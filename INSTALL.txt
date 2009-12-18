@@ -1,0 +1,17 @@
+Installing Test Repository
+++++++++++++++++++++++++++
+
+Run time dependencies
+~~~~~~~~~~~~~~~~~~~~~
+
+* Python2.4 or newer.
+
+* bzrlib (Used for various utility functions)
+
+Test dependencies
+~~~~~~~~~~~~~~~~~
+
+* testtools (the python-testtools package, or
+   http://pypi.python.org/pypi/testtools/).
+
+* testscenarios (https://edge.launchpad.net/testscenarios).

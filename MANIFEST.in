@@ -1,0 +1,8 @@
+include .bzrignore
+include Apache-2.0
+include BSD
+include COPYING
+include INSTALL.txt
+include MANIFEST.in
+include Makefile
+include README.txt
