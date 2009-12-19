@@ -39,5 +39,6 @@ Delete a repository::
 Documentation
 ~~~~~~~~~~~~~
 
-More detailed documentation including design and implementation details can be
+More detailed documentation including design and implementation details, a
+user manual, and guidelines for development of Test Repository itself can be
 found in the doc/ directory.

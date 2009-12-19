@@ -24,6 +24,12 @@ license you chose for the specific language governing permissions and
 limitations under that license.
 ----
 
+A concordance of contributors is maintained here to provide an easy reference
+for distributions such as Debian that wish to list all the copyright holders
+in their metadata:
+* Robert Collins <robertc@robertcollins.net>, 2009
+
+
 Code that has been incorporated into Testrepository from other projects will
 naturally be under its own license, and will retain that license.
 
