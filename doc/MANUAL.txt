@@ -1,0 +1,28 @@
+Test Repository users manual
+++++++++++++++++++++++++++++
+
+Overview
+~~~~~~~~
+
+Test repository is a small application for tracking test results. Any test run
+that can be represented as a subunit stream can be inserted into a repository.
+
+Typical workflow is to have a repository into which test runs are inserted, and
+then to query the repository to find out about issues that need addressing. For
+instance, using the sample subunit stream included with Test repository::
+
+  $ testr init
+  $ testr load < doc/example-failing-subunit-stream
+  $ testr todo
+  1 Failure 1 Error
+  # fix things
+  $ testr load < doc/example-passing-subunit-stream
+  $ testr todo
+
+Most commands in testr have comprehensive online help, and the commands::
+  $ testr help
+  $ testr commands
+
+Will be useful to explore the system.
+
+

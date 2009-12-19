@@ -6,3 +6,4 @@ include INSTALL.txt
 include MANIFEST.in
 include Makefile
 include README.txt
+include doc/*.txt
