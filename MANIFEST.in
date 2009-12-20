@@ -7,3 +7,4 @@ include MANIFEST.in
 include Makefile
 include README.txt
 include doc/*.txt
+include testrepository/tests/*.py

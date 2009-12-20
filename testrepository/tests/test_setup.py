@@ -12,12 +12,19 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-import unittest
+"""Tests for setup.py."""
 
-def test_suite():
-    names = [
-        'setup',
-        ]
-    module_names = ['testrepository.tests.test_' + name for name in names]
-    loader = unittest.TestLoader()
-    return loader.loadTestsFromNames(module_names)
+import commands
+import os.path
+
+from testtools import (
+    TestCase,
+    )
+
+class TestCanSetup(TestCase):
+
+    def test_bdist(self):
+        # Single smoke test to make sure we can build a package.
+        path = os.path.join(os.path.dirname(__file__), '..', '..', 'setup.py')
+        status, output = commands.getstatusoutput(path + ' bdist')
+        self.assertEqual(0, status)

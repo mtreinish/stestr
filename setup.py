@@ -33,4 +33,4 @@ setup(name='testrepository',
       url='https://launchpad.net/testrepository',
       description=('A repository of test results.'),
       version=version,
-      packages=['testrepository', 'testrepository.tests'])
+      packages=['testrepository'])
