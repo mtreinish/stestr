@@ -32,5 +32,6 @@ setup(name='testrepository',
       author_email='robertc@robertcollins.net',
       url='https://launchpad.net/testrepository',
       description=('A repository of test results.'),
+      scripts=['testr'],
       version=version,
       packages=['testrepository'])

@@ -15,10 +15,14 @@
 """Tests for setup.py."""
 
 import commands
+import doctest
 import os.path
 
 from testtools import (
     TestCase,
+    )
+from testtools.matchers import (
+    DocTestMatches,
     )
 
 class TestCanSetup(TestCase):
@@ -28,3 +32,6 @@ class TestCanSetup(TestCase):
         path = os.path.join(os.path.dirname(__file__), '..', '..', 'setup.py')
         status, output = commands.getstatusoutput(path + ' bdist')
         self.assertEqual(0, status)
+        self.assertThat(output, DocTestMatches("""...
+...bin/testr ...
+""", doctest.ELLIPSIS))
