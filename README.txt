@@ -9,9 +9,13 @@ developer workflow to ensure/check things like:
  * No commits without having had a test failure, test fixed cycle.
  * No commits without new tests being added.
  * What tests have failed since the last commit (to run just a subset).
+ * What tests are currently failing and need work.
 
 Test results are inserted using subunit (and thus anything that can output
 subunit or be converted into a subunit stream can be accepted).
+
+A mailing list for discussion, usage and development is at
+https://launchpad.net/~testrepository-dev - all are welcome to join.
 
 Licensing
 ~~~~~~~~~
