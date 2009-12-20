@@ -17,6 +17,8 @@ subunit or be converted into a subunit stream can be accepted).
 A mailing list for discussion, usage and development is at
 https://launchpad.net/~testrepository-dev - all are welcome to join.
 
+CI for the project is at http://build.robertcollins.net/job/testrepository-default/.
+
 Licensing
 ~~~~~~~~~
 
