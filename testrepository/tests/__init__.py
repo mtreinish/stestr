@@ -12,12 +12,32 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
+"""The testrepository tests and test only code."""
+
 import unittest
+
+import testresources
+from testtools import TestCase
+
+class ResourcedTestCase(TestCase, testresources.ResourcedTestCase):
+    """Make all testrepository tests have resource support."""
+
+    def setUp(self):
+        TestCase.setUp(self)
+        testresources.ResourcedTestCase.setUpResources(self)
+        self.addCleanup(testresources.ResourcedTestCase.tearDownResources,
+            self)
+
 
 def test_suite():
     names = [
+        'testr',
         'setup',
+        'stubpackage',
         ]
     module_names = ['testrepository.tests.test_' + name for name in names]
     loader = unittest.TestLoader()
-    return loader.loadTestsFromNames(module_names)
+    suite = loader.loadTestsFromNames(module_names)
+    result = testresources.OptimisingTestSuite()
+    result.addTest(suite)
+    return result

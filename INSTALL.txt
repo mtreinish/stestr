@@ -16,4 +16,7 @@ Test dependencies
 * testtools (the python-testtools package, or
    http://pypi.python.org/pypi/testtools/).
 
-* testscenarios (https://edge.launchpad.net/testscenarios).
+* testresources (https://launchpad.net/testresources, or
+   http://pypi.python.org/pypi/testresources/).
+
+* testscenarios (https://launchpad.net/testscenarios).
