@@ -12,6 +12,14 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
+"""The testrepository library.
+
+This library is divided into some broad areas.
+
+The tests package contains tests and test specific support code.
+The commands package contains the main user entry points into the application.
+"""
+
 # same format as sys.version_info: "A tuple containing the five components of
 # the version number: major, minor, micro, releaselevel, and serial. All
 # values except releaselevel are integers; the release level is 'alpha',

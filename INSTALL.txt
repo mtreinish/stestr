@@ -4,8 +4,6 @@ Installing Test Repository
 Run time dependencies
 ~~~~~~~~~~~~~~~~~~~~~
 
-* bzrlib (Used for various utility functions)
-
 * Python2.4 or newer.
 
 * subunit

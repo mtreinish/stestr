@@ -44,17 +44,18 @@ class StubPackageResource(TestResource):
     
     resources = [('base', TempDirResource())]
 
-    def __init__(self, packagename, modulelist):
+    def __init__(self, packagename, modulelist, init=True):
         super(StubPackageResource, self).__init__()
         self.packagename = packagename
         self.modulelist = modulelist
+        self.init = init
 
     def make(self, dependency_resources):
         result = StubPackage()
         base = dependency_resources['base']
         root = os.path.join(base, self.packagename)
         os.mkdir(root)
-        init_seen = False
+        init_seen = not self.init
         for modulename, contents in self.modulelist:
             stream = file(os.path.join(root, modulename), 'wb')
             try:

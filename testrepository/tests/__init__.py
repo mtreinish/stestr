@@ -31,6 +31,7 @@ class ResourcedTestCase(TestCase, testresources.ResourcedTestCase):
 
 def test_suite():
     names = [
+        'commands',
         'testr',
         'setup',
         'stubpackage',

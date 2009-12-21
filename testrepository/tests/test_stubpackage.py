@@ -39,6 +39,13 @@ class TestStubPackageResource(ResourcedTestCase):
         self.assertEqual('woo', file(os.path.join(pkg.base, 'foo',
             'bar.py')).read())
 
+    def test_no__init__(self):
+        resource = StubPackageResource('foo', [('bar.py', 'woo')], init=False)
+        pkg = resource.getResource()
+        self.addCleanup(resource.finishedWith, pkg)
+        self.assertFalse(os.path.exists(os.path.join(pkg.base, 'foo',
+            '__init__.py')))
+
 
 class TestTempDirResource(ResourcedTestCase):
     """Tests for the StubPackage resource."""
