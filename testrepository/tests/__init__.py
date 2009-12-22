@@ -31,8 +31,15 @@ class ResourcedTestCase(TestCase, testresources.ResourcedTestCase):
 
 
 def test_suite():
+    modules = [
+        'commands',
+        'repository',
+        'ui',
+        ]
     names = [
         'commands',
+        'monkeypatch',
+        'repository',
         'setup',
         'stubpackage',
         'testr',
@@ -43,4 +50,8 @@ def test_suite():
     suite = loader.loadTestsFromNames(module_names)
     result = testresources.OptimisingTestSuite()
     result.addTests(generate_scenarios(suite))
+    for modname in modules:
+        mod = __import__('testrepository.tests.' + modname, globals(),
+            locals(), ['test_suite'])
+        result.addTests(generate_scenarios(mod.test_suite()))
     return result

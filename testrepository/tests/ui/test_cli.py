@@ -16,27 +16,14 @@
 
 from cStringIO import StringIO
 
-from testrepository.ui import cli, model
+from testrepository.ui import cli
 from testrepository.tests import ResourcedTestCase
 
 
-def cli_ui_factory():
-    stdout = StringIO()
-    stdin = StringIO()
-    stderr = StringIO()
-    return cli.UI([], stdin, stdout, stderr)
+class TestCLIUI(ResourcedTestCase):
 
-
-# what ui implementations do we need to test?
-ui_implementations = [
-    ('CLIUI', {'ui_factory': cli_ui_factory}),
-    ('ModelUI', {'ui_factory': model.UI}),
-    ]
-
-
-class TestUIContract(ResourcedTestCase):
-
-    scenarios = ui_implementations
-
-    def test_foo(self):
-        ui = self.ui_factory()
+    def test_construct(self):
+        stdout = StringIO()
+        stdin = StringIO()
+        stderr = StringIO()
+        ui = cli.UI([], stdin, stdout, stderr)

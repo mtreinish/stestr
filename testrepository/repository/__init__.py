@@ -12,31 +12,23 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for UI support logic and the UI contract."""
+"""Storage of test results.
 
-from cStringIO import StringIO
+A Repository provides storage and indexing of results.
 
-from testrepository.ui import cli, model
-from testrepository.tests import ResourcedTestCase
+The AbstractRepository class defines the contract to which any Repository 
+implementation must adhere.
 
+The file submodule is the usual repository that code will use for local
+access, and the memory submodule provides a memory only repository useful for
+testing.
 
-def cli_ui_factory():
-    stdout = StringIO()
-    stdin = StringIO()
-    stderr = StringIO()
-    return cli.UI([], stdin, stdout, stderr)
+Repositories are identified by their URL, and new ones are made by calling
+the initialize function in the appropriate repository module.
+"""
 
+class AbstractRepository(object):
+    """The base class for Repository implementations.
 
-# what ui implementations do we need to test?
-ui_implementations = [
-    ('CLIUI', {'ui_factory': cli_ui_factory}),
-    ('ModelUI', {'ui_factory': model.UI}),
-    ]
-
-
-class TestUIContract(ResourcedTestCase):
-
-    scenarios = ui_implementations
-
-    def test_foo(self):
-        ui = self.ui_factory()
+    There are no interesting attributes or methods as yet.
+    """

@@ -12,31 +12,27 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for UI support logic and the UI contract."""
+"""Tests for the commands module."""
 
-from cStringIO import StringIO
+import os.path
+import sys
 
-from testrepository.ui import cli, model
+from testresources import TestResource
+
+from testrepository.commands import init
+from testrepository.ui.model import UI
 from testrepository.tests import ResourcedTestCase
+from testrepository.tests.monkeypatch import monkeypatch
 
 
-def cli_ui_factory():
-    stdout = StringIO()
-    stdin = StringIO()
-    stderr = StringIO()
-    return cli.UI([], stdin, stdout, stderr)
+class TestCommandInit(ResourcedTestCase):
 
-
-# what ui implementations do we need to test?
-ui_implementations = [
-    ('CLIUI', {'ui_factory': cli_ui_factory}),
-    ('ModelUI', {'ui_factory': model.UI}),
-    ]
-
-
-class TestUIContract(ResourcedTestCase):
-
-    scenarios = ui_implementations
-
-    def test_foo(self):
-        ui = self.ui_factory()
+    def test_init_no_args_no_questions_no_output(self):
+        ui = UI()
+        cmd = init.init(ui)
+        calls = []
+        self.addCleanup(monkeypatch(
+            'testrepository.repository.file.initialize',
+            lambda:calls.append('called')))
+        cmd.run()
+        self.assertEqual(['called'], calls)

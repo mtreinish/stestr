@@ -12,31 +12,15 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for UI support logic and the UI contract."""
+"""Persistent storage of test results."""
 
-from cStringIO import StringIO
-
-from testrepository.ui import cli, model
-from testrepository.tests import ResourcedTestCase
+from testrepository.repository import AbstractRepository
 
 
-def cli_ui_factory():
-    stdout = StringIO()
-    stdin = StringIO()
-    stderr = StringIO()
-    return cli.UI([], stdin, stdout, stderr)
+def initialize(url):
+    """Create a repository at url."""
+    return Repository()
 
 
-# what ui implementations do we need to test?
-ui_implementations = [
-    ('CLIUI', {'ui_factory': cli_ui_factory}),
-    ('ModelUI', {'ui_factory': model.UI}),
-    ]
-
-
-class TestUIContract(ResourcedTestCase):
-
-    scenarios = ui_implementations
-
-    def test_foo(self):
-        ui = self.ui_factory()
+class Repository(AbstractRepository):
+    """Disk based storage of test results."""

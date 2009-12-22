@@ -37,4 +37,5 @@ setup(name='testrepository',
       packages=['testrepository',
         'testrepository.commands',
         'testrepository.ui',
+        'testrepository.repository',
         ])

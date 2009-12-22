@@ -12,31 +12,18 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for UI support logic and the UI contract."""
+"""Tests for the monkeypatch helper."""
 
-from cStringIO import StringIO
-
-from testrepository.ui import cli, model
 from testrepository.tests import ResourcedTestCase
+from testrepository.tests.monkeypatch import monkeypatch
 
+reference = 23
 
-def cli_ui_factory():
-    stdout = StringIO()
-    stdin = StringIO()
-    stderr = StringIO()
-    return cli.UI([], stdin, stdout, stderr)
+class TestMonkeyPatch(ResourcedTestCase):
 
-
-# what ui implementations do we need to test?
-ui_implementations = [
-    ('CLIUI', {'ui_factory': cli_ui_factory}),
-    ('ModelUI', {'ui_factory': model.UI}),
-    ]
-
-
-class TestUIContract(ResourcedTestCase):
-
-    scenarios = ui_implementations
-
-    def test_foo(self):
-        ui = self.ui_factory()
+    def test_patch_and_restore(self):
+        cleanup = monkeypatch(
+            'testrepository.tests.test_monkeypatch.reference', 45)
+        self.assertEqual(45, reference)
+        cleanup()
+        self.assertEqual(23, reference)

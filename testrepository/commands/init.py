@@ -12,31 +12,18 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for UI support logic and the UI contract."""
+"""Initialise a new repository."""
 
-from cStringIO import StringIO
+import os.path
+import sys
 
-from testrepository.ui import cli, model
-from testrepository.tests import ResourcedTestCase
+from testresources import TestResource
 
+from testrepository.commands import Command
+from testrepository.repository import file
 
-def cli_ui_factory():
-    stdout = StringIO()
-    stdin = StringIO()
-    stderr = StringIO()
-    return cli.UI([], stdin, stdout, stderr)
+class init(Command):
+    """Create a new repository."""
 
-
-# what ui implementations do we need to test?
-ui_implementations = [
-    ('CLIUI', {'ui_factory': cli_ui_factory}),
-    ('ModelUI', {'ui_factory': model.UI}),
-    ]
-
-
-class TestUIContract(ResourcedTestCase):
-
-    scenarios = ui_implementations
-
-    def test_foo(self):
-        ui = self.ui_factory()
+    def run(self):
+        file.initialize()

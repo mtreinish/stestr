@@ -18,6 +18,7 @@ This library is divided into some broad areas.
 
 The commands package contains the main user entry points into the application.
 The ui package contains various user interfaces.
+The repository package contains the core storage code.
 The tests package contains tests and test specific support code.
 """
 

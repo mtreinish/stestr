@@ -12,31 +12,16 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for UI support logic and the UI contract."""
+"""Tests for the file repository implementation."""
 
-from cStringIO import StringIO
-
-from testrepository.ui import cli, model
+from testrepository.repository import file
 from testrepository.tests import ResourcedTestCase
+from testrepository.tests.stubpackage import TempDirResource
 
 
-def cli_ui_factory():
-    stdout = StringIO()
-    stdin = StringIO()
-    stderr = StringIO()
-    return cli.UI([], stdin, stdout, stderr)
+class TestFileRepository(ResourcedTestCase):
 
+    resources = [('tempdir', TempDirResource())]
 
-# what ui implementations do we need to test?
-ui_implementations = [
-    ('CLIUI', {'ui_factory': cli_ui_factory}),
-    ('ModelUI', {'ui_factory': model.UI}),
-    ]
-
-
-class TestUIContract(ResourcedTestCase):
-
-    scenarios = ui_implementations
-
-    def test_foo(self):
-        ui = self.ui_factory()
+    def test_construct(self):
+        repo = file.initialize(self.tempdir)
