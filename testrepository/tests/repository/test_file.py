@@ -14,6 +14,8 @@
 
 """Tests for the file repository implementation."""
 
+import os.path
+
 from testrepository.repository import file
 from testrepository.tests import ResourcedTestCase
 from testrepository.tests.stubpackage import TempDirResource
@@ -23,5 +25,18 @@ class TestFileRepository(ResourcedTestCase):
 
     resources = [('tempdir', TempDirResource())]
 
-    def test_construct(self):
+    def test_initialize(self):
         repo = file.initialize(self.tempdir)
+        base = os.path.join(self.tempdir, '.testrepository')
+        stream = open(os.path.join(base, 'format'), 'rb')
+        try:
+            contents = stream.read()
+        finally:
+            stream.close()
+        self.assertEqual("1\n", contents)
+        stream = open(os.path.join(base, 'next-stream'), 'rb')
+        try:
+            contents = stream.read()
+        finally:
+            stream.close()
+        self.assertEqual("0\n", contents)

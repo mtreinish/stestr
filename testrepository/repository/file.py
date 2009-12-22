@@ -14,13 +14,35 @@
 
 """Persistent storage of test results."""
 
+import os.path
+
 from testrepository.repository import AbstractRepository
 
 
 def initialize(url):
-    """Create a repository at url."""
+    """Create a repository at url/path."""
+    base = os.path.join(url, '.testrepository')
+    os.mkdir(base)
+    stream = file(os.path.join(base, 'format'), 'wb')
+    try:
+        stream.write('1\n')
+    finally:
+        stream.close()
+    stream = file(os.path.join(base, 'next-stream'), 'wb')
+    try:
+        stream.write('0\n')
+    finally:
+        stream.close()
     return Repository()
 
 
 class Repository(AbstractRepository):
-    """Disk based storage of test results."""
+    """Disk based storage of test results.
+    
+    This repository stores each stream it receives as a file in a directory.
+    Indices are then built on top of this basic store.
+    
+    This particular disk layout is subject to change at any time, as its
+    primarily a bootstrapping exercise at this point. Any changes made are
+    likely to have an automatic upgrade process.
+    """
