@@ -14,9 +14,9 @@
 
 """Tests for setup.py."""
 
-import commands
 import doctest
 import os.path
+import subprocess
 
 from testtools import (
     TestCase,
@@ -30,8 +30,10 @@ class TestCanSetup(TestCase):
     def test_bdist(self):
         # Single smoke test to make sure we can build a package.
         path = os.path.join(os.path.dirname(__file__), '..', '..', 'setup.py')
-        status, output = commands.getstatusoutput(path + ' bdist')
-        self.assertEqual(0, status)
+        proc = subprocess.Popen([path, 'bdist'], stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output, _ = proc.communicate()
+        self.assertEqual(0, proc.returncode)
         self.assertThat(output, DocTestMatches("""...
 ...bin/testr ...
 """, doctest.ELLIPSIS))
