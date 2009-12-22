@@ -92,3 +92,8 @@ class TestRunArgv(ResourcedTestCase):
         self.stub__find_command(lambda x:0)
         commands.run_argv(['testr', 'foo'], 'in', 'out', 'err')
         self.assertEqual(['foo'], self.calls)
+
+    def test_looks_up_cmd_skips_options(self):
+        self.stub__find_command(lambda x:0)
+        commands.run_argv(['testr', '--version', 'foo'], 'in', 'out', 'err')
+        self.assertEqual(['foo'], self.calls)

@@ -70,4 +70,9 @@ def run_argv(argv, stdin, stdout, stderr):
     :param stderr: The stderr stream for the command.
     :return: An integer exit code for the command.
     """
-    cmd = _find_command(argv[1])
+    cmd_name = None
+    for arg in argv[1:]:
+        if not arg.startswith('-'):
+            cmd_name = arg
+            break
+    cmd = _find_command(cmd_name)
