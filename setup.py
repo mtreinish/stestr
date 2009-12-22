@@ -34,4 +34,7 @@ setup(name='testrepository',
       description=('A repository of test results.'),
       scripts=['testr'],
       version=version,
-      packages=['testrepository'])
+      packages=['testrepository',
+        'testrepository.commands',
+        'testrepository.ui',
+        ])

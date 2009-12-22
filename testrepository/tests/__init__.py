@@ -17,6 +17,7 @@
 import unittest
 
 import testresources
+from testscenarios import generate_scenarios
 from testtools import TestCase
 
 class ResourcedTestCase(TestCase, testresources.ResourcedTestCase):
@@ -32,13 +33,14 @@ class ResourcedTestCase(TestCase, testresources.ResourcedTestCase):
 def test_suite():
     names = [
         'commands',
-        'testr',
         'setup',
         'stubpackage',
+        'testr',
+        'ui',
         ]
     module_names = ['testrepository.tests.test_' + name for name in names]
     loader = unittest.TestLoader()
     suite = loader.loadTestsFromNames(module_names)
     result = testresources.OptimisingTestSuite()
-    result.addTest(suite)
+    result.addTests(generate_scenarios(suite))
     return result

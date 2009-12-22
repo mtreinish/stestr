@@ -16,8 +16,9 @@
 
 This library is divided into some broad areas.
 
-The tests package contains tests and test specific support code.
 The commands package contains the main user entry points into the application.
+The ui package contains various user interfaces.
+The tests package contains tests and test specific support code.
 """
 
 # same format as sys.version_info: "A tuple containing the five components of
