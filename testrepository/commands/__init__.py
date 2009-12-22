@@ -75,4 +75,14 @@ def run_argv(argv, stdin, stdout, stderr):
         if not arg.startswith('-'):
             cmd_name = arg
             break
+    if cmd_name is None:
+        stdout.write("""testr -- a free test repository
+https://launchpad.net/testrepository/
+
+testr commands -- list commands
+testr quickstart -- starter documentation
+testr help [command] -- help system
+""")
+        return 0
     cmd = _find_command(cmd_name)
+
