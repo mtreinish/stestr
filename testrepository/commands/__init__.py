@@ -60,3 +60,14 @@ class Command(object):
     def __init__(self, ui):
         """Create a Command object with ui ui."""
 
+
+def run_argv(argv, stdin, stdout, stderr):
+    """Convenience function to run a command with a CLIUI.
+
+    :param argv: The argv to run the command with.
+    :param stdin: The stdin stream for the command.
+    :param stdout: The stdout stream for the command.
+    :param stderr: The stderr stream for the command.
+    :return: An integer exit code for the command.
+    """
+    cmd = _find_command(argv[1])

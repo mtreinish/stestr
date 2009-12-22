@@ -21,6 +21,7 @@ from testresources import TestResource
 
 from testrepository import commands
 from testrepository.tests import ResourcedTestCase
+from testrepository.tests.monkeypatch import monkeypatch
 from testrepository.tests.stubpackage import (
     StubPackageResource,
     )
@@ -68,3 +69,26 @@ class TestFindCommand(ResourcedTestCase):
 
     def test_missing_command(self):
         self.assertRaises(KeyError, commands._find_command, 'bar')
+
+
+class TestRunArgv(ResourcedTestCase):
+
+    def stub__find_command(self, cmd_run):
+        self.calls = []
+        self.addCleanup(monkeypatch('testrepository.commands._find_command',
+            self._find_command))
+        self.cmd_run = cmd_run
+
+    def _find_command(self, cmd_name):
+        self.calls.append(cmd_name)
+        real_run = self.cmd_run
+        class SampleCommand(commands.Command):
+            """A command that is used for testing."""
+            def run(self):
+                return real_run()
+        return SampleCommand
+
+    def test_looks_up_cmd(self):
+        self.stub__find_command(lambda x:0)
+        commands.run_argv(['testr', 'foo'], 'in', 'out', 'err')
+        self.assertEqual(['foo'], self.calls)
