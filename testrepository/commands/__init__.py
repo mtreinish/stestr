@@ -91,4 +91,7 @@ testr help [command] -- help system
     from testrepository.ui import cli
     ui = cli.UI(cmd_args, stdin, stdout, stderr)
     cmd = cmdclass(ui)
-    cmd.run()
+    result = cmd.execute()
+    if not result:
+        return 0
+    return result

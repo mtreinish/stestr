@@ -90,7 +90,7 @@ class TestRunArgv(ResourcedTestCase):
         real_run = self.cmd_run
         class SampleCommand(commands.Command):
             """A command that is used for testing."""
-            def run(self):
+            def execute(self):
                 return real_run(self)
         return SampleCommand
 
@@ -126,3 +126,13 @@ testr help [command] -- help system
         commands.run_argv(['testr', '--version', 'foo'], 'in', 'out', 'err')
         self.assertEqual(['foo'], self.calls)
         self.assertIsInstance(self.ui, cli.UI)
+
+    def test_returns_0_when_None_returned_from_execute(self):
+        self.stub__find_command(lambda x:None)
+        self.assertEqual(0, commands.run_argv(['testr', 'foo'], 'in', 'out',
+            'err'))
+
+    def test_returns_execute_result(self):
+        self.stub__find_command(lambda x:1)
+        self.assertEqual(1, commands.run_argv(['testr', 'foo'], 'in', 'out',
+            'err'))
