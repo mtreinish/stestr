@@ -60,6 +60,28 @@ class Command(object):
     def __init__(self, ui):
         """Create a Command object with ui ui."""
         self.ui = ui
+        self._init()
+
+    def execute(self):
+        """Execute a command.
+
+        This interrogates the UI to ensure that arguments and options are
+        supplied, performs any validation for the same that the command needs
+        and finally calls run() to perform the command. Most commands should
+        not need to override this method, and any user wanting to run a 
+        command should call this method.
+        """
+        result = self.run()
+        if not result:
+            return 0
+        return result
+
+    def _init(self):
+        """Per command init call, called into by Command.__init__."""
+
+    def run(self):
+        """The core logic for this command to be implemented by subclasses."""
+        raise NotImplementedError(self.run)
 
 
 def run_argv(argv, stdin, stdout, stderr):

@@ -25,7 +25,7 @@ from testtools.matchers import (
     )
 
 from testrepository import commands
-from testrepository.ui import cli
+from testrepository.ui import cli, model
 from testrepository.tests import ResourcedTestCase
 from testrepository.tests.monkeypatch import monkeypatch
 from testrepository.tests.stubpackage import (
@@ -136,3 +136,26 @@ testr help [command] -- help system
         self.stub__find_command(lambda x:1)
         self.assertEqual(1, commands.run_argv(['testr', 'foo'], 'in', 'out',
             'err'))
+
+
+class InstrumentedCommand(commands.Command):
+    """A command which records methods called on it."""
+
+    def _init(self):
+        self.calls = []
+
+    def execute(self):
+        self.calls.append('execute')
+        return commands.Command.execute(self)
+
+    def run(self):
+        self.calls.append('run')
+
+
+class TestAbstractCommand(ResourcedTestCase):
+
+    def test_execute_calls_run(self):
+        cmd = InstrumentedCommand(model.UI())
+        self.assertEqual(0, cmd.execute())
+        self.assertEqual(['execute', 'run'], cmd.calls)
+
