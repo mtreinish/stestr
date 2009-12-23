@@ -25,6 +25,7 @@ from testtools.matchers import (
     )
 
 from testrepository import commands
+from testrepository.ui import cli
 from testrepository.tests import ResourcedTestCase
 from testrepository.tests.monkeypatch import monkeypatch
 from testrepository.tests.stubpackage import (
@@ -90,7 +91,7 @@ class TestRunArgv(ResourcedTestCase):
         class SampleCommand(commands.Command):
             """A command that is used for testing."""
             def run(self):
-                return real_run()
+                return real_run(self)
         return SampleCommand
 
     def test_looks_up_cmd(self):
@@ -115,3 +116,13 @@ testr commands -- list commands
 testr quickstart -- starter documentation
 testr help [command] -- help system
 """, doctest.ELLIPSIS))
+
+    def capture_ui(self, cmd):
+        self.ui = cmd.ui
+        return 0
+
+    def test_runs_cmd_with_CLI_UI(self):
+        self.stub__find_command(self.capture_ui)
+        commands.run_argv(['testr', '--version', 'foo'], 'in', 'out', 'err')
+        self.assertEqual(['foo'], self.calls)
+        self.assertIsInstance(self.ui, cli.UI)

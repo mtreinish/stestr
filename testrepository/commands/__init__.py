@@ -59,6 +59,7 @@ class Command(object):
 
     def __init__(self, ui):
         """Create a Command object with ui ui."""
+        self.ui = ui
 
 
 def run_argv(argv, stdin, stdout, stderr):
@@ -71,6 +72,7 @@ def run_argv(argv, stdin, stdout, stderr):
     :return: An integer exit code for the command.
     """
     cmd_name = None
+    cmd_args = argv[1:]
     for arg in argv[1:]:
         if not arg.startswith('-'):
             cmd_name = arg
@@ -84,5 +86,9 @@ testr quickstart -- starter documentation
 testr help [command] -- help system
 """)
         return 0
-    cmd = _find_command(cmd_name)
-
+    cmd_args.remove(cmd_name)
+    cmdclass = _find_command(cmd_name)
+    from testrepository.ui import cli
+    ui = cli.UI(cmd_args, stdin, stdout, stderr)
+    cmd = cmdclass(ui)
+    cmd.run()
