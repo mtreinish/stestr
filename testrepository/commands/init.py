@@ -26,4 +26,5 @@ class init(Command):
     """Create a new repository."""
 
     def run(self):
-        file.initialize()
+        path = os.getcwd()
+        file.initialize(path)

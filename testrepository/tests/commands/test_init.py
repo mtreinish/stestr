@@ -23,9 +23,29 @@ from testrepository.commands import init
 from testrepository.ui.model import UI
 from testrepository.tests import ResourcedTestCase
 from testrepository.tests.monkeypatch import monkeypatch
+from testrepository.tests.stubpackage import TempDirResource
+
+
+class CDTempDir(object):
+    """A tempdir we chdirred into."""
+
+class CDTempDirResource(TestResource):
+
+    resources = [('base', TempDirResource())]
+
+    def make(self, dependency_resources):
+        result = CDTempDir()
+        result.orig = os.getcwd()
+        os.chdir(dependency_resources['base'])
+        return result
+
+    def clean(self, resource):
+        os.chdir(resource.orig)
 
 
 class TestCommandInit(ResourcedTestCase):
+
+    resources = [('cwd', CDTempDirResource())]
 
     def test_init_no_args_no_questions_no_output(self):
         ui = UI()
@@ -33,6 +53,6 @@ class TestCommandInit(ResourcedTestCase):
         calls = []
         self.addCleanup(monkeypatch(
             'testrepository.repository.file.initialize',
-            lambda:calls.append('called')))
-        cmd.run()
-        self.assertEqual(['called'], calls)
+            lambda url:calls.append(('called', url))))
+        cmd.execute()
+        self.assertEqual([('called', self.cwd.base)], calls)
