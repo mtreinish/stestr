@@ -19,23 +19,6 @@ import os.path
 from testrepository.repository import AbstractRepository
 
 
-def initialize(url):
-    """Create a repository at url/path."""
-    base = os.path.join(url, '.testrepository')
-    os.mkdir(base)
-    stream = file(os.path.join(base, 'format'), 'wb')
-    try:
-        stream.write('1\n')
-    finally:
-        stream.close()
-    stream = file(os.path.join(base, 'next-stream'), 'wb')
-    try:
-        stream.write('0\n')
-    finally:
-        stream.close()
-    return Repository()
-
-
 class Repository(AbstractRepository):
     """Disk based storage of test results.
     
@@ -46,3 +29,22 @@ class Repository(AbstractRepository):
     primarily a bootstrapping exercise at this point. Any changes made are
     likely to have an automatic upgrade process.
     """
+    
+    @classmethod
+    def initialise(klass, url):
+        """Create a repository at url/path."""
+        base = os.path.join(url, '.testrepository')
+        os.mkdir(base)
+        stream = file(os.path.join(base, 'format'), 'wb')
+        try:
+            stream.write('1\n')
+        finally:
+            stream.close()
+        stream = file(os.path.join(base, 'next-stream'), 'wb')
+        try:
+            stream.write('0\n')
+        finally:
+            stream.close()
+        return Repository()
+
+

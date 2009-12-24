@@ -32,3 +32,11 @@ class AbstractRepository(object):
 
     There are no interesting attributes or methods as yet.
     """
+
+    @classmethod
+    def initialise(klass, url):
+        """Create a repository at URL. 
+
+        Call on the class of the repository you wish to create.
+        """
+        raise NotImplementedError(klass.initialise)

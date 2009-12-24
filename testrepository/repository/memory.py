@@ -19,3 +19,9 @@ from testrepository.repository import AbstractRepository
 
 class Repository(AbstractRepository):
     """In memory storage of test results."""
+
+    @classmethod
+    def initialise(klass, url):
+        """Create a repository at url/path."""
+        # nothing to do :)
+        return Repository()

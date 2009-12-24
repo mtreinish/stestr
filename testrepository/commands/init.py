@@ -27,4 +27,4 @@ class init(Command):
 
     def run(self):
         path = os.getcwd()
-        file.initialize(path)
+        file.Repository.initialise(path)

@@ -14,20 +14,35 @@
 
 """Tests for Repository support logic and the Repository contract."""
 
+from testrepository import repository
 from testrepository.repository import file, memory
 from testrepository.tests import ResourcedTestCase
-from testrepository.tests.stubpackage import TempDirResource
+from testrepository.tests.stubpackage import (
+    TempDirResource,
+    )
+
+class DirtyTempDirResource(TempDirResource):
+
+    def __init__(self):
+        TempDirResource.__init__(self)
+        self._dirty = True
+
+    def isDirty(self):
+        return True
+
+    def _setResource(self, new_resource):
+        """Set the current resource to a new value."""
+        self._currentResource = new_resource
+        self._dirty = True
 
 
 # what repository implementations do we need to test?
-def file_repo_factory(test):
-    return file.initialize(test.tempdir)
-def memory_repo_factory(test):
-    return memory.Repository()
 repo_implementations = [
-    ('file', {'repo_factory': file_repo_factory,
-        'resources': [('tempdir', TempDirResource())]}),
-    ('memory', {'repo_factory': memory_repo_factory}),
+    ('file', {'repo_impl': file.Repository,
+        'resources': [('sample_url', DirtyTempDirResource())]
+        }),
+    ('memory', {'repo_impl': memory.Repository,
+        'sample_url': 'memory:'}),
     ]
 
 
@@ -35,6 +50,6 @@ class TestRepositoryContract(ResourcedTestCase):
 
     scenarios = repo_implementations
 
-    def test_factory_returns_object(self):
-        repo = self.repo_factory(self)
-        self.assertNotEqual(None, repo)
+    def test_can_initialise_with_param(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        self.assertIsInstance(repo, repository.AbstractRepository)

@@ -12,7 +12,7 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for the commands module."""
+"""Tests for the init command."""
 
 import os.path
 import sys
@@ -23,11 +23,14 @@ from testrepository.commands import init
 from testrepository.ui.model import UI
 from testrepository.tests import ResourcedTestCase
 from testrepository.tests.monkeypatch import monkeypatch
-from testrepository.tests.stubpackage import TempDirResource
+from testrepository.tests.stubpackage import (
+    TempDirResource,
+    )
 
 
 class CDTempDir(object):
     """A tempdir we chdirred into."""
+
 
 class CDTempDirResource(TestResource):
 
@@ -52,7 +55,7 @@ class TestCommandInit(ResourcedTestCase):
         cmd = init.init(ui)
         calls = []
         self.addCleanup(monkeypatch(
-            'testrepository.repository.file.initialize',
-            lambda url:calls.append(('called', url))))
+            'testrepository.repository.file.Repository.initialise',
+            staticmethod(lambda url:calls.append(('called', url)))))
         cmd.execute()
         self.assertEqual([('called', self.cwd.base)], calls)

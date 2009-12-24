@@ -25,8 +25,8 @@ class TestFileRepository(ResourcedTestCase):
 
     resources = [('tempdir', TempDirResource())]
 
-    def test_initialize(self):
-        repo = file.initialize(self.tempdir)
+    def test_initialise(self):
+        repo = file.Repository.initialise(self.tempdir)
         base = os.path.join(self.tempdir, '.testrepository')
         stream = open(os.path.join(base, 'format'), 'rb')
         try:
