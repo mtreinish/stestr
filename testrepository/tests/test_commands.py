@@ -160,6 +160,12 @@ class TestAbstractCommand(ResourcedTestCase):
         self.assertEqual(0, cmd.execute())
         self.assertEqual(['execute', 'run'], cmd.calls)
 
+    def test_execute_calls_set_command(self):
+        ui = model.UI()
+        cmd = InstrumentedCommand(ui)
+        cmd.execute()
+        self.assertEqual(cmd, ui.cmd)
+
     def test_default_repository_factory(self):
         cmd = commands.Command(model.UI())
         self.assertEqual(file.Repository, cmd.repository_factory)

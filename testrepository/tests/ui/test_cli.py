@@ -16,6 +16,7 @@
 
 from cStringIO import StringIO
 
+from testrepository import commands
 from testrepository.ui import cli
 from testrepository.tests import ResourcedTestCase
 
@@ -27,3 +28,16 @@ class TestCLIUI(ResourcedTestCase):
         stdin = StringIO()
         stderr = StringIO()
         ui = cli.UI([], stdin, stdout, stderr)
+
+    def test_stream_comes_from_stdin(self):
+        stdout = StringIO()
+        stdin = StringIO('foo\n')
+        stderr = StringIO()
+        ui = cli.UI([], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        cmd.input_streams = ['subunit']
+        ui.set_command(cmd)
+        results = []
+        for stream in ui.iter_streams('subunit'):
+            results.append(stream.read())
+        self.assertEqual(['foo\n'], results)

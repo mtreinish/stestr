@@ -63,7 +63,18 @@ class Command(object):
     :ivar repository_factory: a repository factory which is used to create or
         open repositories. The default repository factory is suitable for
         use in the command line tool.
+
+    Commands declare that they accept/need/emit:
+    :ivar input_streams: A list of stream specifications. Mandatory streams
+        are specified by a simple name. Optional streams are specified by
+        a simple name with a ? ending the name. Optional multiple streams are
+        specified by a simple name with a * ending the name, and mandatory
+        multiple streams by ending the name with +. Multiple streams are used
+        when a command can process more than one stream.
     """
+
+    # class defaults to no streams.
+    input_streams = []
 
     def __init__(self, ui):
         """Create a Command object with ui ui."""
@@ -80,6 +91,7 @@ class Command(object):
         not need to override this method, and any user wanting to run a 
         command should call this method.
         """
+        self.ui.set_command(self)
         result = self.run()
         if not result:
             return 0

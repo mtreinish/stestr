@@ -31,3 +31,6 @@ class UI(ui.AbstractUI):
         self._stdin = stdin
         self._stdout = stdout
         self._stderr = stderr
+
+    def _iter_streams(self, stream_type):
+        yield self._stdin

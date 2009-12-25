@@ -14,6 +14,8 @@
 
 """Am object based UI for testrepository."""
 
+from cStringIO import StringIO
+
 from testrepository import ui
 
 class UI(ui.AbstractUI):
@@ -23,3 +25,20 @@ class UI(ui.AbstractUI):
     interaction model with the domain logic from python. It is used for
     testing testrepository commands.
     """
+
+    def __init__(self, input_streams=None):
+        """Create a model UI.
+
+        :param input_streams: A list of stream name, bytes stream tuples to be
+            used as the available input streams for this ui.
+        """
+        self.input_streams = {}
+        if input_streams:
+            for stream_type, stream_bytes in input_streams:
+                self.input_streams.setdefault(stream_type, []).append(
+                    stream_bytes)
+
+    def _iter_streams(self, stream_type):
+        streams = self.input_streams.pop(stream_type, [])
+        for stream_bytes in streams:
+            yield StringIO(stream_bytes)
