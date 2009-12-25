@@ -14,48 +14,30 @@
 
 """Tests for the init command."""
 
-import os.path
-import sys
-
-from testresources import TestResource
+import os
 
 from testrepository.commands import init
 from testrepository.ui.model import UI
 from testrepository.tests import ResourcedTestCase
-from testrepository.tests.monkeypatch import monkeypatch
-from testrepository.tests.stubpackage import (
-    TempDirResource,
-    )
+from testrepository.repository import memory
 
 
-class CDTempDir(object):
-    """A tempdir we chdirred into."""
+class RecordingRepositoryFactory(object):
 
+    def __init__(self, calls):
+        self.calls = calls
 
-class CDTempDirResource(TestResource):
-
-    resources = [('base', TempDirResource())]
-
-    def make(self, dependency_resources):
-        result = CDTempDir()
-        result.orig = os.getcwd()
-        os.chdir(dependency_resources['base'])
-        return result
-
-    def clean(self, resource):
-        os.chdir(resource.orig)
+    def initialise(self, url):
+        self.calls.append(('initialise', url))
+        return memory.Repository.initialise(url)
 
 
 class TestCommandInit(ResourcedTestCase):
-
-    resources = [('cwd', CDTempDirResource())]
 
     def test_init_no_args_no_questions_no_output(self):
         ui = UI()
         cmd = init.init(ui)
         calls = []
-        self.addCleanup(monkeypatch(
-            'testrepository.repository.file.Repository.initialise',
-            staticmethod(lambda url:calls.append(('called', url)))))
+        cmd.repository_factory = RecordingRepositoryFactory(calls)
         cmd.execute()
-        self.assertEqual([('called', self.cwd.base)], calls)
+        self.assertEqual([('initialise', os.getcwd())], calls)

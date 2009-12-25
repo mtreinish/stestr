@@ -25,12 +25,13 @@ from testtools.matchers import (
     )
 
 from testrepository import commands
-from testrepository.ui import cli, model
+from testrepository.repository import file
 from testrepository.tests import ResourcedTestCase
 from testrepository.tests.monkeypatch import monkeypatch
 from testrepository.tests.stubpackage import (
     StubPackageResource,
     )
+from testrepository.ui import cli, model
 
 
 class TemporaryCommand(object):
@@ -159,3 +160,6 @@ class TestAbstractCommand(ResourcedTestCase):
         self.assertEqual(0, cmd.execute())
         self.assertEqual(['execute', 'run'], cmd.calls)
 
+    def test_default_repository_factory(self):
+        cmd = commands.Command(model.UI())
+        self.assertEqual(file.Repository, cmd.repository_factory)

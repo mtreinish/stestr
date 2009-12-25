@@ -32,6 +32,8 @@ __path__ to include a directory containing their commands - no __init__ is
 needed in that directory.)
 """
 
+from testrepository.repository import file
+
 def _find_command(cmd_name):
     classname = "%s" % cmd_name
     modname = "testrepository.commands.%s" % cmd_name
@@ -53,13 +55,20 @@ class Command(object):
     Commands contain non-UI non-domain specific behaviour - they are the
     glue between the UI and the object model.
 
-    Commands are parameterised with a UI object which is responsible for
-    brokering the command arguments, input and output.
+    Commands are parameterised with:
+    :ivar ui: a UI object which is responsible for brokering the command
+        arguments, input and output. There is no default ui, it must be
+        passed to the constructor.
+    
+    :ivar repository_factory: a repository factory which is used to create or
+        open repositories. The default repository factory is suitable for
+        use in the command line tool.
     """
 
     def __init__(self, ui):
         """Create a Command object with ui ui."""
         self.ui = ui
+        self.repository_factory = file.Repository
         self._init()
 
     def execute(self):

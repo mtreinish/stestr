@@ -14,17 +14,14 @@
 
 """Initialise a new repository."""
 
-import os.path
-import sys
+import os
 
-from testresources import TestResource
 
 from testrepository.commands import Command
-from testrepository.repository import file
 
 class init(Command):
     """Create a new repository."""
 
     def run(self):
         path = os.getcwd()
-        file.Repository.initialise(path)
+        self.repository_factory.initialise(path)
