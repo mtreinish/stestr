@@ -53,6 +53,12 @@ class TestUIContract(ResourcedTestCase):
     def test_factory_input_stream_args(self):
         ui = self.ui_factory([('subunit', 'value')])
 
+    def test_here(self):
+        ui = self.ui_factory()
+        cmd = commands.Command(ui)
+        ui.set_command(cmd)
+        self.assertNotEqual(None, ui.here)
+
     def test_iter_streams_load_stdin_use_case(self):
         # A UI can be asked for the streams that a command has indicated it
         # accepts, which is what load < foo will require.

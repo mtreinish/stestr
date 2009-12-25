@@ -41,3 +41,12 @@ class TestCLIUI(ResourcedTestCase):
         for stream in ui.iter_streams('subunit'):
             results.append(stream.read())
         self.assertEqual(['foo\n'], results)
+
+    def test_dash_d_sets_here_option(self):
+        stdout = StringIO()
+        stdin = StringIO('foo\n')
+        stderr = StringIO()
+        ui = cli.UI(['-d', '/nowhere/'], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        ui.set_command(cmd)
+        self.assertEqual('/nowhere/', ui.here)

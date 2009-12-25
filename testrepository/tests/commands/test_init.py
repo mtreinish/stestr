@@ -14,8 +14,6 @@
 
 """Tests for the init command."""
 
-import os
-
 from testrepository.commands import init
 from testrepository.ui.model import UI
 from testrepository.tests import ResourcedTestCase
@@ -40,4 +38,4 @@ class TestCommandInit(ResourcedTestCase):
         calls = []
         cmd.repository_factory = RecordingRepositoryFactory(calls)
         cmd.execute()
-        self.assertEqual([('initialise', os.getcwd())], calls)
+        self.assertEqual([('initialise', ui.here)], calls)

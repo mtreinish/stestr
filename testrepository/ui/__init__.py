@@ -40,6 +40,10 @@ class AbstractUI(object):
     created for each command executed.
 
     :ivar cmd: The command that is running using this UI object.
+    :ivar here: The location that command is being run in. This may be a local
+        path or a URL. This is only guaranteed to be set after set_command is
+        called, as some UI's need to do option processing to determine its
+        value.
     """
 
     def iter_streams(self, stream_type):

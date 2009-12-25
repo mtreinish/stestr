@@ -37,6 +37,7 @@ class UI(ui.AbstractUI):
             for stream_type, stream_bytes in input_streams:
                 self.input_streams.setdefault(stream_type, []).append(
                     stream_bytes)
+        self.here = 'memory:'
 
     def _iter_streams(self, stream_type):
         streams = self.input_streams.pop(stream_type, [])

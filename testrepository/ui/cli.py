@@ -14,6 +14,9 @@
 
 """A command line UI for testrepository."""
 
+from optparse import OptionParser
+import os
+
 from testrepository import ui
 
 class UI(ui.AbstractUI):
@@ -34,3 +37,13 @@ class UI(ui.AbstractUI):
 
     def _iter_streams(self, stream_type):
         yield self._stdin
+
+    def set_command(self, cmd):
+        ui.AbstractUI.set_command(self, cmd)
+        parser = OptionParser()
+        parser.add_option("-d", "--here", dest="here",
+            help="Set the directory or url that a command should run from. "
+            "This affects all default path lookups but does not affect paths "
+            "supplied to the command.", default=os.getcwd(), type=str)
+        options, args = parser.parse_args(self._argv)
+        self.here = options.here
