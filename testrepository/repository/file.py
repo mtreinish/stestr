@@ -15,6 +15,9 @@
 """Persistent storage of test results."""
 
 import os.path
+import tempfile
+
+from subunit import TestProtocolClient
 
 from testrepository.repository import AbstractRepository
 
@@ -29,6 +32,13 @@ class Repository(AbstractRepository):
     primarily a bootstrapping exercise at this point. Any changes made are
     likely to have an automatic upgrade process.
     """
+
+    def __init__(self, base):
+        """Create a file-based repository object for the repo at 'base'.
+
+        :param base: The path to the repository.
+        """
+        self.base = base
     
     @classmethod
     def initialise(klass, url):
@@ -40,11 +50,45 @@ class Repository(AbstractRepository):
             stream.write('1\n')
         finally:
             stream.close()
-        stream = file(os.path.join(base, 'next-stream'), 'wb')
+        result = Repository(base)
+        result._write_next_stream(0)
+        return result
+
+    def _allocate(self):
+        # XXX: lock the file. K?!
+        value = self.count()
+        self._write_next_stream(value + 1)
+        return value
+
+    def count(self):
+        return int(file(os.path.join(self.base, 'next-stream'), 'rb').read())
+    
+    def get_inserter(self):
+        return _Inserter(self)
+
+    def _write_next_stream(self, value):
+        stream = file(os.path.join(self.base, 'next-stream'), 'wb')
         try:
-            stream.write('0\n')
+            stream.write('%d\n' % value)
         finally:
             stream.close()
-        return Repository()
 
 
+class _Inserter(TestProtocolClient):
+
+    def __init__(self, repository):
+        self._repository = repository
+        stream = tempfile.NamedTemporaryFile(dir=self._repository.base,
+            delete=False)
+        self.fname = stream.name
+        TestProtocolClient.__init__(self, stream)
+
+    def startTestRun(self):
+        pass
+
+    def stopTestRun(self):
+        # TestProtocolClient.stopTestRun(self)
+        self._stream.flush()
+        self._stream.close()
+        os.rename(self.fname, os.path.join(self._repository.base,
+            str(self._repository._allocate())))

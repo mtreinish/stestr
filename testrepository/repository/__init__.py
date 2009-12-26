@@ -40,3 +40,19 @@ class AbstractRepository(object):
         Call on the class of the repository you wish to create.
         """
         raise NotImplementedError(klass.initialise)
+
+    def count(self):
+        """Return the number of test runs this repository has stored.
+        
+        :return count: The count of test runs stored in the repositor.
+        """
+        raise NotImplementedError(self.count)
+
+    def get_inserter(self):
+        """Get an inserter that will insert a test run into the repository.
+
+        :return an inserter: Inserters meet the extended TestResult protocol
+            that testtools 0.9.2 and above offer. The startTestRun and
+            stopTestRun methods in particular must be called.
+        """
+        raise NotImplementedError(self.get_inserter)

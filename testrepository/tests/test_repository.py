@@ -53,3 +53,21 @@ class TestRepositoryContract(ResourcedTestCase):
     def test_can_initialise_with_param(self):
         repo = self.repo_impl.initialise(self.sample_url)
         self.assertIsInstance(repo, repository.AbstractRepository)
+
+    def test_can_get_inserter(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        self.assertNotEqual(None, result)
+
+    def test_insert_stream_smoke(self):
+        # We can insert some data into the repository.
+        repo = self.repo_impl.initialise(self.sample_url)
+        class Case(ResourcedTestCase):
+            def method(self):
+                pass
+        case = Case('method')
+        result = repo.get_inserter()
+        result.startTestRun()
+        case.run(result)
+        result.stopTestRun()
+        self.assertEqual(1, repo.count())

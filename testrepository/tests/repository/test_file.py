@@ -27,6 +27,7 @@ class TestFileRepository(ResourcedTestCase):
 
     def test_initialise(self):
         repo = file.Repository.initialise(self.tempdir)
+        self.resources[0][1].dirtied(self.tempdir)
         base = os.path.join(self.tempdir, '.testrepository')
         stream = open(os.path.join(base, 'format'), 'rb')
         try:
@@ -40,3 +41,11 @@ class TestFileRepository(ResourcedTestCase):
         finally:
             stream.close()
         self.assertEqual("0\n", contents)
+
+    def test_inserter_output_path(self):
+        repo = file.Repository.initialise(self.tempdir)
+        self.resources[0][1].dirtied(self.tempdir)
+        inserter = repo.get_inserter()
+        inserter.startTestRun()
+        inserter.stopTestRun()
+        self.assertTrue(os.path.exists(os.path.join(repo.base, '0')))
