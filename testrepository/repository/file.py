@@ -78,9 +78,9 @@ class _Inserter(TestProtocolClient):
 
     def __init__(self, repository):
         self._repository = repository
-        stream = tempfile.NamedTemporaryFile(dir=self._repository.base,
-            delete=False)
-        self.fname = stream.name
+        fd, name = tempfile.mkstemp(dir=self._repository.base)
+        self.fname = name
+        stream = os.fdopen(fd, 'wb')
         TestProtocolClient.__init__(self, stream)
 
     def startTestRun(self):
