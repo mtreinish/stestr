@@ -15,6 +15,7 @@
 """Load data into a repository."""
 
 import subunit
+from testtools import MultiTestResult, TestResult
 
 from testrepository.commands import Command
 
@@ -26,11 +27,18 @@ class load(Command):
     def run(self):
         path = self.ui.here
         repo = self.repository_factory.open(path)
+        failed = False
         for stream in self.ui.iter_streams('subunit'):
             inserter = repo.get_inserter()
+            evaluator = TestResult()
             case = subunit.ProtocolTestCase(stream)
             inserter.startTestRun()
             try:
-                case.run(inserter)
+                case.run(MultiTestResult(inserter, evaluator))
             finally:
                 inserter.stopTestRun()
+            failed = failed or not evaluator.wasSuccessful()
+        if failed:
+            return 1
+        else:
+            return 0

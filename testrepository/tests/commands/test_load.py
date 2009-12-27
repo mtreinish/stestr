@@ -39,3 +39,19 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertFalse('subunit' in ui.input_streams)
         # Results loaded
         self.assertEqual(1, repo.count())
+
+    def test_load_returns_0_normally(self):
+        ui = UI([('subunit', '')])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        cmd.repository_factory = memory.RepositoryFactory()
+        cmd.repository_factory.initialise(ui.here)
+        self.assertEqual(0, cmd.execute())
+
+    def test_load_returns_1_on_failed_stream(self):
+        ui = UI([('subunit', 'test: foo\nfailure: foo\n')])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        cmd.repository_factory = memory.RepositoryFactory()
+        cmd.repository_factory.initialise(ui.here)
+        self.assertEqual(1, cmd.execute())

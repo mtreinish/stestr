@@ -14,8 +14,11 @@
 
 all: check
 
-check:
-	python -m testtools.run testrepository.tests.test_suite
+.testrepository:
+	./testr init
+
+check: .testrepository
+	python -m subunit.run testrepository.tests.test_suite | ./testr load
 
 check-xml:
 	python -m subunit.run testrepository.tests.test_suite | subunit2junitxml -o test.xml -f | subunit2pyunit
