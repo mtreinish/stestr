@@ -79,7 +79,7 @@ class Command(object):
     def __init__(self, ui):
         """Create a Command object with ui ui."""
         self.ui = ui
-        self.repository_factory = file.Repository
+        self.repository_factory = file.RepositoryFactory()
         self._init()
 
     def execute(self):

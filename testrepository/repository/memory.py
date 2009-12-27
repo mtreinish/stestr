@@ -14,7 +14,28 @@
 
 """In memory storage of test results."""
 
-from testrepository.repository import AbstractRepository
+from testrepository.repository import (
+    AbstractRepository,
+    AbstractRepositoryFactory,
+    )
+
+
+class RepositoryFactory(AbstractRepositoryFactory):
+    """A factory that can initialise and open memory repositories.
+
+    This is used for testing where a repository may be created and later
+    opened, but tests should not see each others repositories.
+    """
+
+    def __init__(self):
+        self.repos = {}
+
+    def initialise(self, url):
+        self.repos[url] = Repository()
+        return self.repos[url]
+
+    def open(self, url):
+        return self.repos[url]
 
 
 class Repository(AbstractRepository):
@@ -23,12 +44,6 @@ class Repository(AbstractRepository):
     def __init__(self):
         # Test runs:
         self._runs = []
-
-    @classmethod
-    def initialise(klass, url):
-        """Create a repository at url/path."""
-        # nothing to do :)
-        return Repository()
 
     def count(self):
         return len(self._runs)

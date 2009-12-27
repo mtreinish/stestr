@@ -12,22 +12,30 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for the init command."""
+"""Tests for the load command."""
 
-from testrepository.commands import init
+from testrepository.commands import load
 from testrepository.ui.model import UI
 from testrepository.tests import ResourcedTestCase
 from testrepository.tests.test_repository import RecordingRepositoryFactory
 from testrepository.repository import memory
 
 
-class TestCommandInit(ResourcedTestCase):
+class TestCommandLoad(ResourcedTestCase):
 
-    def test_init_no_args_no_questions_no_output(self):
-        ui = UI()
-        cmd = init.init(ui)
+    def test_load_loads_subunit_stream_to_default_repository(self):
+        ui = UI([('subunit', '')])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
         calls = []
         cmd.repository_factory = RecordingRepositoryFactory(calls,
             memory.RepositoryFactory())
+        repo = cmd.repository_factory.initialise(ui.here)
+        del calls[:]
         cmd.execute()
-        self.assertEqual([('initialise', ui.here)], calls)
+        # Right repo
+        self.assertEqual([('open', ui.here)], calls)
+        # Stream consumed
+        self.assertFalse('subunit' in ui.input_streams)
+        # Results loaded
+        self.assertEqual(1, repo.count())

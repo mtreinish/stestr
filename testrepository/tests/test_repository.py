@@ -14,12 +14,31 @@
 
 """Tests for Repository support logic and the Repository contract."""
 
+from testresources import TestResource
+
 from testrepository import repository
 from testrepository.repository import file, memory
 from testrepository.tests import ResourcedTestCase
 from testrepository.tests.stubpackage import (
     TempDirResource,
     )
+
+
+class RecordingRepositoryFactory(object):
+    """Test helper for tests wanting to check repository factory callers."""
+
+    def __init__(self, calls, decorated):
+        self.calls = calls
+        self.factory = decorated
+
+    def initialise(self, url):
+        self.calls.append(('initialise', url))
+        return self.factory.initialise(url)
+
+    def open(self, url):
+        self.calls.append(('open', url))
+        return self.factory.open(url)
+
 
 class DirtyTempDirResource(TempDirResource):
 
@@ -36,12 +55,19 @@ class DirtyTempDirResource(TempDirResource):
         self._dirty = True
 
 
+class MemoryRepositoryFactoryResource(TestResource):
+
+    def make(self, dependency_resources):
+        return memory.RepositoryFactory()
+
+
 # what repository implementations do we need to test?
 repo_implementations = [
-    ('file', {'repo_impl': file.Repository,
+    ('file', {'repo_impl': file.RepositoryFactory(),
         'resources': [('sample_url', DirtyTempDirResource())]
         }),
-    ('memory', {'repo_impl': memory.Repository,
+    ('memory', {
+        'resources': [('repo_impl', MemoryRepositoryFactoryResource())],
         'sample_url': 'memory:'}),
     ]
 
@@ -71,3 +97,7 @@ class TestRepositoryContract(ResourcedTestCase):
         case.run(result)
         result.stopTestRun()
         self.assertEqual(1, repo.count())
+
+    def test_open(self):
+        repo1 = self.repo_impl.initialise(self.sample_url)
+        repo2 = self.repo_impl.open(self.sample_url)

@@ -19,7 +19,33 @@ import tempfile
 
 from subunit import TestProtocolClient
 
-from testrepository.repository import AbstractRepository
+from testrepository.repository import (
+    AbstractRepository,
+    AbstractRepositoryFactory,
+    )
+
+
+class RepositoryFactory(AbstractRepositoryFactory):
+
+    def initialise(klass, url):
+        """Create a repository at url/path."""
+        base = os.path.join(url, '.testrepository')
+        os.mkdir(base)
+        stream = file(os.path.join(base, 'format'), 'wb')
+        try:
+            stream.write('1\n')
+        finally:
+            stream.close()
+        result = Repository(base)
+        result._write_next_stream(0)
+        return result
+
+    def open(self, url):
+        base = os.path.join(url, '.testrepository')
+        stream = file(os.path.join(base, 'format'), 'rb')
+        if '1\n' != stream.read():
+            raise ValueError(url)
+        return Repository(base)
 
 
 class Repository(AbstractRepository):
@@ -40,20 +66,6 @@ class Repository(AbstractRepository):
         """
         self.base = base
     
-    @classmethod
-    def initialise(klass, url):
-        """Create a repository at url/path."""
-        base = os.path.join(url, '.testrepository')
-        os.mkdir(base)
-        stream = file(os.path.join(base, 'format'), 'wb')
-        try:
-            stream.write('1\n')
-        finally:
-            stream.close()
-        result = Repository(base)
-        result._write_next_stream(0)
-        return result
-
     def _allocate(self):
         # XXX: lock the file. K?!
         value = self.count()

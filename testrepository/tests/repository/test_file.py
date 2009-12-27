@@ -26,7 +26,7 @@ class TestFileRepository(ResourcedTestCase):
     resources = [('tempdir', TempDirResource())]
 
     def test_initialise(self):
-        repo = file.Repository.initialise(self.tempdir)
+        repo = file.RepositoryFactory().initialise(self.tempdir)
         self.resources[0][1].dirtied(self.tempdir)
         base = os.path.join(self.tempdir, '.testrepository')
         stream = open(os.path.join(base, 'format'), 'rb')
@@ -43,7 +43,7 @@ class TestFileRepository(ResourcedTestCase):
         self.assertEqual("0\n", contents)
 
     def test_inserter_output_path(self):
-        repo = file.Repository.initialise(self.tempdir)
+        repo = file.RepositoryFactory().initialise(self.tempdir)
         self.resources[0][1].dirtied(self.tempdir)
         inserter = repo.get_inserter()
         inserter.startTestRun()

@@ -12,22 +12,25 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for the init command."""
+"""Load data into a repository."""
 
-from testrepository.commands import init
-from testrepository.ui.model import UI
-from testrepository.tests import ResourcedTestCase
-from testrepository.tests.test_repository import RecordingRepositoryFactory
-from testrepository.repository import memory
+import subunit
 
+from testrepository.commands import Command
 
-class TestCommandInit(ResourcedTestCase):
+class load(Command):
+    """Load a subunit stream into a repository."""
 
-    def test_init_no_args_no_questions_no_output(self):
-        ui = UI()
-        cmd = init.init(ui)
-        calls = []
-        cmd.repository_factory = RecordingRepositoryFactory(calls,
-            memory.RepositoryFactory())
-        cmd.execute()
-        self.assertEqual([('initialise', ui.here)], calls)
+    input_streams = ['subunit+']
+
+    def run(self):
+        path = self.ui.here
+        repo = self.repository_factory.open(path)
+        for stream in self.ui.iter_streams('subunit'):
+            inserter = repo.get_inserter()
+            case = subunit.ProtocolTestCase(stream)
+            inserter.startTestRun()
+            try:
+                case.run(inserter)
+            finally:
+                inserter.stopTestRun()

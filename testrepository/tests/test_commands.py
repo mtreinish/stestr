@@ -168,4 +168,4 @@ class TestAbstractCommand(ResourcedTestCase):
 
     def test_default_repository_factory(self):
         cmd = commands.Command(model.UI())
-        self.assertEqual(file.Repository, cmd.repository_factory)
+        self.assertIsInstance(cmd.repository_factory, file.RepositoryFactory)

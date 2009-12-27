@@ -19,6 +19,7 @@ import unittest
 def test_suite():
     names = [
         'init',
+        'load',
         ]
     module_names = ['testrepository.tests.commands.test_' + name for name in
         names]

@@ -27,19 +27,26 @@ Repositories are identified by their URL, and new ones are made by calling
 the initialize function in the appropriate repository module.
 """
 
+class AbstractRepositoryFactory(object):
+    """Interface for making or opening repositories."""
+
+    def initialise(self, url):
+        """Create a repository at URL. 
+
+        Call on the class of the repository you wish to create.
+        """
+        raise NotImplementedError(self.initialise)
+
+    def open(self, url):
+        """Open the repository at url."""
+        raise NotImplementedError(self.open)
+
+
 class AbstractRepository(object):
     """The base class for Repository implementations.
 
     There are no interesting attributes or methods as yet.
     """
-
-    @classmethod
-    def initialise(klass, url):
-        """Create a repository at URL. 
-
-        Call on the class of the repository you wish to create.
-        """
-        raise NotImplementedError(klass.initialise)
 
     def count(self):
         """Return the number of test runs this repository has stored.
