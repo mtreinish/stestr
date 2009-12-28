@@ -45,5 +45,9 @@ class UI(ui.AbstractUI):
             help="Set the directory or url that a command should run from. "
             "This affects all default path lookups but does not affect paths "
             "supplied to the command.", default=os.getcwd(), type=str)
+        parser.add_option("-q", "--quiet", action="store_true", default=False,
+            help="Turn off output other than the primary output for a command "
+            "and any errors.")
         options, args = parser.parse_args(self._argv)
         self.here = options.here
+        self.options = options

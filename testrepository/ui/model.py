@@ -15,6 +15,7 @@
 """Am object based UI for testrepository."""
 
 from cStringIO import StringIO
+import optparse
 
 from testrepository import ui
 
@@ -26,11 +27,12 @@ class UI(ui.AbstractUI):
     testing testrepository commands.
     """
 
-    def __init__(self, input_streams=None):
+    def __init__(self, input_streams=None, options=()):
         """Create a model UI.
 
         :param input_streams: A list of stream name, bytes stream tuples to be
             used as the available input streams for this ui.
+        :param options: Options to explicitly set values for.
         """
         self.input_streams = {}
         if input_streams:
@@ -38,6 +40,13 @@ class UI(ui.AbstractUI):
                 self.input_streams.setdefault(stream_type, []).append(
                     stream_bytes)
         self.here = 'memory:'
+        self.options = optparse.Values()
+        seen_options = set()
+        for option, value in options:
+            setattr(self.options, option, value)
+            seen_options.add(option)
+        if not 'quiet' in seen_options:
+            setattr(self.options, 'quiet', False)
 
     def _iter_streams(self, stream_type):
         streams = self.input_streams.pop(stream_type, [])

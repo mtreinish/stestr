@@ -21,7 +21,7 @@ from testrepository.ui import cli, model
 from testrepository.tests import ResourcedTestCase
 
 
-def cli_ui_factory(input_streams=None):
+def cli_ui_factory(input_streams=None, options=()):
     if input_streams and len(input_streams) > 1:
         # TODO: turn additional streams into argv and simulated files, or
         # something - however, may need to be cli specific tests at that
@@ -33,7 +33,12 @@ def cli_ui_factory(input_streams=None):
     else:
         stdin = StringIO()
     stderr = StringIO()
-    return cli.UI([], stdin, stdout, stderr)
+    argv = []
+    for option, value in options:
+        # only bool handled so far
+        if value:
+            argv.append('--%s' % option)
+    return cli.UI(argv, stdin, stdout, stderr)
 
 
 # what ui implementations do we need to test?
@@ -82,3 +87,15 @@ class TestUIContract(ResourcedTestCase):
         ui = self.ui_factory()
         cmd = commands.Command(ui)
         ui.set_command(cmd)
+
+    def test_options_at_options(self):
+        ui = self.ui_factory()
+        cmd = commands.Command(ui)
+        ui.set_command(cmd)
+        self.assertEqual(False, ui.options.quiet)
+
+    def test_options_when_set_at_options(self):
+        ui = self.ui_factory(options=[('quiet', True)])
+        cmd = commands.Command(ui)
+        ui.set_command(cmd)
+        self.assertEqual(True, ui.options.quiet)

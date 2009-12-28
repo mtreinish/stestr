@@ -44,6 +44,8 @@ class AbstractUI(object):
         path or a URL. This is only guaranteed to be set after set_command is
         called, as some UI's need to do option processing to determine its
         value.
+    :ivar options: The options for this ui, containing both global and command
+        specific options.
     """
 
     def iter_streams(self, stream_type):
