@@ -101,3 +101,10 @@ class TestRepositoryContract(ResourcedTestCase):
     def test_open(self):
         repo1 = self.repo_impl.initialise(self.sample_url)
         repo2 = self.repo_impl.open(self.sample_url)
+
+    def test_inserting_creates_id(self):
+        # When inserting a stream, an id is returned from stopTestRun.
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        self.assertNotEqual(None, result.stopTestRun())

@@ -49,3 +49,11 @@ class TestFileRepository(ResourcedTestCase):
         inserter.startTestRun()
         inserter.stopTestRun()
         self.assertTrue(os.path.exists(os.path.join(repo.base, '0')))
+
+    def test_inserting_creates_id(self):
+        # When inserting a stream, an id is returned from stopTestRun.
+        repo = file.RepositoryFactory().initialise(self.tempdir)
+        self.resources[0][1].dirtied(self.tempdir)
+        result = repo.get_inserter()
+        result.startTestRun()
+        self.assertEqual(0, result.stopTestRun())

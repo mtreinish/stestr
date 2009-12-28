@@ -102,5 +102,7 @@ class _Inserter(TestProtocolClient):
         # TestProtocolClient.stopTestRun(self)
         self._stream.flush()
         self._stream.close()
+        run_id = self._repository._allocate()
         os.rename(self.fname, os.path.join(self._repository.base,
-            str(self._repository._allocate())))
+            str(run_id)))
+        return run_id
