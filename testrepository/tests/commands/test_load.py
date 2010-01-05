@@ -63,7 +63,8 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory = memory.RepositoryFactory()
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(1, cmd.execute())
-        self.assertEqual([[('tests', 1), ('failures', 1)]], ui.outputs)
+        self.assertEqual([[('id', 0), ('tests', 1), ('failures', 1)]],
+            ui.outputs)
 
     def test_load_new_shows_test_summary_no_tests(self):
         ui = UI([('subunit', '')])
@@ -72,7 +73,7 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory = memory.RepositoryFactory()
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(0, cmd.execute())
-        self.assertEqual([[('tests', 0)]], ui.outputs)
+        self.assertEqual([[('id', 0), ('tests', 0)]], ui.outputs)
 
     def test_load_new_shows_test_summary_per_stream(self):
         # This may not be the final layout, but for now per-stream stats are
@@ -83,7 +84,8 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory = memory.RepositoryFactory()
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(0, cmd.execute())
-        self.assertEqual([[('tests', 0)], [('tests', 0)]], ui.outputs)
+        self.assertEqual([[('id', 0), ('tests', 0)], [('id', 1), ('tests', 0)]],
+            ui.outputs)
 
     def test_load_quiet_shows_nothing(self):
         ui = UI([('subunit', '')], [('quiet', True)])

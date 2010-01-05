@@ -36,10 +36,10 @@ class load(Command):
             try:
                 case.run(MultiTestResult(inserter, evaluator))
             finally:
-                inserter.stopTestRun()
+                run_id = inserter.stopTestRun()
             failed = failed or not evaluator.wasSuccessful()
             if not self.ui.options.quiet:
-                values = [('tests', evaluator.testsRun)]
+                values = [('id', run_id), ('tests', evaluator.testsRun)]
                 failures = len(evaluator.failures) + len(evaluator.errors)
                 if failures:
                     values.append(('failures', failures))
