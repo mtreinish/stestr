@@ -56,6 +56,15 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(1, cmd.execute())
 
+    def test_load_new_shows_test_failures(self):
+        ui = UI([('subunit', 'test: foo\nfailure: foo\n')])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        cmd.repository_factory = memory.RepositoryFactory()
+        cmd.repository_factory.initialise(ui.here)
+        self.assertEqual(1, cmd.execute())
+        self.assertEqual([[('tests', 1), ('failures', 1)]], ui.outputs)
+
     def test_load_new_shows_test_summary_no_tests(self):
         ui = UI([('subunit', '')])
         cmd = load.load(ui)
