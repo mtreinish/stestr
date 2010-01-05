@@ -64,7 +64,7 @@ class _Inserter(object):
 
     def stopTestRun(self):
         self._repository._runs.append(self)
-        return self
+        return len(self._repository._runs) - 1
 
     def startTest(self, test):
         pass

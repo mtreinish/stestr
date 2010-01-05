@@ -55,3 +55,12 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory = memory.RepositoryFactory()
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(1, cmd.execute())
+
+    def test_load_quiet_shows_nothing(self):
+        ui = UI([('subunit', '')], [('quiet', True)])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        cmd.repository_factory = memory.RepositoryFactory()
+        cmd.repository_factory.initialise(ui.here)
+        self.assertEqual(0, cmd.execute())
+        self.assertEqual([], ui.outputs)
