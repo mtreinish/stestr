@@ -38,6 +38,8 @@ class load(Command):
             finally:
                 inserter.stopTestRun()
             failed = failed or not evaluator.wasSuccessful()
+            if not self.ui.options.quiet:
+                self.ui.output_values([('tests', evaluator.testsRun)])
         if failed:
             return 1
         else:
