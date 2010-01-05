@@ -82,6 +82,13 @@ class TestUIContract(ResourcedTestCase):
         ui.set_command(cmd)
         self.assertRaises(KeyError, ui.iter_streams, 'subunit')
 
+    def test_output_values(self):
+        # output_values can be called and takes a list of things to output.
+        ui = self.ui_factory()
+        cmd = commands.Command(ui)
+        ui.set_command(cmd)
+        ui.output_values([('foo', 1), ('bar', 'quux')])
+
     def test_set_command(self):
         # All ui objects can be given their command.
         ui = self.ui_factory()

@@ -47,8 +47,12 @@ class UI(ui.AbstractUI):
             seen_options.add(option)
         if not 'quiet' in seen_options:
             setattr(self.options, 'quiet', False)
+        self.outputs = []
 
     def _iter_streams(self, stream_type):
         streams = self.input_streams.pop(stream_type, [])
         for stream_bytes in streams:
             yield StringIO(stream_bytes)
+
+    def output_values(self, values):
+        self.outputs.append(values)

@@ -50,3 +50,13 @@ class TestCLIUI(ResourcedTestCase):
         cmd = commands.Command(ui)
         ui.set_command(cmd)
         self.assertEqual('/nowhere/', ui.here)
+
+    def test_outputs_values_to_stdout(self):
+        stdout = StringIO()
+        stdin = StringIO()
+        stderr = StringIO()
+        ui = cli.UI([], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        ui.set_command(cmd)
+        ui.output_values([('foo', 1), ('bar', 'quux')])
+        self.assertEqual('foo: 1 bar: quux\n', stdout.getvalue())

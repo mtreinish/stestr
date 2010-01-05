@@ -38,6 +38,12 @@ class UI(ui.AbstractUI):
     def _iter_streams(self, stream_type):
         yield self._stdin
 
+    def output_values(self, values):
+        outputs = []
+        for label, value in values:
+            outputs.append('%s: %s' % (label, value))
+        self._stdout.write('%s\n' % ' '.join(outputs))
+
     def set_command(self, cmd):
         ui.AbstractUI.set_command(self, cmd)
         parser = OptionParser()
