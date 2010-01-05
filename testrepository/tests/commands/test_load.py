@@ -65,6 +65,17 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual(0, cmd.execute())
         self.assertEqual([[('tests', 0)]], ui.outputs)
 
+    def test_load_new_shows_test_summary_per_stream(self):
+        # This may not be the final layout, but for now per-stream stats are
+        # easiest.
+        ui = UI([('subunit', ''), ('subunit', '')])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        cmd.repository_factory = memory.RepositoryFactory()
+        cmd.repository_factory.initialise(ui.here)
+        self.assertEqual(0, cmd.execute())
+        self.assertEqual([[('tests', 0)], [('tests', 0)]], ui.outputs)
+
     def test_load_quiet_shows_nothing(self):
         ui = UI([('subunit', '')], [('quiet', True)])
         cmd = load.load(ui)
