@@ -66,6 +66,16 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual([[('id', 0), ('tests', 1), ('failures', 1)]],
             ui.outputs)
 
+    def test_load_new_shows_test_skips(self):
+        ui = UI([('subunit', 'test: foo\nskip: foo\n')])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        cmd.repository_factory = memory.RepositoryFactory()
+        cmd.repository_factory.initialise(ui.here)
+        self.assertEqual(0, cmd.execute())
+        self.assertEqual([[('id', 0), ('tests', 1), ('skips', 1)]],
+            ui.outputs)
+
     def test_load_new_shows_test_summary_no_tests(self):
         ui = UI([('subunit', '')])
         cmd = load.load(ui)

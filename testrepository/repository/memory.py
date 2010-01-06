@@ -94,7 +94,7 @@ class _Inserter(object):
     def addUnexpectedSuccess(self, details=None):
         self._addOutcome('unexpectedSccess', test, details)
 
-    def addSkip(self, reason=None, details=None):
+    def addSkip(self, test, reason=None, details=None):
         assert reason is None
         self._addOutcome('skip', test, details)
 

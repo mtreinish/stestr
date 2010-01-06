@@ -44,6 +44,9 @@ class load(Command):
                 if failures:
                     values.append(('failures', failures))
                 self.ui.output_values(values)
+                skips = sum(map(len, evaluator.skip_reasons.itervalues()))
+                if skips:
+                    values.append(('skips', skips))
         if failed:
             return 1
         else:
