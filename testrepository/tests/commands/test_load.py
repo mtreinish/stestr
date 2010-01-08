@@ -14,6 +14,8 @@
 
 """Tests for the load command."""
 
+import testtools
+
 from testrepository.commands import load
 from testrepository.ui.model import UI
 from testrepository.tests import ResourcedTestCase
@@ -81,6 +83,14 @@ class TestCommandLoad(ResourcedTestCase):
             ('results', None),
             ('values', [('id', 0), ('tests', 1), ('failures', 1)])],
             ui.outputs)
+        result = testtools.TestResult()
+        result.startTestRun()
+        try:
+            suite.run(result)
+        finally:
+            result.stopTestRun()
+        self.assertEqual(1, result.testsRun)
+        self.assertEqual(1, len(result.failures))
 
     def test_load_new_shows_test_skips(self):
         ui = UI([('subunit', 'test: foo\nskip: foo\n')])
