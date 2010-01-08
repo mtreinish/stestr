@@ -55,4 +55,4 @@ class UI(ui.AbstractUI):
             yield StringIO(stream_bytes)
 
     def output_values(self, values):
-        self.outputs.append(values)
+        self.outputs.append(('values', values))
