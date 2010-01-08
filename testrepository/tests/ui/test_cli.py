@@ -14,7 +14,10 @@
 
 """Tests for UI support logic and the UI contract."""
 
+import doctest
 from cStringIO import StringIO
+
+from testtools.matchers import DocTestMatches
 
 from testrepository import commands
 from testrepository.ui import cli
@@ -50,6 +53,31 @@ class TestCLIUI(ResourcedTestCase):
         cmd = commands.Command(ui)
         ui.set_command(cmd)
         self.assertEqual('/nowhere/', ui.here)
+
+    def test_outputs_results_to_stdout(self):
+        stdout = StringIO()
+        stdin = StringIO()
+        stderr = StringIO()
+        ui = cli.UI([], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        ui.set_command(cmd)
+        class Case(ResourcedTestCase):
+            def method(self):
+                self.fail('quux')
+        ui.output_results(Case('method'))
+        self.assertThat(stdout.getvalue(),DocTestMatches(
+            """======================================================================
+FAIL: testrepository.tests.ui.test_cli.Case.method
+----------------------------------------------------------------------
+Text attachment: traceback
+------------
+Traceback (most recent call last):
+...
+  File "...test_cli.py", line ..., in method
+    self.fail(\'quux\')
+AssertionError: quux
+------------
+""", doctest.ELLIPSIS))
 
     def test_outputs_values_to_stdout(self):
         stdout = StringIO()

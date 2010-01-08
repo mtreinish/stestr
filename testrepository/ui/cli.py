@@ -17,7 +17,32 @@
 from optparse import OptionParser
 import os
 
+import testtools
+
 from testrepository import ui
+
+class CLITestResult(testtools.TestResult):
+    """A TestResult for the CLI."""
+
+    def __init__(self, stream):
+        """Construct a CLITestResult writing to stream."""
+        super(CLITestResult, self).__init__()
+        self.stream = stream
+        self.sep1 = '=' * 70 + '\n'
+        self.sep2 = '-' * 70 + '\n'
+
+    def _show_list(self, label, error_list):
+        for test, output in error_list:
+            self.stream.write(self.sep1)
+            self.stream.write("%s: %s\n" % (label, test.id()))
+            self.stream.write(self.sep2)
+            self.stream.write(output)
+
+    def stopTestRun(self):
+        self._show_list('ERROR', self.errors)
+        self._show_list('FAIL', self.failures)
+        super(CLITestResult, self).stopTestRun()
+
 
 class UI(ui.AbstractUI):
     """A command line user interface."""
@@ -43,6 +68,14 @@ class UI(ui.AbstractUI):
         for label, value in values:
             outputs.append('%s: %s' % (label, value))
         self._stdout.write('%s\n' % ' '.join(outputs))
+
+    def output_results(self, suite_or_test):
+        result = CLITestResult(self._stdout)
+        result.startTestRun()
+        try:
+            suite_or_test.run(result)
+        finally:
+            result.stopTestRun()
 
     def set_command(self, cmd):
         ui.AbstractUI.set_command(self, cmd)

@@ -73,6 +73,25 @@ class AbstractUI(object):
         """Helper for iter_streams which subclasses should implement."""
         raise NotImplementedError(self._iter_streams)
 
+    def output_values(self, values):
+        """Show values to the user.
+
+        :param values: An iterable of (label, value).
+        """
+        raise NotImplementedError(self.output_values)
+
+    def output_results(self, suite_or_test):
+        """Show suite_or_test to the user by 'running' it.
+
+        This expects the run to be fast/cheap.
+
+        :param suite_or_test: A suite or test to show to the user. This should
+            obey the 'TestCase' protocol - it should have a method run(result)
+            that causes all the tests contained in the object to be handed to
+            the result object.
+        """
+        raise NotImplementedError(self.output_results)
+
     def set_command(self, cmd):
         """Inform the UI what command it is running.
 

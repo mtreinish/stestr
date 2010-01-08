@@ -56,3 +56,6 @@ class UI(ui.AbstractUI):
 
     def output_values(self, values):
         self.outputs.append(('values', values))
+
+    def output_results(self, suite_or_test):
+        self.outputs.append(('results', suite_or_test))

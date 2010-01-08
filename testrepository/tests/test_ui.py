@@ -82,6 +82,16 @@ class TestUIContract(ResourcedTestCase):
         ui.set_command(cmd)
         self.assertRaises(KeyError, ui.iter_streams, 'subunit')
 
+    def test_output_results(self):
+        # output_results can be called and takes a thing that can be 'run'.
+        ui = self.ui_factory()
+        cmd = commands.Command(ui)
+        ui.set_command(cmd)
+        class Case(ResourcedTestCase):
+            def method(self):
+                pass
+        ui.output_results(Case('method'))
+        
     def test_output_values(self):
         # output_values can be called and takes a list of things to output.
         ui = self.ui_factory()
