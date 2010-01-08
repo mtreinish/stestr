@@ -75,7 +75,7 @@ class Repository(AbstractRepository):
     def count(self):
         return int(file(os.path.join(self.base, 'next-stream'), 'rb').read())
     
-    def get_inserter(self):
+    def _get_inserter(self):
         return _Inserter(self)
 
     def _write_next_stream(self, value):

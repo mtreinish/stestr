@@ -48,7 +48,7 @@ class Repository(AbstractRepository):
     def count(self):
         return len(self._runs)
 
-    def get_inserter(self):
+    def _get_inserter(self):
         return _Inserter(self)
 
 

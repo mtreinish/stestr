@@ -27,6 +27,8 @@ Repositories are identified by their URL, and new ones are made by calling
 the initialize function in the appropriate repository module.
 """
 
+import subunit.test_results
+
 class AbstractRepositoryFactory(object):
     """Interface for making or opening repositories."""
 
@@ -58,8 +60,18 @@ class AbstractRepository(object):
     def get_inserter(self):
         """Get an inserter that will insert a test run into the repository.
 
+        Repository implementations should implement _get_inserter.
+
         :return an inserter: Inserters meet the extended TestResult protocol
             that testtools 0.9.2 and above offer. The startTestRun and
             stopTestRun methods in particular must be called.
         """
-        raise NotImplementedError(self.get_inserter)
+        return subunit.test_results.AutoTimingTestResultDecorator(
+            self._get_inserter())
+    
+    def _get_inserter(self):
+        """Get an inserter for get_inserter.
+        
+        The result is decorated with an AutoTimingTestResultDecorator.
+        """
+        raise NotImplementedError(self._get_inserter)
