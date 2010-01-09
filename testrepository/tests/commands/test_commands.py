@@ -17,7 +17,6 @@
 from testrepository.commands import commands
 from testrepository.ui.model import UI
 from testrepository.tests import ResourcedTestCase
-from testrepository.tests.test_commands import TemporaryCommandResource
 
 
 class TestCommandCommands(ResourcedTestCase):
