@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 Testrepository Contributors
+# Copyright (c) 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -12,17 +12,15 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for commands."""
+"""List available commands."""
 
-import unittest
+import testrepository.commands
 
-def test_suite():
-    names = [
-        'commands',
-        'init',
-        'load',
-        ]
-    module_names = ['testrepository.tests.commands.test_' + name for name in
-        names]
-    loader = unittest.TestLoader()
-    return loader.loadTestsFromNames(module_names)
+class commands(testrepository.commands.Command):
+    """List available commands."""
+
+    def run(self):
+        table = [('command', 'description')]
+        for command in testrepository.commands.iter_commands():
+            table.append((command.name, command.get_summary()))
+        self.ui.output_table(table)

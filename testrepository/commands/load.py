@@ -22,7 +22,11 @@ from testtools import MultiTestResult, TestResult
 from testrepository.commands import Command
 
 class load(Command):
-    """Load a subunit stream into a repository."""
+    """Load a subunit stream into a repository.
+    
+    Failing tests are shown on the console and a summary of the stream is
+    printed at the end.
+    """
 
     input_streams = ['subunit+']
 

@@ -159,7 +159,10 @@ testr help [command] -- help system
 
 
 class InstrumentedCommand(commands.Command):
-    """A command which records methods called on it."""
+    """A command which records methods called on it.
+    
+    The first line is the summary.
+    """
 
     def _init(self):
         self.calls = []
@@ -188,3 +191,8 @@ class TestAbstractCommand(ResourcedTestCase):
     def test_default_repository_factory(self):
         cmd = commands.Command(model.UI())
         self.assertIsInstance(cmd.repository_factory, file.RepositoryFactory)
+
+    def test_get_summary(self):
+        cmd = InstrumentedCommand
+        self.assertEqual('A command which records methods called on it.',
+            cmd.get_summary())

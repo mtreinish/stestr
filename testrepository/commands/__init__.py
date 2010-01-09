@@ -120,6 +120,11 @@ class Command(object):
             return 0
         return result
 
+    @classmethod
+    def get_summary(klass):
+        docs = klass.__doc__.split('\n')
+        return docs[0]
+
     def _init(self):
         """Per command init call, called into by Command.__init__."""
 
