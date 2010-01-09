@@ -63,12 +63,6 @@ class UI(ui.AbstractUI):
     def _iter_streams(self, stream_type):
         yield self._stdin
 
-    def output_values(self, values):
-        outputs = []
-        for label, value in values:
-            outputs.append('%s: %s' % (label, value))
-        self._stdout.write('%s\n' % ' '.join(outputs))
-
     def output_results(self, suite_or_test):
         result = CLITestResult(self._stdout)
         result.startTestRun()
@@ -76,6 +70,50 @@ class UI(ui.AbstractUI):
             suite_or_test.run(result)
         finally:
             result.stopTestRun()
+
+    def output_table(self, table):
+        # stringify
+        contents = []
+        for row in table:
+            new_row = []
+            for column in row:
+                new_row.append(str(column))
+            contents.append(new_row)
+        if not contents:
+            return
+        widths = [0] * len(contents[0])
+        for row in contents:
+            for idx, column in enumerate(row):
+                if widths[idx] < len(column):
+                    widths[idx] = len(column)
+        # Show a row
+        outputs = []
+        def show_row(row):
+            for idx, column in enumerate(row):
+                outputs.append(column)
+                if idx == len(row) - 1:
+                    outputs.append('\n')
+                    return
+                # spacers for the next column
+                outputs.append(' '*(widths[idx]-len(column)))
+                outputs.append('  ')
+        show_row(contents[0])
+        # title spacer
+        for idx, width in enumerate(widths):
+            outputs.append('-'*width)
+            if idx == len(widths) - 1:
+                outputs.append('\n')
+                continue
+            outputs.append('  ')
+        for row in contents[1:]:
+            show_row(row)
+        self._stdout.write(''.join(outputs))
+
+    def output_values(self, values):
+        outputs = []
+        for label, value in values:
+            outputs.append('%s: %s' % (label, value))
+        self._stdout.write('%s\n' % ' '.join(outputs))
 
     def set_command(self, cmd):
         ui.AbstractUI.set_command(self, cmd)

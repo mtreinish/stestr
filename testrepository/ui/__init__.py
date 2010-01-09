@@ -73,13 +73,6 @@ class AbstractUI(object):
         """Helper for iter_streams which subclasses should implement."""
         raise NotImplementedError(self._iter_streams)
 
-    def output_values(self, values):
-        """Show values to the user.
-
-        :param values: An iterable of (label, value).
-        """
-        raise NotImplementedError(self.output_values)
-
     def output_results(self, suite_or_test):
         """Show suite_or_test to the user by 'running' it.
 
@@ -91,6 +84,22 @@ class AbstractUI(object):
             the result object.
         """
         raise NotImplementedError(self.output_results)
+
+    def output_table(self, table):
+        """Show a table to the user.
+
+        :param table: an iterable of rows. The first row is used for column
+            headings, and every row needs the same number of cells.
+            e.g. output_table([('name', 'age'), ('robert', 1234)])
+        """
+        raise NotImplementedError(self.output_table)
+
+    def output_values(self, values):
+        """Show values to the user.
+
+        :param values: An iterable of (label, value).
+        """
+        raise NotImplementedError(self.output_values)
 
     def set_command(self, cmd):
         """Inform the UI what command it is running.

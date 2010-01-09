@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 Testrepository Contributors
+# Copyright (c) 2009, 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -52,6 +52,12 @@ class TestUIContract(ResourcedTestCase):
 
     scenarios = ui_implementations
 
+    def get_test_ui(self):
+        ui = self.ui_factory()
+        cmd = commands.Command(ui)
+        ui.set_command(cmd)
+        return ui
+
     def test_factory_noargs(self):
         ui = self.ui_factory()
 
@@ -59,9 +65,7 @@ class TestUIContract(ResourcedTestCase):
         ui = self.ui_factory([('subunit', 'value')])
 
     def test_here(self):
-        ui = self.ui_factory()
-        cmd = commands.Command(ui)
-        ui.set_command(cmd)
+        ui = self.get_test_ui()
         self.assertNotEqual(None, ui.here)
 
     def test_iter_streams_load_stdin_use_case(self):
@@ -77,26 +81,25 @@ class TestUIContract(ResourcedTestCase):
         self.assertEqual(['test: foo\nsuccess: foo\n'], results)
 
     def test_iter_streams_unexpected_type_raises(self):
-        ui = self.ui_factory()
-        cmd = commands.Command(ui)
-        ui.set_command(cmd)
+        ui = self.get_test_ui()
         self.assertRaises(KeyError, ui.iter_streams, 'subunit')
 
     def test_output_results(self):
         # output_results can be called and takes a thing that can be 'run'.
-        ui = self.ui_factory()
-        cmd = commands.Command(ui)
-        ui.set_command(cmd)
+        ui = self.get_test_ui()
         class Case(ResourcedTestCase):
             def method(self):
                 pass
         ui.output_results(Case('method'))
+
+    def test_output_table(self):
+        # output_table shows a table.
+        ui = self.get_test_ui()
+        ui.output_table([('col1', 'col2'), ('row1c1','row1c2')])
         
     def test_output_values(self):
         # output_values can be called and takes a list of things to output.
-        ui = self.ui_factory()
-        cmd = commands.Command(ui)
-        ui.set_command(cmd)
+        ui = self.get_test_ui()
         ui.output_values([('foo', 1), ('bar', 'quux')])
 
     def test_set_command(self):
@@ -106,9 +109,7 @@ class TestUIContract(ResourcedTestCase):
         ui.set_command(cmd)
 
     def test_options_at_options(self):
-        ui = self.ui_factory()
-        cmd = commands.Command(ui)
-        ui.set_command(cmd)
+        ui = self.get_test_ui()
         self.assertEqual(False, ui.options.quiet)
 
     def test_options_when_set_at_options(self):
