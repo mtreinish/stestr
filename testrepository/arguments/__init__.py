@@ -74,7 +74,27 @@ class AbstractArgument(object):
     def parse(self, argv):
         """Evaluate arguments in argv.
 
+        Used arguments are removed from argv.
+
         :param argv: The arguments to parse.
         :return: The parsed results as a list.
         """
-        raise NotImplementedError(self.parse)
+        count = 0
+        result = []
+        while len(argv) > count and (
+            count < self.maximum_count or self.maximum_count is None):
+            arg = argv[count]
+            count += 1
+            result.append(self._parse_one(arg))
+        if count < self.minimum_count:
+            raise ValueError('not enough arguments present in %s' % argv)
+        del argv[:count]
+        return result
+
+    def _parse_one(self, arg):
+        """Parse a single argument.
+        
+        :param arg: An arg from an argv.
+        :result: The parsed argument.
+        """
+        raise NotImplementedError(self._parse_one)

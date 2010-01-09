@@ -47,3 +47,37 @@ class TestAbstractArgument(ResourcedTestCase):
     def test_init_arbitrary_infinite(self):
         arg = arguments.AbstractArgument('name', min=2, max=None)
         self.assertEqual('name{2,}', arg.summary())
+
+    def test_parsing_calls__parse_one(self):
+        calls = []
+        class AnArgument(arguments.AbstractArgument):
+            def _parse_one(self, arg):
+                calls.append(arg)
+                return ('1', arg)
+        argument = AnArgument('foo', max=2)
+        args = ['thing', 'other', 'stranger']
+        # results are returned
+        self.assertEqual([('1', 'thing'), ('1', 'other')],
+            argument.parse(args))
+        # used args are removed
+        self.assertEqual(['stranger'], args)
+        # parse function was used
+        self.assertEqual(['thing', 'other'], calls)
+
+    def test_parsing_unlimited(self):
+        class AnArgument(arguments.AbstractArgument):
+            def _parse_one(self, arg):
+                return arg
+        argument = AnArgument('foo', max=None)
+        args = ['thing', 'other']
+        # results are returned
+        self.assertEqual(['thing', 'other'], argument.parse(args))
+        # used args are removed
+        self.assertEqual([], args)
+
+    def test_parsing_too_few(self):
+        class AnArgument(arguments.AbstractArgument):
+            def _parse_one(self, arg):
+                return arg
+        argument = AnArgument('foo')
+        self.assertRaises(ValueError, argument.parse, [])
