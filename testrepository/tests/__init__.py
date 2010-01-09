@@ -32,6 +32,7 @@ class ResourcedTestCase(TestCase, testresources.ResourcedTestCase):
 
 def test_suite():
     packages = [
+        'arguments',
         'commands',
         'repository',
         'ui',

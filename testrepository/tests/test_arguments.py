@@ -81,3 +81,7 @@ class TestAbstractArgument(ResourcedTestCase):
                 return arg
         argument = AnArgument('foo')
         self.assertRaises(ValueError, argument.parse, [])
+
+
+# No interface tests for now, because the interface we expect is really just
+# _parse_one; however if bugs or issues show up... then we should add them.
