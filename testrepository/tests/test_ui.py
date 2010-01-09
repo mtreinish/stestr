@@ -16,12 +16,14 @@
 
 from cStringIO import StringIO
 
-from testrepository import commands
+from testrepository import arguments, commands
+import testrepository.arguments.command
+from testrepository.commands import load
 from testrepository.ui import cli, model
 from testrepository.tests import ResourcedTestCase
 
 
-def cli_ui_factory(input_streams=None, options=()):
+def cli_ui_factory(input_streams=None, options=(), args=()):
     if input_streams and len(input_streams) > 1:
         # TODO: turn additional streams into argv and simulated files, or
         # something - however, may need to be cli specific tests at that
@@ -33,7 +35,7 @@ def cli_ui_factory(input_streams=None, options=()):
     else:
         stdin = StringIO()
     stderr = StringIO()
-    argv = []
+    argv = list(args)
     for option, value in options:
         # only bool handled so far
         if value:
@@ -111,7 +113,31 @@ class TestUIContract(ResourcedTestCase):
         # All ui objects can be given their command.
         ui = self.ui_factory()
         cmd = commands.Command(ui)
-        ui.set_command(cmd)
+        self.assertEqual(True, ui.set_command(cmd))
+
+    def test_set_command_checks_args_unwanted_arg(self):
+        ui = self.ui_factory(args=['foo'])
+        cmd = commands.Command(ui)
+        self.assertEqual(False, ui.set_command(cmd))
+
+    def test_set_command_checks_args_missing_arg(self):
+        ui = self.ui_factory()
+        cmd = commands.Command(ui)
+        cmd.args = [arguments.command.CommandArgument('foo')]
+        self.assertEqual(False, ui.set_command(cmd))
+
+    def test_set_command_checks_args_invalid_arg(self):
+        ui = self.ui_factory(args=['a'])
+        cmd = commands.Command(ui)
+        cmd.args = [arguments.command.CommandArgument('foo')]
+        self.assertEqual(False, ui.set_command(cmd))
+
+    def test_args_are_exposed_at_arguments(self):
+        ui = self.ui_factory(args=['load'])
+        cmd = commands.Command(ui)
+        cmd.args = [arguments.command.CommandArgument('foo')]
+        self.assertEqual(True, ui.set_command(cmd))
+        self.assertEqual({'foo':[load.load]}, ui.arguments)
 
     def test_options_at_options(self):
         ui = self.get_test_ui()

@@ -19,6 +19,8 @@ from cStringIO import StringIO
 
 from testtools.matchers import DocTestMatches
 
+from testrepository import arguments
+import testrepository.arguments.command
 from testrepository import commands
 from testrepository.ui import cli
 from testrepository.tests import ResourcedTestCase
@@ -98,3 +100,22 @@ AssertionError: quux
         ui, cmd = self.get_test_ui_and_cmd()
         ui.output_values([('foo', 1), ('bar', 'quux')])
         self.assertEqual('foo: 1 bar: quux\n', ui._stdout.getvalue())
+
+    def test_parse_error_goes_to_stderr(self):
+        stdout = StringIO()
+        stdin = StringIO()
+        stderr = StringIO()
+        ui = cli.UI(['one'], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        cmd.args = [arguments.command.CommandArgument('foo')]
+        ui.set_command(cmd)
+        self.assertEqual("Could not find command 'one'.\n", stderr.getvalue())
+
+    def test_parse_excess_goes_to_stderr(self):
+        stdout = StringIO()
+        stdin = StringIO()
+        stderr = StringIO()
+        ui = cli.UI(['one'], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        ui.set_command(cmd)
+        self.assertEqual("Unexpected arguments: ['one']\n", stderr.getvalue())

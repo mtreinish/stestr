@@ -96,5 +96,6 @@ class AbstractArgument(object):
         
         :param arg: An arg from an argv.
         :result: The parsed argument.
+        :raises ValueError: If the arg cannot be parsed/validated.
         """
         raise NotImplementedError(self._parse_one)

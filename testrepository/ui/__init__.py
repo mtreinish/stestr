@@ -48,6 +48,13 @@ class AbstractUI(object):
         specific options.
     """
 
+    def _check_cmd(self):
+        """Check that cmd is valid. This method is meant to be overridden.
+        
+        :return: True if the cmd is valid - if options and args match up with
+            the ones supplied to the UI, and so on.
+        """
+
     def iter_streams(self, stream_type):
         """Iterate over all the streams of type stream_type.
 
@@ -122,3 +129,4 @@ class AbstractUI(object):
         :param cmd: A testrepository.commands.Command.
         """
         self.cmd = cmd
+        return self._check_cmd()

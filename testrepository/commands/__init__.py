@@ -88,6 +88,9 @@ class Command(object):
         use in the command line tool.
 
     Commands declare that they accept/need/emit:
+    :ivar args: A list of testrepository.arguments.AbstractArgument instances.
+        AbstractArgument arguments are validated when set_command is called on
+        the UI layer.
     :ivar input_streams: A list of stream specifications. Mandatory streams
         are specified by a simple name. Optional streams are specified by
         a simple name with a ? ending the name. Optional multiple streams are
@@ -98,6 +101,8 @@ class Command(object):
 
     # class defaults to no streams.
     input_streams = []
+    # class defaults to no arguments.
+    args = []
 
     def __init__(self, ui):
         """Create a Command object with ui ui."""
@@ -114,7 +119,8 @@ class Command(object):
         not need to override this method, and any user wanting to run a 
         command should call this method.
         """
-        self.ui.set_command(self)
+        if not self.ui.set_command(self):
+            return 1
         result = self.run()
         if not result:
             return 0

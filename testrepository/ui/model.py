@@ -27,12 +27,13 @@ class UI(ui.AbstractUI):
     testing testrepository commands.
     """
 
-    def __init__(self, input_streams=None, options=()):
+    def __init__(self, input_streams=None, options=(), args={}):
         """Create a model UI.
 
         :param input_streams: A list of stream name, bytes stream tuples to be
             used as the available input streams for this ui.
         :param options: Options to explicitly set values for.
+        :param args: The argument values to give the UI.
         """
         self.input_streams = {}
         if input_streams:
@@ -48,6 +49,21 @@ class UI(ui.AbstractUI):
         if not 'quiet' in seen_options:
             setattr(self.options, 'quiet', False)
         self.outputs = []
+        # Could take parsed args, but for now this is easier.
+        self.unparsed_args = args
+
+    def _check_cmd(self):
+        args = list(self.unparsed_args)
+        parsed_args = {}
+        failed = False
+        for arg in self.cmd.args:
+            try:
+                parsed_args[arg.name] = arg.parse(args)
+            except ValueError:
+                failed = True
+                break
+        self.arguments = parsed_args
+        return args == [] and not failed
 
     def _iter_streams(self, stream_type):
         streams = self.input_streams.pop(stream_type, [])

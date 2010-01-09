@@ -16,6 +16,7 @@
 
 from optparse import OptionParser
 import os
+import sys
 
 import testtools
 
@@ -120,8 +121,8 @@ class UI(ui.AbstractUI):
             outputs.append('%s: %s' % (label, value))
         self._stdout.write('%s\n' % ' '.join(outputs))
 
-    def set_command(self, cmd):
-        ui.AbstractUI.set_command(self, cmd)
+    def _check_cmd(self):
+        cmd = self.cmd
         parser = OptionParser()
         parser.add_option("-d", "--here", dest="here",
             help="Set the directory or url that a command should run from. "
@@ -133,3 +134,19 @@ class UI(ui.AbstractUI):
         options, args = parser.parse_args(self._argv)
         self.here = options.here
         self.options = options
+        orig_args = list(args)
+        parsed_args = {}
+        failed = False
+        for arg in self.cmd.args:
+            try:
+                parsed_args[arg.name] = arg.parse(args)
+            except ValueError:
+                exc_info = sys.exc_info()
+                failed = True
+                self._stderr.write("%s\n" % str(exc_info[1]))
+                break
+        if not failed:
+            self.arguments = parsed_args
+            if args != []:
+                self._stderr.write("Unexpected arguments: %r\n" % args)
+        return not failed and args == []
