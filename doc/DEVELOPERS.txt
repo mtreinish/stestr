@@ -30,3 +30,6 @@ of Test Repository, and there is no automated test-before-merge process at the
 moment. The quid pro quo for committers is that they should check that the
 automated job found their change acceptable after merging it, and either roll
 it back or fix it immediately. A broken trunk is not acceptable!
+
+See DESIGN.txt for information about code layout which will help you find
+where to add tests (and indeed where to change things).

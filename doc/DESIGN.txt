@@ -4,6 +4,35 @@ Design / Architecture of Test Repository
 Values
 ~~~~~~
 
+Code reuse.
+Focus on the project.
+Do one thing well.
+
 Goals
 ~~~~~
 
+Achieve a Clean UI, responsive UI, small-tools approach. Simulataneously have
+a small clean code base which is easily approachable.
+
+Data model/storage
+~~~~~~~~~~~~~~~~~~
+
+testrepository stores subunit streams as subunit streams in .testrespository
+with simple additional metadata - a format marker to allow this to be changed
+in the future, and a next-stream counter counting the id to give the next
+stream.
+
+Code layout
+~~~~~~~~~~~
+
+One conceptual thing per module, packages for anything where multiple types
+are expected (e.g. testrepository.commands, testrespository.ui).
+
+Generic driver code should not trigger lots of imports: code dependencies
+should be loaded when needed. For example, argument validation uses argument
+types that each command can import, so the core code doesn't need to know about
+all types.
+
+The tests for the code in testrepository.foo.bar is in
+testrepository.tests.foo.test_bar. Interface tests for testrepository.foo is
+in testrepository.tests.test_foo.
