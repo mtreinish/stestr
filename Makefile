@@ -12,7 +12,7 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-all: check
+all: README.txt check
 
 .testrepository:
 	./testr init
@@ -25,5 +25,8 @@ check-xml:
 
 release:
 	./setup.py sdist upload --sign
+
+README.txt: testrepository/commands/quickstart.py
+	./testr quickstart > $@
 
 .PHONY: check check-xml release all
