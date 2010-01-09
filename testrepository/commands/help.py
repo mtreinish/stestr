@@ -20,9 +20,19 @@ from testrepository.commands import Command
 class help(Command):
     """Get help on a command."""
 
-    args = [command.CommandArgument('command_name')]
+    args = [command.CommandArgument('command_name', min=0)]
 
     def run(self):
-        cmd = self.ui.arguments['command_name'][0]
-        self.ui.output_rest(cmd.__doc__)
+        if not self.ui.arguments['command_name']:
+            help = """testr -- a free test repository
+https://launchpad.net/testrepository/
+
+testr commands -- list commands
+testr quickstart -- starter documentation
+testr help [command] -- help system
+"""
+        else:
+            cmd = self.ui.arguments['command_name'][0]
+            help = cmd.__doc__
+        self.ui.output_rest(help)
         return 0

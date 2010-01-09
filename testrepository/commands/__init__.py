@@ -155,14 +155,8 @@ def run_argv(argv, stdin, stdout, stderr):
             cmd_name = arg
             break
     if cmd_name is None:
-        stdout.write("""testr -- a free test repository
-https://launchpad.net/testrepository/
-
-testr commands -- list commands
-testr quickstart -- starter documentation
-testr help [command] -- help system
-""")
-        return 0
+        cmd_name = 'help'
+        cmd_args = ['help']
     cmd_args.remove(cmd_name)
     cmdclass = _find_command(cmd_name)
     from testrepository.ui import cli

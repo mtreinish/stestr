@@ -14,15 +14,10 @@
 
 """Tests for the commands module."""
 
-from cStringIO import StringIO
-import doctest
 import os.path
 import sys
 
 from testresources import TestResource
-from testtools.matchers import (
-    DocTestMatches,
-    )
 
 from testrepository import commands
 from testrepository.repository import file
@@ -126,16 +121,8 @@ class TestRunArgv(ResourcedTestCase):
 
     def test_no_cmd_issues_help(self):
         self.stub__find_command(lambda x:0)
-        out = StringIO()
-        commands.run_argv(['testr', '--version'], 'in', out, 'err')
-        self.assertEqual([], self.calls)
-        self.assertThat(out.getvalue(), DocTestMatches("""testr -- a free test repository
-https://launchpad.net/testrepository/
-
-testr commands -- list commands
-testr quickstart -- starter documentation
-testr help [command] -- help system
-""", doctest.ELLIPSIS))
+        commands.run_argv(['testr', '--version'], 'in', 'out', 'err')
+        self.assertEqual(['help'], self.calls)
 
     def capture_ui(self, cmd):
         self.ui = cmd.ui

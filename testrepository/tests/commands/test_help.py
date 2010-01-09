@@ -21,13 +21,19 @@ from testrepository.tests import ResourcedTestCase
 
 class TestCommand(ResourcedTestCase):
 
-    def get_test_ui_and_cmd(self):
-        ui = UI(args=['load'])
+    def get_test_ui_and_cmd(self,args=()):
+        ui = UI(args=args)
         cmd = help.help(ui)
         ui.set_command(cmd)
         return ui, cmd
 
     def test_shows_rest_of__doc__(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = self.get_test_ui_and_cmd(args=['load'])
         cmd.execute()
         self.assertEqual([('rest', load.load.__doc__)], ui.outputs)
+
+    def test_shows_general_help_with_no_args(self):
+        ui, cmd = self.get_test_ui_and_cmd()
+        self.assertEqual(0, cmd.execute())
+        self.assertEqual(1, len(ui.outputs))
+        self.assertEqual('rest', ui.outputs[0][0])
