@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009, 2010 Testrepository Contributors
+# Copyright (c) 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -12,18 +12,22 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for commands."""
+"""Tests for the help command."""
 
-import unittest
+from testrepository.commands import help, load
+from testrepository.ui.model import UI
+from testrepository.tests import ResourcedTestCase
 
-def test_suite():
-    names = [
-        'commands',
-        'help',
-        'init',
-        'load',
-        ]
-    module_names = ['testrepository.tests.commands.test_' + name for name in
-        names]
-    loader = unittest.TestLoader()
-    return loader.loadTestsFromNames(module_names)
+
+class TestCommand(ResourcedTestCase):
+
+    def get_test_ui_and_cmd(self):
+        ui = UI(args=['load'])
+        cmd = help.help(ui)
+        ui.set_command(cmd)
+        return ui, cmd
+
+    def test_shows_rest_of__doc__(self):
+        ui, cmd = self.get_test_ui_and_cmd()
+        cmd.execute()
+        self.assertEqual([('rest', load.load.__doc__)], ui.outputs)

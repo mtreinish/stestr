@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009, 2010 Testrepository Contributors
+# Copyright (c) 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -12,18 +12,17 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for commands."""
+"""Get help on a command."""
 
-import unittest
+from testrepository.arguments import command
+from testrepository.commands import Command
 
-def test_suite():
-    names = [
-        'commands',
-        'help',
-        'init',
-        'load',
-        ]
-    module_names = ['testrepository.tests.commands.test_' + name for name in
-        names]
-    loader = unittest.TestLoader()
-    return loader.loadTestsFromNames(module_names)
+class help(Command):
+    """Get help on a command."""
+
+    args = [command.CommandArgument('command_name')]
+
+    def run(self):
+        cmd = self.ui.arguments['command_name'][0]
+        self.ui.output_rest(cmd.__doc__)
+        return 0
