@@ -33,3 +33,10 @@ it back or fix it immediately. A broken trunk is not acceptable!
 
 See DESIGN.txt for information about code layout which will help you find
 where to add tests (and indeed where to change things).
+
+Running the tests
+-----------------
+
+Generally just ``make`` is all that is needed to run all the tests. However
+if dropping into pdb, it is currently more convenient to use
+``python -m testtools.run testrepository.tests.test_suite``.
