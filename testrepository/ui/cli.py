@@ -63,6 +63,11 @@ class UI(ui.AbstractUI):
     def _iter_streams(self, stream_type):
         yield self._stdin
 
+    def output_rest(self, rest_string):
+        self._stdout.write(rest_string)
+        if not rest_string.endswith('\n'):
+            self._stdout.write('\n')
+
     def output_results(self, suite_or_test):
         result = CLITestResult(self._stdout)
         result.startTestRun()

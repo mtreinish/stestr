@@ -73,6 +73,16 @@ class AbstractUI(object):
         """Helper for iter_streams which subclasses should implement."""
         raise NotImplementedError(self._iter_streams)
 
+    def output_rest(self, rest_string):
+        """Show rest_string - a ReST document.
+
+        This is typically used as the entire output for command help or
+        documentation.
+        
+        :param rest_string: A ReST source to display.
+        """
+        raise NotImplementedError(self.output_rest)
+
     def output_results(self, suite_or_test):
         """Show suite_or_test to the user by 'running' it.
 

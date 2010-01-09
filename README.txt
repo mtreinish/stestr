@@ -23,8 +23,7 @@ CI for the project is at http://build.robertcollins.net/job/testrepository-defau
 Licensing
 ~~~~~~~~~
 
-Test Repository is under BSD / Apache 2.0 licences. See the file COPYING for
-details.
+Test Repository is under BSD / Apache 2.0 licences. See the file COPYING in the source for details.
 
 Quick Start
 ~~~~~~~~~~~

@@ -26,6 +26,15 @@ from testrepository.tests import ResourcedTestCase
 
 class TestCLIUI(ResourcedTestCase):
 
+    def get_test_ui_and_cmd(self):
+        stdout = StringIO()
+        stdin = StringIO()
+        stderr = StringIO()
+        ui = cli.UI([], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        ui.set_command(cmd)
+        return ui, cmd
+
     def test_construct(self):
         stdout = StringIO()
         stdin = StringIO()
@@ -54,18 +63,18 @@ class TestCLIUI(ResourcedTestCase):
         ui.set_command(cmd)
         self.assertEqual('/nowhere/', ui.here)
 
+    def test_outputs_rest_to_stdout(self):
+        ui, cmd = self.get_test_ui_and_cmd()
+        ui.output_rest('topic\n=====\n')
+        self.assertEqual('topic\n=====\n', ui._stdout.getvalue())
+
     def test_outputs_results_to_stdout(self):
-        stdout = StringIO()
-        stdin = StringIO()
-        stderr = StringIO()
-        ui = cli.UI([], stdin, stdout, stderr)
-        cmd = commands.Command(ui)
-        ui.set_command(cmd)
+        ui, cmd = self.get_test_ui_and_cmd()
         class Case(ResourcedTestCase):
             def method(self):
                 self.fail('quux')
         ui.output_results(Case('method'))
-        self.assertThat(stdout.getvalue(),DocTestMatches(
+        self.assertThat(ui._stdout.getvalue(),DocTestMatches(
             """======================================================================
 FAIL: testrepository.tests.ui.test_cli.Case.method
 ----------------------------------------------------------------------
@@ -80,21 +89,12 @@ AssertionError: quux
 """, doctest.ELLIPSIS))
 
     def test_outputs_tables_to_stdout(self):
-        stdout = StringIO()
-        stdin = StringIO()
-        stderr = StringIO()
-        ui = cli.UI([], stdin, stdout, stderr)
-        cmd = commands.Command(ui)
-        ui.set_command(cmd)
+        ui, cmd = self.get_test_ui_and_cmd()
         ui.output_table([('foo', 1), ('b', 'quux')])
-        self.assertEqual('foo  1\n---  ----\nb    quux\n', stdout.getvalue())
+        self.assertEqual('foo  1\n---  ----\nb    quux\n',
+            ui._stdout.getvalue())
 
     def test_outputs_values_to_stdout(self):
-        stdout = StringIO()
-        stdin = StringIO()
-        stderr = StringIO()
-        ui = cli.UI([], stdin, stdout, stderr)
-        cmd = commands.Command(ui)
-        ui.set_command(cmd)
+        ui, cmd = self.get_test_ui_and_cmd()
         ui.output_values([('foo', 1), ('bar', 'quux')])
-        self.assertEqual('foo: 1 bar: quux\n', stdout.getvalue())
+        self.assertEqual('foo: 1 bar: quux\n', ui._stdout.getvalue())

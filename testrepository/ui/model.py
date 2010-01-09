@@ -54,6 +54,9 @@ class UI(ui.AbstractUI):
         for stream_bytes in streams:
             yield StringIO(stream_bytes)
 
+    def output_rest(self, rest_string):
+        self.outputs.append(('rest', rest_string))
+
     def output_results(self, suite_or_test):
         self.outputs.append(('results', suite_or_test))
 

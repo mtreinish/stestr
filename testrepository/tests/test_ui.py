@@ -84,6 +84,11 @@ class TestUIContract(ResourcedTestCase):
         ui = self.get_test_ui()
         self.assertRaises(KeyError, ui.iter_streams, 'subunit')
 
+    def test_output_rest(self):
+        # output some ReST - used for help and docs.
+        ui = self.get_test_ui()
+        ui.output_rest('')
+
     def test_output_results(self):
         # output_results can be called and takes a thing that can be 'run'.
         ui = self.get_test_ui()
