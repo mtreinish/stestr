@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 Testrepository Contributors
+# Copyright (c) 2009, 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -76,6 +76,25 @@ class TestFindCommand(ResourcedTestCase):
 
     def test_missing_command(self):
         self.assertRaises(KeyError, commands._find_command, 'bar')
+
+    def test_sets_name(self):
+        cmd = commands._find_command('foo')
+        self.assertEqual('foo', cmd.name)
+
+
+class TestIterCommands(ResourcedTestCase):
+
+    resources = [
+        ('cmd1', TemporaryCommandResource('one')),
+        ('cmd2', TemporaryCommandResource('two')),
+        ]
+
+    def test_iter_commands(self):
+        cmds = list(commands.iter_commands())
+        cmds = [cmd(None).name for cmd in cmds]
+        # We don't care about all the built in commands
+        cmds = [cmd for cmd in cmds if cmd in ('one', 'two')]
+        self.assertEqual(['one', 'two'], cmds)
 
 
 class TestRunArgv(ResourcedTestCase):

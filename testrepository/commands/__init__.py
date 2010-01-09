@@ -32,6 +32,8 @@ __path__ to include a directory containing their commands - no __init__ is
 needed in that directory.)
 """
 
+import os
+
 from testrepository.repository import file
 
 def _find_command(cmd_name):
@@ -46,7 +48,28 @@ def _find_command(cmd_name):
         raise KeyError(
             "Malformed command module - no command class %s found in module %s."
             % (classname, modname))
+    if getattr(result, 'name', None) is None:
+        # Store the name for the common case of name == lookup path.
+        result.name = classname
     return result
+
+
+def iter_commands():
+    """Iterate over all the command classes."""
+    paths = __path__
+    names = set()
+    for path in paths:
+        # For now, only support regular installs. TODO: support zip, eggs.
+        for filename in os.listdir(path):
+            base = os.path.basename(filename)
+            if base.startswith('.'):
+                continue
+            name = base.split('.', 1)[0]
+            names.add(name)
+    names.discard('__init__')
+    names = sorted(names)
+    for name in names:
+        yield _find_command(name)
 
 
 class Command(object):
