@@ -37,6 +37,7 @@ def test_suite():
         'ui',
         ]
     names = [
+        'arguments',
         'commands',
         'monkeypatch',
         'repository',
