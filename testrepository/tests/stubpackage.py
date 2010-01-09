@@ -42,13 +42,12 @@ class StubPackage(object):
 
 class StubPackageResource(TestResource):
     
-    resources = [('base', TempDirResource())]
-
     def __init__(self, packagename, modulelist, init=True):
         super(StubPackageResource, self).__init__()
         self.packagename = packagename
         self.modulelist = modulelist
         self.init = init
+        self.resources = [('base', TempDirResource())]
 
     def make(self, dependency_resources):
         result = StubPackage()
