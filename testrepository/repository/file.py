@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 Testrepository Contributors
+# Copyright (c) 2009, 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -72,8 +72,14 @@ class Repository(AbstractRepository):
         self._write_next_stream(value + 1)
         return value
 
-    def count(self):
+    def _next_stream(self):
         return int(file(os.path.join(self.base, 'next-stream'), 'rb').read())
+
+    def count(self):
+        return self._next_stream()
+
+    def latest_id(self):
+        return self._next_stream() - 1
     
     def _get_inserter(self):
         return _Inserter(self)

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 Testrepository Contributors
+# Copyright (c) 2009, 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -47,6 +47,9 @@ class Repository(AbstractRepository):
 
     def count(self):
         return len(self._runs)
+
+    def latest_id(self):
+        return self.count() - 1
 
     def _get_inserter(self):
         return _Inserter(self)

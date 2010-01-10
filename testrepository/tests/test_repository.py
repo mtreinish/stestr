@@ -120,3 +120,10 @@ class TestRepositoryContract(ResourcedTestCase):
         result.startTestRun()
         result.stopTestRun()
         self.assertEqual(2, repo.count())
+
+    def test_latest_id(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        inserted = result.stopTestRun()
+        self.assertEqual(inserted, repo.latest_id())
