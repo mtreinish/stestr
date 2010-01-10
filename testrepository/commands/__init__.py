@@ -152,10 +152,10 @@ class Command(object):
         failures = len(evaluator.failures) + len(evaluator.errors)
         if failures:
             values.append(('failures', failures))
-        self.ui.output_values(values)
         skips = sum(map(len, evaluator.skip_reasons.itervalues()))
         if skips:
             values.append(('skips', skips))
+        self.ui.output_values(values)
 
     def run(self):
         """The core logic for this command to be implemented by subclasses."""
