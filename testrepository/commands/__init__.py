@@ -34,6 +34,8 @@ needed in that directory.)
 
 import os
 
+import subunit
+
 from testrepository.repository import file
 
 def _find_command(cmd_name):
@@ -133,6 +135,27 @@ class Command(object):
 
     def _init(self):
         """Per command init call, called into by Command.__init__."""
+
+    def output_run(self, run_id, output, evaluator):
+        """Output a test run.
+
+        :param run_id: The run id.
+        :param output: A StringIO containing a subunit stream for some portion of the run to show.
+        :param evaluator: A TestResult evaluating the entire run.
+        """
+        if self.ui.options.quiet:
+            return
+        if output.getvalue():
+            output.seek(0)
+            self.ui.output_results(subunit.ProtocolTestCase(output))
+        values = [('id', run_id), ('tests', evaluator.testsRun)]
+        failures = len(evaluator.failures) + len(evaluator.errors)
+        if failures:
+            values.append(('failures', failures))
+        self.ui.output_values(values)
+        skips = sum(map(len, evaluator.skip_reasons.itervalues()))
+        if skips:
+            values.append(('skips', skips))
 
     def run(self):
         """The core logic for this command to be implemented by subclasses."""

@@ -21,6 +21,7 @@ def test_suite():
         'commands',
         'help',
         'init',
+        'last',
         'load',
         'quickstart',
         'stats',

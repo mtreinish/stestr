@@ -48,18 +48,7 @@ class load(Command):
             finally:
                 run_id = inserter.stopTestRun()
             failed = failed or not evaluator.wasSuccessful()
-            if not self.ui.options.quiet:
-                if output.getvalue():
-                    output.seek(0)
-                    self.ui.output_results(subunit.ProtocolTestCase(output))
-                values = [('id', run_id), ('tests', evaluator.testsRun)]
-                failures = len(evaluator.failures) + len(evaluator.errors)
-                if failures:
-                    values.append(('failures', failures))
-                self.ui.output_values(values)
-                skips = sum(map(len, evaluator.skip_reasons.itervalues()))
-                if skips:
-                    values.append(('skips', skips))
+            self.output_run(run_id, output, evaluator)
         if failed:
             return 1
         else:
