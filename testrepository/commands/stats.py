@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009, 2010 Testrepository Contributors
+# Copyright (c) 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -12,20 +12,20 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for commands."""
+"""Report stats about a repository. Current vestigial."""
 
-import unittest
+from cStringIO import StringIO
 
-def test_suite():
-    names = [
-        'commands',
-        'help',
-        'init',
-        'load',
-        'quickstart',
-        'stats',
-        ]
-    module_names = ['testrepository.tests.commands.test_' + name for name in
-        names]
-    loader = unittest.TestLoader()
-    return loader.loadTestsFromNames(module_names)
+from testrepository.commands import Command
+
+class stats(Command):
+    """Report stats about a repository.
+    
+    This is currently vestigial, but should grow to be the main entry point for
+    getting summary information about the repository.
+    """
+
+    def run(self):
+        repo = self.repository_factory.open(self.ui.here)
+        self.ui.output_values([('runs', repo.count())])
+        return 0
