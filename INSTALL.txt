@@ -18,3 +18,8 @@ Test dependencies
    http://pypi.python.org/pypi/testresources/).
 
 * testscenarios (https://launchpad.net/testscenarios).
+
+Installing
+~~~~~~~~~~
+
+* ./setup.py install
