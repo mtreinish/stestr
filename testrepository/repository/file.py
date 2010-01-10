@@ -14,14 +14,17 @@
 
 """Persistent storage of test results."""
 
+from cStringIO import StringIO
 import os.path
 import tempfile
 
+import subunit
 from subunit import TestProtocolClient
 
 from testrepository.repository import (
     AbstractRepository,
     AbstractRepositoryFactory,
+    AbstractTestRun,
     )
 
 
@@ -81,6 +84,11 @@ class Repository(AbstractRepository):
     def latest_id(self):
         return self._next_stream() - 1
     
+    def get_test_run(self, run_id):
+        run_subunit_content = file(
+            os.path.join(self.base, str(run_id)), 'rb').read()
+        return _DiskRun(run_subunit_content)
+
     def _get_inserter(self):
         return _Inserter(self)
 
@@ -90,6 +98,20 @@ class Repository(AbstractRepository):
             stream.write('%d\n' % value)
         finally:
             stream.close()
+
+
+class _DiskRun(AbstractTestRun):
+    """A test run that was inserted into the repository."""
+
+    def __init__(self, subunit_content):
+        """Create a _DiskRun with the content subunit_content."""
+        self._content = subunit_content
+
+    def get_subunit_stream(self):
+        return StringIO(self._content)
+
+    def get_test(self):
+        return subunit.ProtocolTestCase(self.get_subunit_stream())
 
 
 class _Inserter(TestProtocolClient):

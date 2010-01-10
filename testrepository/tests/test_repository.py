@@ -14,7 +14,11 @@
 
 """Tests for Repository support logic and the Repository contract."""
 
+import doctest
+
 from testresources import TestResource
+from testtools import TestResult
+from testtools.matchers import DocTestMatches
 
 from testrepository import repository
 from testrepository.repository import file, memory
@@ -127,3 +131,47 @@ class TestRepositoryContract(ResourcedTestCase):
         result.startTestRun()
         inserted = result.stopTestRun()
         self.assertEqual(inserted, repo.latest_id())
+
+    def test_get_test_run(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        inserted = result.stopTestRun()
+        run = repo.get_test_run(inserted)
+        self.assertNotEqual(None, run)
+
+    def test_get_subunit_from_test_run(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        class Case(ResourcedTestCase):
+            def method(self):
+                pass
+        case = Case('method')
+        case.run(result)
+        inserted = result.stopTestRun()
+        run = repo.get_test_run(inserted)
+        as_subunit = run.get_subunit_stream()
+        self.assertThat(as_subunit.read(), DocTestMatches("""...test: testrepository.tests.test_repository.Case.method...
+successful: testrepository.tests.test_repository.Case.method...
+""", doctest.ELLIPSIS))
+
+    def test_get_test_from_test_run(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        class Case(ResourcedTestCase):
+            def method(self):
+                pass
+        case = Case('method')
+        case.run(result)
+        inserted = result.stopTestRun()
+        run = repo.get_test_run(inserted)
+        test = run.get_test()
+        result = TestResult()
+        result.startTestRun()
+        try:
+            test.run(result)
+        finally:
+            result.stopTestRun()
+        self.assertEqual(1, result.testsRun)

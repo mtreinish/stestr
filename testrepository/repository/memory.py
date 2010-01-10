@@ -14,9 +14,14 @@
 
 """In memory storage of test results."""
 
+from cStringIO import StringIO
+
+import subunit
+
 from testrepository.repository import (
     AbstractRepository,
     AbstractRepositoryFactory,
+    AbstractTestRun,
     )
 
 
@@ -48,6 +53,9 @@ class Repository(AbstractRepository):
     def count(self):
         return len(self._runs)
 
+    def get_test_run(self, run_id):
+        return self._runs[run_id]
+
     def latest_id(self):
         return self.count() - 1
 
@@ -55,8 +63,8 @@ class Repository(AbstractRepository):
         return _Inserter(self)
 
 
-class _Inserter(object):
-    """Insert test results into a memory repository."""
+class _Inserter(AbstractTestRun):
+    """Insert test results into a memory repository, and describe them later."""
 
     def __init__(self, repository):
         self._repository = repository
@@ -79,25 +87,40 @@ class _Inserter(object):
         self._outcomes.append((outcome, test, details))
 
     def addSuccess(self, test, details=None):
-        self._addOutcome('success', test, details)
+        self._addOutcome('Success', test, details)
 
     def addFailure(self, test, err=None, details=None):
         # Don't support old interface for now.
         assert err is None
-        self._addOutcome('failure', test, details)
+        self._addOutcome('Failure', test, details)
 
     def addError(self, test, err=None, details=None):
         assert err is None
-        self._addOutcome('error', test, details)
+        self._addOutcome('Error', test, details)
 
     def addExpectedFailure(self, test, err=None, details=None):
         assert err is None
-        self._addOutcome('expectedFailure', test, details)
+        self._addOutcome('ExpectedFailure', test, details)
 
     def addUnexpectedSuccess(self, details=None):
-        self._addOutcome('unexpectedSccess', test, details)
+        self._addOutcome('UnexpectedSccess', test, details)
 
     def addSkip(self, test, reason=None, details=None):
         assert reason is None
-        self._addOutcome('skip', test, details)
+        self._addOutcome('Skip', test, details)
 
+    def get_subunit_stream(self):
+        result = StringIO()
+        serialiser = subunit.TestProtocolClient(result)
+        self.run(serialiser)
+        result.seek(0)
+        return result
+
+    def get_test(self):
+        return self
+
+    def run(self, result):
+        for outcome, test, details in self._outcomes:
+            result.startTest(test)
+            getattr(result, 'add' + outcome)(test, details=details)
+            result.stopTest(test)

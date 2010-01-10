@@ -75,3 +75,31 @@ class AbstractRepository(object):
         The result is decorated with an AutoTimingTestResultDecorator.
         """
         raise NotImplementedError(self._get_inserter)
+
+    def get_test_run(self, run_id):
+        """Retrieve a TestRun object for run_id.
+
+        :param run_id: The test run id to retrieve.
+        :return: A TestRun object.
+        """
+        raise NotImplementedError(self.get_test_run)
+
+    def latest_id(self):
+        """Return the run id for the most recently inserted test run."""
+        raise NotImplementedError(self.latest_id)
+
+
+class AbstractTestRun(object):
+    """A test run that has been stored in a repository."""
+
+    def get_subunit_stream(self):
+        """Get a subunit stream for this test run."""
+        raise NotImplementedError(self.get_subunit_stream)
+
+    def get_test(self):
+        """Get a testtools.TestCase-like object that can be run.
+
+        :return: A TestCase like object which can be run to get the individual
+            tests reported to a testtools.TestResult.
+        """
+        raise NotImplementedError(self.get_test)
