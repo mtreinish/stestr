@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 Testrepository Contributors
+# Copyright (c) 2009, 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -108,3 +108,15 @@ class TestRepositoryContract(ResourcedTestCase):
         result = repo.get_inserter()
         result.startTestRun()
         self.assertNotEqual(None, result.stopTestRun())
+
+    def test_count(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        self.assertEqual(0, repo.count())
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        self.assertEqual(1, repo.count())
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        self.assertEqual(2, repo.count())
