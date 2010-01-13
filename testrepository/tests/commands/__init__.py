@@ -19,6 +19,7 @@ import unittest
 def test_suite():
     names = [
         'commands',
+        'failing',
         'help',
         'init',
         'last',
