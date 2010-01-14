@@ -15,6 +15,7 @@
 """Show the current failures in the repository."""
 
 from cStringIO import StringIO
+import optparse
 
 import subunit.test_results
 from testtools import MultiTestResult, TestResult
@@ -31,10 +32,14 @@ class failing(Command):
     tests will only be detected on full runs with this approach.
     """
 
+    options = [optparse.Option("--subunit", action="store_true",
+            default=False, help="Show output as a subunit stream.")]
+
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
         run_id = repo.latest_id()
-        case = repo.get_test_run(run_id).get_test()
+        run = repo.get_test_run(run_id)
+        case = run.get_test()
         failed = False
         evaluator = TestResult()
         output = StringIO()
@@ -48,8 +53,16 @@ class failing(Command):
         finally:
             result.stopTestRun()
         failed = not evaluator.wasSuccessful()
+        if failed:
+            result = 1
+        else:
+            result = 0
+        if self.ui.options.subunit:
+            # TODO only failing tests.
+            self.ui.output_stream(run.get_subunit_stream())
+            return result
         if self.ui.options.quiet:
-            return
+            return result
         if output.getvalue():
             output.seek(0)
             self.ui.output_results(subunit.ProtocolTestCase(output))
@@ -58,7 +71,4 @@ class failing(Command):
         if failures:
             values.append(('failures', failures))
         self.ui.output_values(values)
-        if failed:
-            return 1
-        else:
-            return 0
+        return result

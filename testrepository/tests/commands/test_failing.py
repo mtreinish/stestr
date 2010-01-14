@@ -14,7 +14,10 @@
 
 """Tests for the failing command."""
 
+import doctest
+
 import testtools
+from testtools.matchers import DocTestMatches
 
 from testrepository.commands import failing
 from testrepository.ui.model import UI
@@ -24,8 +27,8 @@ from testrepository.tests import ResourcedTestCase
 
 class TestCommand(ResourcedTestCase):
 
-    def get_test_ui_and_cmd(self,args=()):
-        ui = UI(args=args)
+    def get_test_ui_and_cmd(self, options=(), args=()):
+        ui = UI(options=options, args=args)
         cmd = failing.failing(ui)
         ui.set_command(cmd)
         return ui, cmd
@@ -61,3 +64,23 @@ class TestCommand(ResourcedTestCase):
             result.stopTestRun()
         self.assertEqual(1, result.testsRun)
         self.assertEqual(1, len(result.failures))
+
+    def test_with_subunit_shows_subunit_stream(self):
+        ui, cmd = self.get_test_ui_and_cmd(options=[('subunit', True)])
+        cmd.repository_factory = memory.RepositoryFactory()
+        repo = cmd.repository_factory.initialise(ui.here)
+        inserter = repo.get_inserter()
+        inserter.startTestRun()
+        class Cases(ResourcedTestCase):
+            def failing(self):
+                self.fail('foo')
+            def ok(self):
+                pass
+        Cases('failing').run(inserter)
+        Cases('ok').run(inserter)
+        id = inserter.stopTestRun()
+        self.assertEqual(1, cmd.execute())
+        self.assertEqual(1, len(ui.outputs))
+        self.assertEqual('stream', ui.outputs[0][0])
+        self.assertThat(ui.outputs[0][1], DocTestMatches("""...test: ...failing
+...failure: ...failing...""", doctest.ELLIPSIS))
