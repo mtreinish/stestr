@@ -90,6 +90,12 @@ AssertionError: quux
 ------------
 """, doctest.ELLIPSIS))
 
+    def test_outputs_stream_to_stdout(self):
+        ui, cmd = self.get_test_ui_and_cmd()
+        stream = StringIO("Foo \n bar")
+        ui.output_stream(stream)
+        self.assertEqual("Foo \n bar", ui._stdout.getvalue())
+
     def test_outputs_tables_to_stdout(self):
         ui, cmd = self.get_test_ui_and_cmd()
         ui.output_table([('foo', 1), ('b', 'quux')])

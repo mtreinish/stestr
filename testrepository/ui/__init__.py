@@ -102,6 +102,17 @@ class AbstractUI(object):
         """
         raise NotImplementedError(self.output_results)
 
+    def output_stream(self, stream):
+        """Show a byte stream to the user.
+
+        This is not currently typed, but in future a MIME type may be
+        permitted.
+
+        :param stream: A file like object that can be read from. The UI will
+        not close the file.
+        """
+        raise NotImplementedError(self.output_results)
+
     def output_table(self, table):
         """Show a table to the user.
 

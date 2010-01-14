@@ -81,6 +81,9 @@ class UI(ui.AbstractUI):
     def output_results(self, suite_or_test):
         self.outputs.append(('results', suite_or_test))
 
+    def output_stream(self, stream):
+        self.outputs.append(('stream', stream))
+
     def output_table(self, table):
         self.outputs.append(('table', table))
 

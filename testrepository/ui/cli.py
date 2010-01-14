@@ -77,6 +77,12 @@ class UI(ui.AbstractUI):
         finally:
             result.stopTestRun()
 
+    def output_stream(self, stream):
+        contents = stream.read(65536)
+        while contents:
+            self._stdout.write(contents)
+            contents = stream.read(65536)
+
     def output_table(self, table):
         # stringify
         contents = []

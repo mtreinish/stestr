@@ -100,6 +100,11 @@ class TestUIContract(ResourcedTestCase):
                 pass
         ui.output_results(Case('method'))
 
+    def test_output_stream(self):
+        # a stream of bytes can be output.
+        ui = self.get_test_ui()
+        ui.output_stream(StringIO())
+
     def test_output_table(self):
         # output_table shows a table.
         ui = self.get_test_ui()
