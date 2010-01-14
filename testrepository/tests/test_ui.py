@@ -15,6 +15,7 @@
 """Tests for UI support logic and the UI contract."""
 
 from cStringIO import StringIO
+import optparse
 
 from testrepository import arguments, commands
 import testrepository.arguments.command
@@ -148,3 +149,18 @@ class TestUIContract(ResourcedTestCase):
         cmd = commands.Command(ui)
         ui.set_command(cmd)
         self.assertEqual(True, ui.options.quiet)
+
+    def test_options_on_command_picked_up(self):
+        ui = self.ui_factory(options=[('subunit', True)])
+        cmd = commands.Command(ui)
+        cmd.options = [optparse.Option("--subunit", action="store_true",
+            default=False, help="Show output as a subunit stream.")]
+        ui.set_command(cmd)
+        self.assertEqual(True, ui.options.subunit)
+        # And when not given the default works.
+        ui = self.ui_factory()
+        cmd = commands.Command(ui)
+        cmd.options = [optparse.Option("--subunit", action="store_true",
+            default=False, help="Show output as a subunit stream.")]
+        ui.set_command(cmd)
+        self.assertEqual(False, ui.options.subunit)

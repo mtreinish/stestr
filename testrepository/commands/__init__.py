@@ -99,12 +99,16 @@ class Command(object):
         specified by a simple name with a * ending the name, and mandatory
         multiple streams by ending the name with +. Multiple streams are used
         when a command can process more than one stream.
+    :ivar options: A list of optparse.Option options to accept. These are
+        merged with global options by the UI layer when set_command is called.
     """
 
     # class defaults to no streams.
     input_streams = []
     # class defaults to no arguments.
     args = []
+    # class defaults to no options.
+    options = []
 
     def __init__(self, ui):
         """Create a Command object with ui ui."""

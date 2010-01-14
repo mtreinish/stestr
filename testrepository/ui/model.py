@@ -41,6 +41,13 @@ class UI(ui.AbstractUI):
                 self.input_streams.setdefault(stream_type, []).append(
                     stream_bytes)
         self.here = 'memory:'
+        self.unparsed_opts = options
+        self.outputs = []
+        # Could take parsed args, but for now this is easier.
+        self.unparsed_args = args
+
+    def _check_cmd(self):
+        options = list(self.unparsed_opts)
         self.options = optparse.Values()
         seen_options = set()
         for option, value in options:
@@ -48,11 +55,9 @@ class UI(ui.AbstractUI):
             seen_options.add(option)
         if not 'quiet' in seen_options:
             setattr(self.options, 'quiet', False)
-        self.outputs = []
-        # Could take parsed args, but for now this is easier.
-        self.unparsed_args = args
-
-    def _check_cmd(self):
+        for option in self.cmd.options:
+            if not option.dest in seen_options:
+                setattr(self.options, option.dest, option.default)
         args = list(self.unparsed_args)
         parsed_args = {}
         failed = False
