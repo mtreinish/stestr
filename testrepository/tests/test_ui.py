@@ -16,6 +16,7 @@
 
 from cStringIO import StringIO
 import optparse
+import sys
 
 from testrepository import arguments, commands
 import testrepository.arguments.command
@@ -86,6 +87,14 @@ class TestUIContract(ResourcedTestCase):
     def test_iter_streams_unexpected_type_raises(self):
         ui = self.get_test_ui()
         self.assertRaises(KeyError, ui.iter_streams, 'subunit')
+
+    def test_output_error(self):
+        try:
+            raise Exception('fooo')
+        except Exception:
+            err_tuple = sys.exc_info()
+        ui = self.get_test_ui()
+        ui.output_error(err_tuple)
 
     def test_output_rest(self):
         # output some ReST - used for help and docs.

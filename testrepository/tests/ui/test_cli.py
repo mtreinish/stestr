@@ -16,6 +16,7 @@
 
 import doctest
 from cStringIO import StringIO
+import sys
 
 from testtools.matchers import DocTestMatches
 
@@ -64,6 +65,19 @@ class TestCLIUI(ResourcedTestCase):
         cmd = commands.Command(ui)
         ui.set_command(cmd)
         self.assertEqual('/nowhere/', ui.here)
+
+    def test_outputs_error_string(self):
+        try:
+            raise Exception('fooo')
+        except Exception:
+            err_tuple = sys.exc_info()
+        expected = str(err_tuple[1]) + '\n'
+        stdout = StringIO()
+        stdin = StringIO()
+        stderr = StringIO()
+        ui = cli.UI([], stdin, stdout, stderr)
+        ui.output_error(err_tuple)
+        self.assertThat(stderr.getvalue(), DocTestMatches(expected))
 
     def test_outputs_rest_to_stdout(self):
         ui, cmd = self.get_test_ui_and_cmd()

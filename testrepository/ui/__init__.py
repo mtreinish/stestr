@@ -80,6 +80,16 @@ class AbstractUI(object):
         """Helper for iter_streams which subclasses should implement."""
         raise NotImplementedError(self._iter_streams)
 
+    def output_error(self, error_tuple):
+        """Show an error to the user.
+
+        This is typically used only by Command.execute when run raises an
+        exception.
+
+        :param error_tuple: An error tuple obtained from sys.exc_info().
+        """
+        raise NotImplementedError(self.output_error)
+
     def output_rest(self, rest_string):
         """Show rest_string - a ReST document.
 

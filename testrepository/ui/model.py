@@ -75,6 +75,9 @@ class UI(ui.AbstractUI):
         for stream_bytes in streams:
             yield StringIO(stream_bytes)
 
+    def output_error(self, error_tuple):
+        self.outputs.append(('error', error_tuple))
+
     def output_rest(self, rest_string):
         self.outputs.append(('rest', rest_string))
 

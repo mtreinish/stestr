@@ -64,6 +64,9 @@ class UI(ui.AbstractUI):
     def _iter_streams(self, stream_type):
         yield self._stdin
 
+    def output_error(self, error_tuple):
+        self._stderr.write(str(error_tuple[1]) + '\n')
+
     def output_rest(self, rest_string):
         self._stdout.write(rest_string)
         if not rest_string.endswith('\n'):
