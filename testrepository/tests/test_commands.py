@@ -22,6 +22,7 @@ from testresources import TestResource
 from testrepository import commands
 from testrepository.repository import file
 from testrepository.tests import ResourcedTestCase
+from testrepository.tests.matchers import MatchesException
 from testrepository.tests.monkeypatch import monkeypatch
 from testrepository.tests.stubpackage import (
     StubPackageResource,
@@ -181,6 +182,17 @@ class TestAbstractCommand(ResourcedTestCase):
                 return False
         cmd = InstrumentedCommand(FailUI())
         self.assertEqual(1, cmd.execute())
+
+    def test_shows_errors_from_execute_returns_3(self):
+        class FailCommand(commands.Command):
+            def run(self):
+                raise Exception("foo")
+        ui = model.UI()
+        cmd = FailCommand(ui)
+        self.assertEqual(3, cmd.execute())
+        self.assertEqual(1, len(ui.outputs))
+        self.assertEqual('error', ui.outputs[0][0])
+        self.assertThat(ui.outputs[0][1], MatchesException(Exception('foo')))
 
     def test_default_repository_factory(self):
         cmd = commands.Command(model.UI())

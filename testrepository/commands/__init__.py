@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 Testrepository Contributors
+# Copyright (c) 2009, 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -33,6 +33,7 @@ needed in that directory.)
 """
 
 import os
+import sys
 
 import subunit
 
@@ -127,7 +128,12 @@ class Command(object):
         """
         if not self.ui.set_command(self):
             return 1
-        result = self.run()
+        try:
+            result = self.run()
+        except Exception:
+            error_tuple = sys.exc_info()
+            self.ui.output_error(error_tuple)
+            return 3
         if not result:
             return 0
         return result

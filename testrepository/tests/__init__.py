@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 Testrepository Contributors
+# Copyright (c) 2009, 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -40,6 +40,7 @@ def test_suite():
     names = [
         'arguments',
         'commands',
+        'matchers',
         'monkeypatch',
         'repository',
         'setup',
