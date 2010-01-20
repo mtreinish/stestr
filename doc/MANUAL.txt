@@ -13,11 +13,11 @@ instance, using the sample subunit stream included with Test repository::
 
   $ testr init
   $ testr load < doc/example-failing-subunit-stream
-  $ testr todo
-  1 Failure 1 Error
+  $ testr failing
+  # prints out failing tests
   # fix things
   $ testr load < doc/example-passing-subunit-stream
-  $ testr todo
+  $ testr failing
 
 Most commands in testr have comprehensive online help, and the commands::
   $ testr help

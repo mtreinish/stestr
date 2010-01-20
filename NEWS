@@ -1,0 +1,11 @@
+----------------------------
+testrepository release notes
+----------------------------
+
+NEXT (In development)
+---------------------
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* New subcommand 'failing' added.
