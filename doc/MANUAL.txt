@@ -11,12 +11,15 @@ Typical workflow is to have a repository into which test runs are inserted, and
 then to query the repository to find out about issues that need addressing. For
 instance, using the sample subunit stream included with Test repository::
 
+  # Create a store to manage test results in.
   $ testr init
+  # add a test result (shows failures)
   $ testr load < doc/example-failing-subunit-stream
+  # see the tracked failing tests again
   $ testr failing
-  # prints out failing tests
   # fix things
   $ testr load < doc/example-passing-subunit-stream
+  # Now there are no tracked failing tests
   $ testr failing
 
 Most commands in testr have comprehensive online help, and the commands::
