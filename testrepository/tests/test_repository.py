@@ -154,7 +154,13 @@ class TestRepositoryContract(ResourcedTestCase):
         result.stopTestRun()
         self.assertEqual(2, repo.count())
 
-    def test_latest_id(self):
+    def test_latest_id_empty(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        err = self.assertRaises(KeyError, repo.latest_id)
+        self.assertThat(str(err),
+            DocTestMatches("...No tests in repository...", doctest.ELLIPSIS))
+
+    def test_latest_id_nonempty(self):
         repo = self.repo_impl.initialise(self.sample_url)
         result = repo.get_inserter()
         result.startTestRun()

@@ -9,3 +9,5 @@ IMPROVEMENTS
 ~~~~~~~~~~~~
 
 * New subcommand 'failing' added.
+
+* The command 'last' will no longer error on a new repository.

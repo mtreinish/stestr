@@ -84,7 +84,10 @@ class Repository(AbstractRepository):
         return self._next_stream()
 
     def latest_id(self):
-        return self._next_stream() - 1
+        result = self._next_stream() - 1
+        if result < 0:
+            raise KeyError("No tests in repository")
+        return result
  
     def get_failing(self):
         try:

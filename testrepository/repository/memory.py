@@ -61,7 +61,10 @@ class Repository(AbstractRepository):
         return self._runs[run_id]
 
     def latest_id(self):
-        return self.count() - 1
+        result = self.count() - 1
+        if result < 0:
+            raise KeyError("No tests in repository")
+        return result
 
     def _get_inserter(self):
         return _Inserter(self)
