@@ -151,3 +151,13 @@ class AbstractUI(object):
         """
         self.cmd = cmd
         return self._check_cmd()
+
+    def subprocess_Popen(self, *args, **kwargs):
+        """Call an external process from the UI's context.
+        
+        The behaviour of this call should match the Popen process on any given
+        platform, except that the UI can take care of any wrapping or
+        manipulation needed to fit into its environment.
+        """
+        # This might not be the right place.
+        raise NotImplementedError(self.subprocess_Popen)

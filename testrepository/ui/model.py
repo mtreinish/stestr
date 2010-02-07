@@ -19,6 +19,18 @@ import optparse
 
 from testrepository import ui
 
+class ProcessModel(object):
+    """A subprocess.Popen test double."""
+
+    def __init__(self, ui):
+        self.ui = ui
+        self.returncode = 0
+
+    def communicate(self):
+        self.ui.outputs.append(('communicate',))
+        return '', ''
+
+
 class UI(ui.AbstractUI):
     """A object based UI.
     
@@ -92,3 +104,8 @@ class UI(ui.AbstractUI):
 
     def output_values(self, values):
         self.outputs.append(('values', values))
+
+    def subprocess_Popen(self, *args, **kwargs):
+        # Really not an output - outputs should be renamed to events.
+        self.outputs.append(('popen', args, kwargs))
+        return ProcessModel(self)

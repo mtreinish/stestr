@@ -161,3 +161,7 @@ class UI(ui.AbstractUI):
             if args != []:
                 self._stderr.write("Unexpected arguments: %r\n" % args)
         return not failed and args == []
+
+    def subprocess_Popen(self, *args, **kwargs):
+        import subprocess
+        return subprocess.Popen(*args, **kwargs)

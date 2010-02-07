@@ -16,6 +16,7 @@
 
 from cStringIO import StringIO
 import optparse
+import subprocess
 import sys
 
 from testrepository import arguments, commands
@@ -178,3 +179,11 @@ class TestUIContract(ResourcedTestCase):
             default=False, help="Show output as a subunit stream.")]
         ui.set_command(cmd)
         self.assertEqual(False, ui.options.subunit)
+
+    def test_exec_subprocess(self):
+        # exec_subprocess should 'work like popen'.
+        ui = self.ui_factory()
+        proc = ui.subprocess_Popen('ls', stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        out, err = proc.communicate()
+        proc.returncode
