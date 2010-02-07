@@ -15,7 +15,9 @@
 """Persistent storage of test results."""
 
 from cStringIO import StringIO
+import errno
 import os.path
+import sys
 import tempfile
 
 import subunit
@@ -83,7 +85,19 @@ class Repository(AbstractRepository):
 
     def latest_id(self):
         return self._next_stream() - 1
-    
+ 
+    def get_failing(self):
+        try:
+            run_subunit_content = file(
+                os.path.join(self.base, "failing"), 'rb').read()
+        except IOError:
+            err = sys.exc_info()[1]
+            if err.errno == errno.ENOENT:
+                run_subunit_content = ''
+            else:
+                raise
+        return _DiskRun(run_subunit_content)
+
     def get_test_run(self, run_id):
         run_subunit_content = file(
             os.path.join(self.base, str(run_id)), 'rb').read()
@@ -114,7 +128,7 @@ class _DiskRun(AbstractTestRun):
         return subunit.ProtocolTestCase(self.get_subunit_stream())
 
 
-class _Inserter(TestProtocolClient):
+class _SafeInserter(TestProtocolClient):
 
     def __init__(self, repository):
         self._repository = repository
@@ -130,7 +144,45 @@ class _Inserter(TestProtocolClient):
         # TestProtocolClient.stopTestRun(self)
         self._stream.flush()
         self._stream.close()
-        run_id = self._repository._allocate()
+        run_id = self._name()
         os.rename(self.fname, os.path.join(self._repository.base,
             str(run_id)))
+        return run_id
+
+
+class _FailingInserter(_SafeInserter):
+    """Insert a stream into the 'failing' file."""
+
+    def _name(self):
+        return "failing"
+
+
+class _Inserter(_SafeInserter):
+
+    def _name(self):
+        return self._repository._allocate()
+
+    def stopTestRun(self):
+        run_id = _SafeInserter.stopTestRun(self)
+        # XXX: locking?
+        # Filter failing + this run.
+        # use memory repo to aggregate. a bit awkward on layering ;).
+        import memory
+        repo = memory.Repository()
+        # Seed with current failing
+        inserter = repo.get_inserter()
+        inserter.startTestRun()
+        failing = self._repository.get_failing()
+        failing.get_test().run(inserter)
+        inserter.stopTestRun()
+        inserter= repo.get_inserter()
+        inserter.startTestRun()
+        run = self._repository.get_test_run(run_id)
+        run.get_test().run(inserter)
+        inserter.stopTestRun()
+        # and now write to failing
+        inserter = _FailingInserter(self._repository)
+        inserter.startTestRun()
+        repo.get_failing().get_test().run(inserter)
+        inserter.stopTestRun()
         return run_id

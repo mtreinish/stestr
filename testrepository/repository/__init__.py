@@ -57,6 +57,13 @@ class AbstractRepository(object):
         """
         raise NotImplementedError(self.count)
 
+    def get_failing(self):
+        """Get a TestRun that contains all of and only current failing tests.
+
+        :return: a TestRun.
+        """
+        raise NotImplementedError(self.get_failing)
+
     def get_inserter(self):
         """Get an inserter that will insert a test run into the repository.
 

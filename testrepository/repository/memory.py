@@ -49,9 +49,13 @@ class Repository(AbstractRepository):
     def __init__(self):
         # Test runs:
         self._runs = []
+        self._failing = {} # id -> test
 
     def count(self):
         return len(self._runs)
+
+    def get_failing(self):
+        return _Failures(self)
 
     def get_test_run(self, run_id):
         return self._runs[run_id]
@@ -61,6 +65,30 @@ class Repository(AbstractRepository):
 
     def _get_inserter(self):
         return _Inserter(self)
+
+
+# XXX: Too much duplication between this and _Inserter
+class _Failures(AbstractTestRun):
+    """Report on failures from a memory repository."""
+
+    def __init__(self, repository):
+        self._repository = repository
+
+    def get_subunit_stream(self):
+        result = StringIO()
+        serialiser = subunit.TestProtocolClient(result)
+        self.run(serialiser)
+        result.seek(0)
+        return result
+
+    def get_test(self):
+        return self
+
+    def run(self, result):
+        for outcome, test, details in self._repository._failing.itervalues():
+            result.startTest(test)
+            getattr(result, 'add' + outcome)(test, details=details)
+            result.stopTest(test)
 
 
 class _Inserter(AbstractTestRun):
@@ -75,6 +103,12 @@ class _Inserter(AbstractTestRun):
 
     def stopTestRun(self):
         self._repository._runs.append(self)
+        for record in self._outcomes:
+            test_id = record[1].id()
+            if record[0] in ('Failure', 'Error'):
+                self._repository._failing[test_id] = record
+            else:
+                self._repository._failing.pop(test_id, None)
         return len(self._repository._runs) - 1
 
     def startTest(self, test):
