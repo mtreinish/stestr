@@ -107,3 +107,22 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,), {'shell': True}),
             ('communicate',),
             ], ui.outputs)
+
+    def test_extra_options_passed_in(self):
+        ui, cmd = self.get_test_ui_and_cmd(args=('bar', 'quux'))
+        cmd.repository_factory = memory.RepositoryFactory()
+        repo = cmd.repository_factory.initialise(ui.here)
+        inserter = repo.get_inserter()
+        inserter.startTestRun()
+        make_test('passing', True).run(inserter)
+        make_test('failing', False).run(inserter)
+        inserter.stopTestRun()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
+        self.assertEqual(0, cmd.execute())
+        expected_cmd = 'foo  bar quux| testr load'
+        self.assertEqual([
+            ('values', [('running', expected_cmd)]),
+            ('popen', (expected_cmd,), {'shell': True}),
+            ('communicate',),
+            ], ui.outputs)

@@ -22,6 +22,7 @@ import string
 
 from testtools import TestResult
 
+from testrepository.arguments.string import StringArgument
 from testrepository.commands import Command
 
 class run(Command):
@@ -39,6 +40,7 @@ class run(Command):
 
     options = [optparse.Option("--failing", action="store_true",
             default=False, help="Run only tests known to be failing.")]
+    args = [StringArgument('testargs', 0, None)]
 
     def run(self):
         parser = ConfigParser.ConfigParser()
@@ -50,7 +52,9 @@ class run(Command):
             if e.message != "No option 'test_command' in section: 'DEFAULT'":
                 raise
             raise ValueError("No test_command option present in .testr.conf")
-        template = string.Template(command + '| testr load')
+        elements = [command]
+        elements.extend(self.ui.arguments['testargs'])
+        template = string.Template(' '.join(elements) + '| testr load')
         if self.ui.options.failing:
             # Run only failing tests
             try:

@@ -36,12 +36,18 @@ file in your cwd. A file like::
   test_id_option=--bar $IDFILE
 
 will cause 'testr run' to run 'foo | testr load', and 'testr run --failing' to
-run 'foo --bar failing.list | testr load'. failing.list will be a newline separated
-list of the test ids that your test runner outputs. Having setup a .testr.conf, a
-common workflow then becomes::
+run 'foo --bar failing.list | testr load'. failing.list will be a newline
+separated list of the test ids that your test runner outputs. Arguments passed
+to run are passed through to your test runner command line. To pass options
+through to your test running, use a ``--`` before your options.
+For instance, ``testr run foo -- bar --no-plugins`` would run
+``foo foo bar --no-plugins | testr load`` using the above config example.
+
+Having setup a .testr.conf, a common workflow then becomes::
 
   # Fix currently broken tests - repeat until there are no failures.
   $ testr run --failing
   # Do a full run to find anything thrown out during the reduction process.
   $ testr run
-  # And either commit or start over depending on whether errors were found.
+  # And either commit or loop around this again depending on whether errors
+  # were found.
