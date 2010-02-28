@@ -28,4 +28,20 @@ Most commands in testr have comprehensive online help, and the commands::
 
 Will be useful to explore the system.
 
+Test Repository can be taught how to run your tests by setting up a .testr.conf
+file in your cwd. A file like::
 
+  [DEFAULT]
+  test_command=foo $IDOPTION
+  test_id_option=--bar $IDFILE
+
+will cause 'testr run' to run 'foo | testr load', and 'testr run --failing' to
+run 'foo --bar failing.list | testr load'. failing.list will be a newline separated
+list of the test ids that your test runner outputs. Having setup a .testr.conf, a
+common workflow then becomes::
+
+  # Fix currently broken tests - repeat until there are no failures.
+  $ testr run --failing
+  # Do a full run to find anything thrown out during the reduction process.
+  $ testr run
+  # And either commit or start over depending on whether errors were found.

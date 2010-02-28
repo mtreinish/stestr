@@ -13,4 +13,9 @@ IMPROVEMENTS
 
 * New subcommand 'failing' added.
 
+* New subcommand ``run`` added which reads a .testr.conf file to figure out how
+  to run tests with subunit output. It then runs them and pipes into testr
+  load. This allows simpler integration and permits a programming interface so
+  that tools like Tribunal/Eclipe etc can refresh tests in a testrepository.
+
 * The command 'last' will no longer error on a new repository.
