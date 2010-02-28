@@ -36,6 +36,20 @@ class run(Command):
     ---
     will cause 'testr run' to run 'foo | testr load', and 'testr run --failing'
     to run 'foo --bar failing.list | testr load'.
+
+    The full list of options and variables for .testr.conf:
+    * test_command -- command line to run to execute tests.
+    * test_id_option -- the value to substitute into test_command when specific
+      test ids should be run.
+    * test_id_list_default -- the value to use for $IDLIST when no specific
+      test ids are being run.
+    * $IDOPTION -- the variable to use to trigger running some specific tests.
+    * $IDFILE -- A file created before the test command is run and deleted
+      afterwards which contains a list of test ids, one per line. This can
+      handle test ids with emedded whitespace.
+    * $IDLIST -- A list of the test ids to run, separated by spaces. IDLIST
+      defaults to an empty string when no test ids are known and no explicit
+      default is provided. This will not handle test ids with spaces.
     """
 
     options = [optparse.Option("--failing", action="store_true",
@@ -57,12 +71,15 @@ class run(Command):
         template = string.Template(' '.join(elements) + '| testr load')
         if self.ui.options.failing:
             # Run only failing tests
-            try:
-                idoption = parser.get('DEFAULT', 'test_id_option')
-            except ConfigParser.NoOptionError, e:
-                if e.message != "No option 'test_id_option' in section: 'DEFAULT'":
-                    raise
-                raise ValueError("No test_id_option option present in .testr.conf")
+            if 'IDOPTION' in command:
+                try:
+                    idoption = parser.get('DEFAULT', 'test_id_option')
+                except ConfigParser.NoOptionError, e:
+                    if e.message != "No option 'test_id_option' in section: 'DEFAULT'":
+                        raise
+                    raise ValueError("No test_id_option option present in .testr.conf")
+            else:
+                idoption = ''
             repo = self.repository_factory.open(self.ui.here)
             run = repo.get_failing()
             case = run.get_test()
@@ -82,12 +99,20 @@ class run(Command):
                     idfile.write('%s\n' % id)
             finally:
                 idfile.close()
+            idlist = ' '.join(ids)
         else:
             # Run all
             idoption = ''
             idfilename = ''
+            try:
+                idlist = parser.get('DEFAULT', 'test_id_list_default')
+            except ConfigParser.NoOptionError, e:
+                if e.message != "No option 'test_id_list_default' in section: 'DEFAULT'":
+                    raise
+                idlist = ''
         try:
-            command = template.substitute(IDOPTION=idoption, IDFILE=idfilename)
+            command = template.substitute(IDOPTION=idoption, IDFILE=idfilename,
+                IDLIST=idlist)
             self.ui.output_values([('running', command)])
             proc = self.ui.subprocess_Popen(command, shell=True)
             proc.communicate()

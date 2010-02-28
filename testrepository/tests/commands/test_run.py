@@ -51,6 +51,14 @@ class TestCommand(ResourcedTestCase):
         finally:
             stream.close()
 
+    def setup_repo(self, cmd, ui):
+        repo = cmd.repository_factory.initialise(ui.here)
+        inserter = repo.get_inserter()
+        inserter.startTestRun()
+        make_test('passing', True).run(inserter)
+        make_test('failing', False).run(inserter)
+        inserter.stopTestRun()
+
     def test_no_config_file_errors(self):
         ui, cmd = self.get_test_ui_and_cmd()
         self.assertEqual(3, cmd.execute())
@@ -71,12 +79,7 @@ class TestCommand(ResourcedTestCase):
     def test_IDFILE_failures(self):
         ui, cmd = self.get_test_ui_and_cmd(options=[('failing', True)])
         cmd.repository_factory = memory.RepositoryFactory()
-        repo = cmd.repository_factory.initialise(ui.here)
-        inserter = repo.get_inserter()
-        inserter.startTestRun()
-        make_test('passing', True).run(inserter)
-        make_test('failing', False).run(inserter)
-        inserter.stopTestRun()
+        self.setup_repo(cmd, ui)
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
         self.assertEqual(0, cmd.execute())
@@ -89,15 +92,52 @@ class TestCommand(ResourcedTestCase):
             ], ui.outputs)
         # TODO: check the list file is written, and deleted.
 
+    def test_IDLIST_failures(self):
+        ui, cmd = self.get_test_ui_and_cmd(options=[('failing', True)])
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST\n')
+        self.assertEqual(0, cmd.execute())
+        expected_cmd = 'foo failing| testr load'
+        self.assertEqual([
+            ('values', [('running', expected_cmd)]),
+            ('popen', (expected_cmd,), {'shell': True}),
+            ('communicate',),
+            ], ui.outputs)
+
+    def test_IDLIST_default_is_empty(self):
+        ui, cmd = self.get_test_ui_and_cmd()
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST\n')
+        self.assertEqual(0, cmd.execute())
+        expected_cmd = 'foo | testr load'
+        self.assertEqual([
+            ('values', [('running', expected_cmd)]),
+            ('popen', (expected_cmd,), {'shell': True}),
+            ('communicate',),
+            ], ui.outputs)
+
+    def test_IDLIST_default_passed_normally(self):
+        ui, cmd = self.get_test_ui_and_cmd()
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST\ntest_id_list_default=whoo yea\n')
+        self.assertEqual(0, cmd.execute())
+        expected_cmd = 'foo whoo yea| testr load'
+        self.assertEqual([
+            ('values', [('running', expected_cmd)]),
+            ('popen', (expected_cmd,), {'shell': True}),
+            ('communicate',),
+            ], ui.outputs)
+
     def test_IDFILE_not_passed_normally(self):
         ui, cmd = self.get_test_ui_and_cmd()
         cmd.repository_factory = memory.RepositoryFactory()
-        repo = cmd.repository_factory.initialise(ui.here)
-        inserter = repo.get_inserter()
-        inserter.startTestRun()
-        make_test('passing', True).run(inserter)
-        make_test('failing', False).run(inserter)
-        inserter.stopTestRun()
+        self.setup_repo(cmd, ui)
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
         self.assertEqual(0, cmd.execute())
@@ -111,12 +151,7 @@ class TestCommand(ResourcedTestCase):
     def test_extra_options_passed_in(self):
         ui, cmd = self.get_test_ui_and_cmd(args=('bar', 'quux'))
         cmd.repository_factory = memory.RepositoryFactory()
-        repo = cmd.repository_factory.initialise(ui.here)
-        inserter = repo.get_inserter()
-        inserter.startTestRun()
-        make_test('passing', True).run(inserter)
-        make_test('failing', False).run(inserter)
-        inserter.stopTestRun()
+        self.setup_repo(cmd, ui)
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
         self.assertEqual(0, cmd.execute())

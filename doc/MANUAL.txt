@@ -41,7 +41,8 @@ separated list of the test ids that your test runner outputs. Arguments passed
 to run are passed through to your test runner command line. To pass options
 through to your test running, use a ``--`` before your options.
 For instance, ``testr run foo -- bar --no-plugins`` would run
-``foo foo bar --no-plugins | testr load`` using the above config example.
+``foo foo bar --no-plugins | testr load`` using the above config example. The
+command help for ``testr run`` describes the availableoptions for .testr.conf.
 
 Having setup a .testr.conf, a common workflow then becomes::
 
