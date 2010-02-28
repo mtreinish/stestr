@@ -21,6 +21,8 @@ optparse.
 The code in this module contains the AbstractArgument base class. Individual
 argument types are present in e.g. testrepository.arguments.string.
 
+See testrepository.commands.Command for usage of Arguments.
+
 Plugins and extensions wanting to add argument types should either define them
 internally or install into testrepository.arguments as somename (perhaps by
 extending the testrepository.arguments __path__ to include a directory

@@ -12,16 +12,15 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for individual arguments."""
+"""Tests for the string argument type."""
 
-import unittest
+from testrepository.arguments import string
+from testrepository.tests import ResourcedTestCase
 
-def test_suite():
-    names = [
-        'command',
-        'string',
-        ]
-    module_names = ['testrepository.tests.arguments.test_' + name for name in
-        names]
-    loader = unittest.TestLoader()
-    return loader.loadTestsFromNames(module_names)
+
+class TestArgument(ResourcedTestCase):
+
+    def test_parses_as_string(self):
+        arg = string.StringArgument('name')
+        result = arg.parse(['load'])
+        self.assertEqual(['load'], result)

@@ -44,8 +44,10 @@ class AbstractUI(object):
         path or a URL. This is only guaranteed to be set after set_command is
         called, as some UI's need to do option processing to determine its
         value.
-    :ivar options: The options for this ui, containing both global and command
-        specific options.
+    :ivar options: The parsed options for this ui, containing both global and
+        command specific options.
+    :ivar arguments: The parsed arguments for this ui. Set Command.args to
+        define the accepted arguments for a command.
     """
 
     def _check_cmd(self):

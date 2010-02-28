@@ -12,16 +12,13 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for individual arguments."""
+"""An Argument that simply stores a string."""
 
-import unittest
+from testrepository.arguments import AbstractArgument
 
-def test_suite():
-    names = [
-        'command',
-        'string',
-        ]
-    module_names = ['testrepository.tests.arguments.test_' + name for name in
-        names]
-    loader = unittest.TestLoader()
-    return loader.loadTestsFromNames(module_names)
+
+class StringArgument(AbstractArgument):
+    """An argument that stores a string verbatim."""
+
+    def _parse_one(self, arg):
+        return arg

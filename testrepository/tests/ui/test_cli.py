@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 Testrepository Contributors
+# Copyright (c) 2009, 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -139,3 +139,13 @@ AssertionError: quux
         cmd = commands.Command(ui)
         ui.set_command(cmd)
         self.assertEqual("Unexpected arguments: ['one']\n", stderr.getvalue())
+
+    def test_parse_after_double_dash_are_arguments(self):
+        stdout = StringIO()
+        stdin = StringIO()
+        stderr = StringIO()
+        ui = cli.UI(['one', '--', '--two', 'three'], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        cmd.args = [arguments.string.StringArgument('args', max=None)]
+        ui.set_command(cmd)
+        self.assertEqual({'args':['one', '--two', 'three']}, ui.arguments)
