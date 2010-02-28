@@ -37,8 +37,7 @@ class failing(Command):
 
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
-        run_id = repo.latest_id()
-        run = repo.get_test_run(run_id)
+        run = repo.get_failing()
         case = run.get_test()
         failed = False
         evaluator = TestResult()

@@ -8,6 +8,9 @@ NEXT (In development)
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
+* ``failing`` now correctly calls ``repository.get_failing`` and will this
+  track all seen failures rather than just the latest observed failures.
+
 * New subcommand 'failing' added.
 
 * The command 'last' will no longer error on a new repository.

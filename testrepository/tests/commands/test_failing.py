@@ -84,3 +84,21 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual('stream', ui.outputs[0][0])
         self.assertThat(ui.outputs[0][1], DocTestMatches("""...test: ...failing
 ...failure: ...failing...""", doctest.ELLIPSIS))
+
+    def test_uses_get_failing(self):
+        ui, cmd = self.get_test_ui_and_cmd()
+        cmd.repository_factory = memory.RepositoryFactory()
+        calls = []
+        open = cmd.repository_factory.open
+        def decorate_open_with_get_failing(url):
+            repo = open(url)
+            orig = repo.get_failing
+            def get_failing():
+                calls.append(True)
+                return orig()
+            repo.get_failing = get_failing
+            return repo
+        cmd.repository_factory.open = decorate_open_with_get_failing
+        repo = cmd.repository_factory.initialise(ui.here)
+        self.assertEqual(0, cmd.execute())
+        self.assertEqual([True], calls)
