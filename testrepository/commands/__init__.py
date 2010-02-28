@@ -125,6 +125,10 @@ class Command(object):
         and finally calls run() to perform the command. Most commands should
         not need to override this method, and any user wanting to run a 
         command should call this method.
+
+        This is a synchronous method, and basically just a helper. GUI's or
+        asynchronous programs can choose to not call it and instead should call
+        lower level API's.
         """
         if not self.ui.set_command(self):
             return 1
