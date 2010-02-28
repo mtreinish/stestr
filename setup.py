@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2009 Testrepository Contributors
+# Copyright (c) 2009, 2010 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -14,7 +14,10 @@
 # limitations under that license.
 
 from distutils.core import setup
+import os
+
 import testrepository
+
 version = '.'.join(str(component) for component in testrepository.__version__[0:3])
 phase = testrepository.__version__[3]
 if phase != 'final':
@@ -27,11 +30,14 @@ if phase != 'final':
         # Preserve the version number but give it a revno prefix
         version = version + '~%s' % t.branch.revno()
 
+description = file(os.path.join(os.path.dirname(__file__), 'README.txt'), 'rb').read()
+
 setup(name='testrepository',
       author='Robert Collins',
       author_email='robertc@robertcollins.net',
       url='https://launchpad.net/testrepository',
-      description=('A repository of test results.'),
+      description='A repository of test results.',
+      long_description=description,
       scripts=['testr'],
       version=version,
       packages=['testrepository',

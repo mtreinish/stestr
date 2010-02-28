@@ -5,6 +5,7 @@ include COPYING
 include INSTALL.txt
 include MANIFEST.in
 include Makefile
+include NEWS
 include README.txt
 include doc/*.txt
 include testrepository/tests/*.py

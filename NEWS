@@ -1,12 +1,15 @@
-----------------------------
+############################
 testrepository release notes
-----------------------------
+############################
 
 NEXT (In development)
----------------------
++++++++++++++++++++++
 
 IMPROVEMENTS
 ~~~~~~~~~~~~
+
+0.0.3
+-----
 
 * ``failing`` now correctly calls ``repository.get_failing`` and will this
   track all seen failures rather than just the latest observed failures.
