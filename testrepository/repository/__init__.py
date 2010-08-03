@@ -40,7 +40,10 @@ class AbstractRepositoryFactory(object):
         raise NotImplementedError(self.initialise)
 
     def open(self, url):
-        """Open the repository at url."""
+        """Open the repository at url.
+
+        Raise RepositoryNotFound if there is no repository at the given url.
+        """
         raise NotImplementedError(self.open)
 
 
