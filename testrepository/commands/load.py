@@ -20,6 +20,7 @@ import subunit.test_results
 from testtools import MultiTestResult, TestResult
 
 from testrepository.commands import Command
+from testrepository.repository import RepositoryNotFound
 
 class load(Command):
     """Load a subunit stream into a repository.
@@ -32,7 +33,10 @@ class load(Command):
 
     def run(self):
         path = self.ui.here
-        repo = self.repository_factory.open(path)
+        try:
+            repo = self.repository_factory.open(path)
+        except RepositoryNotFound:
+            repo = self.repository_factory.initialise(path)
         failed = False
         for stream in self.ui.iter_streams('subunit'):
             inserter = repo.get_inserter()

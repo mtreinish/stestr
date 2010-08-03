@@ -42,6 +42,17 @@ class TestCommandLoad(ResourcedTestCase):
         # Results loaded
         self.assertEqual(1, repo.count())
 
+    def test_load_initialises_repo_if_doesnt_exist(self):
+        ui = UI([('subunit', '')])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        calls = []
+        cmd.repository_factory = RecordingRepositoryFactory(calls,
+            memory.RepositoryFactory())
+        del calls[:]
+        cmd.execute()
+        self.assertEqual([('open', ui.here), ('initialise', ui.here)], calls)
+
     def test_load_returns_0_normally(self):
         ui = UI([('subunit', '')])
         cmd = load.load(ui)
