@@ -127,8 +127,8 @@ class UI(ui.AbstractUI):
     def output_values(self, values):
         outputs = []
         for label, value in values:
-            outputs.append('%s: %s' % (label, value))
-        self._stdout.write('%s\n' % ' '.join(outputs))
+            outputs.append('%s=%s' % (label, value))
+        self._stdout.write('%s\n' % ', '.join(outputs))
 
     def _check_cmd(self):
         parser = OptionParser()
