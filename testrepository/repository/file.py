@@ -34,7 +34,7 @@ class RepositoryFactory(AbstractRepositoryFactory):
 
     def initialise(klass, url):
         """Create a repository at url/path."""
-        base = os.path.join(url, '.testrepository')
+        base = os.path.join(os.path.expanduser(url), '.testrepository')
         os.mkdir(base)
         stream = file(os.path.join(base, 'format'), 'wb')
         try:
@@ -46,7 +46,7 @@ class RepositoryFactory(AbstractRepositoryFactory):
         return result
 
     def open(self, url):
-        base = os.path.join(url, '.testrepository')
+        base = os.path.join(os.path.expanduser(url), '.testrepository')
         stream = file(os.path.join(base, 'format'), 'rb')
         if '1\n' != stream.read():
             raise ValueError(url)
