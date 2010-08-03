@@ -27,6 +27,7 @@ from testrepository.repository import (
     AbstractRepository,
     AbstractRepositoryFactory,
     AbstractTestRun,
+    RepositoryNotFound,
     )
 
 
@@ -47,7 +48,12 @@ class RepositoryFactory(AbstractRepositoryFactory):
 
     def open(self, url):
         base = os.path.join(url, '.testrepository')
-        stream = file(os.path.join(base, 'format'), 'rb')
+        try:
+            stream = file(os.path.join(base, 'format'), 'rb')
+        except (IOError, OSError), e:
+            if e.errno == errno.ENOENT:
+                raise RepositoryNotFound(url)
+            raise
         if '1\n' != stream.read():
             raise ValueError(url)
         return Repository(base)

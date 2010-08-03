@@ -132,8 +132,16 @@ class TestRepositoryContract(ResourcedTestCase):
         self.assertEqual(1, repo.count())
 
     def test_open(self):
-        repo1 = self.repo_impl.initialise(self.sample_url)
-        repo2 = self.repo_impl.open(self.sample_url)
+        self.repo_impl.initialise(self.sample_url)
+        self.repo_impl.open(self.sample_url)
+
+    def test_open_non_existent(self):
+        url = 'doesntexistatall'
+        error = self.assertRaises(
+            repository.RepositoryNotFound, self.repo_impl.open, url)
+        self.assertEqual(
+            'No repository found in %s. Create one by running "testr init".'
+            % url, str(error))
 
     def test_inserting_creates_id(self):
         # When inserting a stream, an id is returned from stopTestRun.

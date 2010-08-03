@@ -22,6 +22,7 @@ from testrepository.repository import (
     AbstractRepository,
     AbstractRepositoryFactory,
     AbstractTestRun,
+    RepositoryNotFound,
     )
 
 
@@ -40,7 +41,10 @@ class RepositoryFactory(AbstractRepositoryFactory):
         return self.repos[url]
 
     def open(self, url):
-        return self.repos[url]
+        try:
+            return self.repos[url]
+        except KeyError:
+            raise RepositoryNotFound(url)
 
 
 class Repository(AbstractRepository):
