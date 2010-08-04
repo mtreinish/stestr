@@ -135,7 +135,6 @@ class UI(ui.AbstractUI):
         self._stdout.write('%s\n' % ' '.join(outputs))
 
     def _check_cmd(self):
-        cmd = self.cmd
         parser = OptionParser()
         parser.add_option("-d", "--here", dest="here",
             help="Set the directory or url that a command should run from. "
@@ -149,7 +148,6 @@ class UI(ui.AbstractUI):
         options, args = parser.parse_args(self._argv)
         self.here = options.here
         self.options = options
-        orig_args = list(args)
         parsed_args = {}
         failed = False
         for arg in self.cmd.args:
