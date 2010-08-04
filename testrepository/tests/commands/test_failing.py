@@ -46,7 +46,7 @@ class TestCommand(ResourcedTestCase):
                 pass
         Cases('failing').run(inserter)
         Cases('ok').run(inserter)
-        id = inserter.stopTestRun()
+        inserter.stopTestRun()
         self.assertEqual(1, cmd.execute())
         self.assertEqual('results', ui.outputs[0][0])
         suite = ui.outputs[0][1]
@@ -78,7 +78,7 @@ class TestCommand(ResourcedTestCase):
                 pass
         Cases('failing').run(inserter)
         Cases('ok').run(inserter)
-        id = inserter.stopTestRun()
+        inserter.stopTestRun()
         self.assertEqual(1, cmd.execute())
         self.assertEqual(1, len(ui.outputs))
         self.assertEqual('stream', ui.outputs[0][0])
@@ -99,6 +99,6 @@ class TestCommand(ResourcedTestCase):
             repo.get_failing = get_failing
             return repo
         cmd.repository_factory.open = decorate_open_with_get_failing
-        repo = cmd.repository_factory.initialise(ui.here)
+        cmd.repository_factory.initialise(ui.here)
         self.assertEqual(0, cmd.execute())
         self.assertEqual([True], calls)
