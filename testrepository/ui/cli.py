@@ -79,14 +79,6 @@ class UI(ui.AbstractUI):
         if not rest_string.endswith('\n'):
             self._stdout.write('\n')
 
-    def output_results(self, suite_or_test):
-        result = self.make_result()
-        result.startTestRun()
-        try:
-            suite_or_test.run(result)
-        finally:
-            result.stopTestRun()
-
     def output_stream(self, stream):
         contents = stream.read(65536)
         while contents:
