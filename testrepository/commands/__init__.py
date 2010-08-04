@@ -154,7 +154,8 @@ class Command(object):
         """Output a test run.
 
         :param run_id: The run id.
-        :param output: A StringIO containing a subunit stream for some portion of the run to show.
+        :param output: A StringIO containing a subunit stream for some
+            portion of the run to show.
         :param evaluator: A TestResult evaluating the entire run.
         """
         if self.ui.options.quiet:

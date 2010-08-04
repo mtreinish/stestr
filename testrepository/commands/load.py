@@ -23,7 +23,7 @@ from testrepository.commands import Command
 
 class load(Command):
     """Load a subunit stream into a repository.
-    
+
     Failing tests are shown on the console and a summary of the stream is
     printed at the end.
     """
@@ -37,10 +37,9 @@ class load(Command):
         for stream in self.ui.iter_streams('subunit'):
             inserter = repo.get_inserter()
             evaluator = TestResult()
-            output = StringIO()
-            output_stream = subunit.TestProtocolClient(output)
-            filtered = subunit.test_results.TestResultFilter(output_stream,
-                filter_skip=True)
+            output_stream = StringIO()
+            filtered = subunit.test_results.TestResultFilter(
+                subunit.TestProtocolClient(output_stream), filter_skip=True)
             case = subunit.ProtocolTestCase(stream)
             inserter.startTestRun()
             try:
@@ -48,7 +47,7 @@ class load(Command):
             finally:
                 run_id = inserter.stopTestRun()
             failed = failed or not evaluator.wasSuccessful()
-            self.output_run(run_id, output, evaluator)
+            self.output_run(run_id, output_stream, evaluator)
         if failed:
             return 1
         else:
