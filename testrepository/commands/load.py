@@ -14,8 +14,6 @@
 
 """Load data into a repository."""
 
-from cStringIO import StringIO
-
 import subunit.test_results
 from testtools import MultiTestResult, TestResult
 
@@ -49,7 +47,7 @@ class load(Command):
                 run_id = inserter.stopTestRun()
                 filtered.stopTestRun()
             failed = failed or not evaluator.wasSuccessful()
-            self.output_run(run_id, StringIO(), evaluator)
+            self.output_run(run_id, evaluator)
         if failed:
             return 1
         else:

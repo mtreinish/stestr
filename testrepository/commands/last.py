@@ -14,8 +14,6 @@
 
 """Show the last run loaded into a repository."""
 
-from cStringIO import StringIO
-
 import subunit.test_results
 from testtools import MultiTestResult, TestResult
 
@@ -44,7 +42,7 @@ class last(Command):
         finally:
             result.stopTestRun()
         failed = not evaluator.wasSuccessful()
-        self.output_run(run_id, StringIO(), evaluator)
+        self.output_run(run_id, evaluator)
         if failed:
             return 1
         else:
