@@ -32,12 +32,17 @@ class CLITestResult(testtools.TestResult):
         self.sep1 = '=' * 70 + '\n'
         self.sep2 = '-' * 70 + '\n'
 
+    def _format_error(self, label, test, error_text):
+        return ''.join([
+            self.sep1,
+            '%s: %s\n' % (label, test.id()),
+            self.sep2,
+            error_text,
+            ])
+
     def _show_list(self, label, error_list):
         for test, output in error_list:
-            self.stream.write(self.sep1)
-            self.stream.write("%s: %s\n" % (label, test.id()))
-            self.stream.write(self.sep2)
-            self.stream.write(output)
+            self.stream.write(self._format_error(label, test, output))
 
     def stopTestRun(self):
         self._show_list('ERROR', self.errors)

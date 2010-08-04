@@ -18,6 +18,7 @@ import doctest
 from cStringIO import StringIO
 import sys
 
+from testtools import TestCase
 from testtools.matchers import DocTestMatches
 
 from testrepository import arguments
@@ -148,3 +149,30 @@ AssertionError: quux
         cmd.args = [arguments.string.StringArgument('args', max=None)]
         ui.set_command(cmd)
         self.assertEqual({'args':['one', '--two', 'three']}, ui.arguments)
+
+
+class TestCLITestResult(TestCase):
+
+    def make_exc_info(self):
+        # Make an exc_info tuple for use in testing.
+        try:
+            1/0
+        except ZeroDivisionError:
+            return sys.exc_info()
+
+    def test_initial_stream(self):
+        # CLITestResult.__init__ does not do anything to the stream it is
+        # given.
+        stream = StringIO()
+        cli.CLITestResult(stream)
+        self.assertEqual('', stream.getvalue())
+
+    def test_format_error(self):
+        # CLITestResult formats errors by giving them a big fat line, a title
+        # made up of their 'label' and the name of the test, another different
+        # big fat line, and then the actual error itself.
+        result = cli.CLITestResult(None)
+        error = result._format_error('label', self, 'error text')
+        expected = '%s%s: %s\n%s%s' % (
+            result.sep1, 'label', self.id(), result.sep2, 'error text')
+        self.assertThat(error, DocTestMatches(expected))
