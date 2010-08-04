@@ -37,7 +37,6 @@ class load(Command):
         for stream in self.ui.iter_streams('subunit'):
             inserter = repo.get_inserter()
             evaluator = TestResult()
-            output_stream = StringIO()
             output_result = self.ui.make_result()
             filtered = subunit.test_results.TestResultFilter(
                 output_result, filter_skip=True)
@@ -50,7 +49,7 @@ class load(Command):
                 run_id = inserter.stopTestRun()
                 filtered.stopTestRun()
             failed = failed or not evaluator.wasSuccessful()
-            self.output_run(run_id, output_stream, evaluator)
+            self.output_run(run_id, StringIO(), evaluator)
         if failed:
             return 1
         else:
