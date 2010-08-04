@@ -191,6 +191,7 @@ class TestUIContract(ResourcedTestCase):
     def test_make_result(self):
         # make_result should return a TestResult.
         ui = self.ui_factory()
+        ui.set_command(commands.Command(ui))
         result = ui.make_result()
         result.startTestRun()
         result.stopTestRun()

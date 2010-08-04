@@ -33,6 +33,48 @@ class ProcessModel(object):
         return '', ''
 
 
+class TestSuiteModel(object):
+
+    def __init__(self):
+        self._results = []
+
+    def recordResult(self, method, *args):
+        self._results.append((method, args))
+
+    def run(self, result):
+        for method, args in self._results:
+            getattr(result, method)(*args)
+
+
+class TestResultModel(TestResult):
+
+    def __init__(self, ui):
+        super(TestResultModel, self).__init__()
+        self.ui = ui
+        self._suite = TestSuiteModel()
+
+    def startTest(self, test):
+        self._suite.recordResult('startTest', test)
+
+    def stopTest(self, test):
+        self._suite.recordResult('stopTest', test)
+
+    def addError(self, test, *args):
+        super(TestResultModel, self).addError(test, *args)
+        self._suite.recordResult('addError', test, *args)
+
+    def addFailure(self, test, *args):
+        super(TestResultModel, self).addFailure(test, *args)
+        self._suite.recordResult('addFailure', test, *args)
+
+    def stopTestRun(self):
+        if self.wasSuccessful():
+            return
+        if self.ui.options.quiet:
+            return
+        self.ui.outputs.append(('results', self._suite))
+
+
 class UI(ui.AbstractUI):
     """A object based UI.
     
@@ -90,7 +132,7 @@ class UI(ui.AbstractUI):
             yield StringIO(stream_bytes)
 
     def make_result(self):
-        return TestResult()
+        return TestResultModel(self)
 
     def output_error(self, error_tuple):
         self.outputs.append(('error', error_tuple))

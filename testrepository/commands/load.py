@@ -38,15 +38,17 @@ class load(Command):
             inserter = repo.get_inserter()
             evaluator = TestResult()
             output_stream = StringIO()
-            output_result = subunit.TestProtocolClient(output_stream)
+            output_result = self.ui.make_result()
             filtered = subunit.test_results.TestResultFilter(
                 output_result, filter_skip=True)
             case = subunit.ProtocolTestCase(stream)
+            filtered.startTestRun()
             inserter.startTestRun()
             try:
                 case.run(MultiTestResult(inserter, evaluator, filtered))
             finally:
                 run_id = inserter.stopTestRun()
+                filtered.stopTestRun()
             failed = failed or not evaluator.wasSuccessful()
             self.output_run(run_id, output_stream, evaluator)
         if failed:
