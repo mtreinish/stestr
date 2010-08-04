@@ -89,7 +89,8 @@ class TestCLIUI(ResourcedTestCase):
         class Case(ResourcedTestCase):
             def method(self):
                 self.fail('quux')
-        ui.output_results(Case('method'))
+        result = ui.make_result()
+        Case('method').run(result)
         self.assertThat(ui._stdout.getvalue(),DocTestMatches(
             """======================================================================
 FAIL: testrepository.tests.ui.test_cli.Case.method

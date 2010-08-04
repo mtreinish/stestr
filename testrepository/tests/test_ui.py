@@ -102,14 +102,6 @@ class TestUIContract(ResourcedTestCase):
         ui = self.get_test_ui()
         ui.output_rest('')
 
-    def test_output_results(self):
-        # output_results can be called and takes a thing that can be 'run'.
-        ui = self.get_test_ui()
-        class Case(ResourcedTestCase):
-            def method(self):
-                pass
-        ui.output_results(Case('method'))
-
     def test_output_stream(self):
         # a stream of bytes can be output.
         ui = self.get_test_ui()

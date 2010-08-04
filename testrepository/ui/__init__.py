@@ -106,18 +106,6 @@ class AbstractUI(object):
         """
         raise NotImplementedError(self.output_rest)
 
-    def output_results(self, suite_or_test):
-        """Show suite_or_test to the user by 'running' it.
-
-        This expects the run to be fast/cheap.
-
-        :param suite_or_test: A suite or test to show to the user. This should
-            obey the 'TestCase' protocol - it should have a method run(result)
-            that causes all the tests contained in the object to be handed to
-            the result object.
-        """
-        raise NotImplementedError(self.output_results)
-
     def output_stream(self, stream):
         """Show a byte stream to the user.
 
