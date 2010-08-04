@@ -80,7 +80,7 @@ class UI(ui.AbstractUI):
             self._stdout.write('\n')
 
     def output_results(self, suite_or_test):
-        result = CLITestResult(self._stdout)
+        result = self.make_result()
         result.startTestRun()
         try:
             suite_or_test.run(result)
