@@ -40,14 +40,13 @@ class CLITestResult(testtools.TestResult):
             error_text,
             ])
 
-    def _show_list(self, label, error_list):
-        for test, output in error_list:
-            self.stream.write(self._format_error(label, test, output))
+    def addError(self, test, err=None, details=None):
+        super(CLITestResult, self).addError(test, err=err, details=details)
+        self.stream.write(self._format_error('ERROR', *(self.errors[-1])))
 
-    def stopTestRun(self):
-        self._show_list('ERROR', self.errors)
-        self._show_list('FAIL', self.failures)
-        super(CLITestResult, self).stopTestRun()
+    def addFailure(self, test, err=None, details=None):
+        super(CLITestResult, self).addFailure(test, err=err, details=details)
+        self.stream.write(self._format_error('FAIL', *(self.failures[-1])))
 
 
 class UI(ui.AbstractUI):

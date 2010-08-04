@@ -176,3 +176,27 @@ class TestCLITestResult(TestCase):
         expected = '%s%s: %s\n%s%s' % (
             result.sep1, 'label', self.id(), result.sep2, 'error text')
         self.assertThat(error, DocTestMatches(expected))
+
+    def test_addError_outputs_error(self):
+        # CLITestResult.addError outputs the given error immediately to the
+        # stream.
+        stream = StringIO()
+        result = cli.CLITestResult(stream)
+        error = self.make_exc_info()
+        error_text = result._err_details_to_string(self, error)
+        result.addError(self, error)
+        self.assertThat(
+            stream.getvalue(),
+            DocTestMatches(result._format_error('ERROR', self, error_text)))
+
+    def test_addFailure_outputs_failure(self):
+        # CLITestResult.addError outputs the given error immediately to the
+        # stream.
+        stream = StringIO()
+        result = cli.CLITestResult(stream)
+        error = self.make_exc_info()
+        error_text = result._err_details_to_string(self, error)
+        result.addFailure(self, error)
+        self.assertThat(
+            stream.getvalue(),
+            DocTestMatches(result._format_error('FAIL', self, error_text)))
