@@ -38,8 +38,9 @@ class load(Command):
             inserter = repo.get_inserter()
             evaluator = TestResult()
             output_stream = StringIO()
+            output_result = subunit.TestProtocolClient(output_stream)
             filtered = subunit.test_results.TestResultFilter(
-                subunit.TestProtocolClient(output_stream), filter_skip=True)
+                output_result, filter_skip=True)
             case = subunit.ProtocolTestCase(stream)
             inserter.startTestRun()
             try:
