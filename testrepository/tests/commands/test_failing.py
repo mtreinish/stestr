@@ -85,6 +85,32 @@ class TestCommand(ResourcedTestCase):
         self.assertThat(ui.outputs[0][1], DocTestMatches("""...test: ...failing
 ...failure: ...failing...""", doctest.ELLIPSIS))
 
+    def test_with_list_shows_list_of_tests(self):
+        ui, cmd = self.get_test_ui_and_cmd(options=[('list', True)])
+        cmd.repository_factory = memory.RepositoryFactory()
+        repo = cmd.repository_factory.initialise(ui.here)
+        inserter = repo.get_inserter()
+        inserter.startTestRun()
+        class Cases(ResourcedTestCase):
+            def failing1(self):
+                self.fail('foo')
+            def failing2(self):
+                self.fail('bar')
+            def ok(self):
+                pass
+        Cases('failing1').run(inserter)
+        Cases('ok').run(inserter)
+        Cases('failing2').run(inserter)
+        inserter.stopTestRun()
+        self.assertEqual(1, cmd.execute(), ui.outputs)
+        self.assertEqual(1, len(ui.outputs))
+        self.assertEqual('stream', ui.outputs[0][0])
+        sorted_output = ''.join(sorted(ui.outputs[0][1].splitlines(True)))
+        self.assertThat(
+            sorted_output,
+            DocTestMatches(
+                '...Cases.failing1\n...Cases.failing2\n', doctest.ELLIPSIS))
+
     def test_uses_get_failing(self):
         ui, cmd = self.get_test_ui_and_cmd()
         cmd.repository_factory = memory.RepositoryFactory()
