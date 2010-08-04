@@ -18,6 +18,8 @@ from cStringIO import StringIO
 import optparse
 
 from testrepository import ui
+from testtools import TestResult
+
 
 class ProcessModel(object):
     """A subprocess.Popen test double."""
@@ -86,6 +88,9 @@ class UI(ui.AbstractUI):
         streams = self.input_streams.pop(stream_type, [])
         for stream_bytes in streams:
             yield StringIO(stream_bytes)
+
+    def make_result(self):
+        return TestResult()
 
     def output_error(self, error_tuple):
         self.outputs.append(('error', error_tuple))

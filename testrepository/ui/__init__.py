@@ -82,6 +82,10 @@ class AbstractUI(object):
         """Helper for iter_streams which subclasses should implement."""
         raise NotImplementedError(self._iter_streams)
 
+    def make_result(self):
+        """Make a `TestResult` that can be used to display test results."""
+        raise NotImplementedError(self.make_result)
+
     def output_error(self, error_tuple):
         """Show an error to the user.
 

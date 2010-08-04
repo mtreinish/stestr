@@ -187,3 +187,11 @@ class TestUIContract(ResourcedTestCase):
             stderr=subprocess.PIPE)
         out, err = proc.communicate()
         proc.returncode
+
+    def test_make_result(self):
+        # make_result should return a TestResult.
+        ui = self.ui_factory()
+        result = ui.make_result()
+        result.startTestRun()
+        result.stopTestRun()
+        self.assertEqual(0, result.testsRun)
