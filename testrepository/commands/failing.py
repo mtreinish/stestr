@@ -38,13 +38,20 @@ class failing(Command):
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
         run = repo.get_failing()
+        if self.ui.options.subunit:
+            # TODO only failing tests.
+            stream = run.get_subunit_stream()
+            self.ui.output_stream(stream)
+            if stream:
+                return 1
+            else:
+                return 0
         case = run.get_test()
         failed = False
         evaluator = TestResult()
-        output = StringIO()
-        output_stream = subunit.TestProtocolClient(output)
-        filtered = subunit.test_results.TestResultFilter(output_stream,
-            filter_skip=True)
+        output_result = self.ui.make_result()
+        filtered = subunit.test_results.TestResultFilter(
+            output_result, filter_skip=True)
         result = MultiTestResult(evaluator, filtered)
         result.startTestRun()
         try:
@@ -56,15 +63,8 @@ class failing(Command):
             result = 1
         else:
             result = 0
-        if self.ui.options.subunit:
-            # TODO only failing tests.
-            self.ui.output_stream(run.get_subunit_stream())
-            return result
         if self.ui.options.quiet:
             return result
-        if output.getvalue():
-            output.seek(0)
-            self.ui.output_results(subunit.ProtocolTestCase(output))
         values = []
         failures = len(evaluator.failures) + len(evaluator.errors)
         if failures:
