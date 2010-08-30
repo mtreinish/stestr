@@ -119,7 +119,7 @@ AssertionError: quux
     def test_outputs_values_to_stdout(self):
         ui, cmd = self.get_test_ui_and_cmd()
         ui.output_values([('foo', 1), ('bar', 'quux')])
-        self.assertEqual('foo: 1 bar: quux\n', ui._stdout.getvalue())
+        self.assertEqual('foo=1, bar=quux\n', ui._stdout.getvalue())
 
     def test_parse_error_goes_to_stderr(self):
         stdout = StringIO()
