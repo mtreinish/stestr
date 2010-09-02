@@ -13,6 +13,8 @@ IMPROVEMENTS
 
 * The file implementation of Repository.open now performs ~ expansion.
 
+* "testr load" will now create a repository if none existed.
+
 0.0.3
 +++++
 
