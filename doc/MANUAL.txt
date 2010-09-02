@@ -42,7 +42,7 @@ to run are passed through to your test runner command line. To pass options
 through to your test running, use a ``--`` before your options.
 For instance, ``testr run foo -- bar --no-plugins`` would run
 ``foo foo bar --no-plugins | testr load`` using the above config example. The
-command help for ``testr run`` describes the availableoptions for .testr.conf.
+command help for ``testr run`` describes the available options for .testr.conf.
 
 Having setup a .testr.conf, a common workflow then becomes::
 
@@ -52,3 +52,25 @@ Having setup a .testr.conf, a common workflow then becomes::
   $ testr run
   # And either commit or loop around this again depending on whether errors
   # were found.
+
+Repositories
+~~~~~~~~~~~~
+
+A testr repository is a very simple disk structure. It contains the following
+files (for a format 1 repository - the only current format):
+
+* format: This file identifies the precise layout of the repository, in case
+  future changes are needed.
+
+* next-stream: This file contains the serial number to be used when adding another
+  stream to the repository.
+
+* failing: This file is a stream containing just the known failing tests. It
+  is updated whenever a new stream is added to the repository, so that it only
+  references known failing tests.
+
+* #N - all the streams inserted in the repository are given a serial number.
+
+* repo.conf: This file contains user configuration settings for the repository.
+  ``testr repo-config`` will dump a repo configration and
+  ``test help repo-config`` has online help for all the repository settings.

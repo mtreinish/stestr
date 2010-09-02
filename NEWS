@@ -5,9 +5,16 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+IMPROVEMENTS
+------------
+
+* The summary of a test run is now formatted as foo=NN rather than foo: NN,
+  which some folk find easier to read.
+
+* The file implementation of Repository.open now performs ~ expansion.
 
 0.0.3
-~~~~~
++++++
 
 IMPROVEMENTS
 ------------
