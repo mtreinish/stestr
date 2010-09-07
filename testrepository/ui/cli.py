@@ -124,6 +124,11 @@ class UI(ui.AbstractUI):
             show_row(row)
         self._stdout.write(''.join(outputs))
 
+    def output_tests(self, tests):
+        for test in tests:
+            self._stdout.write(test.id())
+            self._stdout.write('\n')
+
     def output_values(self, values):
         outputs = []
         for label, value in values:

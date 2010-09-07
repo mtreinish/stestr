@@ -120,6 +120,11 @@ class TestUIContract(ResourcedTestCase):
         ui = self.get_test_ui()
         ui.output_table([('col1', 'col2'), ('row1c1','row1c2')])
         
+    def test_output_tests(self):
+        # output_tests can be called, and takes a list of tests to output.
+        ui = self.get_test_ui()
+        ui.output_tests([self, self.__class__('test_output_table')])
+
     def test_output_values(self):
         # output_values can be called and takes a list of things to output.
         ui = self.get_test_ui()

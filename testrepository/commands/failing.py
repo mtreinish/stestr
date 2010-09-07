@@ -64,10 +64,8 @@ class failing(Command):
             result = 0
         if self.ui.options.list:
             failing_tests = [
-                test.id()
-                for test, thing in evaluator.errors + evaluator.failures]
-            failing_tests.append('')
-            self.ui.output_stream(StringIO('\n'.join(failing_tests)))
+                test for test, thing in evaluator.errors + evaluator.failures]
+            self.ui.output_tests(failing_tests)
             return result
         if self.ui.options.subunit:
             # TODO only failing tests.

@@ -104,12 +104,10 @@ class TestCommand(ResourcedTestCase):
         inserter.stopTestRun()
         self.assertEqual(1, cmd.execute(), ui.outputs)
         self.assertEqual(1, len(ui.outputs))
-        self.assertEqual('stream', ui.outputs[0][0])
-        sorted_output = ''.join(sorted(ui.outputs[0][1].splitlines(True)))
-        self.assertThat(
-            sorted_output,
-            DocTestMatches(
-                '...Cases.failing1\n...Cases.failing2\n', doctest.ELLIPSIS))
+        self.assertEqual('tests', ui.outputs[0][0])
+        self.assertEqual(
+            set([Cases('failing1').id(), Cases('failing2').id()]),
+            set([test.id() for test in ui.outputs[0][1]]))
 
     def test_uses_get_failing(self):
         ui, cmd = self.get_test_ui_and_cmd()
