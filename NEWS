@@ -8,6 +8,8 @@ NEXT (In development)
 IMPROVEMENTS
 ------------
 
+* Repository not found errors are now clearer. (Jonathan Lange, #530010)
+
 * The summary of a test run is now formatted as foo=NN rather than foo: NN,
   which some folk find easier to read.
 
