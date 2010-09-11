@@ -17,6 +17,7 @@ IMPROVEMENTS
   which some folk find easier to read.
 
 * The file implementation of Repository.open now performs ~ expansion.
+  (Jonathan Lange, #529665)
 
 0.0.3
 +++++
