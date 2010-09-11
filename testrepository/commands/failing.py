@@ -32,8 +32,14 @@ class failing(Command):
     tests will only be detected on full runs with this approach.
     """
 
-    options = [optparse.Option("--subunit", action="store_true",
-            default=False, help="Show output as a subunit stream.")]
+    options = [
+        optparse.Option(
+            "--subunit", action="store_true",
+            default=False, help="Show output as a subunit stream."),
+        optparse.Option(
+            "--list", action="store_true",
+            default=False, help="Show only a list of failing tests."),
+        ]
 
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
@@ -56,6 +62,11 @@ class failing(Command):
             result = 1
         else:
             result = 0
+        if self.ui.options.list:
+            failing_tests = [
+                test for test, _ in evaluator.errors + evaluator.failures]
+            self.ui.output_tests(failing_tests)
+            return result
         if self.ui.options.subunit:
             # TODO only failing tests.
             self.ui.output_stream(run.get_subunit_stream())
