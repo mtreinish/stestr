@@ -68,7 +68,7 @@ class UI(ui.AbstractUI):
     def _iter_streams(self, stream_type):
         yield self._stdin
 
-    def make_result(self):
+    def make_result(self, get_id):
         return CLITestResult(self._stdout)
 
     def output_error(self, error_tuple):

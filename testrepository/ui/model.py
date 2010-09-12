@@ -131,7 +131,7 @@ class UI(ui.AbstractUI):
         for stream_bytes in streams:
             yield StringIO(stream_bytes)
 
-    def make_result(self):
+    def make_result(self, get_id):
         return TestResultModel(self)
 
     def output_error(self, error_tuple):

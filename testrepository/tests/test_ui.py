@@ -189,7 +189,7 @@ class TestUIContract(ResourcedTestCase):
         # make_result should return a TestResult.
         ui = self.ui_factory()
         ui.set_command(commands.Command(ui))
-        result = ui.make_result()
+        result = ui.make_result(lambda: None)
         result.startTestRun()
         result.stopTestRun()
         self.assertEqual(0, result.testsRun)

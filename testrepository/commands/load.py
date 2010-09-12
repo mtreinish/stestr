@@ -35,7 +35,7 @@ class load(Command):
         for stream in self.ui.iter_streams('subunit'):
             inserter = repo.get_inserter()
             evaluator = TestResult()
-            output_result = self.ui.make_result()
+            output_result = self.ui.make_result(lambda: None)
             filtered = subunit.test_results.TestResultFilter(
                 output_result, filter_skip=True)
             case = subunit.ProtocolTestCase(stream)

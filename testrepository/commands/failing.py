@@ -53,7 +53,7 @@ class failing(Command):
     def _make_result(self, evaluator):
         if self.ui.options.list:
             return evaluator
-        output_result = self.ui.make_result()
+        output_result = self.ui.make_result(lambda: None)
         filtered = subunit.test_results.TestResultFilter(
             output_result, filter_skip=True)
         return MultiTestResult(evaluator, filtered)

@@ -32,7 +32,7 @@ class last(Command):
         case = repo.get_test_run(run_id).get_test()
         failed = False
         evaluator = TestResult()
-        output_result = self.ui.make_result()
+        output_result = self.ui.make_result(lambda: None)
         filtered = subunit.test_results.TestResultFilter(
             output_result, filter_skip=True)
         result = MultiTestResult(evaluator, filtered)
