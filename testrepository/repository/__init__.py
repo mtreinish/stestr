@@ -40,7 +40,10 @@ class AbstractRepositoryFactory(object):
         raise NotImplementedError(self.initialise)
 
     def open(self, url):
-        """Open the repository at url."""
+        """Open the repository at url.
+
+        Raise RepositoryNotFound if there is no repository at the given url.
+        """
         raise NotImplementedError(self.open)
 
 
@@ -110,3 +113,12 @@ class AbstractTestRun(object):
             tests reported to a testtools.TestResult.
         """
         raise NotImplementedError(self.get_test)
+
+
+class RepositoryNotFound(Exception):
+    """Raised when we try to open a repository that isn't there."""
+
+    def __init__(self, url):
+        self.url = url
+        msg = 'No repository found in %s. Create one by running "testr init".'
+        Exception.__init__(self, msg % url)

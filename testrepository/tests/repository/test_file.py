@@ -15,6 +15,8 @@
 """Tests for the file repository implementation."""
 
 import os.path
+import shutil
+import tempfile
 
 from testrepository.repository import file
 from testrepository.tests import ResourcedTestCase
@@ -26,7 +28,7 @@ class TestFileRepository(ResourcedTestCase):
     resources = [('tempdir', TempDirResource())]
 
     def test_initialise(self):
-        repo = file.RepositoryFactory().initialise(self.tempdir)
+        file.RepositoryFactory().initialise(self.tempdir)
         self.resources[0][1].dirtied(self.tempdir)
         base = os.path.join(self.tempdir, '.testrepository')
         stream = open(os.path.join(base, 'format'), 'rb')
@@ -41,6 +43,14 @@ class TestFileRepository(ResourcedTestCase):
         finally:
             stream.close()
         self.assertEqual("0\n", contents)
+
+    def test_initialise_expands_user_directory(self):
+        home_dir = os.path.expanduser('~')
+        temp_dir = tempfile.mkdtemp(dir=home_dir)
+        self.addCleanup(shutil.rmtree, temp_dir)
+        short_path = os.path.join('~', os.path.basename(temp_dir))
+        repo = file.RepositoryFactory().initialise(short_path)
+        self.assertTrue(os.path.exists(repo.base))
 
     def test_inserter_output_path(self):
         repo = file.RepositoryFactory().initialise(self.tempdir)
@@ -57,3 +67,12 @@ class TestFileRepository(ResourcedTestCase):
         result = repo.get_inserter()
         result.startTestRun()
         self.assertEqual(0, result.stopTestRun())
+
+    def test_open_expands_user_directory(self):
+        home_dir = os.path.expanduser('~')
+        temp_dir = tempfile.mkdtemp(dir=home_dir)
+        self.addCleanup(shutil.rmtree, temp_dir)
+        short_path = os.path.join('~', os.path.basename(temp_dir))
+        repo1 = file.RepositoryFactory().initialise(short_path)
+        repo2 = file.RepositoryFactory().open(short_path)
+        self.assertEqual(repo1.base, repo2.base)

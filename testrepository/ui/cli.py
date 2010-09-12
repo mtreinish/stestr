@@ -123,11 +123,16 @@ class UI(ui.AbstractUI):
             show_row(row)
         self._stdout.write(''.join(outputs))
 
+    def output_tests(self, tests):
+        for test in tests:
+            self._stdout.write(test.id())
+            self._stdout.write('\n')
+
     def output_values(self, values):
         outputs = []
         for label, value in values:
-            outputs.append('%s: %s' % (label, value))
-        self._stdout.write('%s\n' % ' '.join(outputs))
+            outputs.append('%s=%s' % (label, value))
+        self._stdout.write('%s\n' % ', '.join(outputs))
 
     def _check_cmd(self):
         parser = OptionParser()

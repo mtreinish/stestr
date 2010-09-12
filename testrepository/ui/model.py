@@ -146,6 +146,10 @@ class UI(ui.AbstractUI):
     def output_table(self, table):
         self.outputs.append(('table', table))
 
+    def output_tests(self, tests):
+        """Output a list of tests."""
+        self.outputs.append(('tests', tests))
+
     def output_values(self, values):
         self.outputs.append(('values', values))
 

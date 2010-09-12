@@ -32,27 +32,41 @@ class failing(Command):
     tests will only be detected on full runs with this approach.
     """
 
-    options = [optparse.Option("--subunit", action="store_true",
-            default=False, help="Show output as a subunit stream.")]
+    options = [
+        optparse.Option(
+            "--subunit", action="store_true",
+            default=False, help="Show output as a subunit stream."),
+        optparse.Option(
+            "--list", action="store_true",
+            default=False, help="Show only a list of failing tests."),
+        ]
+
+    def _list_subunit(self, run):
+        # TODO only failing tests.
+        stream = run.get_subunit_stream()
+        self.ui.output_stream(stream)
+        if stream:
+            return 1
+        else:
+            return 0
+
+    def _make_result(self, evaluator):
+        if self.ui.options.list:
+            return evaluator
+        output_result = self.ui.make_result()
+        filtered = subunit.test_results.TestResultFilter(
+            output_result, filter_skip=True)
+        return MultiTestResult(evaluator, filtered)
 
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
         run = repo.get_failing()
         if self.ui.options.subunit:
-            # TODO only failing tests.
-            stream = run.get_subunit_stream()
-            self.ui.output_stream(stream)
-            if stream:
-                return 1
-            else:
-                return 0
+            return self._list_subunit(run)
         case = run.get_test()
         failed = False
         evaluator = TestResult()
-        output_result = self.ui.make_result()
-        filtered = subunit.test_results.TestResultFilter(
-            output_result, filter_skip=True)
-        result = MultiTestResult(evaluator, filtered)
+        result = self._make_result(evaluator)
         result.startTestRun()
         try:
             case.run(result)
@@ -63,6 +77,11 @@ class failing(Command):
             result = 1
         else:
             result = 0
+        if self.ui.options.list:
+            failing_tests = [
+                test for test, _ in evaluator.errors + evaluator.failures]
+            self.ui.output_tests(failing_tests)
+            return result
         if self.ui.options.quiet:
             return result
         values = []

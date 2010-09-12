@@ -117,10 +117,19 @@ AssertionError: quux
         self.assertEqual('foo  1\n---  ----\nb    quux\n',
             ui._stdout.getvalue())
 
+    def test_outputs_tests_to_stdout(self):
+        ui, cmd = self.get_test_ui_and_cmd()
+        ui.output_tests([self, self.__class__('test_construct')])
+        self.assertThat(
+            ui._stdout.getvalue(),
+            DocTestMatches(
+                '...TestCLIUI.test_outputs_tests_to_stdout\n'
+                '...TestCLIUI.test_construct\n', doctest.ELLIPSIS))
+
     def test_outputs_values_to_stdout(self):
         ui, cmd = self.get_test_ui_and_cmd()
         ui.output_values([('foo', 1), ('bar', 'quux')])
-        self.assertEqual('foo: 1 bar: quux\n', ui._stdout.getvalue())
+        self.assertEqual('foo=1, bar=quux\n', ui._stdout.getvalue())
 
     def test_parse_error_goes_to_stderr(self):
         stdout = StringIO()

@@ -5,9 +5,25 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+0.0.4
++++++
+
+IMPROVEMENTS
+------------
+
+* ``failing`` now supports ``--list`` to list the failing tests.
+  (Jonathan Lange)
+
+* Repository not found errors are now clearer. (Jonathan Lange, #530010)
+
+* The summary of a test run is now formatted as foo=NN rather than foo: NN,
+  which some folk find easier to read.
+
+* The file implementation of Repository.open now performs ~ expansion.
+  (Jonathan Lange, #529665)
 
 0.0.3
-~~~~~
++++++
 
 IMPROVEMENTS
 ------------
