@@ -170,6 +170,11 @@ class TestCLITestResult(TestCase):
         except ZeroDivisionError:
             return sys.exc_info()
 
+    def make_result(self, stream=None):
+        if stream is None:
+            stream = StringIO()
+        return cli.CLITestResult(stream)
+
     def test_initial_stream(self):
         # CLITestResult.__init__ does not do anything to the stream it is
         # given.
@@ -181,7 +186,7 @@ class TestCLITestResult(TestCase):
         # CLITestResult formats errors by giving them a big fat line, a title
         # made up of their 'label' and the name of the test, another different
         # big fat line, and then the actual error itself.
-        result = cli.CLITestResult(None)
+        result = self.make_result()
         error = result._format_error('label', self, 'error text')
         expected = '%s%s: %s\n%s%s' % (
             result.sep1, 'label', self.id(), result.sep2, 'error text')
@@ -191,7 +196,7 @@ class TestCLITestResult(TestCase):
         # CLITestResult.addError outputs the given error immediately to the
         # stream.
         stream = StringIO()
-        result = cli.CLITestResult(stream)
+        result = self.make_result(stream)
         error = self.make_exc_info()
         error_text = result._err_details_to_string(self, error)
         result.addError(self, error)
@@ -203,7 +208,7 @@ class TestCLITestResult(TestCase):
         # CLITestResult.addError outputs the given error immediately to the
         # stream.
         stream = StringIO()
-        result = cli.CLITestResult(stream)
+        result = self.make_result(stream)
         error = self.make_exc_info()
         error_text = result._err_details_to_string(self, error)
         result.addFailure(self, error)
