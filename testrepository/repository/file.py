@@ -47,7 +47,8 @@ class RepositoryFactory(AbstractRepositoryFactory):
         return result
 
     def open(self, url):
-        base = os.path.join(os.path.expanduser(url), '.testrepository')
+        path = os.path.expanduser(url)
+        base = os.path.join(path, '.testrepository')
         try:
             stream = file(os.path.join(base, 'format'), 'rb')
         except (IOError, OSError), e:

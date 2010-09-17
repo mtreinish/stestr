@@ -46,7 +46,7 @@ class TestCommand(ResourcedTestCase):
                 pass
         Cases('failing').run(inserter)
         Cases('ok').run(inserter)
-        id = inserter.stopTestRun()
+        inserter.stopTestRun()
         self.assertEqual(1, cmd.execute())
         self.assertEqual('results', ui.outputs[0][0])
         suite = ui.outputs[0][1]
@@ -78,12 +78,36 @@ class TestCommand(ResourcedTestCase):
                 pass
         Cases('failing').run(inserter)
         Cases('ok').run(inserter)
-        id = inserter.stopTestRun()
+        inserter.stopTestRun()
         self.assertEqual(1, cmd.execute())
         self.assertEqual(1, len(ui.outputs))
         self.assertEqual('stream', ui.outputs[0][0])
         self.assertThat(ui.outputs[0][1], DocTestMatches("""...test: ...failing
 ...failure: ...failing...""", doctest.ELLIPSIS))
+
+    def test_with_list_shows_list_of_tests(self):
+        ui, cmd = self.get_test_ui_and_cmd(options=[('list', True)])
+        cmd.repository_factory = memory.RepositoryFactory()
+        repo = cmd.repository_factory.initialise(ui.here)
+        inserter = repo.get_inserter()
+        inserter.startTestRun()
+        class Cases(ResourcedTestCase):
+            def failing1(self):
+                self.fail('foo')
+            def failing2(self):
+                self.fail('bar')
+            def ok(self):
+                pass
+        Cases('failing1').run(inserter)
+        Cases('ok').run(inserter)
+        Cases('failing2').run(inserter)
+        inserter.stopTestRun()
+        self.assertEqual(1, cmd.execute(), ui.outputs)
+        self.assertEqual(1, len(ui.outputs))
+        self.assertEqual('tests', ui.outputs[0][0])
+        self.assertEqual(
+            set([Cases('failing1').id(), Cases('failing2').id()]),
+            set([test.id() for test in ui.outputs[0][1]]))
 
     def test_uses_get_failing(self):
         ui, cmd = self.get_test_ui_and_cmd()
@@ -99,6 +123,6 @@ class TestCommand(ResourcedTestCase):
             repo.get_failing = get_failing
             return repo
         cmd.repository_factory.open = decorate_open_with_get_failing
-        repo = cmd.repository_factory.initialise(ui.here)
+        cmd.repository_factory.initialise(ui.here)
         self.assertEqual(0, cmd.execute())
         self.assertEqual([True], calls)
