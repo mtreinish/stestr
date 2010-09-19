@@ -18,7 +18,7 @@ import testtools
 
 from testrepository.commands import load
 from testrepository.ui.model import UI
-from testrepository.tests import ResourcedTestCase
+from testrepository.tests import ResourcedTestCase, Wildcard
 from testrepository.tests.test_repository import RecordingRepositoryFactory
 from testrepository.repository import memory
 
@@ -77,10 +77,8 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(1, cmd.execute())
         suite = ui.outputs[0][1]
-        self.assertEqual('results', ui.outputs[0][0])
-        ui.outputs[0] = ('results', None)
         self.assertEqual([
-            ('results', None),
+            ('results', Wildcard),
             ('values', [('id', 0), ('tests', 1), ('failures', 1)])],
             ui.outputs)
         result = testtools.TestResult()

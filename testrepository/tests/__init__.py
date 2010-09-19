@@ -33,6 +33,9 @@ class ResourcedTestCase(TestCase, testresources.ResourcedTestCase):
 class _Wildcard(object):
     """Object that is equal to everything."""
 
+    def __repr__(self):
+        return '*'
+
     def __eq__(self, other):
         return True
 

@@ -22,7 +22,7 @@ from testtools.matchers import DocTestMatches
 from testrepository.commands import failing
 from testrepository.ui.model import UI
 from testrepository.repository import memory
-from testrepository.tests import ResourcedTestCase
+from testrepository.tests import ResourcedTestCase, Wildcard
 
 
 class TestCommand(ResourcedTestCase):
@@ -48,14 +48,12 @@ class TestCommand(ResourcedTestCase):
         Cases('ok').run(inserter)
         inserter.stopTestRun()
         self.assertEqual(1, cmd.execute())
-        self.assertEqual('results', ui.outputs[0][0])
-        suite = ui.outputs[0][1]
-        ui.outputs[0] = ('results', None)
         # We should have seen test outputs (of the failure) and summary data.
         self.assertEqual([
-            ('results', None),
+            ('results', Wildcard),
             ('values', [('failures', 1)])],
             ui.outputs)
+        suite = ui.outputs[0][1]
         result = testtools.TestResult()
         result.startTestRun()
         try:
