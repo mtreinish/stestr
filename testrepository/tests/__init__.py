@@ -30,6 +30,19 @@ class ResourcedTestCase(TestCase, testresources.ResourcedTestCase):
             self)
 
 
+class _Wildcard(object):
+    """Object that is equal to everything."""
+
+    def __eq__(self, other):
+        return True
+
+    def __ne__(self, other):
+        return False
+
+
+Wildcard = _Wildcard()
+
+
 def test_suite():
     packages = [
         'arguments',
