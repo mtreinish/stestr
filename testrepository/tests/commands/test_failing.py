@@ -135,9 +135,3 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual(1, cmd.execute())
         self.assertEqual([True], calls)
 
-    # XXX: Need a test to show what happens when "failing" is called and there
-    # is no previous test run.
-
-    # XXX: Probably should have a test that demonstrates what happens when
-    # "failing" is called and there is a previous test run with no failures.
-
