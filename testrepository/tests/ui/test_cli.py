@@ -173,13 +173,14 @@ class TestCLITestResult(TestCase):
     def make_result(self, stream=None):
         if stream is None:
             stream = StringIO()
-        return cli.CLITestResult(stream)
+        ui = cli.UI([], None, stream, None)
+        return ui.make_result(lambda: None)
 
     def test_initial_stream(self):
         # CLITestResult.__init__ does not do anything to the stream it is
         # given.
         stream = StringIO()
-        cli.CLITestResult(stream)
+        cli.CLITestResult(cli.UI(None, None, None, None), stream, lambda: None)
         self.assertEqual('', stream.getvalue())
 
     def test_format_error(self):

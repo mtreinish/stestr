@@ -59,6 +59,7 @@ def test_suite():
         'matchers',
         'monkeypatch',
         'repository',
+        'results',
         'setup',
         'stubpackage',
         'testr',

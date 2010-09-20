@@ -14,13 +14,13 @@
 
 """Show the current failures in the repository."""
 
-from cStringIO import StringIO
 import optparse
 
-import subunit.test_results
 from testtools import MultiTestResult, TestResult
 
 from testrepository.commands import Command
+from testrepository.results import TestResultFilter
+
 
 class failing(Command):
     """Show the current failures known by the repository.
@@ -50,12 +50,11 @@ class failing(Command):
         else:
             return 0
 
-    def _make_result(self, evaluator):
+    def _make_result(self, repo, evaluator):
         if self.ui.options.list:
             return evaluator
-        output_result = self.ui.make_result(lambda: None)
-        filtered = subunit.test_results.TestResultFilter(
-            output_result, filter_skip=True)
+        output_result = self.ui.make_result(repo.latest_id)
+        filtered = TestResultFilter(output_result, filter_skip=True)
         return MultiTestResult(evaluator, filtered)
 
     def run(self):
@@ -66,7 +65,7 @@ class failing(Command):
         case = run.get_test()
         failed = False
         evaluator = TestResult()
-        result = self._make_result(evaluator)
+        result = self._make_result(repo, evaluator)
         result.startTestRun()
         try:
             case.run(result)
@@ -81,12 +80,4 @@ class failing(Command):
             failing_tests = [
                 test for test, _ in evaluator.errors + evaluator.failures]
             self.ui.output_tests(failing_tests)
-            return result
-        if self.ui.options.quiet:
-            return result
-        values = []
-        failures = len(evaluator.failures) + len(evaluator.errors)
-        if failures:
-            values.append(('failures', failures))
-        self.ui.output_values(values)
         return result

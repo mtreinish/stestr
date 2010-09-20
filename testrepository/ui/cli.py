@@ -18,16 +18,15 @@ from optparse import OptionParser
 import os
 import sys
 
-import testtools
-
 from testrepository import ui
 
-class CLITestResult(testtools.TestResult):
+
+class CLITestResult(ui.BaseUITestResult):
     """A TestResult for the CLI."""
 
-    def __init__(self, stream):
+    def __init__(self, ui, get_id, stream):
         """Construct a CLITestResult writing to stream."""
-        super(CLITestResult, self).__init__()
+        super(CLITestResult, self).__init__(ui, get_id)
         self.stream = stream
         self.sep1 = '=' * 70 + '\n'
         self.sep2 = '-' * 70 + '\n'
@@ -69,7 +68,7 @@ class UI(ui.AbstractUI):
         yield self._stdin
 
     def make_result(self, get_id):
-        return CLITestResult(self._stdout)
+        return CLITestResult(self, get_id, self._stdout)
 
     def output_error(self, error_tuple):
         self._stderr.write(str(error_tuple[1]) + '\n')

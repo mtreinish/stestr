@@ -18,7 +18,6 @@ from cStringIO import StringIO
 import optparse
 
 from testrepository import ui
-from testtools import TestResult
 
 
 class ProcessModel(object):
@@ -46,14 +45,14 @@ class TestSuiteModel(object):
             getattr(result, method)(*args)
 
 
-class TestResultModel(TestResult):
+class TestResultModel(ui.BaseUITestResult):
 
-    def __init__(self, ui):
-        super(TestResultModel, self).__init__()
-        self.ui = ui
+    def __init__(self, ui, get_id):
+        super(TestResultModel, self).__init__(ui, get_id)
         self._suite = TestSuiteModel()
 
     def startTest(self, test):
+        super(TestResultModel, self).startTest(test)
         self._suite.recordResult('startTest', test)
 
     def stopTest(self, test):
@@ -68,11 +67,10 @@ class TestResultModel(TestResult):
         self._suite.recordResult('addFailure', test, *args)
 
     def stopTestRun(self):
-        if self.wasSuccessful():
-            return
         if self.ui.options.quiet:
             return
         self.ui.outputs.append(('results', self._suite))
+        return super(TestResultModel, self).stopTestRun()
 
 
 class UI(ui.AbstractUI):
@@ -132,7 +130,7 @@ class UI(ui.AbstractUI):
             yield StringIO(stream_bytes)
 
     def make_result(self, get_id):
-        return TestResultModel(self)
+        return TestResultModel(self, get_id)
 
     def output_error(self, error_tuple):
         self.outputs.append(('error', error_tuple))

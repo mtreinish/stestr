@@ -14,10 +14,12 @@
 
 """Load data into a repository."""
 
-import subunit.test_results
-from testtools import MultiTestResult, TestResult
+import subunit
+from testtools import MultiTestResult
 
 from testrepository.commands import Command
+from testrepository.results import TestResultFilter
+
 
 class load(Command):
     """Load a subunit stream into a repository.
@@ -32,22 +34,21 @@ class load(Command):
         path = self.ui.here
         repo = self.repository_factory.open(path)
         failed = False
+        run_id = None
         for stream in self.ui.iter_streams('subunit'):
             inserter = repo.get_inserter()
-            evaluator = TestResult()
-            output_result = self.ui.make_result(lambda: None)
-            filtered = subunit.test_results.TestResultFilter(
-                output_result, filter_skip=True)
+            output_result = self.ui.make_result(lambda: run_id)
+            # XXX: We want to *count* skips, but not show them.
+            filtered = TestResultFilter(output_result, filter_skip=False)
             case = subunit.ProtocolTestCase(stream)
             filtered.startTestRun()
             inserter.startTestRun()
             try:
-                case.run(MultiTestResult(inserter, evaluator, filtered))
+                case.run(MultiTestResult(inserter, filtered))
             finally:
                 run_id = inserter.stopTestRun()
                 filtered.stopTestRun()
-            failed = failed or not evaluator.wasSuccessful()
-            self.output_run(run_id, evaluator)
+            failed = failed or not filtered.wasSuccessful()
         if failed:
             return 1
         else:

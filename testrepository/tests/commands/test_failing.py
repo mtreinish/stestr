@@ -51,7 +51,7 @@ class TestCommand(ResourcedTestCase):
         # We should have seen test outputs (of the failure) and summary data.
         self.assertEqual([
             ('results', Wildcard),
-            ('values', [('failures', 1)])],
+            ('values', [('id', 0), ('tests', 1), ('failures', 1)])],
             ui.outputs)
         suite = ui.outputs[0][1]
         result = testtools.TestResult()
@@ -114,6 +114,16 @@ class TestCommand(ResourcedTestCase):
         open = cmd.repository_factory.open
         def decorate_open_with_get_failing(url):
             repo = open(url)
+            inserter = repo.get_inserter()
+            inserter.startTestRun()
+            class Cases(ResourcedTestCase):
+                def failing(self):
+                    self.fail('foo')
+                def ok(self):
+                    pass
+            Cases('failing').run(inserter)
+            Cases('ok').run(inserter)
+            inserter.stopTestRun()
             orig = repo.get_failing
             def get_failing():
                 calls.append(True)
@@ -122,5 +132,12 @@ class TestCommand(ResourcedTestCase):
             return repo
         cmd.repository_factory.open = decorate_open_with_get_failing
         cmd.repository_factory.initialise(ui.here)
-        self.assertEqual(0, cmd.execute())
+        self.assertEqual(1, cmd.execute())
         self.assertEqual([True], calls)
+
+    # XXX: Need a test to show what happens when "failing" is called and there
+    # is no previous test run.
+
+    # XXX: Probably should have a test that demonstrates what happens when
+    # "failing" is called and there is a previous test run with no failures.
+

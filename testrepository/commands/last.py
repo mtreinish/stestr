@@ -14,10 +14,9 @@
 
 """Show the last run loaded into a repository."""
 
-import subunit.test_results
-from testtools import MultiTestResult, TestResult
-
 from testrepository.commands import Command
+from testrepository.results import TestResultFilter
+
 
 class last(Command):
     """Show the last run loaded into a repository.
@@ -31,18 +30,14 @@ class last(Command):
         run_id = repo.latest_id()
         case = repo.get_test_run(run_id).get_test()
         failed = False
-        evaluator = TestResult()
-        output_result = self.ui.make_result(lambda: None)
-        filtered = subunit.test_results.TestResultFilter(
-            output_result, filter_skip=True)
-        result = MultiTestResult(evaluator, filtered)
+        output_result = self.ui.make_result(lambda: run_id)
+        result = TestResultFilter(output_result, filter_skip=True)
         result.startTestRun()
         try:
             case.run(result)
         finally:
             result.stopTestRun()
-        failed = not evaluator.wasSuccessful()
-        self.output_run(run_id, evaluator)
+        failed = not result.wasSuccessful()
         if failed:
             return 1
         else:
