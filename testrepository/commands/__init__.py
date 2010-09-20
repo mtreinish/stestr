@@ -150,23 +150,6 @@ class Command(object):
     def _init(self):
         """Per command init call, called into by Command.__init__."""
 
-    def output_run(self, run_id, evaluator):
-        """Output a test run.
-
-        :param run_id: The run id.
-        :param evaluator: A TestResult evaluating the entire run.
-        """
-        if self.ui.options.quiet:
-            return
-        values = [('id', run_id), ('tests', evaluator.testsRun)]
-        failures = len(evaluator.failures) + len(evaluator.errors)
-        if failures:
-            values.append(('failures', failures))
-        skips = sum(map(len, evaluator.skip_reasons.itervalues()))
-        if skips:
-            values.append(('skips', skips))
-        self.ui.output_values(values)
-
     def run(self):
         """The core logic for this command to be implemented by subclasses."""
         raise NotImplementedError(self.run)
