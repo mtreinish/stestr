@@ -18,7 +18,7 @@ import testtools
 
 from testrepository.commands import load
 from testrepository.ui.model import UI
-from testrepository.tests import ResourcedTestCase
+from testrepository.tests import ResourcedTestCase, Wildcard
 from testrepository.tests.test_repository import RecordingRepositoryFactory
 from testrepository.repository import memory
 
@@ -77,10 +77,8 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(1, cmd.execute())
         suite = ui.outputs[0][1]
-        self.assertEqual('results', ui.outputs[0][0])
-        ui.outputs[0] = ('results', None)
         self.assertEqual([
-            ('results', None),
+            ('results', Wildcard),
             ('values', [('id', 0), ('tests', 1), ('failures', 1)])],
             ui.outputs)
         result = testtools.TestResult()
@@ -100,7 +98,8 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(0, cmd.execute())
         self.assertEqual(
-            [('values', [('id', 0), ('tests', 1), ('skips', 1)])],
+            [('results', Wildcard),
+             ('values', [('id', 0), ('tests', 1), ('skips', 1)])],
             ui.outputs)
 
     def test_load_new_shows_test_summary_no_tests(self):
@@ -110,7 +109,9 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory = memory.RepositoryFactory()
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(0, cmd.execute())
-        self.assertEqual([('values', [('id', 0), ('tests', 0)])], ui.outputs)
+        self.assertEqual(
+            [('results', Wildcard), ('values', [('id', 0), ('tests', 0)])],
+            ui.outputs)
 
     def test_load_new_shows_test_summary_per_stream(self):
         # This may not be the final layout, but for now per-stream stats are
@@ -122,7 +123,9 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(0, cmd.execute())
         self.assertEqual([
+            ('results', Wildcard),
             ('values', [('id', 0), ('tests', 0)]),
+            ('results', Wildcard),
             ('values', [('id', 1), ('tests', 0)])],
             ui.outputs)
 

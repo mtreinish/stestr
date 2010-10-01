@@ -14,13 +14,13 @@
 
 """Show the current failures in the repository."""
 
-from cStringIO import StringIO
 import optparse
 
-import subunit.test_results
 from testtools import MultiTestResult, TestResult
 
 from testrepository.commands import Command
+from testrepository.results import TestResultFilter
+
 
 class failing(Command):
     """Show the current failures known by the repository.
@@ -41,44 +41,43 @@ class failing(Command):
             default=False, help="Show only a list of failing tests."),
         ]
 
+    def _list_subunit(self, run):
+        # TODO only failing tests.
+        stream = run.get_subunit_stream()
+        self.ui.output_stream(stream)
+        if stream:
+            return 1
+        else:
+            return 0
+
+    def _make_result(self, repo, list_result):
+        if self.ui.options.list:
+            return list_result
+        output_result = self.ui.make_result(repo.latest_id)
+        filtered = TestResultFilter(output_result, filter_skip=True)
+        return MultiTestResult(list_result, filtered)
+
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
         run = repo.get_failing()
+        if self.ui.options.subunit:
+            return self._list_subunit(run)
         case = run.get_test()
         failed = False
-        evaluator = TestResult()
-        output = StringIO()
-        output_stream = subunit.TestProtocolClient(output)
-        filtered = subunit.test_results.TestResultFilter(output_stream,
-            filter_skip=True)
-        result = MultiTestResult(evaluator, filtered)
+        list_result = TestResult()
+        result = self._make_result(repo, list_result)
         result.startTestRun()
         try:
             case.run(result)
         finally:
             result.stopTestRun()
-        failed = not evaluator.wasSuccessful()
+        failed = not list_result.wasSuccessful()
         if failed:
             result = 1
         else:
             result = 0
         if self.ui.options.list:
             failing_tests = [
-                test for test, _ in evaluator.errors + evaluator.failures]
+                test for test, _ in list_result.errors + list_result.failures]
             self.ui.output_tests(failing_tests)
-            return result
-        if self.ui.options.subunit:
-            # TODO only failing tests.
-            self.ui.output_stream(run.get_subunit_stream())
-            return result
-        if self.ui.options.quiet:
-            return result
-        if output.getvalue():
-            output.seek(0)
-            self.ui.output_results(subunit.ProtocolTestCase(output))
-        values = []
-        failures = len(evaluator.failures) + len(evaluator.errors)
-        if failures:
-            values.append(('failures', failures))
-        self.ui.output_values(values)
         return result

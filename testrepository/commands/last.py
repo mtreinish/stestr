@@ -5,7 +5,7 @@
 # license at the users choice. A copy of both licenses are available in the
 # project source as Apache-2.0 and BSD. You may not use this file except in
 # compliance with one of these two licences.
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -14,16 +14,13 @@
 
 """Show the last run loaded into a repository."""
 
-from cStringIO import StringIO
-
-import subunit.test_results
-from testtools import MultiTestResult, TestResult
-
 from testrepository.commands import Command
+from testrepository.results import TestResultFilter
+
 
 class last(Command):
     """Show the last run loaded into a repository.
-    
+
     Failing tests are shown on the console and a summary of the run is printed
     at the end.
     """
@@ -33,19 +30,14 @@ class last(Command):
         run_id = repo.latest_id()
         case = repo.get_test_run(run_id).get_test()
         failed = False
-        evaluator = TestResult()
-        output = StringIO()
-        output_stream = subunit.TestProtocolClient(output)
-        filtered = subunit.test_results.TestResultFilter(output_stream,
-            filter_skip=True)
-        result = MultiTestResult(evaluator, filtered)
+        output_result = self.ui.make_result(lambda: run_id)
+        result = TestResultFilter(output_result, filter_skip=True)
         result.startTestRun()
         try:
             case.run(result)
         finally:
             result.stopTestRun()
-        failed = not evaluator.wasSuccessful()
-        self.output_run(run_id, output, evaluator)
+        failed = not result.wasSuccessful()
         if failed:
             return 1
         else:

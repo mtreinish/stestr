@@ -22,7 +22,7 @@ from testtools.matchers import DocTestMatches
 from testrepository.commands import failing
 from testrepository.ui.model import UI
 from testrepository.repository import memory
-from testrepository.tests import ResourcedTestCase
+from testrepository.tests import ResourcedTestCase, Wildcard
 
 
 class TestCommand(ResourcedTestCase):
@@ -48,14 +48,12 @@ class TestCommand(ResourcedTestCase):
         Cases('ok').run(inserter)
         inserter.stopTestRun()
         self.assertEqual(1, cmd.execute())
-        self.assertEqual('results', ui.outputs[0][0])
-        suite = ui.outputs[0][1]
-        ui.outputs[0] = ('results', None)
         # We should have seen test outputs (of the failure) and summary data.
         self.assertEqual([
-            ('results', None),
-            ('values', [('failures', 1)])],
+            ('results', Wildcard),
+            ('values', [('id', 0), ('tests', 1), ('failures', 1)])],
             ui.outputs)
+        suite = ui.outputs[0][1]
         result = testtools.TestResult()
         result.startTestRun()
         try:
@@ -116,6 +114,16 @@ class TestCommand(ResourcedTestCase):
         open = cmd.repository_factory.open
         def decorate_open_with_get_failing(url):
             repo = open(url)
+            inserter = repo.get_inserter()
+            inserter.startTestRun()
+            class Cases(ResourcedTestCase):
+                def failing(self):
+                    self.fail('foo')
+                def ok(self):
+                    pass
+            Cases('failing').run(inserter)
+            Cases('ok').run(inserter)
+            inserter.stopTestRun()
             orig = repo.get_failing
             def get_failing():
                 calls.append(True)
@@ -124,5 +132,6 @@ class TestCommand(ResourcedTestCase):
             return repo
         cmd.repository_factory.open = decorate_open_with_get_failing
         cmd.repository_factory.initialise(ui.here)
-        self.assertEqual(0, cmd.execute())
+        self.assertEqual(1, cmd.execute())
         self.assertEqual([True], calls)
+

@@ -18,31 +18,34 @@ from optparse import OptionParser
 import os
 import sys
 
-import testtools
-
 from testrepository import ui
 
-class CLITestResult(testtools.TestResult):
+
+class CLITestResult(ui.BaseUITestResult):
     """A TestResult for the CLI."""
 
-    def __init__(self, stream):
+    def __init__(self, ui, get_id, stream):
         """Construct a CLITestResult writing to stream."""
-        super(CLITestResult, self).__init__()
+        super(CLITestResult, self).__init__(ui, get_id)
         self.stream = stream
-        self.sep1 = '=' * 70 + '\n'
-        self.sep2 = '-' * 70 + '\n'
+        self.sep1 = u'=' * 70 + '\n'
+        self.sep2 = u'-' * 70 + '\n'
 
-    def _show_list(self, label, error_list):
-        for test, output in error_list:
-            self.stream.write(self.sep1)
-            self.stream.write("%s: %s\n" % (label, test.id()))
-            self.stream.write(self.sep2)
-            self.stream.write(output)
+    def _format_error(self, label, test, error_text):
+        return u''.join([
+            self.sep1,
+            u'%s: %s\n' % (label, test.id()),
+            self.sep2,
+            error_text,
+            ])
 
-    def stopTestRun(self):
-        self._show_list('ERROR', self.errors)
-        self._show_list('FAIL', self.failures)
-        super(CLITestResult, self).stopTestRun()
+    def addError(self, test, err=None, details=None):
+        super(CLITestResult, self).addError(test, err=err, details=details)
+        self.stream.write(self._format_error(u'ERROR', *(self.errors[-1])))
+
+    def addFailure(self, test, err=None, details=None):
+        super(CLITestResult, self).addFailure(test, err=err, details=details)
+        self.stream.write(self._format_error(u'FAIL', *(self.failures[-1])))
 
 
 class UI(ui.AbstractUI):
@@ -64,6 +67,9 @@ class UI(ui.AbstractUI):
     def _iter_streams(self, stream_type):
         yield self._stdin
 
+    def make_result(self, get_id):
+        return CLITestResult(self, get_id, self._stdout)
+
     def output_error(self, error_tuple):
         self._stderr.write(str(error_tuple[1]) + '\n')
 
@@ -71,14 +77,6 @@ class UI(ui.AbstractUI):
         self._stdout.write(rest_string)
         if not rest_string.endswith('\n'):
             self._stdout.write('\n')
-
-    def output_results(self, suite_or_test):
-        result = CLITestResult(self._stdout)
-        result.startTestRun()
-        try:
-            suite_or_test.run(result)
-        finally:
-            result.stopTestRun()
 
     def output_stream(self, stream):
         contents = stream.read(65536)
