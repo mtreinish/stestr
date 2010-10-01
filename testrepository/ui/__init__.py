@@ -180,7 +180,7 @@ class BaseUITestResult(TestResult):
         self.ui = ui
         self.get_id = get_id
 
-    def _output_run(self, run_id):
+    def _output_summary(self, run_id):
         """Output a test run.
 
         :param run_id: The run id.
@@ -199,4 +199,4 @@ class BaseUITestResult(TestResult):
     def stopTestRun(self):
         super(BaseUITestResult, self).stopTestRun()
         run_id = self.get_id()
-        self._output_run(run_id)
+        self._output_summary(run_id)

@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 #
 # Copyright (c) 2009, 2010 Testrepository Contributors
 #

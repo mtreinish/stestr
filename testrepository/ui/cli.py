@@ -28,24 +28,24 @@ class CLITestResult(ui.BaseUITestResult):
         """Construct a CLITestResult writing to stream."""
         super(CLITestResult, self).__init__(ui, get_id)
         self.stream = stream
-        self.sep1 = '=' * 70 + '\n'
-        self.sep2 = '-' * 70 + '\n'
+        self.sep1 = u'=' * 70 + '\n'
+        self.sep2 = u'-' * 70 + '\n'
 
     def _format_error(self, label, test, error_text):
-        return ''.join([
+        return u''.join([
             self.sep1,
-            '%s: %s\n' % (label, test.id()),
+            u'%s: %s\n' % (label, test.id()),
             self.sep2,
             error_text,
             ])
 
     def addError(self, test, err=None, details=None):
         super(CLITestResult, self).addError(test, err=err, details=details)
-        self.stream.write(self._format_error('ERROR', *(self.errors[-1])))
+        self.stream.write(self._format_error(u'ERROR', *(self.errors[-1])))
 
     def addFailure(self, test, err=None, details=None):
         super(CLITestResult, self).addFailure(test, err=err, details=details)
-        self.stream.write(self._format_error('FAIL', *(self.failures[-1])))
+        self.stream.write(self._format_error(u'FAIL', *(self.failures[-1])))
 
 
 class UI(ui.AbstractUI):

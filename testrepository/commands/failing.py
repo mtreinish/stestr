@@ -50,12 +50,12 @@ class failing(Command):
         else:
             return 0
 
-    def _make_result(self, repo, evaluator):
+    def _make_result(self, repo, list_result):
         if self.ui.options.list:
-            return evaluator
+            return list_result
         output_result = self.ui.make_result(repo.latest_id)
         filtered = TestResultFilter(output_result, filter_skip=True)
-        return MultiTestResult(evaluator, filtered)
+        return MultiTestResult(list_result, filtered)
 
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
@@ -64,20 +64,20 @@ class failing(Command):
             return self._list_subunit(run)
         case = run.get_test()
         failed = False
-        evaluator = TestResult()
-        result = self._make_result(repo, evaluator)
+        list_result = TestResult()
+        result = self._make_result(repo, list_result)
         result.startTestRun()
         try:
             case.run(result)
         finally:
             result.stopTestRun()
-        failed = not evaluator.wasSuccessful()
+        failed = not list_result.wasSuccessful()
         if failed:
             result = 1
         else:
             result = 0
         if self.ui.options.list:
             failing_tests = [
-                test for test, _ in evaluator.errors + evaluator.failures]
+                test for test, _ in list_result.errors + list_result.failures]
             self.ui.output_tests(failing_tests)
         return result
