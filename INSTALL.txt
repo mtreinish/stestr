@@ -11,7 +11,7 @@ Run time dependencies
 Test dependencies
 ~~~~~~~~~~~~~~~~~
 
-* testtools (the python-testtools package, or
+* testtools 0.9.8 or newer (the python-testtools package, or
    http://pypi.python.org/pypi/testtools/).
 
 * testresources (https://launchpad.net/testresources, or
