@@ -16,11 +16,12 @@
 
 import os.path
 
+from testtools.matchers import MatchesException
+
 from testrepository.commands import run
 from testrepository.ui.model import UI
 from testrepository.repository import memory
 from testrepository.tests import ResourcedTestCase
-from testrepository.tests.matchers import MatchesException
 from testrepository.tests.stubpackage import TempDirResource
 from testrepository.tests.test_repository import make_test
 

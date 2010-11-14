@@ -14,6 +14,8 @@
 
 """Tests for the command argument."""
 
+from testtools.matchers import raises
+
 from testrepository.arguments import command
 from testrepository.commands import load
 from testrepository.tests import ResourcedTestCase
@@ -28,6 +30,6 @@ class TestArgument(ResourcedTestCase):
 
     def test_no_command(self):
         arg = command.CommandArgument('name')
-        err = self.assertRaises(ValueError, arg.parse, ['one'])
-        self.assertEqual("Could not find command 'one'.", str(err))
+        self.assertThat(lambda: arg.parse(['one']),
+            raises(ValueError("Could not find command 'one'.")))
 

@@ -17,46 +17,6 @@
 import sys
 from testtools import TestCase
 
-from testrepository.tests import ResourcedTestCase
-from testrepository.tests.matchers import MatchesException
-
-
-class TestMatchesException(ResourcedTestCase):
-
-    def test_does_not_match_different_exception_class(self):
-        matcher = MatchesException(ValueError("foo"))
-        try:
-            raise Exception("foo")
-        except Exception:
-            error = sys.exc_info()
-        mismatch = matcher.match(error)
-        self.assertNotEqual(None, mismatch)
-        self.assertEqual(
-            "<type 'exceptions.Exception'> is not a "
-            "<type 'exceptions.ValueError'>",
-            mismatch.describe())
-
-    def test_does_not_match_different_args(self):
-        matcher = MatchesException(Exception("foo"))
-        try:
-            raise Exception("bar")
-        except Exception:
-            error = sys.exc_info()
-        mismatch = matcher.match(error)
-        self.assertNotEqual(None, mismatch)
-        self.assertEqual(
-            "Exception('bar',) has different arguments to Exception('foo',).",
-            mismatch.describe())
-
-    def test_matches_same_args(self):
-        matcher = MatchesException(Exception("foo"))
-        try:
-            raise Exception("foo")
-        except Exception:
-            error = sys.exc_info()
-        mismatch = matcher.match(error)
-        self.assertEqual(None, mismatch)
-
 
 class TestWildcard(TestCase):
 

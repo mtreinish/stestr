@@ -5,6 +5,15 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+CHANGES
+-------
+
+* The testrepository test suite depends on testtools 0.9.8. (Robert Collins)
+
+* Local implementation of MatchesException has been removed in favour of the
+  testtools implementation. All ``self.assertRaises`` have been migrated to
+  this new testing interface.
+
 0.0.4
 +++++
 

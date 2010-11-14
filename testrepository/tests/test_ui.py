@@ -19,6 +19,8 @@ import optparse
 import subprocess
 import sys
 
+from testtools.matchers import raises
+
 from testrepository import arguments, commands
 import testrepository.arguments.command
 from testrepository.commands import load
@@ -87,7 +89,7 @@ class TestUIContract(ResourcedTestCase):
 
     def test_iter_streams_unexpected_type_raises(self):
         ui = self.get_test_ui()
-        self.assertRaises(KeyError, ui.iter_streams, 'subunit')
+        self.assertThat(lambda: ui.iter_streams('subunit'), raises(KeyError))
 
     def test_output_error(self):
         try:

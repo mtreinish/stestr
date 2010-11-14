@@ -18,11 +18,11 @@ import os.path
 import sys
 
 from testresources import TestResource
+from testtools.matchers import MatchesException, raises
 
 from testrepository import commands
 from testrepository.repository import file
 from testrepository.tests import ResourcedTestCase
-from testrepository.tests.matchers import MatchesException
 from testrepository.tests.monkeypatch import monkeypatch
 from testrepository.tests.stubpackage import (
     StubPackageResource,
@@ -71,7 +71,8 @@ class TestFindCommand(ResourcedTestCase):
         self.assertIsInstance(cmd(None), commands.Command)
 
     def test_missing_command(self):
-        self.assertRaises(KeyError, commands._find_command, 'bar')
+        self.assertThat(lambda: commands._find_command('bar'),
+            raises(KeyError))
 
     def test_sets_name(self):
         cmd = commands._find_command('foo')

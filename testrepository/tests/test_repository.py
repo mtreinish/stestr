@@ -21,7 +21,7 @@ from testtools import (
     clone_test_with_new_id,
     TestResult,
     )
-from testtools.matchers import DocTestMatches
+from testtools.matchers import DocTestMatches, raises
 
 from testrepository import repository
 from testrepository.repository import file, memory
@@ -98,6 +98,16 @@ def make_test(id, should_pass):
     return clone_test_with_new_id(case, id)
 
 
+class TestRepositoryErrors(ResourcedTestCase):
+
+    def test_not_found(self):
+        url = 'doesntexistatall'
+        error = repository.RepositoryNotFound(url)
+        self.assertEqual(
+            'No repository found in %s. Create one by running "testr init".'
+            % url, str(error))
+
+
 class TestRepositoryContract(ResourcedTestCase):
 
     scenarios = repo_implementations
@@ -137,11 +147,8 @@ class TestRepositoryContract(ResourcedTestCase):
 
     def test_open_non_existent(self):
         url = 'doesntexistatall'
-        error = self.assertRaises(
-            repository.RepositoryNotFound, self.repo_impl.open, url)
-        self.assertEqual(
-            'No repository found in %s. Create one by running "testr init".'
-            % url, str(error))
+        self.assertThat(lambda: self.repo_impl.open(url),
+            raises(repository.RepositoryNotFound(url)))
 
     def test_inserting_creates_id(self):
         # When inserting a stream, an id is returned from stopTestRun.
@@ -164,9 +171,8 @@ class TestRepositoryContract(ResourcedTestCase):
 
     def test_latest_id_empty(self):
         repo = self.repo_impl.initialise(self.sample_url)
-        err = self.assertRaises(KeyError, repo.latest_id)
-        self.assertThat(str(err),
-            DocTestMatches("...No tests in repository...", doctest.ELLIPSIS))
+        self.assertThat(repo.latest_id,
+            raises(KeyError("No tests in repository")))
 
     def test_latest_id_nonempty(self):
         repo = self.repo_impl.initialise(self.sample_url)
