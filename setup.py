@@ -14,23 +14,53 @@
 # limitations under that license.
 
 from distutils.core import setup
+import email
 import os
 
 import testrepository
 
-version = '.'.join(str(component) for component in testrepository.__version__[0:3])
-phase = testrepository.__version__[3]
-if phase != 'final':
+
+def get_revno():
     import bzrlib.workingtree
     t = bzrlib.workingtree.WorkingTree.open_containing(__file__)[0]
+    return t.branch.revno()
+
+
+def get_version_from_pkg_info():
+    """Get the version from PKG-INFO file if we can."""
+    pkg_info_path = os.path.join(os.path.dirname(__file__), 'PKG-INFO')
+    try:
+        pkg_info_file = open(pkg_info_path, 'r')
+    except (IOError, OSError):
+        return None
+    try:
+        pkg_info = email.message_from_file(pkg_info_file)
+    except email.MessageError:
+        return None
+    return pkg_info.get('Version', None)
+
+
+def get_version():
+    """Return the version of testtools that we are building."""
+    version = '.'.join(
+        str(component) for component in testrepository.__version__[0:3])
+    phase = testrepository.__version__[3]
+    if phase == 'final':
+        return version
+    pkg_info_version = get_version_from_pkg_info()
+    if pkg_info_version:
+        return pkg_info_version
+    revno = get_revno()
     if phase == 'alpha':
         # No idea what the next version will be
-        version = 'next-%s' % t.branch.revno()
+        return 'next-r%s' % revno
     else:
         # Preserve the version number but give it a revno prefix
-        version = version + '~%s' % t.branch.revno()
+        return version + '-r%s' % revno
+
 
 description = file(os.path.join(os.path.dirname(__file__), 'README.txt'), 'rb').read()
+
 
 setup(name='testrepository',
       author='Robert Collins',
@@ -39,7 +69,7 @@ setup(name='testrepository',
       description='A repository of test results.',
       long_description=description,
       scripts=['testr'],
-      version=version,
+      version=get_version(),
       packages=['testrepository',
         'testrepository.arguments',
         'testrepository.commands',

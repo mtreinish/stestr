@@ -14,6 +14,10 @@ CHANGES
   testtools implementation. All ``self.assertRaises`` have been migrated to
   this new testing interface.
 
+* ``setup.py`` will read the version number from PKG-INFO when it is running
+  without a bzr tree : this makes it easier to snapshot without doing a 
+  release. (Jonathan Lange)
+
 0.0.4
 +++++
 
