@@ -26,6 +26,9 @@ CHANGES
   running ``testr run -d /some/path`` will work correctly.
   (Robert Collins, #529698)
 
+* ``testr run`` will now pass ``-q`` down to ``testr load``.
+  (Robert Collins, #529701)
+
 * Updates to next-stream are done via a temporary file to reduce the chance
   of an empty next-stream being written to disk. (Robert Collins, #531664)
 

@@ -163,3 +163,18 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,), {'shell': True}),
             ('communicate',),
             ], ui.outputs)
+
+    def test_quiet_passed_down(self):
+        ui, cmd = self.get_test_ui_and_cmd(options=[('quiet', True)])
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo\n')
+        self.assertEqual(0, cmd.execute())
+        expected_cmd = 'foo| testr load -q -d %s' % ui.here
+        self.assertEqual([
+            ('values', [('running', expected_cmd)]),
+            ('popen', (expected_cmd,), {'shell': True}),
+            ('communicate',),
+            ], ui.outputs)
+
