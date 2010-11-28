@@ -85,7 +85,8 @@ class TestCommand(ResourcedTestCase):
             '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
         self.assertEqual(0, cmd.execute())
         listfile = os.path.join(ui.here, 'failing.list')
-        expected_cmd = 'foo --load-list %s| testr load' % listfile
+        expected_cmd = 'foo --load-list %s| testr load -d %s' % (
+            listfile, ui.here)
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
             ('popen', (expected_cmd,), {'shell': True}),
@@ -100,7 +101,7 @@ class TestCommand(ResourcedTestCase):
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDLIST\n')
         self.assertEqual(0, cmd.execute())
-        expected_cmd = 'foo failing| testr load'
+        expected_cmd = 'foo failing| testr load -d %s' % ui.here
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
             ('popen', (expected_cmd,), {'shell': True}),
@@ -114,7 +115,7 @@ class TestCommand(ResourcedTestCase):
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDLIST\n')
         self.assertEqual(0, cmd.execute())
-        expected_cmd = 'foo | testr load'
+        expected_cmd = 'foo | testr load -d %s' % ui.here
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
             ('popen', (expected_cmd,), {'shell': True}),
@@ -128,7 +129,7 @@ class TestCommand(ResourcedTestCase):
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDLIST\ntest_id_list_default=whoo yea\n')
         self.assertEqual(0, cmd.execute())
-        expected_cmd = 'foo whoo yea| testr load'
+        expected_cmd = 'foo whoo yea| testr load -d %s' % ui.here
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
             ('popen', (expected_cmd,), {'shell': True}),
@@ -142,7 +143,7 @@ class TestCommand(ResourcedTestCase):
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
         self.assertEqual(0, cmd.execute())
-        expected_cmd = 'foo | testr load'
+        expected_cmd = 'foo | testr load -d %s' % ui.here
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
             ('popen', (expected_cmd,), {'shell': True}),
@@ -156,7 +157,7 @@ class TestCommand(ResourcedTestCase):
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
         self.assertEqual(0, cmd.execute())
-        expected_cmd = 'foo  bar quux| testr load'
+        expected_cmd = 'foo  bar quux| testr load -d %s' % ui.here
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
             ('popen', (expected_cmd,), {'shell': True}),

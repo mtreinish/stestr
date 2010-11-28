@@ -68,7 +68,8 @@ class run(Command):
             raise ValueError("No test_command option present in .testr.conf")
         elements = [command]
         elements.extend(self.ui.arguments['testargs'])
-        template = string.Template(' '.join(elements) + '| testr load')
+        template = string.Template(
+            ' '.join(elements) + '| testr load -d %s' % self.ui.here)
         if self.ui.options.failing:
             # Run only failing tests
             if 'IDOPTION' in command:

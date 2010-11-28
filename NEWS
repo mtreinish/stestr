@@ -22,6 +22,10 @@ CHANGES
   without a bzr tree : this makes it easier to snapshot without doing a 
   release. (Jonathan Lange)
 
+* ``testr run`` will now pass -d to the ``testr load`` invocation, so that
+  running ``testr run -d /some/path`` will work correctly.
+  (Robert Collins, #529698)
+
 * Updates to next-stream are done via a temporary file to reduce the chance
   of an empty next-stream being written to disk. (Robert Collins, #531664)
 
