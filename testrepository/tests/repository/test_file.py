@@ -19,6 +19,7 @@ import shutil
 import tempfile
 
 from fixtures import Fixture
+from testtools.matchers import Raises, MatchesException
 
 from testrepository.repository import file
 from testrepository.tests import ResourcedTestCase
@@ -92,3 +93,9 @@ class TestFileRepository(ResourcedTestCase):
         repo1 = file.RepositoryFactory().initialise(short_path)
         repo2 = file.RepositoryFactory().open(short_path)
         self.assertEqual(repo1.base, repo2.base)
+
+    def test_next_stream_corruption_error(self):
+        repo = self.useFixture(FileRepositoryFixture(self)).repo
+        open(os.path.join(repo.base, 'next-stream'), 'wb').close()
+        self.assertThat(repo.count, Raises(
+            MatchesException(ValueError("Corrupt next-stream file: ''"))))

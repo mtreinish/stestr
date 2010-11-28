@@ -85,7 +85,11 @@ class Repository(AbstractRepository):
         return value
 
     def _next_stream(self):
-        return int(file(os.path.join(self.base, 'next-stream'), 'rb').read())
+        next_content = file(os.path.join(self.base, 'next-stream'), 'rb').read()
+        try:
+            return int(next_content)
+        except ValueError:
+            raise ValueError("Corrupt next-stream file: %r" % next_content)
 
     def count(self):
         return self._next_stream()
