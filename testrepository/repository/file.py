@@ -169,6 +169,11 @@ class _SafeInserter(TestProtocolClient):
             str(run_id)))
         return run_id
 
+    def _cancel(self):
+        """Cancel an insertion."""
+        self._stream.close()
+        os.unlink(self.fname)
+
 
 class _FailingInserter(_SafeInserter):
     """Insert a stream into the 'failing' file."""
@@ -184,8 +189,9 @@ class _Inserter(_SafeInserter):
 
     def stopTestRun(self):
         run_id = _SafeInserter.stopTestRun(self)
-        # XXX: locking?
-        # Filter failing + this run.
+        # XXX: locking (other inserts may happen while we update the failing
+        # file).
+        # Combine failing + this run : strip passed tests, add failures.
         # use memory repo to aggregate. a bit awkward on layering ;).
         import memory
         repo = memory.Repository()
@@ -203,6 +209,11 @@ class _Inserter(_SafeInserter):
         # and now write to failing
         inserter = _FailingInserter(self._repository)
         inserter.startTestRun()
-        repo.get_failing().get_test().run(inserter)
-        inserter.stopTestRun()
+        try:
+            repo.get_failing().get_test().run(inserter)
+        except:
+            inserter._cancel()
+            raise
+        finally:
+            inserter.stopTestRun()
         return run_id
