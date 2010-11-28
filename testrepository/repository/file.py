@@ -121,11 +121,17 @@ class Repository(AbstractRepository):
         return _Inserter(self)
 
     def _write_next_stream(self, value):
-        stream = file(os.path.join(self.base, 'next-stream'), 'wb')
+        # Note that this is unlocked and not threadsafe : for now, shrug - single
+        # user, repo-per-working-tree model makes this acceptable in the short
+        # term. Likewise we don't fsync - this data isn't valuable enough to
+        # force disk IO.
+        prefix = os.path.join(self.base, 'next-stream')
+        stream = file(prefix + '.new', 'wb')
         try:
             stream.write('%d\n' % value)
         finally:
             stream.close()
+        os.rename(prefix + '.new', prefix)
 
 
 class _DiskRun(AbstractTestRun):
