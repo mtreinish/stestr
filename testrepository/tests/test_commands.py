@@ -38,6 +38,7 @@ class TemporaryCommandResource(TestResource):
 
     def __init__(self, cmd_name):
         TestResource.__init__(self)
+        cmd_name = cmd_name.replace('-', '_')
         self.resources.append(('pkg',
             StubPackageResource('commands',
             [('%s.py' % cmd_name,
@@ -77,6 +78,21 @@ class TestFindCommand(ResourcedTestCase):
     def test_sets_name(self):
         cmd = commands._find_command('foo')
         self.assertEqual('foo', cmd.name)
+
+
+class TestNameMangling(ResourcedTestCase):
+
+    resources = [('cmd', TemporaryCommandResource('foo-bar'))]
+
+    def test_looksupcommand(self):
+        cmd = commands._find_command('foo-bar')
+        self.assertIsInstance(cmd(None), commands.Command)
+
+    def test_sets_name(self):
+        cmd = commands._find_command('foo-bar')
+        # This is arbitrary in the absence of a reason to do it any particular
+        # way.
+        self.assertEqual('foo_bar', cmd.name)
 
 
 class TestIterCommands(ResourcedTestCase):

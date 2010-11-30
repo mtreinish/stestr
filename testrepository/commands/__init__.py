@@ -40,6 +40,7 @@ import subunit
 from testrepository.repository import file
 
 def _find_command(cmd_name):
+    cmd_name = cmd_name.replace('-', '_')
     classname = "%s" % cmd_name
     modname = "testrepository.commands.%s" % cmd_name
     try:
