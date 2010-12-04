@@ -8,6 +8,9 @@ Run time dependencies
 
 * subunit
 
+* testfixtures (https://launchpad.net/python-fixtures, or
+   http://pypi.python.org/pypi/fixtures/).
+
 Test dependencies
 ~~~~~~~~~~~~~~~~~
 

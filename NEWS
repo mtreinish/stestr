@@ -25,6 +25,10 @@ CHANGES
 * ``testr run`` now resets the SIGPIPE handler to default - which is what
   most Unix processes expect. (Robert Collins)
 
+* ``testr run`` now uses a unique file name rather than hard coding
+  failing.list - while not as clear, this permits concurrent testr invocations,
+  or parallel testing from within testr, to execute safely. (Robert Collins)
+
 * ``testr run`` will now pass -d to the ``testr load`` invocation, so that
   running ``testr run -d /some/path`` will work correctly.
   (Robert Collins, #529698)

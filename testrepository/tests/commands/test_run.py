@@ -23,6 +23,7 @@ from testrepository.ui.model import UI
 from testrepository.repository import memory
 from testrepository.tests import ResourcedTestCase
 from testrepository.tests.stubpackage import TempDirResource
+from testrepository.tests.test_testcommand import FakeTestCommand
 from testrepository.tests.test_repository import make_test
 
 
@@ -83,6 +84,7 @@ class TestCommand(ResourcedTestCase):
         self.setup_repo(cmd, ui)
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
+        cmd.command_factory = FakeTestCommand
         self.assertEqual(0, cmd.execute())
         listfile = os.path.join(ui.here, 'failing.list')
         expected_cmd = 'foo --load-list %s| testr load -d %s' % (

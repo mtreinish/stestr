@@ -62,6 +62,7 @@ def test_suite():
         'results',
         'setup',
         'stubpackage',
+        'testcommand',
         'testr',
         'ui',
         ]
