@@ -22,6 +22,10 @@ CHANGES
   without a bzr tree : this makes it easier to snapshot without doing a 
   release. (Jonathan Lange)
 
+* ``testr load`` now loads all input streams in parallel. This has no impact
+  on the CLI as yet, but permits API users to load from parallel processes.
+  (Robert Collins)
+
 * ``testr run`` now resets the SIGPIPE handler to default - which is what
   most Unix processes expect. (Robert Collins)
 
