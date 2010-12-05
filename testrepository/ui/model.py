@@ -84,16 +84,16 @@ class UI(ui.AbstractUI):
     def __init__(self, input_streams=None, options=(), args={}):
         """Create a model UI.
 
-        :param input_streams: A list of stream name, bytes stream tuples to be
-            used as the available input streams for this ui.
+        :param input_streams: A list of stream name, (file or bytes) tuples to
+            be used as the available input streams for this ui.
         :param options: Options to explicitly set values for.
         :param args: The argument values to give the UI.
         """
         self.input_streams = {}
         if input_streams:
-            for stream_type, stream_bytes in input_streams:
+            for stream_type, stream_value in input_streams:
                 self.input_streams.setdefault(stream_type, []).append(
-                    stream_bytes)
+                    stream_value)
         self.here = 'memory:'
         self.unparsed_opts = options
         self.outputs = []
@@ -126,8 +126,11 @@ class UI(ui.AbstractUI):
 
     def _iter_streams(self, stream_type):
         streams = self.input_streams.pop(stream_type, [])
-        for stream_bytes in streams:
-            yield StringIO(stream_bytes)
+        for stream_value in streams:
+            if getattr(stream_value, 'read', None):
+                yield stream_value
+            else:
+                yield StringIO(stream_value)
 
     def make_result(self, get_id):
         return TestResultModel(self, get_id)
