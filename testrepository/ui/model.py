@@ -26,6 +26,8 @@ class ProcessModel(object):
     def __init__(self, ui):
         self.ui = ui
         self.returncode = 0
+        self.stdin = StringIO()
+        self.stdout = StringIO()
 
     def communicate(self):
         self.ui.outputs.append(('communicate',))
@@ -81,20 +83,22 @@ class UI(ui.AbstractUI):
     testing testrepository commands.
     """
 
-    def __init__(self, input_streams=None, options=(), args={}):
+    def __init__(self, input_streams=None, options=(), args={},
+        here='memory:'):
         """Create a model UI.
 
         :param input_streams: A list of stream name, (file or bytes) tuples to
             be used as the available input streams for this ui.
         :param options: Options to explicitly set values for.
         :param args: The argument values to give the UI.
+        :param here: Set the here value for the UI.
         """
         self.input_streams = {}
         if input_streams:
             for stream_type, stream_value in input_streams:
                 self.input_streams.setdefault(stream_type, []).append(
                     stream_value)
-        self.here = 'memory:'
+        self.here = here
         self.unparsed_opts = options
         self.outputs = []
         # Could take parsed args, but for now this is easier.

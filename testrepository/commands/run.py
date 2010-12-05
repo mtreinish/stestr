@@ -19,11 +19,14 @@ from cStringIO import StringIO
 import optparse
 import os.path
 import string
+import subprocess
 
 from testtools import TestResult
 
 from testrepository.arguments.string import StringArgument
 from testrepository.commands import Command
+from testrepository.commands.load import load
+from testrepository.ui import decorator
 from testrepository.testcommand import TestCommand, testrconf_help
 
 class run(Command):
@@ -53,19 +56,19 @@ class run(Command):
             ids.extend([error[0].id() for error in result.errors])
         else:
             ids = None
-        if self.ui.options.quiet:
-            quiet = "-q "
-        else:
-            quiet = ""
-        load_cmd = '| testr load %s-d %s' % (quiet, self.ui.here)
         cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'])
         cmd.setUp()
         try:
-            command = cmd.cmd + load_cmd
-            self.ui.output_values([('running', command)])
-            proc = self.ui.subprocess_Popen(command, shell=True)
-            proc.communicate()
-            return proc.returncode
+            self.ui.output_values([('running', cmd.cmd)])
+            run_proc = self.ui.subprocess_Popen(cmd.cmd, shell=True,
+                stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            # Prevent processes stalling if they read from stdin; we could
+            # pass this through in future, but there is no point doing that
+            # until we have a working can-run-debugger-inline story.
+            run_proc.stdin.close()
+            load_ui = decorator.UI([('subunit', run_proc.stdout)], self.ui)
+            load_cmd = load(load_ui)
+            return load_cmd.execute()
         finally:
             cmd.cleanUp()
         template = string.Template(

@@ -15,13 +15,14 @@
 """Tests for the run command."""
 
 import os.path
+from subprocess import PIPE
 
 from testtools.matchers import MatchesException
 
 from testrepository.commands import run
 from testrepository.ui.model import UI
 from testrepository.repository import memory
-from testrepository.tests import ResourcedTestCase
+from testrepository.tests import ResourcedTestCase, Wildcard
 from testrepository.tests.stubpackage import TempDirResource
 from testrepository.tests.test_testcommand import FakeTestCommand
 from testrepository.tests.test_repository import make_test
@@ -87,12 +88,13 @@ class TestCommand(ResourcedTestCase):
         cmd.command_factory = FakeTestCommand
         self.assertEqual(0, cmd.execute())
         listfile = os.path.join(ui.here, 'failing.list')
-        expected_cmd = 'foo --load-list %s| testr load -d %s' % (
-            listfile, ui.here)
+        expected_cmd = 'foo --load-list %s' % listfile
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
-            ('popen', (expected_cmd,), {'shell': True}),
-            ('communicate',),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
+            ('results', Wildcard),
+            ('values', [('id', 1), ('tests', 0)])
             ], ui.outputs)
         # TODO: check the list file is written, and deleted.
 
@@ -103,11 +105,13 @@ class TestCommand(ResourcedTestCase):
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDLIST\n')
         self.assertEqual(0, cmd.execute())
-        expected_cmd = 'foo failing| testr load -d %s' % ui.here
+        expected_cmd = 'foo failing'
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
-            ('popen', (expected_cmd,), {'shell': True}),
-            ('communicate',),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
+            ('results', Wildcard),
+            ('values', [('id', 1), ('tests', 0)])
             ], ui.outputs)
 
     def test_IDLIST_default_is_empty(self):
@@ -117,11 +121,13 @@ class TestCommand(ResourcedTestCase):
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDLIST\n')
         self.assertEqual(0, cmd.execute())
-        expected_cmd = 'foo | testr load -d %s' % ui.here
+        expected_cmd = 'foo '
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
-            ('popen', (expected_cmd,), {'shell': True}),
-            ('communicate',),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
+            ('results', Wildcard),
+            ('values', [('id', 1), ('tests', 0)])
             ], ui.outputs)
 
     def test_IDLIST_default_passed_normally(self):
@@ -131,11 +137,13 @@ class TestCommand(ResourcedTestCase):
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDLIST\ntest_id_list_default=whoo yea\n')
         self.assertEqual(0, cmd.execute())
-        expected_cmd = 'foo whoo yea| testr load -d %s' % ui.here
+        expected_cmd = 'foo whoo yea'
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
-            ('popen', (expected_cmd,), {'shell': True}),
-            ('communicate',),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
+            ('results', Wildcard),
+            ('values', [('id', 1), ('tests', 0)])
             ], ui.outputs)
 
     def test_IDFILE_not_passed_normally(self):
@@ -145,11 +153,13 @@ class TestCommand(ResourcedTestCase):
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
         self.assertEqual(0, cmd.execute())
-        expected_cmd = 'foo | testr load -d %s' % ui.here
+        expected_cmd = 'foo '
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
-            ('popen', (expected_cmd,), {'shell': True}),
-            ('communicate',),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
+            ('results', Wildcard),
+            ('values', [('id', 1), ('tests', 0)])
             ], ui.outputs)
 
     def test_extra_options_passed_in(self):
@@ -159,11 +169,13 @@ class TestCommand(ResourcedTestCase):
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
         self.assertEqual(0, cmd.execute())
-        expected_cmd = 'foo  bar quux| testr load -d %s' % ui.here
+        expected_cmd = 'foo  bar quux'
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
-            ('popen', (expected_cmd,), {'shell': True}),
-            ('communicate',),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
+            ('results', Wildcard),
+            ('values', [('id', 1), ('tests', 0)])
             ], ui.outputs)
 
     def test_quiet_passed_down(self):
@@ -172,11 +184,11 @@ class TestCommand(ResourcedTestCase):
         self.setup_repo(cmd, ui)
         self.set_config(
             '[DEFAULT]\ntest_command=foo\n')
-        self.assertEqual(0, cmd.execute())
-        expected_cmd = 'foo| testr load -q -d %s' % ui.here
+        result = cmd.execute()
+        expected_cmd = 'foo'
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
-            ('popen', (expected_cmd,), {'shell': True}),
-            ('communicate',),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ], ui.outputs)
-
+        self.assertEqual(0, result)

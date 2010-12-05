@@ -33,6 +33,10 @@ CHANGES
   failing.list - while not as clear, this permits concurrent testr invocations,
   or parallel testing from within testr, to execute safely. (Robert Collins)
 
+* ``testr run`` uses an in-process load rather than reinvoking testr. This
+  should be faster on Windows and avoids the issue with running the wrong
+  testr when PYTHONPATH but not PATH is set. (Robert Collins, #613129)
+
 * ``testr run`` will now pass -d to the ``testr load`` invocation, so that
   running ``testr run -d /some/path`` will work correctly.
   (Robert Collins, #529698)
