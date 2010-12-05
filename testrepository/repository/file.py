@@ -131,6 +131,8 @@ class Repository(AbstractRepository):
             stream.write('%d\n' % value)
         finally:
             stream.close()
+        if os.name != "posix" and os.path.exists(prefix):
+            os.remove(prefix)
         os.rename(prefix + '.new', prefix)
 
 
@@ -165,8 +167,10 @@ class _SafeInserter(TestProtocolClient):
         self._stream.flush()
         self._stream.close()
         run_id = self._name()
-        os.rename(self.fname, os.path.join(self._repository.base,
-            str(run_id)))
+        toname = os.path.join(self._repository.base, str(run_id))
+        if os.name != "posix" and os.path.exists(toname):
+            os.remove(toname)
+        os.rename(self.fname, toname)
         return run_id
 
     def _cancel(self):
@@ -210,10 +214,11 @@ class _Inserter(_SafeInserter):
         inserter = _FailingInserter(self._repository)
         inserter.startTestRun()
         try:
-            repo.get_failing().get_test().run(inserter)
-        except:
-            inserter._cancel()
-            raise
+            try:
+                repo.get_failing().get_test().run(inserter)
+            except:
+                inserter._cancel()
+                raise
         finally:
             inserter.stopTestRun()
         return run_id

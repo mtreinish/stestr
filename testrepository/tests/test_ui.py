@@ -182,8 +182,8 @@ class TestUIContract(ResourcedTestCase):
     def test_exec_subprocess(self):
         # exec_subprocess should 'work like popen'.
         ui = self.ui_factory()
-        proc = ui.subprocess_Popen('ls', stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+        proc = ui.subprocess_Popen([sys.executable, "-V"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         proc.returncode
 
