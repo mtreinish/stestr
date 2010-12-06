@@ -36,6 +36,11 @@ CHANGES
   many projects it will be a win either from simplicity or because getting
   their test runner to parallise is nontrivial. (Robert Collins)
 
+* ``testr run`` no longer attempts to expand unknown variables. This permits
+  the use of environmen variables to control the test run. For instance,
+  ${PYTHON:-python} in the test_command setting will run the command with
+  $PYTHON or python if $PYTHON is not set. (Robert Collins, #595295)
+
 * ``testr run`` now resets the SIGPIPE handler to default - which is what
   most Unix processes expect. (Robert Collins)
 
