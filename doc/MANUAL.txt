@@ -87,8 +87,10 @@ then testr is able to run your tests in parallel::
 
   $ testr run --parallel
 
-This will first list the tests, partition them, and then invoke multiple test
-runners.
+This will first list the tests, partition the tests into one partition per CPU
+on the machine, and then invoke multiple test runners at the same time, with
+each test runner getting one partition. Currently the partitioning algorithm
+is a simple round-robin, and the CPU detection is only implemented for Linux.
 
 Repositories
 ~~~~~~~~~~~~
