@@ -19,7 +19,6 @@ from cStringIO import StringIO
 import optparse
 import os.path
 import string
-import subprocess
 
 from testtools import TestResult
 
@@ -59,14 +58,8 @@ class run(Command):
         cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'])
         cmd.setUp()
         try:
-            self.ui.output_values([('running', cmd.cmd)])
-            run_proc = self.ui.subprocess_Popen(cmd.cmd, shell=True,
-                stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-            # Prevent processes stalling if they read from stdin; we could
-            # pass this through in future, but there is no point doing that
-            # until we have a working can-run-debugger-inline story.
-            run_proc.stdin.close()
-            load_ui = decorator.UI([('subunit', run_proc.stdout)], self.ui)
+            run_procs = [('subunit', proc.stdout) for proc in cmd.run_tests()]
+            load_ui = decorator.UI(run_procs, self.ui)
             load_cmd = load(load_ui)
             return load_cmd.execute()
         finally:

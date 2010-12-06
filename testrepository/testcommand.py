@@ -19,6 +19,7 @@ from fixtures import Fixture
 import os.path
 import re
 import string
+import subprocess
 import tempfile
 from textwrap import dedent
 
@@ -51,18 +52,20 @@ testrconf_help = dedent("""
 class TestListingFixture(Fixture):
     """Write a temporary file to disk with test ids in it."""
 
-    def __init__(self, test_ids, cmd_template, listpath=None):
+    def __init__(self, test_ids, cmd_template, ui, listpath=None):
         """Create a TestListingFixture.
 
         :param test_ids: The test_ids to use. May be None indicating that
             no ids are present.
         :param cmd_template: string to be filled out with
             IDFILE.
+        :param ui: The UI in use.
         :param listpath: The file listing path to use. If None, a unique path
             is created.
         """
         self.test_ids = test_ids
         self.template = cmd_template
+        self.ui = ui
         self._listpath = listpath
 
     def setUp(self):
@@ -97,6 +100,20 @@ class TestListingFixture(Fixture):
             raise
         self.addCleanup(os.unlink, name)
         return name
+
+    def run_tests(self):
+        """Run the tests defined by the command and ui.
+
+        :return: A list of spawned processes.
+        """
+        self.ui.output_values([('running', self.cmd)])
+        run_proc = self.ui.subprocess_Popen(self.cmd, shell=True,
+            stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        # Prevent processes stalling if they read from stdin; we could
+        # pass this through in future, but there is no point doing that
+        # until we have a working can-run-debugger-inline story.
+        run_proc.stdin.close()
+        return [run_proc]
 
 
 class TestCommand(object):
@@ -152,7 +169,7 @@ class TestCommand(object):
             cmd = re.sub('\$IDOPTION', idoption, cmd)
         if self.oldschool:
             listpath = os.path.join(self.ui.here, 'failing.list')
-            result = self.run_factory(test_ids, cmd, listpath)
+            result = self.run_factory(test_ids, cmd, self.ui, listpath)
         else:
-            result = self.run_factory(test_ids, cmd)
+            result = self.run_factory(test_ids, cmd, self.ui)
         return result
