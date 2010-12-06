@@ -28,6 +28,9 @@ Most commands in testr have comprehensive online help, and the commands::
 
 Will be useful to explore the system.
 
+Running tests
+~~~~~~~~~~~~~
+
 Test Repository can be taught how to run your tests by setting up a .testr.conf
 file in your cwd. A file like::
 
@@ -35,13 +38,14 @@ file in your cwd. A file like::
   test_command=foo $IDOPTION
   test_id_option=--bar $IDFILE
 
-will cause 'testr run' to run 'foo | testr load', and 'testr run --failing' to
-run 'foo --bar failing.list | testr load'. failing.list will be a newline
-separated list of the test ids that your test runner outputs. Arguments passed
-to run are passed through to your test runner command line. To pass options
-through to your test running, use a ``--`` before your options.
-For instance, ``testr run foo -- bar --no-plugins`` would run
-``foo foo bar --no-plugins | testr load`` using the above config example. The
+will cause 'testr run' to run 'foo' and process it as 'testr load' would.
+Likewise 'testr run --failing' will run 'foo --bar failing.list' and process it
+as 'testr load' would. failing.list will be a newline separated list of the
+test ids that your test runner outputs. Arguments passed to run are passed
+through to your test runner command line. To pass options through to your test
+running, use a ``--`` before your options.  For instance, 
+``testr run quux -- bar --no-plugins`` would run
+``foo quux bar --no-plugins`` using the above config example. The
 command help for ``testr run`` describes the available options for .testr.conf.
 
 Having setup a .testr.conf, a common workflow then becomes::
@@ -52,6 +56,24 @@ Having setup a .testr.conf, a common workflow then becomes::
   $ testr run
   # And either commit or loop around this again depending on whether errors
   # were found.
+
+Listing tests
+~~~~~~~~~~~~~
+
+It is useful to be able to query the test program to see what tests will be
+run - this permits partitioning the tests and running multiple instances with
+separate partitions at once. Set 'test_list_option' in .testr.conf like so::
+
+  test_list_option=--list-tests
+
+All the normal rules for invoking test program commands apply: extra parameters
+will be passed through, if a test list is being supplied test_option can be
+used via $IDOPTION.
+
+The output of the test command when this option is supplied should be a series
+of test ids, in any order, `\n' separated on stdout.
+
+To test whether this is working the `testr list-tests` command can be useful.
 
 Repositories
 ~~~~~~~~~~~~

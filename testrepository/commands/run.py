@@ -28,6 +28,7 @@ from testrepository.commands.load import load
 from testrepository.ui import decorator
 from testrepository.testcommand import TestCommand, testrconf_help
 
+
 class run(Command):
     __doc__ = """Run the tests for a project and load them into testrepository.
     """ + testrconf_help
@@ -64,5 +65,3 @@ class run(Command):
             return load_cmd.execute()
         finally:
             cmd.cleanUp()
-        template = string.Template(
-            ' '.join(elements) + '| testr load %s-d %s' % (quiet, self.ui.here))

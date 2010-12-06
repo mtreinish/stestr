@@ -30,8 +30,9 @@ testrconf_help = dedent("""
     test_command=foo $IDOPTION
     test_id_option=--bar $IDFILE
     ---
-    will cause 'testr run' to run 'foo | testr load', and 'testr run --failing'
-    to run 'foo --bar failing.list | testr load'.
+    will cause 'testr run' to run 'foo' to execute tests, and
+    'testr run --failing' will cause 'foo --bar failing.list ' to be run to
+    execute tests.
 
     The full list of options and variables for .testr.conf:
     * test_command -- command line to run to execute tests.
@@ -39,6 +40,11 @@ testrconf_help = dedent("""
       test ids should be run.
     * test_id_list_default -- the value to use for $IDLIST when no specific
       test ids are being run.
+    * test_list_option -- the option to use to cause the test runner to report
+      on the tests it would run, rather than running them. When supplied the
+      test_command should output on stdout all the test ids that would have
+      been run if every other option and argument was honoured, one per line.
+      This is required for parallel testing, and is substituted into $LISTOPT.
     * $IDOPTION -- the variable to use to trigger running some specific tests.
     * $IDFILE -- A file created before the test command is run and deleted
       afterwards which contains a list of test ids, one per line. This can
@@ -52,19 +58,22 @@ testrconf_help = dedent("""
 class TestListingFixture(Fixture):
     """Write a temporary file to disk with test ids in it."""
 
-    def __init__(self, test_ids, cmd_template, ui, listpath=None):
+    def __init__(self, test_ids, cmd_template, listopt, ui, listpath=None):
         """Create a TestListingFixture.
 
         :param test_ids: The test_ids to use. May be None indicating that
             no ids are present.
         :param cmd_template: string to be filled out with
             IDFILE.
+        :param listopt: Option to substitute into LISTOPT to cause test listing
+            to take place.
         :param ui: The UI in use.
         :param listpath: The file listing path to use. If None, a unique path
             is created.
         """
         self.test_ids = test_ids
         self.template = cmd_template
+        self.listopt = listopt
         self.ui = ui
         self._listpath = listpath
 
@@ -80,7 +89,8 @@ class TestListingFixture(Fixture):
         cmd = re.sub('\$IDFILE', name, cmd)
         idlist = ' '.join(self.test_ids)
         cmd = re.sub('\$IDLIST', idlist, cmd)
-        self.cmd = cmd
+        self.cmd = re.sub('\$LISTOPT', '', cmd)
+        self.list_cmd = re.sub('\$LISTOPT', self.listopt, cmd)
 
     def make_listfile(self):
         name = None
@@ -100,6 +110,19 @@ class TestListingFixture(Fixture):
             raise
         self.addCleanup(os.unlink, name)
         return name
+
+    def list_tests(self):
+        """List the tests returned by list_cmd.
+
+        :return: A list of test ids.
+        """
+        self.ui.output_values([('running', self.list_cmd)])
+        run_proc = self.ui.subprocess_Popen(self.list_cmd, shell=True,
+            stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        out, err = run_proc.communicate()
+        # Should we raise on non-zero exit?
+        ids = [id for id in out.split('\n') if id]
+        return ids
 
     def run_tests(self):
         """Run the tests defined by the command and ui.
@@ -167,9 +190,18 @@ class TestCommand(object):
                 # No test ids, no id option.
                 idoption = ''
             cmd = re.sub('\$IDOPTION', idoption, cmd)
+        listopt = ''
+        if '$LISTOPT' in command:
+            # LISTOPT is used, test_list_option must be configured.
+            try:
+                listopt = parser.get('DEFAULT', 'test_list_option')
+            except ConfigParser.NoOptionError, e:
+                if e.message != "No option 'test_list_option' in section: 'DEFAULT'":
+                    raise
+                raise ValueError("No test_list_option option present in .testr.conf")
         if self.oldschool:
             listpath = os.path.join(self.ui.here, 'failing.list')
-            result = self.run_factory(test_ids, cmd, self.ui, listpath)
+            result = self.run_factory(test_ids, cmd, listopt, self.ui, listpath)
         else:
-            result = self.run_factory(test_ids, cmd, self.ui)
+            result = self.run_factory(test_ids, cmd, listopt, self.ui)
         return result

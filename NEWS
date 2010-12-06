@@ -26,6 +26,10 @@ CHANGES
   on the CLI as yet, but permits API users to load from parallel processes.
   (Robert Collins)
 
+* ``testr list-tests`` is a new command that will list the tests for a project
+  when ``.testr.conf`` has been configured with a ``test_list_option``.
+  (Robert Collins)
+
 * ``testr run`` now resets the SIGPIPE handler to default - which is what
   most Unix processes expect. (Robert Collins)
 

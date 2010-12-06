@@ -161,3 +161,21 @@ class TestTestCommand(ResourcedTestCase):
             testargs=('bar', 'quux')))
         expected_cmd = 'foo  bar quux'
         self.assertEqual(expected_cmd, fixture.cmd)
+
+    def test_list_tests_cmd(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $LISTOPT $IDLIST\ntest_id_list_default=whoo yea\n'
+            'test_list_option=--list\n')
+        fixture = self.useFixture(command.get_run_command())
+        expected_cmd = 'foo --list whoo yea'
+        self.assertEqual(expected_cmd, fixture.list_cmd)
+
+    def test_list_tests_parsing(self):
+        ui, command = self.get_test_ui_and_cmd()
+        ui.proc_outputs = ['returned\nids\n']
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $LISTOPT $IDLIST\ntest_id_list_default=whoo yea\n'
+            'test_list_option=--list\n')
+        fixture = self.useFixture(command.get_run_command())
+        self.assertEqual(set(['returned', 'ids']), set(fixture.list_tests()))

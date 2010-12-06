@@ -40,6 +40,7 @@ import subunit
 from testrepository.repository import file
 
 def _find_command(cmd_name):
+    orig_cmd_name = cmd_name
     cmd_name = cmd_name.replace('-', '_')
     classname = "%s" % cmd_name
     modname = "testrepository.commands.%s" % cmd_name
@@ -54,7 +55,7 @@ def _find_command(cmd_name):
             % (classname, modname))
     if getattr(result, 'name', None) is None:
         # Store the name for the common case of name == lookup path.
-        result.name = classname
+        result.name = orig_cmd_name
     return result
 
 
@@ -69,8 +70,9 @@ def iter_commands():
             if base.startswith('.'):
                 continue
             name = base.split('.', 1)[0]
+            name = name.replace('_', '-')
             names.add(name)
-    names.discard('__init__')
+    names.discard('--init--')
     names = sorted(names)
     for name in names:
         yield _find_command(name)

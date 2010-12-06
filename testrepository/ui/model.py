@@ -31,7 +31,7 @@ class ProcessModel(object):
 
     def communicate(self):
         self.ui.outputs.append(('communicate',))
-        return '', ''
+        return self.stdout.getvalue(), ''
 
 
 class TestSuiteModel(object):
@@ -84,7 +84,7 @@ class UI(ui.AbstractUI):
     """
 
     def __init__(self, input_streams=None, options=(), args={},
-        here='memory:'):
+        here='memory:', proc_outputs=()):
         """Create a model UI.
 
         :param input_streams: A list of stream name, (file or bytes) tuples to
@@ -92,6 +92,8 @@ class UI(ui.AbstractUI):
         :param options: Options to explicitly set values for.
         :param args: The argument values to give the UI.
         :param here: Set the here value for the UI.
+        :param proc_outputs: byte strings to be returned in the stdout from
+            created processes.
         """
         self.input_streams = {}
         if input_streams:
@@ -103,6 +105,7 @@ class UI(ui.AbstractUI):
         self.outputs = []
         # Could take parsed args, but for now this is easier.
         self.unparsed_args = args
+        self.proc_outputs = list(proc_outputs)
 
     def _check_cmd(self):
         options = list(self.unparsed_opts)
@@ -161,4 +164,7 @@ class UI(ui.AbstractUI):
     def subprocess_Popen(self, *args, **kwargs):
         # Really not an output - outputs should be renamed to events.
         self.outputs.append(('popen', args, kwargs))
-        return ProcessModel(self)
+        result = ProcessModel(self)
+        if self.proc_outputs:
+            result.stdout = StringIO(self.proc_outputs.pop(0))
+        return result

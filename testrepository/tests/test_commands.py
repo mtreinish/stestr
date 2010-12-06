@@ -90,9 +90,9 @@ class TestNameMangling(ResourcedTestCase):
 
     def test_sets_name(self):
         cmd = commands._find_command('foo-bar')
-        # This is arbitrary in the absence of a reason to do it any particular
-        # way.
-        self.assertEqual('foo_bar', cmd.name)
+        # The name is preserved, so that 'testr commands' shows something
+        # sensible.
+        self.assertEqual('foo-bar', cmd.name)
 
 
 class TestIterCommands(ResourcedTestCase):
