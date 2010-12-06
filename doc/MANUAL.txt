@@ -66,6 +66,10 @@ separate partitions at once. Set 'test_list_option' in .testr.conf like so::
 
   test_list_option=--list-tests
 
+You also need to use the $LISTOPT option to tell testr where to expand things:
+
+  test_command=foo $LISTOPT $IDOPTION
+
 All the normal rules for invoking test program commands apply: extra parameters
 will be passed through, if a test list is being supplied test_option can be
 used via $IDOPTION.
@@ -74,6 +78,17 @@ The output of the test command when this option is supplied should be a series
 of test ids, in any order, `\n' separated on stdout.
 
 To test whether this is working the `testr list-tests` command can be useful.
+
+Parallel testing
+~~~~~~~~~~~~~~~~
+
+If both test listing and filtering (via either IDLIST or IDFILE) are configured
+then testr is able to run your tests in parallel::
+
+  $ testr run --parallel
+
+This will first list the tests, partition them, and then invoke multiple test
+runners.
 
 Repositories
 ~~~~~~~~~~~~

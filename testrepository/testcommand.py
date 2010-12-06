@@ -16,10 +16,12 @@
 
 import ConfigParser
 from fixtures import Fixture
+import itertools
 import os.path
 import re
 import string
 import subprocess
+import sys
 import tempfile
 from textwrap import dedent
 
@@ -58,23 +60,31 @@ testrconf_help = dedent("""
 class TestListingFixture(Fixture):
     """Write a temporary file to disk with test ids in it."""
 
-    def __init__(self, test_ids, cmd_template, listopt, ui, listpath=None):
+    def __init__(self, test_ids, cmd_template, listopt, idoption, ui,
+        parallel=True, listpath=None):
         """Create a TestListingFixture.
 
         :param test_ids: The test_ids to use. May be None indicating that
-            no ids are present.
+            no ids filtering is requested: run whatever the test program
+            chooses to.
         :param cmd_template: string to be filled out with
             IDFILE.
         :param listopt: Option to substitute into LISTOPT to cause test listing
             to take place.
+        :param idoption: Option to substitutde into cmd when supplying any test
+            ids.
         :param ui: The UI in use.
+        :param parallel: If not True, prohibit parallel use : used to implement
+            --parallel run recursively.
         :param listpath: The file listing path to use. If None, a unique path
             is created.
         """
         self.test_ids = test_ids
         self.template = cmd_template
         self.listopt = listopt
+        self.idoption = idoption
         self.ui = ui
+        self.parallel = parallel
         self._listpath = listpath
 
     def setUp(self):
@@ -86,6 +96,12 @@ class TestListingFixture(Fixture):
         else:
             name = self.make_listfile()
         cmd = self.template
+        if not self.test_ids:
+            # No test ids, no id option.
+            idoption = ''
+        else:
+            idoption = self.idoption
+        cmd = re.sub('\$IDOPTION', idoption, cmd)
         cmd = re.sub('\$IDFILE', name, cmd)
         idlist = ' '.join(self.test_ids)
         cmd = re.sub('\$IDLIST', idlist, cmd)
@@ -116,6 +132,8 @@ class TestListingFixture(Fixture):
 
         :return: A list of test ids.
         """
+        if '$LISTOPT' not in self.template:
+            raise ValueError("LISTOPT not configured in .testr.conf.")
         self.ui.output_values([('running', self.list_cmd)])
         run_proc = self.ui.subprocess_Popen(self.list_cmd, shell=True,
             stdout=subprocess.PIPE, stdin=subprocess.PIPE)
@@ -129,14 +147,58 @@ class TestListingFixture(Fixture):
 
         :return: A list of spawned processes.
         """
-        self.ui.output_values([('running', self.cmd)])
-        run_proc = self.ui.subprocess_Popen(self.cmd, shell=True,
-            stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-        # Prevent processes stalling if they read from stdin; we could
-        # pass this through in future, but there is no point doing that
-        # until we have a working can-run-debugger-inline story.
-        run_proc.stdin.close()
-        return [run_proc]
+        if not self.ui.options.parallel or not self.parallel:
+            concurrency = 1
+        else:
+            concurrency = self.local_concurrency()
+            if not concurrency:
+                concurrency = 1
+        if concurrency == 1:
+            self.ui.output_values([('running', self.cmd)])
+            run_proc = self.ui.subprocess_Popen(self.cmd, shell=True,
+                stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            # Prevent processes stalling if they read from stdin; we could
+            # pass this through in future, but there is no point doing that
+            # until we have a working can-run-debugger-inline story.
+            run_proc.stdin.close()
+            return [run_proc]
+        result = []
+        if not self.test_ids:
+            # Discover the tests to run
+            test_ids = self.list_tests()
+        else:
+            # Use the already requested tests.
+            test_ids = self.test_ids
+        test_id_groups = self.partition_tests(test_ids, concurrency)
+        for test_ids in test_id_groups:
+            if not test_ids:
+                # No tests in this partition
+                continue
+            fixture = self.useFixture(TestListingFixture(test_ids,
+                self.template, self.listopt, self.idoption, self.ui, parallel=False))
+            result.extend(fixture.run_tests())
+        return result
+
+    def partition_tests(self, test_ids, concurrency):
+        """Parition test_ids by concurrency.
+
+        This is a simple round robin partition. In future we should introspect
+        for durations to assign tests more optimally.
+        """
+        partitions = [list() for i in range(concurrency)]
+        for partition, test_id in itertools.izip(itertools.cycle(partitions), test_ids):
+            partition.append(test_id)
+        return partitions
+
+    def local_concurrency(self):
+        if sys.platform == 'linux2':
+            concurrency = None
+            for line in file('/proc/cpuinfo', 'rb'):
+                if line.startswith('processor'):
+                    concurrency = int(line[line.find(':')+1:]) + 1
+            return concurrency
+        # No concurrency logic known.
+        return None
 
 
 class TestCommand(object):
@@ -178,6 +240,7 @@ class TestCommand(object):
                 if e.message != "No option 'test_id_list_default' in section: 'DEFAULT'":
                     raise
                 test_ids = None
+        idoption = ''
         if '$IDOPTION' in command:
             # IDOPTION is used, we must have it configured.
             try:
@@ -186,10 +249,6 @@ class TestCommand(object):
                 if e.message != "No option 'test_id_option' in section: 'DEFAULT'":
                     raise
                 raise ValueError("No test_id_option option present in .testr.conf")
-            if test_ids is None:
-                # No test ids, no id option.
-                idoption = ''
-            cmd = re.sub('\$IDOPTION', idoption, cmd)
         listopt = ''
         if '$LISTOPT' in command:
             # LISTOPT is used, test_list_option must be configured.
@@ -201,7 +260,9 @@ class TestCommand(object):
                 raise ValueError("No test_list_option option present in .testr.conf")
         if self.oldschool:
             listpath = os.path.join(self.ui.here, 'failing.list')
-            result = self.run_factory(test_ids, cmd, listopt, self.ui, listpath)
+            result = self.run_factory(test_ids, cmd, listopt, idoption,
+                self.ui, listpath=listpath)
         else:
-            result = self.run_factory(test_ids, cmd, listopt, self.ui)
+            result = self.run_factory(test_ids, cmd, listopt, idoption,
+                self.ui)
         return result

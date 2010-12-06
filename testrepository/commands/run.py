@@ -34,7 +34,10 @@ class run(Command):
     """ + testrconf_help
 
     options = [optparse.Option("--failing", action="store_true",
-            default=False, help="Run only tests known to be failing.")]
+            default=False, help="Run only tests known to be failing."),
+        optparse.Option("--parallel", action="store_true",
+            default=False, help="Run tests in parallel processes."),
+        ]
     args = [StringArgument('testargs', 0, None)]
     # Can be assigned to to inject a custom command factory.
     command_factory = TestCommand

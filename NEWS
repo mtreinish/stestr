@@ -30,6 +30,12 @@ CHANGES
   when ``.testr.conf`` has been configured with a ``test_list_option``.
   (Robert Collins)
 
+* ``test run --parallel`` will parallise by running each test command once per
+  CPU in the machine (detection for this only implemented on Linux so far).
+  An internally parallelising command will not benefit from this, but for
+  many projects it will be a win either from simplicity or because getting
+  their test runner to parallise is nontrivial. (Robert Collins)
+
 * ``testr run`` now resets the SIGPIPE handler to default - which is what
   most Unix processes expect. (Robert Collins)
 
