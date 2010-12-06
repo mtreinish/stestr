@@ -34,7 +34,8 @@ testrconf_help = dedent("""
     ---
     will cause 'testr run' to run 'foo' to execute tests, and
     'testr run --failing' will cause 'foo --bar failing.list ' to be run to
-    execute tests.
+    execute tests. Shell variables are expanded in these commands on platforms
+    that have a shell.
 
     The full list of options and variables for .testr.conf:
     * test_command -- command line to run to execute tests.
