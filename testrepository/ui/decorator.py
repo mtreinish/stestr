@@ -15,6 +15,7 @@
 """A decorator for UIs to allow use of additional command objects in-process."""
 
 from StringIO import StringIO
+import optparse
 
 from testrepository import ui
 
@@ -28,11 +29,13 @@ class UI(ui.AbstractUI):
     does not get passed to the decorated UI unless it has not been initialised.
     """
 
-    def __init__(self, input_streams=None, decorated=None):
+    def __init__(self, input_streams=None, options={}, decorated=None):
         """Create a decorating UI.
         
         :param input_streams: The input steams to present from this UI. Should
             be a list of (stream name, file) tuples.
+        :param options: Dict of options to replace in the base UI. These are
+            merged with the underlying ones when set_command is called.
         :param decorated: The UI to decorate.
         """
         self._decorated = decorated
@@ -41,10 +44,7 @@ class UI(ui.AbstractUI):
             for stream_type, stream_value in input_streams:
                 self.input_streams.setdefault(stream_type, []).append(
                     stream_value)
-
-    @property
-    def options(self):
-        return self._decorated.options
+        self._options = options
 
     @property
     def arguments(self):
@@ -85,11 +85,19 @@ class UI(ui.AbstractUI):
 
     def set_command(self, cmd):
         self.cmd = cmd
+        result = True
         if getattr(self._decorated, 'cmd', None) is None:
-            return self._decorated.set_command(cmd)
+            result = self._decorated.set_command(cmd)
         # Pickup the repository factory from the decorated UI's command.
         cmd.repository_factory = self._decorated.cmd.repository_factory
-        return True
+        # Merge options
+        self.options = optparse.Values()
+        for option in dir(self._decorated.options):
+            setattr(self.options, option,
+                getattr(self._decorated.options, option))
+        for option, value in self._options.items():
+            setattr(self.options, option, value)
+        return result
 
     def subprocess_Popen(self, *args, **kwargs):
         return self._decorated.subprocess_Popen(*args, **kwargs)

@@ -117,8 +117,8 @@ class Repository(AbstractRepository):
             os.path.join(self.base, str(run_id)), 'rb').read()
         return _DiskRun(run_subunit_content)
 
-    def _get_inserter(self):
-        return _Inserter(self)
+    def _get_inserter(self, partial):
+        return _Inserter(self, partial)
 
     def _write_next_stream(self, value):
         # Note that this is unlocked and not threadsafe : for now, shrug - single
@@ -150,11 +150,12 @@ class _DiskRun(AbstractTestRun):
 
 class _SafeInserter(TestProtocolClient):
 
-    def __init__(self, repository):
+    def __init__(self, repository, partial=False):
         self._repository = repository
         fd, name = tempfile.mkstemp(dir=self._repository.base)
         self.fname = name
         stream = os.fdopen(fd, 'wb')
+        self.partial = partial
         TestProtocolClient.__init__(self, stream)
 
     def startTestRun(self):
@@ -195,13 +196,14 @@ class _Inserter(_SafeInserter):
         # use memory repo to aggregate. a bit awkward on layering ;).
         import memory
         repo = memory.Repository()
-        # Seed with current failing
-        inserter = repo.get_inserter()
-        inserter.startTestRun()
-        failing = self._repository.get_failing()
-        failing.get_test().run(inserter)
-        inserter.stopTestRun()
-        inserter= repo.get_inserter()
+        if self.partial:
+            # Seed with current failing
+            inserter = repo.get_inserter()
+            inserter.startTestRun()
+            failing = self._repository.get_failing()
+            failing.get_test().run(inserter)
+            inserter.stopTestRun()
+        inserter= repo.get_inserter(partial=True)
         inserter.startTestRun()
         run = self._repository.get_test_run(run_id)
         run.get_test().run(inserter)

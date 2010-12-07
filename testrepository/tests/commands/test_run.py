@@ -113,6 +113,9 @@ class TestCommand(ResourcedTestCase):
             ('results', Wildcard),
             ('values', [('id', 1), ('tests', 0)])
             ], ui.outputs)
+        # Failing causes partial runs to be used.
+        self.assertEqual(True,
+            cmd.repository_factory.repos[ui.here].get_test_run(1)._partial)
 
     def test_IDLIST_default_is_empty(self):
         ui, cmd = self.get_test_ui_and_cmd()
@@ -192,3 +195,21 @@ class TestCommand(ResourcedTestCase):
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ], ui.outputs)
         self.assertEqual(0, result)
+
+    def test_partial_passed_to_repo(self):
+        ui, cmd = self.get_test_ui_and_cmd(
+            options=[('quiet', True), ('partial', True)])
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo\n')
+        result = cmd.execute()
+        expected_cmd = 'foo'
+        self.assertEqual([
+            ('values', [('running', expected_cmd)]),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
+            ], ui.outputs)
+        self.assertEqual(0, result)
+        self.assertEqual(True,
+            cmd.repository_factory.repos[ui.here].get_test_run(1)._partial)

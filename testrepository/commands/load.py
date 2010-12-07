@@ -14,6 +14,8 @@
 
 """Load data into a repository."""
 
+import optparse
+
 import subunit
 from testtools import ConcurrentTestSuite, MultiTestResult
 
@@ -26,9 +28,16 @@ class load(Command):
 
     Failing tests are shown on the console and a summary of the stream is
     printed at the end.
+
+    Unless the stream is a partial stream, any existing failures are discarded.
     """
 
     input_streams = ['subunit+']
+
+    options = [
+        optparse.Option("--partial", action="store_true",
+            default=False, help="The stream being loaded was a partial run."),
+        ]
 
     def run(self):
         path = self.ui.here
@@ -43,7 +52,7 @@ class load(Command):
             for stream in streams():
                 yield subunit.ProtocolTestCase(stream)
         case = ConcurrentTestSuite(cases, make_tests)
-        inserter = repo.get_inserter()
+        inserter = repo.get_inserter(partial=self.ui.options.partial)
         output_result = self.ui.make_result(lambda: run_id)
         # XXX: We want to *count* skips, but not show them.
         filtered = TestResultFilter(output_result, filter_skip=False)

@@ -67,17 +67,19 @@ class AbstractRepository(object):
         """
         raise NotImplementedError(self.get_failing)
 
-    def get_inserter(self):
+    def get_inserter(self, partial=False):
         """Get an inserter that will insert a test run into the repository.
 
         Repository implementations should implement _get_inserter.
 
+        :param partial: If True, the stream being inserted only executed some
+            tests rather than all the projects tests.
         :return an inserter: Inserters meet the extended TestResult protocol
             that testtools 0.9.2 and above offer. The startTestRun and
             stopTestRun methods in particular must be called.
         """
         return subunit.test_results.AutoTimingTestResultDecorator(
-            self._get_inserter())
+            self._get_inserter(partial))
     
     def _get_inserter(self):
         """Get an inserter for get_inserter.

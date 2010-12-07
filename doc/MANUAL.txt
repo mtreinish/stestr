@@ -53,10 +53,14 @@ Having setup a .testr.conf, a common workflow then becomes::
 
   # Fix currently broken tests - repeat until there are no failures.
   $ testr run --failing
-  # Do a full run to find anything thrown out during the reduction process.
+  # Do a full run to find anything that regressed during the reduction process.
   $ testr run
   # And either commit or loop around this again depending on whether errors
   # were found.
+
+The --failing option turns on ``--partial`` automatically (so that if the
+partial test run were to be interrupted, the failing tests that aren't run are
+not lost).
 
 Listing tests
 ~~~~~~~~~~~~~

@@ -70,8 +70,8 @@ class Repository(AbstractRepository):
             raise KeyError("No tests in repository")
         return result
 
-    def _get_inserter(self):
-        return _Inserter(self)
+    def _get_inserter(self, partial):
+        return _Inserter(self, partial)
 
 
 # XXX: Too much duplication between this and _Inserter
@@ -101,8 +101,9 @@ class _Failures(AbstractTestRun):
 class _Inserter(AbstractTestRun):
     """Insert test results into a memory repository, and describe them later."""
 
-    def __init__(self, repository):
+    def __init__(self, repository, partial):
         self._repository = repository
+        self._partial = partial
         self._outcomes = []
 
     def startTestRun(self):
@@ -110,6 +111,8 @@ class _Inserter(AbstractTestRun):
 
     def stopTestRun(self):
         self._repository._runs.append(self)
+        if not self._partial:
+            self._repository._failing = {}
         for record in self._outcomes:
             test_id = record[1].id()
             if record[0] in ('Failure', 'Error'):

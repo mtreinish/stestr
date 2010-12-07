@@ -22,6 +22,14 @@ CHANGES
   without a bzr tree : this makes it easier to snapshot without doing a 
   release. (Jonathan Lange)
 
+* ``testr load`` and ``testr run`` now have a flag ``--partial``. When set
+  this will cause existing failures to be preserved. When not set, doing a
+  load will reset existing failures. The ``testr run`` flag ``--failing``
+  implicitly sets ``--partial`` (so that an interrupted incremental test run
+  does not incorrectly discard a failure record). The ``--partial`` flag exists
+  so that deleted or renamed tests do not persist forever in the database.
+  (Robert Collins)
+
 * ``testr load`` now loads all input streams in parallel. This has no impact
   on the CLI as yet, but permits API users to load from parallel processes.
   (Robert Collins)

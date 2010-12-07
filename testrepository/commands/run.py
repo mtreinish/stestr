@@ -33,10 +33,13 @@ class run(Command):
     __doc__ = """Run the tests for a project and load them into testrepository.
     """ + testrconf_help
 
-    options = [optparse.Option("--failing", action="store_true",
+    options = [
+        optparse.Option("--failing", action="store_true",
             default=False, help="Run only tests known to be failing."),
         optparse.Option("--parallel", action="store_true",
             default=False, help="Run tests in parallel processes."),
+        optparse.Option("--partial", action="store_true",
+            default=False, help="Only some tests will be run. Implied by --failing."),
         ]
     args = [StringArgument('testargs', 0, None)]
     # Can be assigned to to inject a custom command factory.
@@ -63,7 +66,11 @@ class run(Command):
         cmd.setUp()
         try:
             run_procs = [('subunit', proc.stdout) for proc in cmd.run_tests()]
-            load_ui = decorator.UI(run_procs, self.ui)
+            options = {}
+            if self.ui.options.failing:
+                options['partial'] = True
+            load_ui = decorator.UI(input_streams=run_procs, options=options,
+                decorated=self.ui)
             load_cmd = load(load_ui)
             return load_cmd.execute()
         finally:
