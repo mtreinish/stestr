@@ -67,6 +67,10 @@ CHANGES
 * ``testr run`` will now pass ``-q`` down to ``testr load``.
   (Robert Collins, #529701)
 
+* The ``testrepository.repository.Repository`` interface now tracks test times
+  for use in estimating test run duration and parallel test partitioning.
+  (Robert Collins)
+
 * Updates to next-stream are done via a temporary file to reduce the chance
   of an empty next-stream being written to disk. (Robert Collins, #531664)
 

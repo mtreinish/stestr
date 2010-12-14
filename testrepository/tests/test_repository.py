@@ -14,7 +14,10 @@
 
 """Tests for Repository support logic and the Repository contract."""
 
+import datetime
 import doctest
+
+from subunit import iso8601
 
 from testresources import TestResource
 from testtools import (
@@ -275,3 +278,24 @@ successful: testrepository.tests.test_repository.Case.method...
         finally:
             result.stopTestRun()
         self.assertEqual(1, result.testsRun)
+
+    def test_get_times_unknown_tests_are_unknown(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        test_ids = set(['foo', 'bar'])
+        self.assertEqual(test_ids, repo.get_test_times(test_ids)['unknown'])
+
+    def test_inserted_test_times_known(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        start = datetime.datetime.now(tz=iso8601.Utc())
+        result.time(start)
+        test_name = 'testrepository.tests.test_repository.Case.method'
+        test = make_test(test_name, True)
+        result.startTest(test)
+        result.time(start + datetime.timedelta(seconds=1))
+        result.addSuccess(test)
+        result.stopTest(test)
+        result.stopTestRun()
+        self.assertEqual({test_name: 1.0},
+            repo.get_test_times([test_name])['known'])
