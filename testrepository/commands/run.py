@@ -46,10 +46,10 @@ class run(Command):
     command_factory = TestCommand
 
     def run(self):
-        testcommand = self.command_factory(self.ui)
+        repo = self.repository_factory.open(self.ui.here)
+        testcommand = self.command_factory(self.ui, repo)
         if self.ui.options.failing:
             # Run only failing tests
-            repo = self.repository_factory.open(self.ui.here)
             run = repo.get_failing()
             case = run.get_test()
             result = TestResult()

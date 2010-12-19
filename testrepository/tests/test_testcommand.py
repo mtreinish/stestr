@@ -30,8 +30,8 @@ from testrepository.tests.test_repository import make_test
 
 class FakeTestCommand(TestCommand):
 
-    def __init__(self, ui):
-        TestCommand.__init__(self, ui)
+    def __init__(self, ui, repo):
+        TestCommand.__init__(self, ui, repo)
         self.oldschool = True
 
 
@@ -43,7 +43,7 @@ class TestTestCommand(ResourcedTestCase):
         self.dirty()
         ui = UI(options=options, args=args)
         ui.here = self.tempdir
-        return ui, TestCommand(ui)
+        return ui, TestCommand(ui, None)
 
     def get_test_ui_and_cmd2(self, options=(), args=()):
         self.dirty()
@@ -78,7 +78,7 @@ class TestTestCommand(ResourcedTestCase):
     def test_takes_ui(self):
         ui = UI()
         ui.here = self.tempdir
-        command = TestCommand(ui)
+        command = TestCommand(ui, None)
         self.assertEqual(command.ui, ui)
 
     def test_get_run_command_no_config_file_errors(self):

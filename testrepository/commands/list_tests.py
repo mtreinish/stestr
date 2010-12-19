@@ -32,7 +32,7 @@ class list_tests(Command):
     command_factory = TestCommand
 
     def run(self):
-        testcommand = self.command_factory(self.ui)
+        testcommand = self.command_factory(self.ui, None)
         ids = None
         cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'])
         cmd.setUp()

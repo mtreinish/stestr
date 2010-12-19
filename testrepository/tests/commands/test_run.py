@@ -64,6 +64,7 @@ class TestCommand(ResourcedTestCase):
 
     def test_no_config_file_errors(self):
         ui, cmd = self.get_test_ui_and_cmd()
+        repo = cmd.repository_factory.initialise(ui.here)
         self.assertEqual(3, cmd.execute())
         self.assertEqual(1, len(ui.outputs))
         self.assertEqual('error', ui.outputs[0][0])
@@ -72,6 +73,7 @@ class TestCommand(ResourcedTestCase):
 
     def test_no_config_settings_errors(self):
         ui, cmd = self.get_test_ui_and_cmd()
+        repo = cmd.repository_factory.initialise(ui.here)
         self.set_config('')
         self.assertEqual(3, cmd.execute())
         self.assertEqual(1, len(ui.outputs))
@@ -86,7 +88,7 @@ class TestCommand(ResourcedTestCase):
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
         cmd.command_factory = FakeTestCommand
-        self.assertEqual(0, cmd.execute())
+        result = cmd.execute()
         listfile = os.path.join(ui.here, 'failing.list')
         expected_cmd = 'foo --load-list %s' % listfile
         self.assertEqual([
@@ -97,6 +99,7 @@ class TestCommand(ResourcedTestCase):
             ('values', [('id', 1), ('tests', 0)])
             ], ui.outputs)
         # TODO: check the list file is written, and deleted.
+        self.assertEqual(0, result)
 
     def test_IDLIST_failures(self):
         ui, cmd = self.get_test_ui_and_cmd(options=[('failing', True)])

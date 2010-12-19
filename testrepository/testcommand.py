@@ -62,7 +62,7 @@ class TestListingFixture(Fixture):
     """Write a temporary file to disk with test ids in it."""
 
     def __init__(self, test_ids, cmd_template, listopt, idoption, ui,
-        parallel=True, listpath=None):
+        repository, parallel=True, listpath=None):
         """Create a TestListingFixture.
 
         :param test_ids: The test_ids to use. May be None indicating that
@@ -75,6 +75,7 @@ class TestListingFixture(Fixture):
         :param idoption: Option to substitutde into cmd when supplying any test
             ids.
         :param ui: The UI in use.
+        :param repository: The repository to query for test times, if needed.
         :param parallel: If not True, prohibit parallel use : used to implement
             --parallel run recursively.
         :param listpath: The file listing path to use. If None, a unique path
@@ -85,6 +86,7 @@ class TestListingFixture(Fixture):
         self.listopt = listopt
         self.idoption = idoption
         self.ui = ui
+        self.repository = repository
         self.parallel = parallel
         self._listpath = listpath
 
@@ -176,7 +178,8 @@ class TestListingFixture(Fixture):
                 # No tests in this partition
                 continue
             fixture = self.useFixture(TestListingFixture(test_ids,
-                self.template, self.listopt, self.idoption, self.ui, parallel=False))
+                self.template, self.listopt, self.idoption, self.ui,
+                self.repository, parallel=False))
             result.extend(fixture.run_tests())
         return result
 
@@ -212,13 +215,16 @@ class TestCommand(object):
     run_factory = TestListingFixture
     oldschool = False
 
-    def __init__(self, ui):
+    def __init__(self, ui, repository):
         """Create a TestCommand.
 
         :param ui: A testrepository.ui.UI object which is used to obtain the
             location of the .testr.conf.
+        :param repository: A testrepository.repository.Repository used for
+            determining test times when partitioning tests.
         """
         self.ui = ui
+        self.repository = repository
 
     def get_run_command(self, test_ids=None, testargs=()):
         """Get the command that would be run to run tests."""
@@ -262,8 +268,8 @@ class TestCommand(object):
         if self.oldschool:
             listpath = os.path.join(self.ui.here, 'failing.list')
             result = self.run_factory(test_ids, cmd, listopt, idoption,
-                self.ui, listpath=listpath)
+                self.ui, self.repository, listpath=listpath)
         else:
             result = self.run_factory(test_ids, cmd, listopt, idoption,
-                self.ui)
+                self.ui, self.repository)
         return result
