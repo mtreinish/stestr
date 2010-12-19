@@ -38,11 +38,14 @@ CHANGES
   when ``.testr.conf`` has been configured with a ``test_list_option``.
   (Robert Collins)
 
-* ``test run --parallel`` will parallise by running each test command once per
-  CPU in the machine (detection for this only implemented on Linux so far).
+* ``test run --parallel`` will parallelise by running each test command once
+  per CPU in the machine (detection for this only implemented on Linux so far).
   An internally parallelising command will not benefit from this, but for
   many projects it will be a win either from simplicity or because getting
-  their test runner to parallise is nontrivial. (Robert Collins)
+  their test runner to parallise is nontrivial. The observed duration of tests
+  is used to inform the partitioning algorithm - so each test runner should
+  complete at approximately the same time, minimising total runtime.
+  (Robert Collins)
 
 * ``testr run`` no longer attempts to expand unknown variables. This permits
   the use of environmen variables to control the test run. For instance,

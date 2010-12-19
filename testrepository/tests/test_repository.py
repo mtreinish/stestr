@@ -101,6 +101,17 @@ def make_test(id, should_pass):
     return clone_test_with_new_id(case, id)
 
 
+def run_timed(id, duration, result):
+    """Make and run a test taking duration seconds."""
+    start = datetime.datetime.now(tz=iso8601.Utc())
+    result.time(start)
+    test = make_test(id, True)
+    result.startTest(test)
+    result.time(start + datetime.timedelta(seconds=duration))
+    result.addSuccess(test)
+    result.stopTest(test)
+
+
 class TestRepositoryErrors(ResourcedTestCase):
 
     def test_not_found(self):
@@ -288,14 +299,8 @@ successful: testrepository.tests.test_repository.Case.method...
         repo = self.repo_impl.initialise(self.sample_url)
         result = repo.get_inserter()
         result.startTestRun()
-        start = datetime.datetime.now(tz=iso8601.Utc())
-        result.time(start)
         test_name = 'testrepository.tests.test_repository.Case.method'
-        test = make_test(test_name, True)
-        result.startTest(test)
-        result.time(start + datetime.timedelta(seconds=1))
-        result.addSuccess(test)
-        result.stopTest(test)
+        run_timed(test_name, 1, result)
         result.stopTestRun()
         self.assertEqual({test_name: 1.0},
             repo.get_test_times([test_name])['known'])

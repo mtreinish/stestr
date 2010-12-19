@@ -25,7 +25,7 @@ from testrepository.repository import memory
 from testrepository.testcommand import TestCommand
 from testrepository.tests import ResourcedTestCase
 from testrepository.tests.stubpackage import TempDirResource
-from testrepository.tests.test_repository import make_test
+from testrepository.tests.test_repository import make_test, run_timed
 
 
 class FakeTestCommand(TestCommand):
@@ -39,11 +39,11 @@ class TestTestCommand(ResourcedTestCase):
 
     resources = [('tempdir', TempDirResource())]
 
-    def get_test_ui_and_cmd(self, options=(), args=()):
+    def get_test_ui_and_cmd(self, options=(), args=(), repository=None):
         self.dirty()
         ui = UI(options=options, args=args)
         ui.here = self.tempdir
-        return ui, TestCommand(ui, None)
+        return ui, TestCommand(ui, repository)
 
     def get_test_ui_and_cmd2(self, options=(), args=()):
         self.dirty()
@@ -179,3 +179,30 @@ class TestTestCommand(ResourcedTestCase):
             'test_list_option=--list\n')
         fixture = self.useFixture(command.get_run_command())
         self.assertEqual(set(['returned', 'ids']), set(fixture.list_tests()))
+
+    def test_partition_tests_smoke(self):
+        repo = memory.RepositoryFactory().initialise('memory:')
+        # Seed with 1 slow and 2 tests making up 2/3 the time.
+        result = repo.get_inserter()
+        result.startTestRun()
+        run_timed("slow", 3, result)
+        run_timed("fast1", 1, result)
+        run_timed("fast2", 1, result)
+        result.stopTestRun()
+        ui, command = self.get_test_ui_and_cmd(repository=repo)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST\n')
+        fixture = self.useFixture(command.get_run_command())
+        # partitioning by two generates 'slow' and the two fast ones as partitions
+        # flushed out by equal numbers of unknown duration tests.
+        test_ids = frozenset(['slow', 'fast1', 'fast2', 'unknown1', 'unknown2',
+            'unknown3', 'unknown4'])
+        partitions = fixture.partition_tests(test_ids, 2)
+        self.assertTrue('slow' in partitions[0])
+        self.assertFalse('fast1' in partitions[0])
+        self.assertFalse('fast2' in partitions[0])
+        self.assertFalse('slow' in partitions[1])
+        self.assertTrue('fast1' in partitions[1])
+        self.assertTrue('fast2' in partitions[1])
+        self.assertEqual(3, len(partitions[0]))
+        self.assertEqual(4, len(partitions[1]))

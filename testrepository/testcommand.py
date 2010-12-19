@@ -17,6 +17,7 @@
 import ConfigParser
 from fixtures import Fixture
 import itertools
+import operator
 import os.path
 import re
 import string
@@ -186,11 +187,32 @@ class TestListingFixture(Fixture):
     def partition_tests(self, test_ids, concurrency):
         """Parition test_ids by concurrency.
 
-        This is a simple round robin partition. In future we should introspect
-        for durations to assign tests more optimally.
+        Test durations from the repository are used to get partitions which
+        have roughly the same expected runtime. New tests - those with no
+        recorded duration - are allocated in round-robin fashion to the 
+        partitions created using test durations.
+
+        :return: A list where each element is a distinct subset of test_ids,
+            and the union of all the elements is equal to set(test_ids).
         """
         partitions = [list() for i in range(concurrency)]
-        for partition, test_id in itertools.izip(itertools.cycle(partitions), test_ids):
+        timed_partitions = [[0.0, partition] for partition in partitions]
+        time_data = self.repository.get_test_times(test_ids)
+        timed = time_data['known']
+        unknown = time_data['unknown']
+        # Scheduling is NP complete in general, so we avoid aiming for
+        # perfection. A quick approximation that is sufficient for our general
+        # needs:
+        # sort the tests by time
+        # allocate to partitions by putting each test in to the partition with
+        # the current lowest time.
+        queue = sorted(timed.items(), key=operator.itemgetter(1), reverse=True)
+        for test_id, duration in queue:
+            timed_partitions[0][0] = timed_partitions[0][0] + duration
+            timed_partitions[0][1].append(test_id)
+            timed_partitions.sort(key=operator.itemgetter(0))
+        # Assign tests with unknown times in round robin fashion to the partitions.
+        for partition, test_id in itertools.izip(itertools.cycle(partitions), unknown):
             partition.append(test_id)
         return partitions
 
