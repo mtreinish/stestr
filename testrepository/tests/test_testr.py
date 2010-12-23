@@ -39,7 +39,7 @@ class StubbedTestr(object):
         proc = subprocess.Popen([sys.executable, self.execpath] + args,
             env={'PYTHONPATH': self.stubpackage.base},
             stdout=subprocess.PIPE, stdin=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
+            stderr=subprocess.STDOUT, universal_newlines=True)
         out, err = proc.communicate()
         return proc.returncode, out
 
