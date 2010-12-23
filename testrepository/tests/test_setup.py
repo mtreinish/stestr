@@ -33,8 +33,11 @@ class TestCanSetup(TestCase):
         path = os.path.join(os.path.dirname(__file__), '..', '..', 'setup.py')
         proc = subprocess.Popen([sys.executable, path, 'bdist'],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
+            stderr=subprocess.STDOUT, universal_newlines=True)
         output, _ = proc.communicate()
         self.assertEqual(0, proc.returncode)
-        self.assertThat(output,
-            DocTestMatches("...running bdist...", doctest.ELLIPSIS))
+        self.assertThat(output, DocTestMatches("""...
+running install_scripts
+...
+adding '...testr'
+...""", doctest.ELLIPSIS))
