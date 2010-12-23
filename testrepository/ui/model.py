@@ -26,10 +26,12 @@ class ProcessModel(object):
     def __init__(self, ui):
         self.ui = ui
         self.returncode = 0
+        self.stdin = StringIO()
+        self.stdout = StringIO()
 
     def communicate(self):
         self.ui.outputs.append(('communicate',))
-        return '', ''
+        return self.stdout.getvalue(), ''
 
 
 class TestSuiteModel(object):
@@ -81,24 +83,29 @@ class UI(ui.AbstractUI):
     testing testrepository commands.
     """
 
-    def __init__(self, input_streams=None, options=(), args={}):
+    def __init__(self, input_streams=None, options=(), args={},
+        here='memory:', proc_outputs=()):
         """Create a model UI.
 
-        :param input_streams: A list of stream name, bytes stream tuples to be
-            used as the available input streams for this ui.
+        :param input_streams: A list of stream name, (file or bytes) tuples to
+            be used as the available input streams for this ui.
         :param options: Options to explicitly set values for.
         :param args: The argument values to give the UI.
+        :param here: Set the here value for the UI.
+        :param proc_outputs: byte strings to be returned in the stdout from
+            created processes.
         """
         self.input_streams = {}
         if input_streams:
-            for stream_type, stream_bytes in input_streams:
+            for stream_type, stream_value in input_streams:
                 self.input_streams.setdefault(stream_type, []).append(
-                    stream_bytes)
-        self.here = 'memory:'
+                    stream_value)
+        self.here = here
         self.unparsed_opts = options
         self.outputs = []
         # Could take parsed args, but for now this is easier.
         self.unparsed_args = args
+        self.proc_outputs = list(proc_outputs)
 
     def _check_cmd(self):
         options = list(self.unparsed_opts)
@@ -126,8 +133,11 @@ class UI(ui.AbstractUI):
 
     def _iter_streams(self, stream_type):
         streams = self.input_streams.pop(stream_type, [])
-        for stream_bytes in streams:
-            yield StringIO(stream_bytes)
+        for stream_value in streams:
+            if getattr(stream_value, 'read', None):
+                yield stream_value
+            else:
+                yield StringIO(stream_value)
 
     def make_result(self, get_id):
         return TestResultModel(self, get_id)
@@ -154,4 +164,7 @@ class UI(ui.AbstractUI):
     def subprocess_Popen(self, *args, **kwargs):
         # Really not an output - outputs should be renamed to events.
         self.outputs.append(('popen', args, kwargs))
-        return ProcessModel(self)
+        result = ProcessModel(self)
+        if self.proc_outputs:
+            result.stdout = StringIO(self.proc_outputs.pop(0))
+        return result

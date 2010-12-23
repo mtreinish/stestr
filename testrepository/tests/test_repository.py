@@ -14,7 +14,10 @@
 
 """Tests for Repository support logic and the Repository contract."""
 
+import datetime
 import doctest
+
+from subunit import iso8601
 
 from testresources import TestResource
 from testtools import (
@@ -96,6 +99,17 @@ def make_test(id, should_pass):
     else:
         case = Case("failing")
     return clone_test_with_new_id(case, id)
+
+
+def run_timed(id, duration, result):
+    """Make and run a test taking duration seconds."""
+    start = datetime.datetime.now(tz=iso8601.Utc())
+    result.time(start)
+    test = make_test(id, True)
+    result.startTest(test)
+    result.time(start + datetime.timedelta(seconds=duration))
+    result.addSuccess(test)
+    result.stopTest(test)
 
 
 class TestRepositoryErrors(ResourcedTestCase):
@@ -200,14 +214,14 @@ class TestRepositoryContract(ResourcedTestCase):
         self.assertEqual(1, len(analyzed.failures))
         self.assertEqual('failing', analyzed.failures[0][0].id())
 
-    def test_get_failing_two_runs(self):
-        # failures from two runs add to existing failures, and successes remove
-        # from them.
+    def test_get_failing_complete_runs_delete_missing_failures(self):
+        # failures from complete runs replace all failures.
         repo = self.repo_impl.initialise(self.sample_url)
         result = repo.get_inserter()
         result.startTestRun()
         make_test('passing', True).run(result)
         make_test('failing', False).run(result)
+        make_test('missing', False).run(result)
         result.stopTestRun()
         result = repo.get_inserter()
         result.startTestRun()
@@ -218,6 +232,27 @@ class TestRepositoryContract(ResourcedTestCase):
         self.assertEqual(1, analyzed.testsRun)
         self.assertEqual(1, len(analyzed.failures))
         self.assertEqual('passing', analyzed.failures[0][0].id())
+
+    def test_get_failing_partial_runs_preserve_missing_failures(self):
+        # failures from two runs add to existing failures, and successes remove
+        # from them.
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        make_test('passing', True).run(result)
+        make_test('failing', False).run(result)
+        make_test('missing', False).run(result)
+        result.stopTestRun()
+        result = repo.get_inserter(partial=True)
+        result.startTestRun()
+        make_test('passing', False).run(result)
+        make_test('failing', True).run(result)
+        result.stopTestRun()
+        analyzed = self.get_failing(repo)
+        self.assertEqual(2, analyzed.testsRun)
+        self.assertEqual(2, len(analyzed.failures))
+        self.assertEqual(set(['passing', 'missing']),
+            set([test[0].id() for test in analyzed.failures]))
 
     def test_get_test_run(self):
         repo = self.repo_impl.initialise(self.sample_url)
@@ -254,3 +289,18 @@ successful: testrepository.tests.test_repository.Case.method...
         finally:
             result.stopTestRun()
         self.assertEqual(1, result.testsRun)
+
+    def test_get_times_unknown_tests_are_unknown(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        test_ids = set(['foo', 'bar'])
+        self.assertEqual(test_ids, repo.get_test_times(test_ids)['unknown'])
+
+    def test_inserted_test_times_known(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        test_name = 'testrepository.tests.test_repository.Case.method'
+        run_timed(test_name, 1, result)
+        result.stopTestRun()
+        self.assertEqual({test_name: 1.0},
+            repo.get_test_times([test_name])['known'])

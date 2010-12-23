@@ -18,7 +18,7 @@ all: README.txt check
 	./testr init
 
 check: .testrepository
-	./testr run
+	./testr run --parallel
 
 check-xml:
 	python -m subunit.run testrepository.tests.test_suite | subunit2junitxml -o test.xml -f | subunit2pyunit

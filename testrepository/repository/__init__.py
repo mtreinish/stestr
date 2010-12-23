@@ -67,17 +67,19 @@ class AbstractRepository(object):
         """
         raise NotImplementedError(self.get_failing)
 
-    def get_inserter(self):
+    def get_inserter(self, partial=False):
         """Get an inserter that will insert a test run into the repository.
 
         Repository implementations should implement _get_inserter.
 
+        :param partial: If True, the stream being inserted only executed some
+            tests rather than all the projects tests.
         :return an inserter: Inserters meet the extended TestResult protocol
             that testtools 0.9.2 and above offer. The startTestRun and
             stopTestRun methods in particular must be called.
         """
         return subunit.test_results.AutoTimingTestResultDecorator(
-            self._get_inserter())
+            self._get_inserter(partial))
     
     def _get_inserter(self):
         """Get an inserter for get_inserter.
@@ -93,6 +95,30 @@ class AbstractRepository(object):
         :return: A TestRun object.
         """
         raise NotImplementedError(self.get_test_run)
+
+    def get_test_times(self, test_ids):
+        """Retrieve estimated times for the tests test_ids.
+
+        :param test_ids: The test ids to query for timing data.
+        :return: A dict with two keys: 'known' and 'unknown'. The unknown
+            key contains a set with the test ids that did run. The known
+            key contains a dict mapping test ids to time in seconds.
+        """
+        test_ids = frozenset(test_ids)
+        known_times = self._get_test_times(test_ids)
+        unknown_times = test_ids - set(known_times)
+        return dict(known=known_times, unknown=unknown_times)
+
+    def _get_test_times(self, test_ids):
+        """Retrieve estimated times for tests test_ids.
+
+        :param test_ids: The test ids to query for timing data.
+        :return: A dict mapping test ids to duration in seconds. Tests that no
+            timing data is present for should not be returned - the base class
+            get_test_times function will collate the missing test ids and put
+            that in to its result automatically.
+        """
+        raise NotImplementedError(self._get_test_times)
 
     def latest_id(self):
         """Return the run id for the most recently inserted test run."""

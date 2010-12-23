@@ -24,7 +24,7 @@ from testtools.matchers import raises
 from testrepository import arguments, commands
 import testrepository.arguments.command
 from testrepository.commands import load
-from testrepository.ui import cli, model
+from testrepository.ui import cli, decorator, model
 from testrepository.tests import ResourcedTestCase
 
 
@@ -48,10 +48,16 @@ def cli_ui_factory(input_streams=None, options=(), args=()):
     return cli.UI(argv, stdin, stdout, stderr)
 
 
+def decorator_ui_factory(input_streams=None, options=(), args=()):
+    base = model.UI(input_streams=input_streams, options=options, args=args)
+    return decorator.UI(input_streams=input_streams, decorated=base)
+
+
 # what ui implementations do we need to test?
 ui_implementations = [
     ('CLIUI', {'ui_factory': cli_ui_factory}),
     ('ModelUI', {'ui_factory': model.UI}),
+    ('DecoratorUI', {'ui_factory': decorator_ui_factory}),
     ]
 
 
@@ -186,6 +192,22 @@ class TestUIContract(ResourcedTestCase):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         proc.returncode
+
+    def test_subprocesses_have_stdin(self):
+        # exec_subprocess should 'work like popen'.
+        ui = self.ui_factory()
+        proc = ui.subprocess_Popen('ls', stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        proc.stdout.read(0)
+        out, err = proc.communicate()
+
+    def test_subprocesses_have_stdout(self):
+        # exec_subprocess should 'work like popen'.
+        ui = self.ui_factory()
+        proc = ui.subprocess_Popen('ls', stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        proc.stdout.read(0)
+        out, err = proc.communicate()
 
     def test_make_result(self):
         # make_result should return a TestResult.

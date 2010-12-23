@@ -15,6 +15,10 @@
 """Persistent storage of test results."""
 
 from cStringIO import StringIO
+try:
+    import anydbm as dbm
+except ImportError:
+    import dbm
 import errno
 import os.path
 import sys
@@ -117,15 +121,32 @@ class Repository(AbstractRepository):
             os.path.join(self.base, str(run_id)), 'rb').read()
         return _DiskRun(run_subunit_content)
 
-    def _get_inserter(self):
-        return _Inserter(self)
+    def _get_inserter(self, partial):
+        return _Inserter(self, partial)
+
+    def _get_test_times(self, test_ids):
+        # May be too slow, but build and iterate.
+        # 'c' because an existing repo may be missing a file.
+        db = dbm.open(self._path('times.dbm'), 'c')
+        try:
+            result = {}
+            for test_id in test_ids:
+                duration = db.get(test_id, None)
+                if duration is not None:
+                    result[test_id] = float(duration)
+            return result
+        finally:
+            db.close()
+
+    def _path(self, suffix):
+        return os.path.join(self.base, suffix)
 
     def _write_next_stream(self, value):
         # Note that this is unlocked and not threadsafe : for now, shrug - single
         # user, repo-per-working-tree model makes this acceptable in the short
         # term. Likewise we don't fsync - this data isn't valuable enough to
         # force disk IO.
-        prefix = os.path.join(self.base, 'next-stream')
+        prefix = self._path('next-stream')
         stream = file(prefix + '.new', 'wb')
         try:
             stream.write('%d\n' % value)
@@ -152,11 +173,18 @@ class _DiskRun(AbstractTestRun):
 
 class _SafeInserter(TestProtocolClient):
 
-    def __init__(self, repository):
+    def __init__(self, repository, partial=False):
+        # XXX: Perhaps should factor into a decorator and use an unaltered
+        # TestProtocolClient.
         self._repository = repository
         fd, name = tempfile.mkstemp(dir=self._repository.base)
         self.fname = name
         stream = os.fdopen(fd, 'wb')
+        self.partial = partial
+        # The time take by each test, flushed at the end.
+        self._times = {}
+        self._test_start = None
+        self._time = None
         TestProtocolClient.__init__(self, stream)
 
     def startTestRun(self):
@@ -171,12 +199,39 @@ class _SafeInserter(TestProtocolClient):
         if os.name != "posix" and os.path.exists(toname):
             os.remove(toname)
         os.rename(self.fname, toname)
+        # May be too slow, but build and iterate.
+        db = dbm.open(self._repository._path('times.dbm'), 'c')
+        try:
+            db.update(self._times)
+        finally:
+            db.close()
         return run_id
 
     def _cancel(self):
         """Cancel an insertion."""
         self._stream.close()
         os.unlink(self.fname)
+
+    def startTest(self, test):
+        result = TestProtocolClient.startTest(self, test)
+        self._test_start = self._time
+        return result
+
+    def stopTest(self, test):
+        result = TestProtocolClient.stopTest(self, test)
+        if None in (self._test_start, self._time):
+            return result
+        duration_delta = self._time - self._test_start
+        duration_seconds = ((duration_delta.microseconds +
+            (duration_delta.seconds + duration_delta.days * 24 * 3600)
+            * 10**6) / float(10**6))
+        self._times[test.id()] = str(duration_seconds)
+        return result
+
+    def time(self, timestamp):
+        result = TestProtocolClient.time(self, timestamp)
+        self._time = timestamp
+        return result
 
 
 class _FailingInserter(_SafeInserter):
@@ -199,13 +254,14 @@ class _Inserter(_SafeInserter):
         # use memory repo to aggregate. a bit awkward on layering ;).
         import memory
         repo = memory.Repository()
-        # Seed with current failing
-        inserter = repo.get_inserter()
-        inserter.startTestRun()
-        failing = self._repository.get_failing()
-        failing.get_test().run(inserter)
-        inserter.stopTestRun()
-        inserter= repo.get_inserter()
+        if self.partial:
+            # Seed with current failing
+            inserter = repo.get_inserter()
+            inserter.startTestRun()
+            failing = self._repository.get_failing()
+            failing.get_test().run(inserter)
+            inserter.stopTestRun()
+        inserter= repo.get_inserter(partial=True)
         inserter.startTestRun()
         run = self._repository.get_test_run(run_id)
         run.get_test().run(inserter)

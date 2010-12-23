@@ -24,23 +24,32 @@ from testtools import TestResult
 
 from testrepository.arguments.string import StringArgument
 from testrepository.commands import Command
+from testrepository.commands.load import load
+from testrepository.ui import decorator
 from testrepository.testcommand import TestCommand, testrconf_help
+
 
 class run(Command):
     __doc__ = """Run the tests for a project and load them into testrepository.
     """ + testrconf_help
 
-    options = [optparse.Option("--failing", action="store_true",
-            default=False, help="Run only tests known to be failing.")]
+    options = [
+        optparse.Option("--failing", action="store_true",
+            default=False, help="Run only tests known to be failing."),
+        optparse.Option("--parallel", action="store_true",
+            default=False, help="Run tests in parallel processes."),
+        optparse.Option("--partial", action="store_true",
+            default=False, help="Only some tests will be run. Implied by --failing."),
+        ]
     args = [StringArgument('testargs', 0, None)]
     # Can be assigned to to inject a custom command factory.
     command_factory = TestCommand
 
     def run(self):
-        testcommand = self.command_factory(self.ui)
+        repo = self.repository_factory.open(self.ui.here)
+        testcommand = self.command_factory(self.ui, repo)
         if self.ui.options.failing:
             # Run only failing tests
-            repo = self.repository_factory.open(self.ui.here)
             run = repo.get_failing()
             case = run.get_test()
             result = TestResult()
@@ -53,20 +62,16 @@ class run(Command):
             ids.extend([error[0].id() for error in result.errors])
         else:
             ids = None
-        if self.ui.options.quiet:
-            quiet = "-q "
-        else:
-            quiet = ""
-        load_cmd = '| testr load %s-d %s' % (quiet, self.ui.here)
         cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'])
         cmd.setUp()
         try:
-            command = cmd.cmd + load_cmd
-            self.ui.output_values([('running', command)])
-            proc = self.ui.subprocess_Popen(command, shell=True)
-            proc.communicate()
-            return proc.returncode
+            run_procs = [('subunit', proc.stdout) for proc in cmd.run_tests()]
+            options = {}
+            if self.ui.options.failing:
+                options['partial'] = True
+            load_ui = decorator.UI(input_streams=run_procs, options=options,
+                decorated=self.ui)
+            load_cmd = load(load_ui)
+            return load_cmd.execute()
         finally:
             cmd.cleanUp()
-        template = string.Template(
-            ' '.join(elements) + '| testr load %s-d %s' % (quiet, self.ui.here))

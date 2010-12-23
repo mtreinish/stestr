@@ -23,6 +23,7 @@ def test_suite():
         'help',
         'init',
         'last',
+        'list_tests',
         'load',
         'quickstart',
         'run',
