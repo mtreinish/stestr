@@ -19,8 +19,6 @@ from fixtures import Fixture
 import itertools
 import operator
 import os.path
-import re
-import string
 import subprocess
 import sys
 import tempfile
@@ -99,18 +97,18 @@ class TestListingFixture(Fixture):
             self.test_ids = []
         else:
             name = self.make_listfile()
-        cmd = self.template
         if not self.test_ids:
             # No test ids, no id option.
             idoption = ''
         else:
             idoption = self.idoption
-        cmd = re.sub('\$IDOPTION', idoption, cmd)
-        cmd = re.sub('\$IDFILE', name, cmd)
         idlist = ' '.join(self.test_ids)
-        cmd = re.sub('\$IDLIST', idlist, cmd)
-        self.cmd = re.sub('\$LISTOPT', '', cmd)
-        self.list_cmd = re.sub('\$LISTOPT', self.listopt, cmd)
+        cmd = (self.template
+            .replace("$IDOPTION", idoption)
+            .replace("$IDFILE", name)
+            .replace("$IDLIST", idlist))
+        self.cmd = cmd.replace("$LISTOPT", "")
+        self.list_cmd = cmd.replace("$LISTOPT", self.listopt)
 
     def make_listfile(self):
         name = None
