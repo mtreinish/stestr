@@ -74,6 +74,10 @@ CHANGES
   for use in estimating test run duration and parallel test partitioning.
   (Robert Collins)
 
+* There are the beginnings of a samba buildfarm backend for testrepository,
+  though it is not hooked into the UI yet, so is only useful for API users.
+  (Jelmer Vernooij)
+
 * Updates to next-stream are done via a temporary file to reduce the chance
   of an empty next-stream being written to disk. (Robert Collins, #531664)
 
