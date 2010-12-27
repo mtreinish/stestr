@@ -22,6 +22,9 @@ CHANGES
   without a bzr tree : this makes it easier to snapshot without doing a 
   release. (Jonathan Lange)
 
+* Testrepository should be more compatible with win32 environments.
+  (Martin [gz] List)
+
 * ``testr load`` and ``testr run`` now have a flag ``--partial``. When set
   this will cause existing failures to be preserved. When not set, doing a
   load will reset existing failures. The ``testr run`` flag ``--failing``

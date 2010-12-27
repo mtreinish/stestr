@@ -35,6 +35,12 @@ from testrepository.repository import (
     )
 
 
+def atomicish_rename(source, target):
+    if os.name != "posix" and os.path.exists(target):
+        os.remove(target)
+    os.rename(source, target)
+
+
 class RepositoryFactory(AbstractRepositoryFactory):
 
     def initialise(klass, url):
@@ -152,7 +158,7 @@ class Repository(AbstractRepository):
             stream.write('%d\n' % value)
         finally:
             stream.close()
-        os.rename(prefix + '.new', prefix)
+        atomicish_rename(prefix + '.new', prefix)
 
 
 class _DiskRun(AbstractTestRun):
@@ -193,8 +199,8 @@ class _SafeInserter(TestProtocolClient):
         self._stream.flush()
         self._stream.close()
         run_id = self._name()
-        os.rename(self.fname, os.path.join(self._repository.base,
-            str(run_id)))
+        final_path = os.path.join(self._repository.base, str(run_id))
+        atomicish_rename(self.fname, final_path)
         # May be too slow, but build and iterate.
         db = dbm.open(self._repository._path('times.dbm'), 'c')
         try:
@@ -266,10 +272,11 @@ class _Inserter(_SafeInserter):
         inserter = _FailingInserter(self._repository)
         inserter.startTestRun()
         try:
-            repo.get_failing().get_test().run(inserter)
-        except:
-            inserter._cancel()
-            raise
+            try:
+                repo.get_failing().get_test().run(inserter)
+            except:
+                inserter._cancel()
+                raise
         finally:
             inserter.stopTestRun()
         return run_id

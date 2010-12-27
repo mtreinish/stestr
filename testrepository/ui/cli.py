@@ -170,4 +170,8 @@ class UI(ui.AbstractUI):
 
     def subprocess_Popen(self, *args, **kwargs):
         import subprocess
-        return subprocess.Popen(*args, preexec_fn=self._clear_SIGPIPE, **kwargs)
+        if os.name == "posix":
+            # GZ 2010-12-04: Should perhaps check for existing preexec_fn and
+            #                combine so both will get called.
+            kwargs['preexec_fn'] = self._clear_SIGPIPE
+        return subprocess.Popen(*args, **kwargs)
