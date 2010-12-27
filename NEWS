@@ -84,6 +84,9 @@ CHANGES
 * Updates to next-stream are done via a temporary file to reduce the chance
   of an empty next-stream being written to disk. (Robert Collins, #531664)
 
+* Variable expansion no longer does python \ escape expansion.
+  (Robert Collins, #694800)
+
 * When next-stream is damaged testr will report that it is corrupt rather than
   reporting an invalid literal. (Robert Collins, #531663)
 

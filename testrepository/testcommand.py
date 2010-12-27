@@ -93,24 +93,30 @@ class TestListingFixture(Fixture):
 
     def setUp(self):
         super(TestListingFixture, self).setUp()
+        variable_regex = '\$(IDOPTION|IDFILE|IDLIST|LISTOPT)'
+        variables = {}
+        cmd = self.template
         if self.test_ids is None:
             self.list_file_name = None
             name = ''
             self.test_ids = []
         else:
             name = self.make_listfile()
-        cmd = self.template
+            variables['IDFILE'] = name
+        idlist = ' '.join(self.test_ids)
+        variables['IDLIST'] = idlist
+        def subst(match):
+            return variables.get(match.groups(1)[0], '')
         if not self.test_ids:
             # No test ids, no id option.
             idoption = ''
         else:
-            idoption = self.idoption
-        cmd = re.sub('\$IDOPTION', idoption, cmd)
-        cmd = re.sub('\$IDFILE', name, cmd)
-        idlist = ' '.join(self.test_ids)
-        cmd = re.sub('\$IDLIST', idlist, cmd)
-        self.cmd = re.sub('\$LISTOPT', '', cmd)
-        self.list_cmd = re.sub('\$LISTOPT', self.listopt, cmd)
+            idoption = re.sub(variable_regex, subst, self.idoption)
+            variables['IDOPTION'] = idoption
+        self.cmd = re.sub(variable_regex, subst, cmd)
+        # and once more with list option support.
+        variables['LISTOPT'] = self.listopt
+        self.list_cmd = re.sub(variable_regex, subst, cmd)
 
     def make_listfile(self):
         name = None
