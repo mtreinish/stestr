@@ -38,6 +38,10 @@ class load(Command):
     options = [
         optparse.Option("--partial", action="store_true",
             default=False, help="The stream being loaded was a partial run."),
+        optparse.Option(
+            "--force-init", action="store_true",
+            default=False,
+            help="Initialise the repository if it does not exist already"),
         ]
 
     def run(self):
@@ -45,7 +49,10 @@ class load(Command):
         try:
             repo = self.repository_factory.open(path)
         except RepositoryNotFound:
-            repo = self.repository_factory.initialise(path)
+            if self.ui.options.force_init:
+                repo = self.repository_factory.initialise(path)
+            else:
+                raise
         run_id = None
         # Not a full implementation of TestCase, but we only need to iterate
         # back to it. Needs to be a callable - its a head fake for
