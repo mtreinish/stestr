@@ -19,6 +19,7 @@ import unittest
 def test_suite():
     names = [
         'cli',
+        'decorator',
         ]
     module_names = ['testrepository.tests.ui.test_' + name for name in
         names]

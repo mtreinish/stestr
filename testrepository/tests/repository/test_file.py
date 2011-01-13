@@ -18,9 +18,35 @@ import os.path
 import shutil
 import tempfile
 
+from fixtures import Fixture
+from testtools.matchers import Raises, MatchesException
+
 from testrepository.repository import file
 from testrepository.tests import ResourcedTestCase
 from testrepository.tests.stubpackage import TempDirResource
+
+
+class FileRepositoryFixture(Fixture):
+
+    def __init__(self, case):
+        self.tempdir = case.tempdir
+        self.resource = case.resources[0][1]
+
+    def setUp(self):
+        super(FileRepositoryFixture, self).setUp()
+        self.repo = file.RepositoryFactory().initialise(self.tempdir)
+        self.resource.dirtied(self.tempdir)
+
+
+class HomeDirTempDir(Fixture):
+    """Creates a temporary directory in ~."""
+
+    def setUp(self):
+        super(HomeDirTempDir, self).setUp()
+        home_dir = os.path.expanduser('~')
+        self.temp_dir = tempfile.mkdtemp(dir=home_dir)
+        self.addCleanup(shutil.rmtree, self.temp_dir)
+        self.short_path = os.path.join('~', os.path.basename(self.temp_dir))
 
 
 class TestFileRepository(ResourcedTestCase):
@@ -28,8 +54,7 @@ class TestFileRepository(ResourcedTestCase):
     resources = [('tempdir', TempDirResource())]
 
     def test_initialise(self):
-        file.RepositoryFactory().initialise(self.tempdir)
-        self.resources[0][1].dirtied(self.tempdir)
+        self.useFixture(FileRepositoryFixture(self))
         base = os.path.join(self.tempdir, '.testrepository')
         stream = open(os.path.join(base, 'format'), 'rb')
         try:
@@ -45,16 +70,12 @@ class TestFileRepository(ResourcedTestCase):
         self.assertEqual("0\n", contents)
 
     def test_initialise_expands_user_directory(self):
-        home_dir = os.path.expanduser('~')
-        temp_dir = tempfile.mkdtemp(dir=home_dir)
-        self.addCleanup(shutil.rmtree, temp_dir)
-        short_path = os.path.join('~', os.path.basename(temp_dir))
+        short_path = self.useFixture(HomeDirTempDir()).short_path
         repo = file.RepositoryFactory().initialise(short_path)
         self.assertTrue(os.path.exists(repo.base))
 
     def test_inserter_output_path(self):
-        repo = file.RepositoryFactory().initialise(self.tempdir)
-        self.resources[0][1].dirtied(self.tempdir)
+        repo = self.useFixture(FileRepositoryFixture(self)).repo
         inserter = repo.get_inserter()
         inserter.startTestRun()
         inserter.stopTestRun()
@@ -62,17 +83,19 @@ class TestFileRepository(ResourcedTestCase):
 
     def test_inserting_creates_id(self):
         # When inserting a stream, an id is returned from stopTestRun.
-        repo = file.RepositoryFactory().initialise(self.tempdir)
-        self.resources[0][1].dirtied(self.tempdir)
+        repo = self.useFixture(FileRepositoryFixture(self)).repo
         result = repo.get_inserter()
         result.startTestRun()
         self.assertEqual(0, result.stopTestRun())
 
     def test_open_expands_user_directory(self):
-        home_dir = os.path.expanduser('~')
-        temp_dir = tempfile.mkdtemp(dir=home_dir)
-        self.addCleanup(shutil.rmtree, temp_dir)
-        short_path = os.path.join('~', os.path.basename(temp_dir))
+        short_path = self.useFixture(HomeDirTempDir()).short_path
         repo1 = file.RepositoryFactory().initialise(short_path)
         repo2 = file.RepositoryFactory().open(short_path)
         self.assertEqual(repo1.base, repo2.base)
+
+    def test_next_stream_corruption_error(self):
+        repo = self.useFixture(FileRepositoryFixture(self)).repo
+        open(os.path.join(repo.base, 'next-stream'), 'wb').close()
+        self.assertThat(repo.count, Raises(
+            MatchesException(ValueError("Corrupt next-stream file: ''"))))

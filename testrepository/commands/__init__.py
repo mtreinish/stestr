@@ -40,6 +40,8 @@ import subunit
 from testrepository.repository import file
 
 def _find_command(cmd_name):
+    orig_cmd_name = cmd_name
+    cmd_name = cmd_name.replace('-', '_')
     classname = "%s" % cmd_name
     modname = "testrepository.commands.%s" % cmd_name
     try:
@@ -53,7 +55,7 @@ def _find_command(cmd_name):
             % (classname, modname))
     if getattr(result, 'name', None) is None:
         # Store the name for the common case of name == lookup path.
-        result.name = classname
+        result.name = orig_cmd_name
     return result
 
 
@@ -68,8 +70,9 @@ def iter_commands():
             if base.startswith('.'):
                 continue
             name = base.split('.', 1)[0]
+            name = name.replace('_', '-')
             names.add(name)
-    names.discard('__init__')
+    names.discard('--init--')
     names = sorted(names)
     for name in names:
         yield _find_command(name)
@@ -149,27 +152,6 @@ class Command(object):
 
     def _init(self):
         """Per command init call, called into by Command.__init__."""
-
-    def output_run(self, run_id, output, evaluator):
-        """Output a test run.
-
-        :param run_id: The run id.
-        :param output: A StringIO containing a subunit stream for some portion of the run to show.
-        :param evaluator: A TestResult evaluating the entire run.
-        """
-        if self.ui.options.quiet:
-            return
-        if output.getvalue():
-            output.seek(0)
-            self.ui.output_results(subunit.ProtocolTestCase(output))
-        values = [('id', run_id), ('tests', evaluator.testsRun)]
-        failures = len(evaluator.failures) + len(evaluator.errors)
-        if failures:
-            values.append(('failures', failures))
-        skips = sum(map(len, evaluator.skip_reasons.itervalues()))
-        if skips:
-            values.append(('skips', skips))
-        self.ui.output_values(values)
 
     def run(self):
         """The core logic for this command to be implemented by subclasses."""

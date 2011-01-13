@@ -1,11 +1,12 @@
+# -*- encoding: utf-8 -*-
 #
 # Copyright (c) 2009, 2010 Testrepository Contributors
-# 
+#
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
 # project source as Apache-2.0 and BSD. You may not use this file except in
 # compliance with one of these two licences.
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -18,10 +19,10 @@ import doctest
 from cStringIO import StringIO
 import sys
 
+from testtools import TestCase
 from testtools.matchers import DocTestMatches
 
 from testrepository import arguments
-import testrepository.arguments.command
 from testrepository import commands
 from testrepository.ui import cli
 from testrepository.tests import ResourcedTestCase
@@ -42,7 +43,7 @@ class TestCLIUI(ResourcedTestCase):
         stdout = StringIO()
         stdin = StringIO()
         stderr = StringIO()
-        ui = cli.UI([], stdin, stdout, stderr)
+        cli.UI([], stdin, stdout, stderr)
 
     def test_stream_comes_from_stdin(self):
         stdout = StringIO()
@@ -89,7 +90,8 @@ class TestCLIUI(ResourcedTestCase):
         class Case(ResourcedTestCase):
             def method(self):
                 self.fail('quux')
-        ui.output_results(Case('method'))
+        result = ui.make_result(lambda: None)
+        Case('method').run(result)
         self.assertThat(ui._stdout.getvalue(),DocTestMatches(
             """======================================================================
 FAIL: testrepository.tests.ui.test_cli.Case.method
@@ -158,3 +160,60 @@ AssertionError: quux
         cmd.args = [arguments.string.StringArgument('args', max=None)]
         ui.set_command(cmd)
         self.assertEqual({'args':['one', '--two', 'three']}, ui.arguments)
+
+
+class TestCLITestResult(TestCase):
+
+    def make_exc_info(self):
+        # Make an exc_info tuple for use in testing.
+        try:
+            1/0
+        except ZeroDivisionError:
+            return sys.exc_info()
+
+    def make_result(self, stream=None):
+        if stream is None:
+            stream = StringIO()
+        ui = cli.UI([], None, stream, None)
+        return ui.make_result(lambda: None)
+
+    def test_initial_stream(self):
+        # CLITestResult.__init__ does not do anything to the stream it is
+        # given.
+        stream = StringIO()
+        cli.CLITestResult(cli.UI(None, None, None, None), stream, lambda: None)
+        self.assertEqual('', stream.getvalue())
+
+    def test_format_error(self):
+        # CLITestResult formats errors by giving them a big fat line, a title
+        # made up of their 'label' and the name of the test, another different
+        # big fat line, and then the actual error itself.
+        result = self.make_result()
+        error = result._format_error('label', self, 'error text')
+        expected = '%s%s: %s\n%s%s' % (
+            result.sep1, 'label', self.id(), result.sep2, 'error text')
+        self.assertThat(error, DocTestMatches(expected))
+
+    def test_addError_outputs_error(self):
+        # CLITestResult.addError outputs the given error immediately to the
+        # stream.
+        stream = StringIO()
+        result = self.make_result(stream)
+        error = self.make_exc_info()
+        error_text = result._err_details_to_string(self, error)
+        result.addError(self, error)
+        self.assertThat(
+            stream.getvalue(),
+            DocTestMatches(result._format_error('ERROR', self, error_text)))
+
+    def test_addFailure_outputs_failure(self):
+        # CLITestResult.addError outputs the given error immediately to the
+        # stream.
+        stream = StringIO()
+        result = self.make_result(stream)
+        error = self.make_exc_info()
+        error_text = result._err_details_to_string(self, error)
+        result.addFailure(self, error)
+        self.assertThat(
+            stream.getvalue(),
+            DocTestMatches(result._format_error('FAIL', self, error_text)))

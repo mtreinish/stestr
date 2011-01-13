@@ -15,43 +15,20 @@
 """Tests for matchers used by or for testing testrepository."""
 
 import sys
-
-from testrepository.tests import ResourcedTestCase
-from testrepository.tests.matchers import MatchesException
+from testtools import TestCase
 
 
-class TestMatchesException(ResourcedTestCase):
+class TestWildcard(TestCase):
 
-    def test_does_not_match_different_exception_class(self):
-        matcher = MatchesException(ValueError("foo"))
-        try:
-            raise Exception("foo")
-        except Exception:
-            error = sys.exc_info()
-        mismatch = matcher.match(error)
-        self.assertNotEqual(None, mismatch)
-        self.assertEqual(
-            "<type 'exceptions.Exception'> is not a "
-            "<type 'exceptions.ValueError'>",
-            mismatch.describe())
+    def test_wildcard_equals_everything(self):
+        from testrepository.tests import Wildcard
+        self.assertTrue(Wildcard == 5)
+        self.assertTrue(Wildcard == 'orange')
+        self.assertTrue('orange' == Wildcard)
+        self.assertTrue(5 == Wildcard)
 
-    def test_does_not_match_different_args(self):
-        matcher = MatchesException(Exception("foo"))
-        try:
-            raise Exception("bar")
-        except Exception:
-            error = sys.exc_info()
-        mismatch = matcher.match(error)
-        self.assertNotEqual(None, mismatch)
-        self.assertEqual(
-            "Exception('bar',) has different arguments to Exception('foo',).",
-            mismatch.describe())
+    def test_wildcard_not_equals_nothing(self):
+        from testrepository.tests import Wildcard
+        self.assertFalse(Wildcard != 5)
+        self.assertFalse(Wildcard != 'orange')
 
-    def test_matches_same_args(self):
-        matcher = MatchesException(Exception("foo"))
-        try:
-            raise Exception("foo")
-        except Exception:
-            error = sys.exc_info()
-        mismatch = matcher.match(error)
-        self.assertEqual(None, mismatch)

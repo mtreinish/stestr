@@ -18,11 +18,11 @@ import os.path
 import sys
 
 from testresources import TestResource
+from testtools.matchers import MatchesException, raises
 
 from testrepository import commands
 from testrepository.repository import file
 from testrepository.tests import ResourcedTestCase
-from testrepository.tests.matchers import MatchesException
 from testrepository.tests.monkeypatch import monkeypatch
 from testrepository.tests.stubpackage import (
     StubPackageResource,
@@ -38,6 +38,7 @@ class TemporaryCommandResource(TestResource):
 
     def __init__(self, cmd_name):
         TestResource.__init__(self)
+        cmd_name = cmd_name.replace('-', '_')
         self.resources.append(('pkg',
             StubPackageResource('commands',
             [('%s.py' % cmd_name,
@@ -71,11 +72,27 @@ class TestFindCommand(ResourcedTestCase):
         self.assertIsInstance(cmd(None), commands.Command)
 
     def test_missing_command(self):
-        self.assertRaises(KeyError, commands._find_command, 'bar')
+        self.assertThat(lambda: commands._find_command('bar'),
+            raises(KeyError))
 
     def test_sets_name(self):
         cmd = commands._find_command('foo')
         self.assertEqual('foo', cmd.name)
+
+
+class TestNameMangling(ResourcedTestCase):
+
+    resources = [('cmd', TemporaryCommandResource('foo-bar'))]
+
+    def test_looksupcommand(self):
+        cmd = commands._find_command('foo-bar')
+        self.assertIsInstance(cmd(None), commands.Command)
+
+    def test_sets_name(self):
+        cmd = commands._find_command('foo-bar')
+        # The name is preserved, so that 'testr commands' shows something
+        # sensible.
+        self.assertEqual('foo-bar', cmd.name)
 
 
 class TestIterCommands(ResourcedTestCase):

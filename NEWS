@@ -5,6 +5,90 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+CHANGES
+-------
+
+* The testrepository test suite depends on testtools 0.9.8. (Robert Collins)
+
+* If interrupted while updating the ``failing`` list, temp files are now
+  cleaned up - previously a carefully timed interrupt would leave the
+  temporary failing file in place. (Robert Collins, #531665)
+
+* Local implementation of MatchesException has been removed in favour of the
+  testtools implementation. All ``self.assertRaises`` have been migrated to
+  this new testing interface.
+
+* ``setup.py`` will read the version number from PKG-INFO when it is running
+  without a bzr tree : this makes it easier to snapshot without doing a 
+  release. (Jonathan Lange)
+
+* Testrepository should be more compatible with win32 environments.
+  (Martin [gz] List)
+
+* ``testr load`` and ``testr run`` now have a flag ``--partial``. When set
+  this will cause existing failures to be preserved. When not set, doing a
+  load will reset existing failures. The ``testr run`` flag ``--failing``
+  implicitly sets ``--partial`` (so that an interrupted incremental test run
+  does not incorrectly discard a failure record). The ``--partial`` flag exists
+  so that deleted or renamed tests do not persist forever in the database.
+  (Robert Collins)
+
+* ``testr load`` now loads all input streams in parallel. This has no impact
+  on the CLI as yet, but permits API users to load from parallel processes.
+  (Robert Collins)
+
+* ``testr list-tests`` is a new command that will list the tests for a project
+  when ``.testr.conf`` has been configured with a ``test_list_option``.
+  (Robert Collins)
+
+* ``test run --parallel`` will parallelise by running each test command once
+  per CPU in the machine (detection for this only implemented on Linux so far).
+  An internally parallelising command will not benefit from this, but for
+  many projects it will be a win either from simplicity or because getting
+  their test runner to parallise is nontrivial. The observed duration of tests
+  is used to inform the partitioning algorithm - so each test runner should
+  complete at approximately the same time, minimising total runtime.
+  (Robert Collins)
+
+* ``testr run`` no longer attempts to expand unknown variables. This permits
+  the use of environmen variables to control the test run. For instance,
+  ${PYTHON:-python} in the test_command setting will run the command with
+  $PYTHON or python if $PYTHON is not set. (Robert Collins, #595295)
+
+* ``testr run`` now resets the SIGPIPE handler to default - which is what
+  most Unix processes expect. (Robert Collins)
+
+* ``testr run`` now uses a unique file name rather than hard coding
+  failing.list - while not as clear, this permits concurrent testr invocations,
+  or parallel testing from within testr, to execute safely. (Robert Collins)
+
+* ``testr run`` uses an in-process load rather than reinvoking testr. This
+  should be faster on Windows and avoids the issue with running the wrong
+  testr when PYTHONPATH but not PATH is set. (Robert Collins, #613129)
+
+* ``testr run`` will now pass -d to the ``testr load`` invocation, so that
+  running ``testr run -d /some/path`` will work correctly.
+  (Robert Collins, #529698)
+
+* ``testr run`` will now pass ``-q`` down to ``testr load``.
+  (Robert Collins, #529701)
+
+* The ``testrepository.repository.Repository`` interface now tracks test times
+  for use in estimating test run duration and parallel test partitioning.
+  (Robert Collins)
+
+* There are the beginnings of a samba buildfarm backend for testrepository,
+  though it is not hooked into the UI yet, so is only useful for API users.
+  (Jelmer Vernooij)
+
+* Updates to next-stream are done via a temporary file to reduce the chance
+  of an empty next-stream being written to disk. (Robert Collins, #531664)
+
+* Variable expansion no longer does python \ escape expansion.
+  (Robert Collins, #694800)
+
+* When next-stream is damaged testr will report that it is corrupt rather than
+  reporting an invalid literal. (Robert Collins, #531663)
 
 0.0.4
 +++++
@@ -22,7 +106,6 @@ IMPROVEMENTS
 
 * The file implementation of Repository.open now performs ~ expansion.
   (Jonathan Lange, #529665)
-
 
 0.0.3
 +++++

@@ -22,6 +22,9 @@ See AbstractUI for details on what UI classes should do and are responsible
 for.
 """
 
+from testtools import TestResult
+
+
 class AbstractUI(object):
     """The base class for UI objects, this providers helpers and the interface.
 
@@ -82,6 +85,14 @@ class AbstractUI(object):
         """Helper for iter_streams which subclasses should implement."""
         raise NotImplementedError(self._iter_streams)
 
+    def make_result(self, get_id):
+        """Make a `TestResult` that can be used to display test results.
+
+        :param get_id: A nullary callable that returns the id of the test run
+            when called.
+        """
+        raise NotImplementedError(self.make_result)
+
     def output_error(self, error_tuple):
         """Show an error to the user.
 
@@ -101,18 +112,6 @@ class AbstractUI(object):
         :param rest_string: A ReST source to display.
         """
         raise NotImplementedError(self.output_rest)
-
-    def output_results(self, suite_or_test):
-        """Show suite_or_test to the user by 'running' it.
-
-        This expects the run to be fast/cheap.
-
-        :param suite_or_test: A suite or test to show to the user. This should
-            obey the 'TestCase' protocol - it should have a method run(result)
-            that causes all the tests contained in the object to be handed to
-            the result object.
-        """
-        raise NotImplementedError(self.output_results)
 
     def output_stream(self, stream):
         """Show a byte stream to the user.
@@ -163,3 +162,41 @@ class AbstractUI(object):
         """
         # This might not be the right place.
         raise NotImplementedError(self.subprocess_Popen)
+
+
+class BaseUITestResult(TestResult):
+    """An abstract test result used with the UI.
+
+    AbstractUI.make_result probably wants to return an object like this.
+    """
+
+    def __init__(self, ui, get_id):
+        """Construct an `AbstractUITestResult`.
+
+        :param ui: The UI this result is associated with.
+        :param get_id: A nullary callable that returns the id of the test run.
+        """
+        super(BaseUITestResult, self).__init__()
+        self.ui = ui
+        self.get_id = get_id
+
+    def _output_summary(self, run_id):
+        """Output a test run.
+
+        :param run_id: The run id.
+        """
+        if self.ui.options.quiet:
+            return
+        values = [('id', run_id), ('tests', self.testsRun)]
+        failures = len(self.failures) + len(self.errors)
+        if failures:
+            values.append(('failures', failures))
+        skips = sum(map(len, self.skip_reasons.itervalues()))
+        if skips:
+            values.append(('skips', skips))
+        self.ui.output_values(values)
+
+    def stopTestRun(self):
+        super(BaseUITestResult, self).stopTestRun()
+        run_id = self.get_id()
+        self._output_summary(run_id)

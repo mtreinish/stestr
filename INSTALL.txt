@@ -8,10 +8,13 @@ Run time dependencies
 
 * subunit
 
+* fixtures (https://launchpad.net/python-fixtures, or
+   http://pypi.python.org/pypi/fixtures/).
+
 Test dependencies
 ~~~~~~~~~~~~~~~~~
 
-* testtools (the python-testtools package, or
+* testtools 0.9.8 or newer (the python-testtools package, or
    http://pypi.python.org/pypi/testtools/).
 
 * testresources (https://launchpad.net/testresources, or

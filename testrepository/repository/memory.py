@@ -54,6 +54,7 @@ class Repository(AbstractRepository):
         # Test runs:
         self._runs = []
         self._failing = {} # id -> test
+        self._times = {} # id -> duration
 
     def count(self):
         return len(self._runs)
@@ -70,8 +71,16 @@ class Repository(AbstractRepository):
             raise KeyError("No tests in repository")
         return result
 
-    def _get_inserter(self):
-        return _Inserter(self)
+    def _get_inserter(self, partial):
+        return _Inserter(self, partial)
+
+    def _get_test_times(self, test_ids):
+        result = {}
+        for test_id in test_ids:
+            duration = self._times.get(test_id, None)
+            if duration is not None:
+                result[test_id] = duration
+        return result
 
 
 # XXX: Too much duplication between this and _Inserter
@@ -101,15 +110,20 @@ class _Failures(AbstractTestRun):
 class _Inserter(AbstractTestRun):
     """Insert test results into a memory repository, and describe them later."""
 
-    def __init__(self, repository):
+    def __init__(self, repository, partial):
         self._repository = repository
+        self._partial = partial
         self._outcomes = []
+        self._time = None
+        self._test_start = None
 
     def startTestRun(self):
         pass
 
     def stopTestRun(self):
         self._repository._runs.append(self)
+        if not self._partial:
+            self._repository._failing = {}
         for record in self._outcomes:
             test_id = record[1].id()
             if record[0] in ('Failure', 'Error'):
@@ -119,10 +133,16 @@ class _Inserter(AbstractTestRun):
         return len(self._repository._runs) - 1
 
     def startTest(self, test):
-        pass
+        self._test_start = self._time
 
     def stopTest(self, test):
-        pass
+        if None in (self._test_start, self._time):
+            return
+        duration_delta = self._time - self._test_start
+        duration_seconds = ((duration_delta.microseconds +
+            (duration_delta.seconds + duration_delta.days * 24 * 3600)
+            * 10**6) / 10**6)
+        self._repository._times[test.id()] = duration_seconds
 
     def _addOutcome(self, outcome, test, details):
         self._outcomes.append((outcome, test, details))
@@ -165,3 +185,6 @@ class _Inserter(AbstractTestRun):
             result.startTest(test)
             getattr(result, 'add' + outcome)(test, details=details)
             result.stopTest(test)
+
+    def time(self, timestamp):
+        self._time = timestamp
