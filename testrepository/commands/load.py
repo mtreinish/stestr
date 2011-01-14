@@ -20,6 +20,7 @@ import subunit
 from testtools import ConcurrentTestSuite, MultiTestResult
 
 from testrepository.commands import Command
+from testrepository.repository import RepositoryNotFound
 from testrepository.results import TestResultFilter
 
 
@@ -37,11 +38,21 @@ class load(Command):
     options = [
         optparse.Option("--partial", action="store_true",
             default=False, help="The stream being loaded was a partial run."),
+        optparse.Option(
+            "--force-init", action="store_true",
+            default=False,
+            help="Initialise the repository if it does not exist already"),
         ]
 
     def run(self):
         path = self.ui.here
-        repo = self.repository_factory.open(path)
+        try:
+            repo = self.repository_factory.open(path)
+        except RepositoryNotFound:
+            if self.ui.options.force_init:
+                repo = self.repository_factory.initialise(path)
+            else:
+                raise
         run_id = None
         # Not a full implementation of TestCase, but we only need to iterate
         # back to it. Needs to be a callable - its a head fake for

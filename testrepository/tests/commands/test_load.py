@@ -15,12 +15,13 @@
 """Tests for the load command."""
 
 import testtools
+from testtools.matchers import MatchesException
 
 from testrepository.commands import load
 from testrepository.ui.model import UI
 from testrepository.tests import ResourcedTestCase, Wildcard
 from testrepository.tests.test_repository import RecordingRepositoryFactory
-from testrepository.repository import memory
+from testrepository.repository import memory, RepositoryNotFound
 
 
 class TestCommandLoad(ResourcedTestCase):
@@ -41,6 +42,31 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertFalse('subunit' in ui.input_streams)
         # Results loaded
         self.assertEqual(1, repo.count())
+
+    def test_load_initialises_repo_if_doesnt_exist_and_init_forced(self):
+        ui = UI([('subunit', '')], options=[('force_init', True)])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        calls = []
+        cmd.repository_factory = RecordingRepositoryFactory(calls,
+            memory.RepositoryFactory())
+        del calls[:]
+        cmd.execute()
+        self.assertEqual([('open', ui.here), ('initialise', ui.here)], calls)
+
+    def test_load_errors_if_repo_doesnt_exist(self):
+        ui = UI([('subunit', '')])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        calls = []
+        cmd.repository_factory = RecordingRepositoryFactory(calls,
+            memory.RepositoryFactory())
+        del calls[:]
+        cmd.execute()
+        self.assertEqual([('open', ui.here)], calls)
+        self.assertEqual([('error', Wildcard)], ui.outputs)
+        self.assertThat(
+            ui.outputs[0][1], MatchesException(RepositoryNotFound('memory:')))
 
     def test_load_returns_0_normally(self):
         ui = UI([('subunit', '')])

@@ -23,7 +23,10 @@ CHANGES
   release. (Jonathan Lange)
 
 * Testrepository should be more compatible with win32 environments.
-  (Martin [gz] List)
+  (Martin [gz])
+
+* ``testr init-repo`` now has a ``--force-init`` option which when provided
+  will cause a repository to be created just-in-time. (Jonathan Lange)
 
 * ``testr load`` and ``testr run`` now have a flag ``--partial``. When set
   this will cause existing failures to be preserved. When not set, doing a
