@@ -107,6 +107,9 @@ IMPROVEMENTS
 * The file implementation of Repository.open now performs ~ expansion.
   (Jonathan Lange, #529665)
 
+* Test failures and errors are now shown as we get them in 'load',
+  'failing' and 'last'. (Jonathan Lange, #613152)
+
 0.0.3
 +++++
 
