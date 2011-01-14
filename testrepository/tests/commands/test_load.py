@@ -15,6 +15,7 @@
 """Tests for the load command."""
 
 import testtools
+from testtools.matchers import MatchesException
 
 from testrepository.commands import load
 from testrepository.ui.model import UI
@@ -64,8 +65,8 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.execute()
         self.assertEqual([('open', ui.here)], calls)
         self.assertEqual([('error', Wildcard)], ui.outputs)
-        exc_type, exc_value, exc_tb = ui.outputs[0][1]
-        self.assertIs(exc_type, RepositoryNotFound)
+        self.assertThat(
+            ui.outputs[0][1], MatchesException(RepositoryNotFound('memory:')))
 
     def test_load_returns_0_normally(self):
         ui = UI([('subunit', '')])
