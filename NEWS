@@ -5,6 +5,12 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+IMPROVEMENTS
+------------
+
+* Python2.7 changed the interface for DBM.update, this has been worked around.
+  (Robert Collins, #775214)
+
 0.0.5
 +++++
 

@@ -204,7 +204,12 @@ class _SafeInserter(TestProtocolClient):
         # May be too slow, but build and iterate.
         db = dbm.open(self._repository._path('times.dbm'), 'c')
         try:
-            db.update(self._times)
+            db_times = {}
+            for key, value in self._times.items():
+                if type(key) != str:
+                    key = key.encode('utf8')
+                db_times[key] = value
+            db.update(db_times)
         finally:
             db.close()
         return run_id
