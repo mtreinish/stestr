@@ -11,6 +11,10 @@ IMPROVEMENTS
 * Python2.7 changed the interface for DBM.update, this has been worked around.
   (Robert Collins, #775214)
 
+* Subunit 0.0.7 Changes its TestResultFilter implementation, requiring the
+  subclass in testrepository.filter to be come more robust.
+  (Robert Collins)
+
 0.0.5
 +++++
 

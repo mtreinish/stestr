@@ -12,15 +12,17 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-from testtools import TestCase, TestResult
+from testtools import TestCase
 
 from testrepository.results import TestResultFilter
+from testrepository.ui import BaseUITestResult
+from testrepository.ui.model import UI
 
 
 class ResultFilter(TestCase):
 
     def test_addSuccess_increases_count(self):
-        result = TestResult()
+        result = BaseUITestResult(UI(), lambda:1)
         filtered = TestResultFilter(result)
         filtered.startTest(self)
         filtered.addSuccess(self)
