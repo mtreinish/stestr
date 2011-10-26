@@ -15,6 +15,9 @@ IMPROVEMENTS
   subclass in testrepository.filter to be come more robust.
   (Robert Collins)
 
+* A horrible thinko in the testrepository test suite came to light and has been
+  fixed. How the tests ever ran is a mystery. (Robert Collins, #881497)
+
 0.0.5
 +++++
 

@@ -23,12 +23,6 @@ from testtools import TestCase
 class ResourcedTestCase(TestCase, testresources.ResourcedTestCase):
     """Make all testrepository tests have resource support."""
 
-    def setUp(self):
-        TestCase.setUp(self)
-        testresources.ResourcedTestCase.setUpResources(self)
-        self.addCleanup(testresources.ResourcedTestCase.tearDownResources,
-            self)
-
 
 class _Wildcard(object):
     """Object that is equal to everything."""
