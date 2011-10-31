@@ -78,7 +78,9 @@ class TestCommand(ResourcedTestCase):
         retcode = cmd.execute()
         self.assertEqual(0, retcode)
         self.assertEqual(
-            [('table', [(test_id, runtime)])],
+            [('table',
+                [slowest.slowest.TABLE_HEADER,
+                 (test_id, runtime)])],
             ui.outputs)
 
     def test_orders_tests_based_on_runtime(self):
@@ -99,6 +101,7 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual(0, retcode)
         self.assertEqual(
             [('table',
-                [(test_id1, runtime1),
+                [slowest.slowest.TABLE_HEADER,
+                 (test_id1, runtime1),
                  (test_id2, runtime2)])],
             ui.outputs)

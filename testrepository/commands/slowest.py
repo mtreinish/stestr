@@ -45,6 +45,8 @@ class slowest(Command):
     tests at the top.
     """
 
+    TABLE_HEADER = ('Test id', 'Runtime (s)')
+
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
         try:
@@ -58,6 +60,8 @@ class slowest(Command):
         test_times = repo.get_test_times(result.ids)
         known_times = test_times['known'].items()
         known_times.sort(key=itemgetter(1), reverse=True)
-        rows = known_times
-        self.ui.output_table(rows)
+        # XXX: limit number of tests by default
+        if len(known_times) > 0:
+            rows = [self.TABLE_HEADER] + known_times
+            self.ui.output_table(rows)
         return 0
