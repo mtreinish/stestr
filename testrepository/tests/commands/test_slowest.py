@@ -105,3 +105,24 @@ class TestCommand(ResourcedTestCase):
                  (test_id1, runtime1),
                  (test_id2, runtime2)])],
             ui.outputs)
+
+    def test_limits_output_by_default(self):
+        """Only the first 10 tests are shown by default."""
+        ui, cmd = self.get_test_ui_and_cmd()
+        cmd.repository_factory = memory.RepositoryFactory()
+        repo = cmd.repository_factory.initialise(ui.here)
+        inserter = repo.get_inserter()
+        inserter.startTestRun()
+        runtimes = [float(r) for r in range(11)]
+        test_ids = [
+            self.insert_one_test_with_runtime(
+                inserter, runtime)
+            for runtime in runtimes]
+        inserter.stopTestRun()
+        retcode = cmd.execute()
+        rows = zip(reversed(test_ids), reversed(runtimes))[:slowest.slowest.DEFAULT_ROWS_SHOWN]
+        self.assertEqual(0, retcode)
+        self.assertEqual(
+            [('table',
+                [slowest.slowest.TABLE_HEADER] + rows)],
+            ui.outputs)

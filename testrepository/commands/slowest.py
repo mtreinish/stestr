@@ -45,6 +45,7 @@ class slowest(Command):
     tests at the top.
     """
 
+    DEFAULT_ROWS_SHOWN = 10
     TABLE_HEADER = ('Test id', 'Runtime (s)')
 
     def run(self):
@@ -60,8 +61,8 @@ class slowest(Command):
         test_times = repo.get_test_times(result.ids)
         known_times = test_times['known'].items()
         known_times.sort(key=itemgetter(1), reverse=True)
-        # XXX: limit number of tests by default
         if len(known_times) > 0:
-            rows = [self.TABLE_HEADER] + known_times
+            # XXX: allow configuring number of tests shown
+            rows = [self.TABLE_HEADER] + known_times[:self.DEFAULT_ROWS_SHOWN]
             self.ui.output_table(rows)
         return 0
