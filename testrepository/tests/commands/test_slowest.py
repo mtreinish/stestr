@@ -79,8 +79,8 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual(0, retcode)
         self.assertEqual(
             [('table',
-                [slowest.slowest.TABLE_HEADER,
-                 (test_id, runtime)])],
+                [slowest.slowest.TABLE_HEADER]
+                + slowest.slowest.format_times([(test_id, runtime)]))],
             ui.outputs)
 
     def test_orders_tests_based_on_runtime(self):
@@ -98,12 +98,13 @@ class TestCommand(ResourcedTestCase):
             inserter, runtime2)
         inserter.stopTestRun()
         retcode = cmd.execute()
+        rows = [(test_id1, runtime1),
+                (test_id2, runtime2)]
+        rows = slowest.slowest.format_times(rows)
         self.assertEqual(0, retcode)
         self.assertEqual(
             [('table',
-                [slowest.slowest.TABLE_HEADER,
-                 (test_id1, runtime1),
-                 (test_id2, runtime2)])],
+                [slowest.slowest.TABLE_HEADER] + rows)],
             ui.outputs)
 
     def test_limits_output_by_default(self):
@@ -121,6 +122,7 @@ class TestCommand(ResourcedTestCase):
         inserter.stopTestRun()
         retcode = cmd.execute()
         rows = zip(reversed(test_ids), reversed(runtimes))[:slowest.slowest.DEFAULT_ROWS_SHOWN]
+        rows = slowest.slowest.format_times(rows)
         self.assertEqual(0, retcode)
         self.assertEqual(
             [('table',

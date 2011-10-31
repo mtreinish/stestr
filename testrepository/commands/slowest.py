@@ -14,6 +14,7 @@
 
 """Show the longest running tests in the repository."""
 
+import math
 from operator import itemgetter
 
 from testtools import TestResult
@@ -48,6 +49,20 @@ class slowest(Command):
     DEFAULT_ROWS_SHOWN = 10
     TABLE_HEADER = ('Test id', 'Runtime (s)')
 
+    @staticmethod
+    def format_times(times):
+        precision = 3
+        digits_before_point = int(
+            math.log10(times[0][1])) + 1
+        min_length = digits_before_point + precision + 1
+        def format_time(time):
+            # Limit the number of digits after the decimal
+            # place, and also enforce a minimum width
+            # based on the longest duration
+            return "%*.*f" % (min_length, precision, time)
+        times = [(name, format_time(time)) for name, time in times]
+        return times
+
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
         try:
@@ -63,6 +78,8 @@ class slowest(Command):
         known_times.sort(key=itemgetter(1), reverse=True)
         if len(known_times) > 0:
             # XXX: allow configuring number of tests shown
-            rows = [self.TABLE_HEADER] + known_times[:self.DEFAULT_ROWS_SHOWN]
+            known_times = known_times[:self.DEFAULT_ROWS_SHOWN]
+            known_times = self.format_times(known_times)
+            rows = [self.TABLE_HEADER] + known_times
             self.ui.output_table(rows)
         return 0
