@@ -73,6 +73,7 @@ class slowest(Command):
         # XXX: Push the get ids stuff down in to repo
         result = TestIDCapturer()
         run.get_test().run(result)
+        # XXX: what happens when there is no timing info?
         test_times = repo.get_test_times(result.ids)
         known_times = test_times['known'].items()
         known_times.sort(key=itemgetter(1), reverse=True)
