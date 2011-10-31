@@ -301,9 +301,9 @@ successful: testrepository.tests.test_repository.Case.method...
         result = repo.get_inserter()
         result.startTestRun()
         test_name = 'testrepository.tests.test_repository.Case.method'
-        run_timed(test_name, 1, result)
+        run_timed(test_name, 0.1, result)
         result.stopTestRun()
-        self.assertEqual({test_name: 1.0},
+        self.assertEqual({test_name: 0.1},
             repo.get_test_times([test_name])['known'])
 
     def test_get_test_ids(self):
