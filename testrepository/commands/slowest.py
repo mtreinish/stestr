@@ -18,26 +18,7 @@ import math
 from operator import itemgetter
 import optparse
 
-from testtools import TestResult
-
 from testrepository.commands import Command
-
-
-class TestIDCapturer(TestResult):
-    """Capture the test ids from a test run.
-
-    After using the result with a test run, the ids of
-    the tests that were run are available in the ids
-    attribute.
-    """
-
-    def __init__(self):
-        super(TestIDCapturer, self).__init__()
-        self.ids = []
-
-    def startTest(self, test):
-        super(TestIDCapturer, self).startTest(test)
-        self.ids.append(test.id())
 
 
 class slowest(Command):
@@ -76,12 +57,8 @@ class slowest(Command):
             latest_id = repo.latest_id()
         except KeyError:
             return 3
-        run = repo.get_test_run(latest_id)
-        # XXX: Push the get ids stuff down in to repo
-        result = TestIDCapturer()
-        run.get_test().run(result)
-        # XXX: what happens when there is no timing info?
-        test_times = repo.get_test_times(result.ids)
+        # what happens when there is no timing info?
+        test_times = repo.get_test_times(repo.get_test_ids(latest_id))
         known_times = test_times['known'].items()
         known_times.sort(key=itemgetter(1), reverse=True)
         if len(known_times) > 0:

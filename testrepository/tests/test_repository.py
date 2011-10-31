@@ -22,6 +22,7 @@ from subunit import iso8601
 from testresources import TestResource
 from testtools import (
     clone_test_with_new_id,
+    PlaceHolder,
     TestResult,
     )
 from testtools.matchers import DocTestMatches, raises
@@ -304,3 +305,15 @@ successful: testrepository.tests.test_repository.Case.method...
         result.stopTestRun()
         self.assertEqual({test_name: 1.0},
             repo.get_test_times([test_name])['known'])
+
+    def test_get_test_ids(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        inserter = repo.get_inserter()
+        inserter.startTestRun()
+        test_cases = [PlaceHolder(self.getUniqueString()) for r in range(5)]
+        for test_case in test_cases:
+            test_case.run(inserter)
+        run_id = inserter.stopTestRun()
+        self.assertEqual(run_id, repo.latest_id())
+        returned_ids = repo.get_test_ids(run_id)
+        self.assertEqual([test.id() for test in test_cases], returned_ids)
