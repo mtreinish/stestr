@@ -107,21 +107,40 @@ class TestCommand(ResourcedTestCase):
                 [slowest.slowest.TABLE_HEADER] + rows)],
             ui.outputs)
 
-    def test_limits_output_by_default(self):
-        """Only the first 10 tests are shown by default."""
-        ui, cmd = self.get_test_ui_and_cmd()
-        cmd.repository_factory = memory.RepositoryFactory()
-        repo = cmd.repository_factory.initialise(ui.here)
+    def insert_lots_of_tests_with_timing(self, repo):
         inserter = repo.get_inserter()
         inserter.startTestRun()
-        runtimes = [float(r) for r in range(11)]
+        runtimes = [float(r) for r in range(slowest.slowest.DEFAULT_ROWS_SHOWN + 1)]
         test_ids = [
             self.insert_one_test_with_runtime(
                 inserter, runtime)
             for runtime in runtimes]
         inserter.stopTestRun()
+        return test_ids, runtimes
+
+    def test_limits_output_by_default(self):
+        """Only the first 10 tests are shown by default."""
+        ui, cmd = self.get_test_ui_and_cmd()
+        cmd.repository_factory = memory.RepositoryFactory()
+        repo = cmd.repository_factory.initialise(ui.here)
+        test_ids, runtimes = self.insert_lots_of_tests_with_timing(repo)
         retcode = cmd.execute()
         rows = zip(reversed(test_ids), reversed(runtimes))[:slowest.slowest.DEFAULT_ROWS_SHOWN]
+        rows = slowest.slowest.format_times(rows)
+        self.assertEqual(0, retcode)
+        self.assertEqual(
+            [('table',
+                [slowest.slowest.TABLE_HEADER] + rows)],
+            ui.outputs)
+
+    def test_option_to_show_all_rows_does_so(self):
+        """When the all option is given all rows are shown."""
+        ui, cmd = self.get_test_ui_and_cmd(options=[('all', True)])
+        cmd.repository_factory = memory.RepositoryFactory()
+        repo = cmd.repository_factory.initialise(ui.here)
+        test_ids, runtimes = self.insert_lots_of_tests_with_timing(repo)
+        retcode = cmd.execute()
+        rows = zip(reversed(test_ids), reversed(runtimes))
         rows = slowest.slowest.format_times(rows)
         self.assertEqual(0, retcode)
         self.assertEqual(

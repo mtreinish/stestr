@@ -16,6 +16,7 @@
 
 import math
 from operator import itemgetter
+import optparse
 
 from testtools import TestResult
 
@@ -49,6 +50,12 @@ class slowest(Command):
     DEFAULT_ROWS_SHOWN = 10
     TABLE_HEADER = ('Test id', 'Runtime (s)')
 
+    options = [
+        optparse.Option(
+            "--all", action="store_true",
+            default=False, help="Show timing for all tests."),
+        ]
+
     @staticmethod
     def format_times(times):
         precision = 3
@@ -78,8 +85,8 @@ class slowest(Command):
         known_times = test_times['known'].items()
         known_times.sort(key=itemgetter(1), reverse=True)
         if len(known_times) > 0:
-            # XXX: allow configuring number of tests shown
-            known_times = known_times[:self.DEFAULT_ROWS_SHOWN]
+            if not self.ui.options.all:
+                known_times = known_times[:self.DEFAULT_ROWS_SHOWN]
             known_times = self.format_times(known_times)
             rows = [self.TABLE_HEADER] + known_times
             self.ui.output_table(rows)
