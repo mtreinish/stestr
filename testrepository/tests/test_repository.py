@@ -91,6 +91,9 @@ class Case(ResourcedTestCase):
     def failing(self):
         self.fail("oops")
 
+    def unexpected_success(self):
+        self.expectFailure("unexpected success", self.assertTrue, True)
+
 
 def make_test(id, should_pass):
     """Make a test."""
@@ -129,6 +132,13 @@ class TestRepositoryContract(ResourcedTestCase):
     def get_failing(self, repo):
         """Analyze a failing stream from repo and return it."""
         run = repo.get_failing()
+        analyzer = TestResult()
+        run.get_test().run(analyzer)
+        return analyzer
+
+    def get_last_run(self, repo):
+        """Return the results from a stream."""
+        run = repo.get_test_run(repo.latest_id())
         analyzer = TestResult()
         run.get_test().run(analyzer)
         return analyzer
@@ -213,6 +223,20 @@ class TestRepositoryContract(ResourcedTestCase):
         self.assertEqual(1, analyzed.testsRun)
         self.assertEqual(1, len(analyzed.failures))
         self.assertEqual('failing', analyzed.failures[0][0].id())
+
+    def test_unexpected_success(self):
+        # Unexpected successes get forwarded too. (Test added because of a
+        # NameError in memory repo).
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        test = clone_test_with_new_id(Case('unexpected_success'), 'unexpected_success')
+        test.run(result)
+        result.stopTestRun()
+        analyzed = self.get_last_run(repo)
+        self.assertEqual(1, analyzed.testsRun)
+        self.assertEqual(1, len(analyzed.unexpectedSuccesses))
+        self.assertEqual('unexpected_success', analyzed.unexpectedSuccesses[0].id())
 
     def test_get_failing_complete_runs_delete_missing_failures(self):
         # failures from complete runs replace all failures.
