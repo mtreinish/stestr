@@ -131,7 +131,7 @@ AssertionError: quux...
 
     def test_outputs_summaries_to_stdout(self):
         ui, cmd = get_test_ui_and_cmd()
-        success, values = True, [('foo', 1), ('bar', 'quux')]
+        success, values = True, [('foo', 1, None), ('bar', 'quux', None)]
         ui.output_summary(success, values)
         self.assertEqual(
             ui._format_summary(success, values), ui._stdout.getvalue())
@@ -176,6 +176,30 @@ class TestCLISummary(TestCase):
     def test_success_only(self):
         x = self.get_summary(True, [])
         self.assertEqual(x, 'PASSED')
+
+    def test_failure_only(self):
+        x = self.get_summary(False, [])
+        self.assertEqual(x, 'FAILED')
+
+    def test_time(self):
+        x = self.get_summary(True, [('time', 3.4, None)])
+        self.assertEqual(x, 'Ran tests in 3.400s\nPASSED')
+
+    def test_time_with_delta(self):
+        x = self.get_summary(True, [('time', 3.4, 0.1)])
+        self.assertEqual(x, 'Ran tests in 3.400s (+0.100s)\nPASSED')
+
+    def test_tests_run(self):
+        x = self.get_summary(True, [('tests', 34, None)])
+        self.assertEqual(x, 'Ran 34 tests\nPASSED')
+
+    def test_tests_run_with_delta(self):
+        x = self.get_summary(True, [('tests', 34, -5)])
+        self.assertEqual(x, 'Ran 34 (-5) tests\nPASSED')
+
+    def test_tests_and_time(self):
+        x = self.get_summary(True, [('tests', 34, -5), ('time', 3.4, 0.1)])
+        self.assertEqual(x, 'Ran 34 (-5) tests in 3.400s (+0.100s)\nPASSED')
 
 
 class TestCLITestResult(TestCase):

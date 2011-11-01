@@ -135,7 +135,30 @@ class UI(ui.AbstractUI):
         self._stdout.write('%s\n' % ', '.join(outputs))
 
     def _format_summary(self, successful, values):
-        return 'PASSED'
+        # We build the string by appending to a list of strings and then
+        # joining trivially at the end. Avoids expensive string concatenation.
+        summary = []
+        a = summary.append
+        for name, value, delta in values:
+            if name == 'tests':
+                a("Ran %s" % (value,))
+                if delta:
+                    a(" (%+s)" % (delta,))
+                a(" tests")
+        for name, value, delta in values:
+            if name == 'time':
+                if not summary:
+                    a("Ran tests")
+                a(" in %0.3fs" % (value,))
+                if delta:
+                    a(" (%+0.3fs)" % (delta,))
+        if summary:
+            a("\n")
+        if successful:
+            a('PASSED')
+        else:
+            a('FAILED')
+        return ''.join(summary)
 
     def output_summary(self, successful, values):
         # XXX: Actually implement this properly.
