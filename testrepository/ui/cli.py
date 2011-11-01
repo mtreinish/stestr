@@ -162,7 +162,7 @@ class UI(ui.AbstractUI):
 
     def output_summary(self, successful, values):
         # XXX: Actually implement this properly.
-        self._stdout.write('PASSED')
+        self._stdout.write(self._format_summary(successful, values))
 
     def _check_cmd(self):
         parser = OptionParser()

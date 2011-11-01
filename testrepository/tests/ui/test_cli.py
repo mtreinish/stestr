@@ -129,12 +129,12 @@ AssertionError: quux...
         ui.output_values([('foo', 1), ('bar', 'quux')])
         self.assertEqual('foo=1, bar=quux\n', ui._stdout.getvalue())
 
-    def test_outputs_summaries_to_stdout(self):
+    def test_outputs_summary_to_stdout(self):
         ui, cmd = get_test_ui_and_cmd()
-        success, values = True, [('foo', 1, None), ('bar', 'quux', None)]
+        success, values = True, [('time', 1, None), ('tests', 2, None)]
+        expected_summary = ui._format_summary(success, values)
         ui.output_summary(success, values)
-        self.assertEqual(
-            ui._format_summary(success, values), ui._stdout.getvalue())
+        self.assertEqual(expected_summary, ui._stdout.getvalue())
 
     def test_parse_error_goes_to_stderr(self):
         stdout = StringIO()
