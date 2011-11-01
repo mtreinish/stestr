@@ -207,6 +207,12 @@ class TestCLISummary(TestCase):
             True, None, None, None, None, [('failures', 12, -1), ('errors', 13, 2)])
         self.assertEqual('PASSED (failures=12 (-1), errors=13 (+2))', x)
 
+    def test_values_no_delta(self):
+        x = self.get_summary(
+            True, None, None, None, None,
+            [('failures', 12, None), ('errors', 13, None)])
+        self.assertEqual('PASSED (failures=12, errors=13)', x)
+
     def test_combination(self):
         x = self.get_summary(
             True, 34, -5, 3.4, 0.1, [('failures', 12, -1), ('errors', 13, 2)])
