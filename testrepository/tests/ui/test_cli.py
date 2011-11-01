@@ -207,6 +207,13 @@ class TestCLISummary(TestCase):
             True, None, None, None, None, [('failures', 12, -1), ('errors', 13, 2)])
         self.assertEqual('PASSED (failures=12 (-1), errors=13 (+2))', x)
 
+    def test_combination(self):
+        x = self.get_summary(
+            True, 34, -5, 3.4, 0.1, [('failures', 12, -1), ('errors', 13, 2)])
+        self.assertEqual(
+            ('Ran 34 (-5) tests in 3.400s (+0.100s)\n'
+             'PASSED (failures=12 (-1), errors=13 (+2))'), x)
+
 
 class TestCLITestResult(TestCase):
 

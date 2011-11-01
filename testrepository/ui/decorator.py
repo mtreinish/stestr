@@ -84,7 +84,8 @@ class UI(ui.AbstractUI):
         return self._decorated.output_values(values)
 
     def output_summary(self, successful, tests, tests_delta, time, time_delta, values):
-        return self._decorated.output_summary(successful, tests, tests_delta, time, time_delta, values)
+        return self._decorated.output_summary(
+            successful, tests, tests_delta, time, time_delta, values)
 
     def set_command(self, cmd):
         self.cmd = cmd
