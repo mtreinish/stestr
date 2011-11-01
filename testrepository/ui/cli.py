@@ -173,6 +173,7 @@ class UI(ui.AbstractUI):
         self._stdout.write(
             self._format_summary(
                 successful, tests, tests_delta, time, time_delta, values))
+        self._stdout.write('\n')
 
     def _check_cmd(self):
         parser = OptionParser()

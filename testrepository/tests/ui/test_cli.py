@@ -134,7 +134,7 @@ AssertionError: quux...
         summary = [True, 1, None, 2, None, []]
         expected_summary = ui._format_summary(*summary)
         ui.output_summary(*summary)
-        self.assertEqual(expected_summary, ui._stdout.getvalue())
+        self.assertEqual("%s\n" % (expected_summary,), ui._stdout.getvalue())
 
     def test_parse_error_goes_to_stderr(self):
         stdout = StringIO()
