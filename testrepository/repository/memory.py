@@ -163,8 +163,8 @@ class _Inserter(AbstractTestRun):
         assert err is None
         self._addOutcome('ExpectedFailure', test, details)
 
-    def addUnexpectedSuccess(self, details=None):
-        self._addOutcome('UnexpectedSccess', test, details)
+    def addUnexpectedSuccess(self, test, details=None):
+        self._addOutcome('UnexpectedSuccess', test, details)
 
     def addSkip(self, test, reason=None, details=None):
         assert reason is None
