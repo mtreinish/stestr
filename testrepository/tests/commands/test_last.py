@@ -48,7 +48,7 @@ class TestCommand(ResourcedTestCase):
         # We should have seen test outputs (of the failure) and summary data.
         self.assertEqual([
             ('results', Wildcard),
-            ('values', [('id', id), ('tests', 2), ('failures', 1)])],
+            ('summary', False, 2, None, None, None, [('id', id, None), ('failures', 1, None)])],
             ui.outputs)
         suite = ui.outputs[0][1]
         result = testtools.TestResult()

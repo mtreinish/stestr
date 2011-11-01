@@ -96,7 +96,7 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('values', [('id', 1), ('tests', 0)])
+            ('summary', True, 0, None, None, None, [('id', 1, None)])
             ], ui.outputs)
         # TODO: check the list file is written, and deleted.
         self.assertEqual(0, result)
@@ -114,7 +114,7 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('values', [('id', 1), ('tests', 0)])
+            ('summary', True, 0, None, None, None, [('id', 1, None)]),
             ], ui.outputs)
         # Failing causes partial runs to be used.
         self.assertEqual(True,
@@ -133,7 +133,7 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('values', [('id', 1), ('tests', 0)])
+            ('summary', True, 0, None, None, None, [('id', 1, None)])
             ], ui.outputs)
 
     def test_IDLIST_default_passed_normally(self):
@@ -149,7 +149,7 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('values', [('id', 1), ('tests', 0)])
+            ('summary', True, 0, None, None, None, [('id', 1, None)])
             ], ui.outputs)
 
     def test_IDFILE_not_passed_normally(self):
@@ -165,7 +165,7 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('values', [('id', 1), ('tests', 0)])
+            ('summary', True, 0, None, None, None, [('id', 1, None)]),
             ], ui.outputs)
 
     def test_extra_options_passed_in(self):
@@ -181,7 +181,7 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('values', [('id', 1), ('tests', 0)])
+            ('summary', True, 0, None, None, None, [('id', 1, None)])
             ], ui.outputs)
 
     def test_quiet_passed_down(self):

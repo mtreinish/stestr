@@ -92,7 +92,8 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(1, cmd.execute())
         self.assertEqual(
-            [('values', [('id', 0), ('tests', 1), ('failures', 1)])],
+            [('summary', False, 1, None, None, None,
+              [('id', 0, None), ('failures', 1, None)])],
             ui.outputs[1:])
 
     def test_load_new_shows_test_failure_details(self):
@@ -105,7 +106,8 @@ class TestCommandLoad(ResourcedTestCase):
         suite = ui.outputs[0][1]
         self.assertEqual([
             ('results', Wildcard),
-            ('values', [('id', 0), ('tests', 1), ('failures', 1)])],
+            ('summary', False, 1, None, None, None,
+             [('id', 0, None), ('failures', 1, None)])],
             ui.outputs)
         result = testtools.TestResult()
         result.startTestRun()
@@ -125,7 +127,8 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual(0, cmd.execute())
         self.assertEqual(
             [('results', Wildcard),
-             ('values', [('id', 0), ('tests', 1), ('skips', 1)])],
+             ('summary', True, 1, None, None, None,
+              [('id', 0, None), ('skips', 1, None)])],
             ui.outputs)
 
     def test_load_new_shows_test_summary_no_tests(self):
@@ -136,7 +139,8 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(0, cmd.execute())
         self.assertEqual(
-            [('results', Wildcard), ('values', [('id', 0), ('tests', 0)])],
+            [('results', Wildcard),
+             ('summary', True, 0, None, None, None, [('id', 0, None)])],
             ui.outputs)
 
     def test_load_quiet_shows_nothing(self):

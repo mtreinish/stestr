@@ -202,14 +202,14 @@ class BaseUITestResult(TestResult):
         """
         if self.ui.options.quiet:
             return
-        values = [('id', run_id), ('tests', self.testsRun)]
+        values = [('id', run_id, None)]
         failures = len(self.failures) + len(self.errors)
         if failures:
-            values.append(('failures', failures))
+            values.append(('failures', failures, None))
         skips = sum(map(len, self.skip_reasons.itervalues()))
         if skips:
-            values.append(('skips', skips))
-        self.ui.output_values(values)
+            values.append(('skips', skips, None))
+        self.ui.output_summary(not bool(failures), self.testsRun, None, None, None, values)
 
     def stopTestRun(self):
         super(BaseUITestResult, self).stopTestRun()
