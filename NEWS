@@ -15,6 +15,12 @@ IMPROVEMENTS
   subclass in testrepository.filter to be come more robust.
   (Robert Collins)
 
+* A horrible thinko in the testrepository test suite came to light and has been
+  fixed. How the tests ever ran is a mystery. (Robert Collins, #881497)
+
+* The test 'test_outputs_results_to_stdout' was sensitive to changes in
+  testtools and has been made more generic. (Robert Collins)
+
 0.0.5
 +++++
 

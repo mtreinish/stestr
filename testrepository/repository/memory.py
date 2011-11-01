@@ -141,7 +141,7 @@ class _Inserter(AbstractTestRun):
         duration_delta = self._time - self._test_start
         duration_seconds = ((duration_delta.microseconds +
             (duration_delta.seconds + duration_delta.days * 24 * 3600)
-            * 10**6) / 10**6)
+            * 10**6) / 10.0**6)
         self._repository._times[test.id()] = duration_seconds
 
     def _addOutcome(self, outcome, test, details):
@@ -163,8 +163,8 @@ class _Inserter(AbstractTestRun):
         assert err is None
         self._addOutcome('ExpectedFailure', test, details)
 
-    def addUnexpectedSuccess(self, details=None):
-        self._addOutcome('UnexpectedSccess', test, details)
+    def addUnexpectedSuccess(self, test, details=None):
+        self._addOutcome('UnexpectedSuccess', test, details)
 
     def addSkip(self, test, reason=None, details=None):
         assert reason is None

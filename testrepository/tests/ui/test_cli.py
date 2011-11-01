@@ -96,14 +96,10 @@ class TestCLIUI(ResourcedTestCase):
             """======================================================================
 FAIL: testrepository.tests.ui.test_cli.Case.method
 ----------------------------------------------------------------------
-Text attachment: traceback
-------------
-Traceback (most recent call last):
-...
+...Traceback (most recent call last):...
   File "...test_cli.py", line ..., in method
     self.fail(\'quux\')
-AssertionError: quux
-------------
+AssertionError: quux...
 """, doctest.ELLIPSIS))
 
     def test_outputs_stream_to_stdout(self):
