@@ -134,6 +134,10 @@ class UI(ui.AbstractUI):
             outputs.append('%s=%s' % (label, value))
         self._stdout.write('%s\n' % ', '.join(outputs))
 
+    def output_summary(self, successful, values):
+        # XXX: Actually implement this properly.
+        pass
+
     def _check_cmd(self):
         parser = OptionParser()
         parser.add_option("-d", "--here", dest="here",

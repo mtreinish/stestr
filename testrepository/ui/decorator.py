@@ -83,6 +83,9 @@ class UI(ui.AbstractUI):
     def output_values(self, values):
         return self._decorated.output_values(values)
 
+    def output_summary(self, successful, values):
+        return self._decorated.output_summary(successful, values)
+
     def set_command(self, cmd):
         self.cmd = cmd
         result = True

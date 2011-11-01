@@ -129,6 +129,12 @@ class TestUIContract(ResourcedTestCase):
         ui = self.get_test_ui()
         ui.output_values([('foo', 1), ('bar', 'quux')])
 
+    def test_output_summary(self):
+        # output_summary can be called, takes success boolean and list of
+        # things to output.
+        ui = self.get_test_ui()
+        ui.output_summary(True, [('tests', 1, None), ('successes', 1, None)])
+
     def test_set_command(self):
         # All ui objects can be given their command.
         ui = self.ui_factory()

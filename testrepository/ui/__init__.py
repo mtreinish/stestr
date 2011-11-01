@@ -140,6 +140,21 @@ class AbstractUI(object):
         """
         raise NotImplementedError(self.output_values)
 
+    def output_summary(self, successful, values):
+        """Output a summary of a test run.
+
+        An example summary might look like:
+          Run 565 (+2) tests in 2.968s
+          FAILED (errors=13 (-2), succeesses=31 (+2))
+
+        :param successful: A boolean indicating whether the result was
+            successful.
+        :param values: A dict mapping from name (e.g. "successes") to a tuple
+            of ``(value, delta)``. e.g. (31, -2)
+
+        """
+        raise NotImplementedError(self.output_summary)
+
     def set_command(self, cmd):
         """Inform the UI what command it is running.
 

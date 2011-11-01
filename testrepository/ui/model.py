@@ -161,6 +161,9 @@ class UI(ui.AbstractUI):
     def output_values(self, values):
         self.outputs.append(('values', values))
 
+    def output_summary(self, successful, values):
+        self.outputs.append(('summary', successful, values))
+
     def subprocess_Popen(self, *args, **kwargs):
         # Really not an output - outputs should be renamed to events.
         self.outputs.append(('popen', args, kwargs))
