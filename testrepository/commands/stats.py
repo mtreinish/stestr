@@ -14,7 +14,6 @@
 
 """Report stats about a repository. Current vestigial."""
 
-from cStringIO import StringIO
 
 from testrepository.commands import Command
 

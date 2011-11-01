@@ -22,7 +22,6 @@ import sys
 from testtools.matchers import raises
 
 from testrepository import arguments, commands
-import testrepository.arguments.command
 from testrepository.commands import load
 from testrepository.ui import cli, decorator, model
 from testrepository.tests import ResourcedTestCase
