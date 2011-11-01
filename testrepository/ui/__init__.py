@@ -200,6 +200,11 @@ class BaseUITestResult(TestResult):
 
         :param run_id: The run id.
         """
+        # XXX: Feed time into output_summary.
+        # XXX: Feed deltas into output_summary, means getting last test run.
+        #  - failures
+        #  - tests
+        #  - time
         if self.ui.options.quiet:
             return
         values = [('id', run_id, None)]

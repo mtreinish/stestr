@@ -138,6 +138,8 @@ class UI(ui.AbstractUI):
         # We build the string by appending to a list of strings and then
         # joining trivially at the end. Avoids expensive string concatenation.
         summary = []
+        # XXX: jml really doesn't like this implementation, or the API for the
+        # method. Adapt once we have the call site in _output_summary.
         a = summary.append
         if tests:
             a("Ran %s" % (tests,))
@@ -169,7 +171,6 @@ class UI(ui.AbstractUI):
         return ''.join(summary)
 
     def output_summary(self, successful, tests, tests_delta, time, time_delta, values):
-        # XXX: Actually implement this properly.
         self._stdout.write(
             self._format_summary(
                 successful, tests, tests_delta, time, time_delta, values))
