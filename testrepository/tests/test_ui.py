@@ -133,7 +133,7 @@ class TestUIContract(ResourcedTestCase):
         # output_summary can be called, takes success boolean and list of
         # things to output.
         ui = self.get_test_ui()
-        ui.output_summary(True, [('tests', 1, None), ('successes', 1, None)])
+        ui.output_summary(True, 1, None, 1, None, [])
 
     def test_set_command(self):
         # All ui objects can be given their command.

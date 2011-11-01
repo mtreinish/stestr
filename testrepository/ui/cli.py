@@ -134,35 +134,45 @@ class UI(ui.AbstractUI):
             outputs.append('%s=%s' % (label, value))
         self._stdout.write('%s\n' % ', '.join(outputs))
 
-    def _format_summary(self, successful, values):
+    def _format_summary(self, successful, tests, tests_delta, time, time_delta, values):
         # We build the string by appending to a list of strings and then
         # joining trivially at the end. Avoids expensive string concatenation.
         summary = []
         a = summary.append
-        for name, value, delta in values:
-            if name == 'tests':
-                a("Ran %s" % (value,))
-                if delta:
-                    a(" (%+s)" % (delta,))
-                a(" tests")
-        for name, value, delta in values:
-            if name == 'time':
-                if not summary:
-                    a("Ran tests")
-                a(" in %0.3fs" % (value,))
-                if delta:
-                    a(" (%+0.3fs)" % (delta,))
+        if tests:
+            a("Ran %s" % (tests,))
+            if tests_delta:
+                a(" (%+s)" % (tests_delta,))
+            a(" tests")
+        if time:
+            if not summary:
+                a("Ran tests")
+            a(" in %0.3fs" % (time,))
+            if time_delta:
+                a(" (%+0.3fs)" % (time_delta,))
         if summary:
             a("\n")
         if successful:
             a('PASSED')
         else:
             a('FAILED')
+        if values:
+            a(' (')
+            values_strings = []
+            for name, value, delta in values:
+                value_str = '%s=%s' % (name, value)
+                if delta:
+                    value_str += ' (%+d)' % (delta,)
+                values_strings.append(value_str)
+            a(', '.join(values_strings))
+            a(')')
         return ''.join(summary)
 
-    def output_summary(self, successful, values):
+    def output_summary(self, successful, tests, tests_delta, time, time_delta, values):
         # XXX: Actually implement this properly.
-        self._stdout.write(self._format_summary(successful, values))
+        self._stdout.write(
+            self._format_summary(
+                successful, tests, tests_delta, time, time_delta, values))
 
     def _check_cmd(self):
         parser = OptionParser()

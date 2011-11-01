@@ -140,7 +140,7 @@ class AbstractUI(object):
         """
         raise NotImplementedError(self.output_values)
 
-    def output_summary(self, successful, values):
+    def output_summary(self, successful, tests, tests_delta, time, time_delta, values):
         """Output a summary of a test run.
 
         An example summary might look like:
