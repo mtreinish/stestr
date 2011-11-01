@@ -28,16 +28,17 @@ from testrepository.ui import cli
 from testrepository.tests import ResourcedTestCase
 
 
-class TestCLIUI(ResourcedTestCase):
+def get_test_ui_and_cmd():
+    stdout = StringIO()
+    stdin = StringIO()
+    stderr = StringIO()
+    ui = cli.UI([], stdin, stdout, stderr)
+    cmd = commands.Command(ui)
+    ui.set_command(cmd)
+    return ui, cmd
 
-    def get_test_ui_and_cmd(self):
-        stdout = StringIO()
-        stdin = StringIO()
-        stderr = StringIO()
-        ui = cli.UI([], stdin, stdout, stderr)
-        cmd = commands.Command(ui)
-        ui.set_command(cmd)
-        return ui, cmd
+
+class TestCLIUI(ResourcedTestCase):
 
     def test_construct(self):
         stdout = StringIO()
@@ -81,12 +82,12 @@ class TestCLIUI(ResourcedTestCase):
         self.assertThat(stderr.getvalue(), DocTestMatches(expected))
 
     def test_outputs_rest_to_stdout(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = get_test_ui_and_cmd()
         ui.output_rest('topic\n=====\n')
         self.assertEqual('topic\n=====\n', ui._stdout.getvalue())
 
     def test_outputs_results_to_stdout(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = get_test_ui_and_cmd()
         class Case(ResourcedTestCase):
             def method(self):
                 self.fail('quux')
@@ -103,19 +104,19 @@ AssertionError: quux...
 """, doctest.ELLIPSIS))
 
     def test_outputs_stream_to_stdout(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = get_test_ui_and_cmd()
         stream = StringIO("Foo \n bar")
         ui.output_stream(stream)
         self.assertEqual("Foo \n bar", ui._stdout.getvalue())
 
     def test_outputs_tables_to_stdout(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = get_test_ui_and_cmd()
         ui.output_table([('foo', 1), ('b', 'quux')])
         self.assertEqual('foo  1\n---  ----\nb    quux\n',
             ui._stdout.getvalue())
 
     def test_outputs_tests_to_stdout(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = get_test_ui_and_cmd()
         ui.output_tests([self, self.__class__('test_construct')])
         self.assertThat(
             ui._stdout.getvalue(),
@@ -124,9 +125,16 @@ AssertionError: quux...
                 '...TestCLIUI.test_construct\n', doctest.ELLIPSIS))
 
     def test_outputs_values_to_stdout(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = get_test_ui_and_cmd()
         ui.output_values([('foo', 1), ('bar', 'quux')])
         self.assertEqual('foo=1, bar=quux\n', ui._stdout.getvalue())
+
+    def test_outputs_summaries_to_stdout(self):
+        ui, cmd = get_test_ui_and_cmd()
+        success, values = True, [('foo', 1), ('bar', 'quux')]
+        ui.output_summary(success, values)
+        self.assertEqual(
+            ui._format_summary(success, values), ui._stdout.getvalue())
 
     def test_parse_error_goes_to_stderr(self):
         stdout = StringIO()
@@ -156,6 +164,18 @@ AssertionError: quux...
         cmd.args = [arguments.string.StringArgument('args', max=None)]
         ui.set_command(cmd)
         self.assertEqual({'args':['one', '--two', 'three']}, ui.arguments)
+
+
+class TestCLISummary(TestCase):
+
+    def get_summary(self, successful, values):
+        """Get the summary that would be output for successful & values."""
+        ui, cmd = get_test_ui_and_cmd()
+        return ui._format_summary(successful, values)
+
+    def test_success_only(self):
+        x = self.get_summary(True, [])
+        self.assertEqual(x, 'PASSED')
 
 
 class TestCLITestResult(TestCase):
