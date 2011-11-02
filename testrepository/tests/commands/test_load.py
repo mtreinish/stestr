@@ -162,3 +162,24 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual([], ui.outputs)
         self.assertEqual(True,
             cmd.repository_factory.repos[ui.here].get_test_run(0)._partial)
+
+    def test_load_timed_run(self):
+        ui = UI(
+            [('subunit',
+              ('time: 2011-01-01 00:00:01.000000Z\n'
+               'test: foo\n'
+               'time: 2011-01-01 00:00:03.000000Z\n'
+               'success: foo\n'
+               'time: 2011-01-01 00:00:06.000000Z\n'))])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        cmd.repository_factory = memory.RepositoryFactory()
+        cmd.repository_factory.initialise(ui.here)
+        self.assertEqual(0, cmd.execute())
+        # Note that the time here is 2.0, the difference between first and
+        # second time: directives. That's because 'load' uses a
+        # ThreadsafeForwardingResult (via ConcurrentTestSuite) that suppresses
+        # time information not involved in the start or stop of a test.
+        self.assertEqual(
+            [('summary', True, 1, None, 2.0, None, [('id', 0, None)])],
+            ui.outputs[1:])

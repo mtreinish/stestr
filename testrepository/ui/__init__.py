@@ -197,18 +197,31 @@ class BaseUITestResult(TestResult):
         self.ui = ui
         self.get_id = get_id
 
+    def startTestRun(self):
+        super(BaseUITestResult, self).startTestRun()
+        self._start_time = None
+
+    def time(self, a_time):
+        if self._start_time is None:
+            self._start_time = a_time
+        super(BaseUITestResult, self).time(a_time)
+
     def _output_summary(self, run_id):
         """Output a test run.
 
         :param run_id: The run id.
         """
-        # XXX: Feed time into output_summary.
         # XXX: Feed deltas into output_summary, means getting last test run.
         #  - failures
         #  - tests
         #  - time
         if self.ui.options.quiet:
             return
+        now = self._now()
+        if now and self._start_time:
+            time = timedelta_to_seconds(now - self._start_time)
+        else:
+            time = None
         values = [('id', run_id, None)]
         failures = len(self.failures) + len(self.errors)
         if failures:
@@ -216,7 +229,7 @@ class BaseUITestResult(TestResult):
         skips = sum(map(len, self.skip_reasons.itervalues()))
         if skips:
             values.append(('skips', skips, None))
-        self.ui.output_summary(not bool(failures), self.testsRun, None, None, None, values)
+        self.ui.output_summary(not bool(failures), self.testsRun, None, time, None, values)
 
     def stopTestRun(self):
         super(BaseUITestResult, self).stopTestRun()
