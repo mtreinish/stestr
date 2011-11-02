@@ -26,6 +26,8 @@ class TestResultFilter(test_results.TestResultFilter):
     def stopTest(self, test):
         # Filter out 'time' calls, because we want to forward those events
         # regardless of whether the test is filtered.
+        #
+        # XXX: Should this be pushed into subunit?
         buffered_calls = []
         for method, args, kwargs in self._buffered_calls:
             if method == 'time':
