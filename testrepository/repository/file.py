@@ -33,6 +33,7 @@ from testrepository.repository import (
     AbstractTestRun,
     RepositoryNotFound,
     )
+from testrepository.utils import timedelta_to_seconds
 
 
 def atomicish_rename(source, target):
@@ -228,10 +229,7 @@ class _SafeInserter(TestProtocolClient):
         result = TestProtocolClient.stopTest(self, test)
         if None in (self._test_start, self._time):
             return result
-        duration_delta = self._time - self._test_start
-        duration_seconds = ((duration_delta.microseconds +
-            (duration_delta.seconds + duration_delta.days * 24 * 3600)
-            * 10**6) / float(10**6))
+        duration_seconds = timedelta_to_seconds(self._time - self._test_start)
         self._times[test.id()] = str(duration_seconds)
         return result
 

@@ -24,6 +24,8 @@ for.
 
 from testtools import TestResult
 
+from testrepository.utils import timedelta_to_seconds
+
 
 class AbstractUI(object):
     """The base class for UI objects, this providers helpers and the interface.
