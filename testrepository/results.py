@@ -1,4 +1,8 @@
+from datetime import timedelta
+
 from subunit import test_results
+
+from testtools import TestResult
 
 
 class TestResultFilter(test_results.TestResultFilter):
@@ -36,3 +40,30 @@ class TestResultFilter(test_results.TestResultFilter):
                 buffered_calls.append((method, args, kwargs))
         self._buffered_calls = buffered_calls
         super(TestResultFilter, self).stopTest(test)
+
+
+class SummarizingResult(TestResult):
+
+    def __init__(self):
+        super(SummarizingResult, self).__init__()
+        self.num_failures = 0
+        self._first_time = None
+
+    def startTestRun(self):
+        super(SummarizingResult, self).startTestRun()
+        self.num_failures = 0
+        self._first_time = None
+
+    def get_num_failures(self):
+        return len(self.failures) + len(self.errors)
+
+    def time(self, a_time):
+        if self._first_time is None:
+            self._first_time = a_time
+        super(SummarizingResult, self).time(a_time)
+
+    def get_time_taken(self):
+        now = self._now()
+        if None in (self._first_time, now):
+            return None
+        return now - self._first_time
