@@ -121,12 +121,12 @@ class Repository(AbstractRepository):
                 run_subunit_content = ''
             else:
                 raise
-        return _DiskRun(run_subunit_content)
+        return _DiskRun(None, run_subunit_content)
 
     def get_test_run(self, run_id):
         run_subunit_content = file(
             os.path.join(self.base, str(run_id)), 'rb').read()
-        return _DiskRun(run_subunit_content)
+        return _DiskRun(run_id, run_subunit_content)
 
     def _get_inserter(self, partial):
         return _Inserter(self, partial)
@@ -165,9 +165,13 @@ class Repository(AbstractRepository):
 class _DiskRun(AbstractTestRun):
     """A test run that was inserted into the repository."""
 
-    def __init__(self, subunit_content):
+    def __init__(self, run_id, subunit_content):
         """Create a _DiskRun with the content subunit_content."""
+        self._run_id = run_id
         self._content = subunit_content
+
+    def get_id(self):
+        return self._run_id
 
     def get_subunit_stream(self):
         return StringIO(self._content)

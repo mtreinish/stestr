@@ -90,6 +90,9 @@ class _Failures(AbstractTestRun):
     def __init__(self, repository):
         self._repository = repository
 
+    def get_id(self):
+        return None
+
     def get_subunit_stream(self):
         result = StringIO()
         serialiser = subunit.TestProtocolClient(result)
@@ -122,6 +125,7 @@ class _Inserter(AbstractTestRun):
 
     def stopTestRun(self):
         self._repository._runs.append(self)
+        self._run_id = len(self._repository._runs) - 1
         if not self._partial:
             self._repository._failing = {}
         for record in self._outcomes:
@@ -130,7 +134,7 @@ class _Inserter(AbstractTestRun):
                 self._repository._failing[test_id] = record
             else:
                 self._repository._failing.pop(test_id, None)
-        return len(self._repository._runs) - 1
+        return self._run_id
 
     def startTest(self, test):
         self._test_start = self._time
@@ -169,6 +173,9 @@ class _Inserter(AbstractTestRun):
     def addSkip(self, test, reason=None, details=None):
         assert reason is None
         self._addOutcome('Skip', test, details)
+
+    def get_id(self):
+        return self._run_id
 
     def get_subunit_stream(self):
         result = StringIO()

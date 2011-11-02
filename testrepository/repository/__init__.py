@@ -128,6 +128,14 @@ class AbstractRepository(object):
 class AbstractTestRun(object):
     """A test run that has been stored in a repository."""
 
+    def get_id(self):
+        """Get the id of the test run.
+
+        Sometimes test runs will not have an id, e.g. test runs for
+        'failing'. In that case, this should return None.
+        """
+        raise NotImplementedError(self.get_id)
+
     def get_subunit_stream(self):
         """Get a subunit stream for this test run."""
         raise NotImplementedError(self.get_subunit_stream)
