@@ -12,7 +12,14 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-from testtools import TestCase
+from datetime import datetime
+from threading import Semaphore
+
+from testtools import (
+    TestCase,
+    TestResult,
+    ThreadsafeForwardingResult,
+    )
 
 from testrepository.results import TestResultFilter
 from testrepository.ui import BaseUITestResult
@@ -28,3 +35,37 @@ class ResultFilter(TestCase):
         filtered.addSuccess(self)
         filtered.stopTest(self)
         self.assertEqual(1, result.testsRun)
+
+    def test_time_goes_through_for_success(self):
+        # Success is normally filtered out, but we still want to get the time
+        # events forwarded to the underlying result because they represent the
+        # most up-to-date time information.
+        result = TestResult()
+        filtered = TestResultFilter(result)
+        filtered.startTestRun()
+        filtered.time(datetime(2011, 1, 1, 0, 0, 1))
+        filtered.startTest(self)
+        filtered.time(datetime(2011, 1, 1, 0, 0, 2))
+        filtered.addSuccess(self)
+        filtered.time(datetime(2011, 1, 1, 0, 0, 3))
+        filtered.stopTest(self)
+        filtered.stopTestRun()
+        self.assertEqual(datetime(2011, 1, 1, 0, 0, 3), result._now())
+
+    def test_time_going_through_threadsafe_filter(self):
+        # ThreadsafeForwardingResult discards time() output that is not bound
+        # specifically to the start or end of a test.  This test is here to
+        # document that behaviour and act as a flag if the behaviour changes.
+        result = TestResult()
+        filtered = ThreadsafeForwardingResult(
+            TestResultFilter(result), Semaphore(1))
+        filtered.startTestRun()
+        filtered.time(datetime(2011, 1, 1, 0, 0, 1))
+        filtered.startTest(self)
+        filtered.time(datetime(2011, 1, 1, 0, 0, 2))
+        filtered.addSuccess(self)
+        # This will be ignored.
+        filtered.time(datetime(2011, 1, 1, 0, 0, 3))
+        filtered.stopTest(self)
+        filtered.stopTestRun()
+        self.assertEqual(datetime(2011, 1, 1, 0, 0, 2), result._now())
