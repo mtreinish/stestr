@@ -88,6 +88,13 @@ class AbstractRepository(object):
         """
         raise NotImplementedError(self._get_inserter)
 
+    def get_latest_run(self):
+        """Return the latest run.
+
+        Equivalent to get_test_run(latest_id()).
+        """
+        return self.get_test_run(self.latest_id())
+
     def get_test_run(self, run_id):
         """Retrieve a TestRun object for run_id.
 

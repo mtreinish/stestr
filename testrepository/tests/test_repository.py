@@ -286,6 +286,14 @@ class TestRepositoryContract(ResourcedTestCase):
         run = repo.get_test_run(inserted)
         self.assertNotEqual(None, run)
 
+    def test_get_latest_run(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        inserted = result.stopTestRun()
+        run = repo.get_latest_run()
+        self.assertEqual(inserted, run.get_id())
+
     def test_get_test_run_get_id(self):
         repo = self.repo_impl.initialise(self.sample_url)
         result = repo.get_inserter()
