@@ -93,7 +93,7 @@ class TestSummarizingResult(TestCase):
         result.time(now)
         result.time(now + timedelta(seconds=5))
         result.stopTestRun()
-        self.assertEqual(timedelta(seconds=5), result.get_time_taken())
+        self.assertEqual(5.0, result.get_time_taken())
 
     def test_num_failures(self):
         result = SummarizingResult()

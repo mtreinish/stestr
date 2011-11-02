@@ -22,9 +22,7 @@ See AbstractUI for details on what UI classes should do and are responsible
 for.
 """
 
-from testtools import TestResult
-
-from testrepository.utils import timedelta_to_seconds
+from testrepository.results import SummarizingResult
 
 
 class AbstractUI(object):
@@ -182,7 +180,7 @@ class AbstractUI(object):
         raise NotImplementedError(self.subprocess_Popen)
 
 
-class BaseUITestResult(TestResult):
+class BaseUITestResult(SummarizingResult):
     """An abstract test result used with the UI.
 
     AbstractUI.make_result probably wants to return an object like this.
@@ -198,15 +196,6 @@ class BaseUITestResult(TestResult):
         self.ui = ui
         self.get_id = get_id
 
-    def startTestRun(self):
-        super(BaseUITestResult, self).startTestRun()
-        self._start_time = None
-
-    def time(self, a_time):
-        if self._start_time is None:
-            self._start_time = a_time
-        super(BaseUITestResult, self).time(a_time)
-
     def _output_summary(self, run_id):
         """Output a test run.
 
@@ -218,13 +207,9 @@ class BaseUITestResult(TestResult):
         #  - time
         if self.ui.options.quiet:
             return
-        now = self._now()
-        if now and self._start_time:
-            time = timedelta_to_seconds(now - self._start_time)
-        else:
-            time = None
+        time = self.get_time_taken()
         values = [('id', run_id, None)]
-        failures = len(self.failures) + len(self.errors)
+        failures = self.get_num_failures()
         if failures:
             values.append(('failures', failures, None))
         skips = sum(map(len, self.skip_reasons.itervalues()))

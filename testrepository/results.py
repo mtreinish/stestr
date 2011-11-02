@@ -1,8 +1,8 @@
-from datetime import timedelta
-
 from subunit import test_results
 
 from testtools import TestResult
+
+from testrepository.utils import timedelta_to_seconds
 
 
 class TestResultFilter(test_results.TestResultFilter):
@@ -46,12 +46,10 @@ class SummarizingResult(TestResult):
 
     def __init__(self):
         super(SummarizingResult, self).__init__()
-        self.num_failures = 0
         self._first_time = None
 
     def startTestRun(self):
         super(SummarizingResult, self).startTestRun()
-        self.num_failures = 0
         self._first_time = None
 
     def get_num_failures(self):
@@ -66,4 +64,4 @@ class SummarizingResult(TestResult):
         now = self._now()
         if None in (self._first_time, now):
             return None
-        return now - self._first_time
+        return timedelta_to_seconds(now - self._first_time)
