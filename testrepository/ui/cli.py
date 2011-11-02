@@ -25,7 +25,7 @@ from testrepository import ui
 class CLITestResult(ui.BaseUITestResult):
     """A TestResult for the CLI."""
 
-    def __init__(self, ui, get_id, stream):
+    def __init__(self, ui, get_id, stream, previous_run=None):
         """Construct a CLITestResult writing to stream."""
         super(CLITestResult, self).__init__(ui, get_id)
         self.stream = stream
@@ -68,8 +68,8 @@ class UI(ui.AbstractUI):
     def _iter_streams(self, stream_type):
         yield self._stdin
 
-    def make_result(self, get_id):
-        return CLITestResult(self, get_id, self._stdout)
+    def make_result(self, get_id, previous_run=None):
+        return CLITestResult(self, get_id, self._stdout, previous_run)
 
     def output_error(self, error_tuple):
         self._stderr.write(str(error_tuple[1]) + '\n')

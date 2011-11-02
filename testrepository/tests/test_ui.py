@@ -23,6 +23,7 @@ from testtools.matchers import raises
 
 from testrepository import arguments, commands
 from testrepository.commands import load
+from testrepository.repository import memory
 from testrepository.ui import cli, decorator, model
 from testrepository.tests import ResourcedTestCase
 
@@ -219,6 +220,15 @@ class TestUIContract(ResourcedTestCase):
         ui = self.ui_factory()
         ui.set_command(commands.Command(ui))
         result = ui.make_result(lambda: None)
+        result.startTestRun()
+        result.stopTestRun()
+        self.assertEqual(0, result.testsRun)
+
+    def test_make_result_previous_run(self):
+        # make_result can take a previous run.
+        ui = self.ui_factory()
+        ui.set_command(commands.Command(ui))
+        result = ui.make_result(lambda: None, memory.Repository().get_failing())
         result.startTestRun()
         result.stopTestRun()
         self.assertEqual(0, result.testsRun)

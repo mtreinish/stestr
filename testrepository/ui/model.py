@@ -49,7 +49,7 @@ class TestSuiteModel(object):
 
 class TestResultModel(ui.BaseUITestResult):
 
-    def __init__(self, ui, get_id):
+    def __init__(self, ui, get_id, previous_run):
         super(TestResultModel, self).__init__(ui, get_id)
         self._suite = TestSuiteModel()
 
@@ -139,8 +139,8 @@ class UI(ui.AbstractUI):
             else:
                 yield StringIO(stream_value)
 
-    def make_result(self, get_id):
-        return TestResultModel(self, get_id)
+    def make_result(self, get_id, previous_run=None):
+        return TestResultModel(self, get_id, previous_run)
 
     def output_error(self, error_tuple):
         self.outputs.append(('error', error_tuple))
