@@ -206,7 +206,9 @@ class BaseUITestResult(SummarizingResult):
         if self.ui.options.quiet:
             return
         # XXX: Returning different times in 'last' and 'load'. This means we
-        # are always getting a weird delta.
+        # are always getting a weird delta. Have verified that dropping
+        # AutoTimingTestResultDecorator from the _Inserter makes this problem
+        # go away, but haven't dug deeper than that.
         time = self.get_time_taken()
         time_delta = None
         num_tests_run_delta = None
