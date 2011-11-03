@@ -49,8 +49,8 @@ class TestSuiteModel(object):
 
 class TestResultModel(ui.BaseUITestResult):
 
-    def __init__(self, ui, get_id, previous_run):
-        super(TestResultModel, self).__init__(ui, get_id)
+    def __init__(self, ui, get_id, previous_run=None):
+        super(TestResultModel, self).__init__(ui, get_id, previous_run)
         self._suite = TestSuiteModel()
 
     def startTest(self, test):

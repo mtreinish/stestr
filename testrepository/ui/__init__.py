@@ -186,7 +186,7 @@ class BaseUITestResult(SummarizingResult):
     AbstractUI.make_result probably wants to return an object like this.
     """
 
-    def __init__(self, ui, get_id):
+    def __init__(self, ui, get_id, previous_run=None):
         """Construct an `AbstractUITestResult`.
 
         :param ui: The UI this result is associated with.
@@ -195,6 +195,7 @@ class BaseUITestResult(SummarizingResult):
         super(BaseUITestResult, self).__init__()
         self.ui = ui
         self.get_id = get_id
+        self._previous_run = previous_run
 
     def _output_summary(self, run_id):
         """Output a test run.

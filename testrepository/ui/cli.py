@@ -27,7 +27,7 @@ class CLITestResult(ui.BaseUITestResult):
 
     def __init__(self, ui, get_id, stream, previous_run=None):
         """Construct a CLITestResult writing to stream."""
-        super(CLITestResult, self).__init__(ui, get_id)
+        super(CLITestResult, self).__init__(ui, get_id, previous_run)
         self.stream = stream
         self.sep1 = u'=' * 70 + '\n'
         self.sep2 = u'-' * 70 + '\n'
