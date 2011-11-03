@@ -209,6 +209,17 @@ class BaseUITestResult(SummarizingResult):
         if self.ui.options.quiet:
             return
         time = self.get_time_taken()
+        time_delta = None
+        if self._previous_run:
+            previous_summary = SummarizingResult()
+            previous_summary.startTestRun()
+            test = self._previous_run.get_test()
+            test.run(previous_summary)
+            previous_summary.stopTestRun()
+        if self._previous_run and time:
+            previous_time_taken = previous_summary.get_time_taken()
+            if previous_time_taken:
+                time_delta = time - previous_time_taken
         values = [('id', run_id, None)]
         failures = self.get_num_failures()
         if failures:
@@ -216,7 +227,8 @@ class BaseUITestResult(SummarizingResult):
         skips = sum(map(len, self.skip_reasons.itervalues()))
         if skips:
             values.append(('skips', skips, None))
-        self.ui.output_summary(not bool(failures), self.testsRun, None, time, None, values)
+        self.ui.output_summary(
+            not bool(failures), self.testsRun, None, time, time_delta, values)
 
     def stopTestRun(self):
         super(BaseUITestResult, self).stopTestRun()

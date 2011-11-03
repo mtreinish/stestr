@@ -14,7 +14,12 @@
 
 """Tests for the load command."""
 
+from datetime import datetime
+
+from subunit import iso8601
+
 import testtools
+from testtools.content import text_content
 from testtools.matchers import MatchesException
 
 from testrepository.commands import load
@@ -182,4 +187,45 @@ class TestCommandLoad(ResourcedTestCase):
         # time information not involved in the start or stop of a test.
         self.assertEqual(
             [('summary', True, 1, None, 2.0, None, [('id', 0, None)])],
+            ui.outputs[1:])
+
+    def test_load_second_run(self):
+        # If there's a previous run in the database, then show information
+        # about the high level differences in the test run: how many more
+        # tests, how many more failures, how much longer it takes.
+        ui = UI(
+            [('subunit',
+              ('time: 2011-01-02 00:00:01.000000Z\n'
+               'test: foo\n'
+               'time: 2011-01-02 00:00:03.000000Z\n'
+               'error: foo\n'
+               'time: 2011-01-02 00:00:05.000000Z\n'
+               'test: bar\n'
+               'time: 2011-01-02 00:00:07.000000Z\n'
+               'error: bar\n'
+               ))])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        cmd.repository_factory = memory.RepositoryFactory()
+        repo = cmd.repository_factory.initialise(ui.here)
+        # XXX: Circumvent the AutoTimingTestResultDecorator so we can get
+        # predictable times, rather than ones based on the system
+        # clock. (Would normally expect to use repo.get_inserter())
+        inserter = repo._get_inserter(False)
+        # Insert a run with different results.
+        inserter.startTestRun()
+        inserter.time(datetime(2011, 1, 1, 0, 0, 1, tzinfo=iso8601.Utc()))
+        inserter.startTest(self)
+        inserter.time(datetime(2011, 1, 1, 0, 0, 10, tzinfo=iso8601.Utc()))
+        inserter.addError(self, details={'traceback': text_content('foo')})
+        inserter.stopTest(self)
+        inserter.stopTestRun()
+        self.assertEqual(1, cmd.execute())
+        # Note that the time here is 2.0, the difference between first and
+        # second time: directives. That's because 'load' uses a
+        # ThreadsafeForwardingResult (via ConcurrentTestSuite) that suppresses
+        # time information not involved in the start or stop of a test.
+        self.assertEqual(
+            [('summary', False, 2, None, 6.0, -3.0,
+              [('id', 1, None), ('failures', 2, None)])],
             ui.outputs[1:])
