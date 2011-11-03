@@ -202,6 +202,7 @@ class BaseUITestResult(SummarizingResult):
 
         :param run_id: The run id.
         """
+        # XXX: Big and ugly, and the tests are very indirect.
         if self.ui.options.quiet:
             return
         # XXX: Returning different times in 'last' and 'load'. This means we
