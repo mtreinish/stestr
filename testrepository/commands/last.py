@@ -29,9 +29,12 @@ class last(Command):
         repo = self.repository_factory.open(self.ui.here)
         latest_run = repo.get_latest_run()
         case = latest_run.get_test()
+        try:
+            previous_run = repo.get_test_run(repo.latest_id() - 1)
+        except KeyError:
+            previous_run = None
         failed = False
-        # XXX: Probably would be good to pass through previous run.
-        output_result = self.ui.make_result(latest_run.get_id)
+        output_result = self.ui.make_result(latest_run.get_id, previous_run)
         result = TestResultFilter(output_result, filter_skip=True)
         result.startTestRun()
         try:
