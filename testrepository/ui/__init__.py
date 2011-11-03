@@ -202,9 +202,6 @@ class BaseUITestResult(SummarizingResult):
 
         :param run_id: The run id.
         """
-        # XXX: Feed deltas into output_summary, means getting last test run.
-        #  - failures
-        #  - tests
         if self.ui.options.quiet:
             return
         # XXX: Returning different times in 'last' and 'load'. This means we
