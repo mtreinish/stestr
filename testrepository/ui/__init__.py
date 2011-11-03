@@ -219,14 +219,17 @@ class BaseUITestResult(SummarizingResult):
             test.run(previous_summary)
             previous_summary.stopTestRun()
             num_tests_run_delta = self.testsRun - previous_summary.testsRun
+        values = [('id', run_id, None)]
+        num_failures_delta = None
+        failures = self.get_num_failures()
+        if failures:
+            if self._previous_run:
+                num_failures_delta = failures - previous_summary.get_num_failures()
+            values.append(('failures', failures, num_failures_delta))
         if self._previous_run and time:
             previous_time_taken = previous_summary.get_time_taken()
             if previous_time_taken:
                 time_delta = time - previous_time_taken
-        values = [('id', run_id, None)]
-        failures = self.get_num_failures()
-        if failures:
-            values.append(('failures', failures, None))
         skips = sum(map(len, self.skip_reasons.itervalues()))
         if skips:
             values.append(('skips', skips, None))

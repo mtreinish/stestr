@@ -227,5 +227,5 @@ class TestCommandLoad(ResourcedTestCase):
         # time information not involved in the start or stop of a test.
         self.assertEqual(
             [('summary', False, 2, 1, 6.0, -3.0,
-              [('id', 1, None), ('failures', 2, None)])],
+              [('id', 1, None), ('failures', 2, 1)])],
             ui.outputs[1:])
