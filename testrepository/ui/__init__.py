@@ -205,17 +205,20 @@ class BaseUITestResult(SummarizingResult):
         # XXX: Feed deltas into output_summary, means getting last test run.
         #  - failures
         #  - tests
-        #  - time
         if self.ui.options.quiet:
             return
+        # XXX: Returning different times in 'last' and 'load'. This means we
+        # are always getting a weird delta.
         time = self.get_time_taken()
         time_delta = None
+        num_tests_run_delta = None
         if self._previous_run:
             previous_summary = SummarizingResult()
             previous_summary.startTestRun()
             test = self._previous_run.get_test()
             test.run(previous_summary)
             previous_summary.stopTestRun()
+            num_tests_run_delta = self.testsRun - previous_summary.testsRun
         if self._previous_run and time:
             previous_time_taken = previous_summary.get_time_taken()
             if previous_time_taken:
@@ -228,7 +231,8 @@ class BaseUITestResult(SummarizingResult):
         if skips:
             values.append(('skips', skips, None))
         self.ui.output_summary(
-            not bool(failures), self.testsRun, None, time, time_delta, values)
+            not bool(failures), self.testsRun, num_tests_run_delta,
+            time, time_delta, values)
 
     def stopTestRun(self):
         super(BaseUITestResult, self).stopTestRun()

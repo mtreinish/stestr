@@ -226,6 +226,6 @@ class TestCommandLoad(ResourcedTestCase):
         # ThreadsafeForwardingResult (via ConcurrentTestSuite) that suppresses
         # time information not involved in the start or stop of a test.
         self.assertEqual(
-            [('summary', False, 2, None, 6.0, -3.0,
+            [('summary', False, 2, 1, 6.0, -3.0,
               [('id', 1, None), ('failures', 2, None)])],
             ui.outputs[1:])
