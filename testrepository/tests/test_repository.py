@@ -20,7 +20,7 @@ from datetime import (
     )
 import doctest
 
-from subunit import iso8601, RemotedTestCase
+from subunit import iso8601
 
 from testresources import TestResource
 from testtools import (
