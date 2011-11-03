@@ -150,9 +150,9 @@ class AbstractUI(object):
 
         :param successful: A boolean indicating whether the result was
             successful.
-        :param values: A dict mapping from name (e.g. "successes") to a tuple
-            of ``(value, delta)``. e.g. (31, -2)
-
+        :param values: List of tuples in the form ``(name, value, delta)``.
+            e.g. ``('failures', 5, -1)``. ``delta`` is None means that either
+            the delta is unknown or inappropriate.
         """
         raise NotImplementedError(self.output_summary)
 
