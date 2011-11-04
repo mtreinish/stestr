@@ -27,6 +27,7 @@ def test_suite():
         'load',
         'quickstart',
         'run',
+        'slowest',
         'stats',
         ]
     module_names = ['testrepository.tests.commands.test_' + name for name in

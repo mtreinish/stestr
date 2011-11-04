@@ -29,6 +29,9 @@ the initialize function in the appropriate repository module.
 
 import subunit.test_results
 
+from testtools import TestResult
+
+
 class AbstractRepositoryFactory(object):
     """Interface for making or opening repositories."""
 
@@ -124,6 +127,18 @@ class AbstractRepository(object):
         """Return the run id for the most recently inserted test run."""
         raise NotImplementedError(self.latest_id)
 
+    def get_test_ids(self, run_id):
+        """Return the test ids from the specified run.
+
+        :param run_id: the id of the test run to query.
+        :return: a list of test ids for the tests that
+            were part of the specified test run.
+        """
+        run = self.get_test_run(run_id)
+        result = TestIDCapturer()
+        run.get_test().run(result)
+        return result.ids
+
 
 class AbstractTestRun(object):
     """A test run that has been stored in a repository."""
@@ -148,3 +163,20 @@ class RepositoryNotFound(Exception):
         self.url = url
         msg = 'No repository found in %s. Create one by running "testr init".'
         Exception.__init__(self, msg % url)
+
+
+class TestIDCapturer(TestResult):
+    """Capture the test ids from a test run.
+
+    After using the result with a test run, the ids of
+    the tests that were run are available in the ids
+    attribute.
+    """
+
+    def __init__(self):
+        super(TestIDCapturer, self).__init__()
+        self.ids = []
+
+    def startTest(self, test):
+        super(TestIDCapturer, self).startTest(test)
+        self.ids.append(test.id())
