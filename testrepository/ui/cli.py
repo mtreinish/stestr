@@ -138,8 +138,6 @@ class UI(ui.AbstractUI):
         # We build the string by appending to a list of strings and then
         # joining trivially at the end. Avoids expensive string concatenation.
         summary = []
-        # XXX: jml really doesn't like this implementation, or the API for the
-        # method. Adapt once we have the call site in _output_summary.
         a = summary.append
         if tests:
             a("Ran %s" % (tests,))
