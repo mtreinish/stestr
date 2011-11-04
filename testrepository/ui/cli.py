@@ -142,7 +142,7 @@ class UI(ui.AbstractUI):
         if tests:
             a("Ran %s" % (tests,))
             if tests_delta:
-                a(" (%+s)" % (tests_delta,))
+                a(" (%+d)" % (tests_delta,))
             a(" tests")
         if time:
             if not summary:

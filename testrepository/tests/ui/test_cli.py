@@ -195,8 +195,8 @@ class TestCLISummary(TestCase):
         self.assertEqual('Ran 34 tests\nPASSED', x)
 
     def test_tests_run_with_delta(self):
-        x = self.get_summary(True, 34, -5, None, None, [])
-        self.assertEqual('Ran 34 (-5) tests\nPASSED', x)
+        x = self.get_summary(True, 34, 5, None, None, [])
+        self.assertEqual('Ran 34 (+5) tests\nPASSED', x)
 
     def test_tests_and_time(self):
         x = self.get_summary(True, 34, -5, 3.4, 0.1, [])
