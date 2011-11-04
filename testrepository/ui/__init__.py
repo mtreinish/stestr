@@ -197,39 +197,40 @@ class BaseUITestResult(SummarizingResult):
         self.get_id = get_id
         self._previous_run = previous_run
 
+    def _get_previous_summary(self):
+        if self._previous_run is None:
+            return None
+        previous_summary = SummarizingResult()
+        previous_summary.startTestRun()
+        test = self._previous_run.get_test()
+        test.run(previous_summary)
+        previous_summary.stopTestRun()
+        return previous_summary
+
     def _output_summary(self, run_id):
         """Output a test run.
 
         :param run_id: The run id.
         """
-        # XXX: Big and ugly, and the tests are very indirect.
         if self.ui.options.quiet:
             return
-        # XXX: Returning different times in 'last' and 'load'. This means we
-        # are always getting a weird delta. Have verified that dropping
-        # AutoTimingTestResultDecorator from the _Inserter makes this problem
-        # go away, but haven't dug deeper than that.
         time = self.get_time_taken()
         time_delta = None
         num_tests_run_delta = None
-        if self._previous_run:
-            previous_summary = SummarizingResult()
-            previous_summary.startTestRun()
-            test = self._previous_run.get_test()
-            test.run(previous_summary)
-            previous_summary.stopTestRun()
-            num_tests_run_delta = self.testsRun - previous_summary.testsRun
-        values = [('id', run_id, None)]
         num_failures_delta = None
+        values = [('id', run_id, None)]
         failures = self.get_num_failures()
+        previous_summary = self._get_previous_summary()
         if failures:
-            if self._previous_run:
+            if previous_summary:
                 num_failures_delta = failures - previous_summary.get_num_failures()
             values.append(('failures', failures, num_failures_delta))
-        if self._previous_run and time:
-            previous_time_taken = previous_summary.get_time_taken()
-            if previous_time_taken:
-                time_delta = time - previous_time_taken
+        if previous_summary:
+            num_tests_run_delta = self.testsRun - previous_summary.testsRun
+            if time:
+                previous_time_taken = previous_summary.get_time_taken()
+                if previous_time_taken:
+                    time_delta = time - previous_time_taken
         skips = sum(map(len, self.skip_reasons.itervalues()))
         if skips:
             values.append(('skips', skips, None))
