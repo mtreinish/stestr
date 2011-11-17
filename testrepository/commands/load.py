@@ -64,7 +64,11 @@ class load(Command):
                 yield subunit.ProtocolTestCase(stream)
         case = ConcurrentTestSuite(cases, make_tests)
         inserter = repo.get_inserter(partial=self.ui.options.partial)
-        output_result = self.ui.make_result(lambda: run_id)
+        try:
+            previous_run = repo.get_latest_run()
+        except KeyError:
+            previous_run = None
+        output_result = self.ui.make_result(lambda: run_id, previous_run)
         # XXX: We want to *count* skips, but not show them.
         filtered = TestResultFilter(output_result, filter_skip=False)
         filtered.startTestRun()

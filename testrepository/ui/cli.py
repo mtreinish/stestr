@@ -25,9 +25,9 @@ from testrepository import ui
 class CLITestResult(ui.BaseUITestResult):
     """A TestResult for the CLI."""
 
-    def __init__(self, ui, get_id, stream):
+    def __init__(self, ui, get_id, stream, previous_run=None):
         """Construct a CLITestResult writing to stream."""
-        super(CLITestResult, self).__init__(ui, get_id)
+        super(CLITestResult, self).__init__(ui, get_id, previous_run)
         self.stream = stream
         self.sep1 = u'=' * 70 + '\n'
         self.sep2 = u'-' * 70 + '\n'
@@ -68,8 +68,8 @@ class UI(ui.AbstractUI):
     def _iter_streams(self, stream_type):
         yield self._stdin
 
-    def make_result(self, get_id):
-        return CLITestResult(self, get_id, self._stdout)
+    def make_result(self, get_id, previous_run=None):
+        return CLITestResult(self, get_id, self._stdout, previous_run)
 
     def output_error(self, error_tuple):
         self._stderr.write(str(error_tuple[1]) + '\n')
@@ -133,6 +133,46 @@ class UI(ui.AbstractUI):
         for label, value in values:
             outputs.append('%s=%s' % (label, value))
         self._stdout.write('%s\n' % ', '.join(outputs))
+
+    def _format_summary(self, successful, tests, tests_delta, time, time_delta, values):
+        # We build the string by appending to a list of strings and then
+        # joining trivially at the end. Avoids expensive string concatenation.
+        summary = []
+        a = summary.append
+        if tests:
+            a("Ran %s" % (tests,))
+            if tests_delta:
+                a(" (%+d)" % (tests_delta,))
+            a(" tests")
+        if time:
+            if not summary:
+                a("Ran tests")
+            a(" in %0.3fs" % (time,))
+            if time_delta:
+                a(" (%+0.3fs)" % (time_delta,))
+        if summary:
+            a("\n")
+        if successful:
+            a('PASSED')
+        else:
+            a('FAILED')
+        if values:
+            a(' (')
+            values_strings = []
+            for name, value, delta in values:
+                value_str = '%s=%s' % (name, value)
+                if delta:
+                    value_str += ' (%+d)' % (delta,)
+                values_strings.append(value_str)
+            a(', '.join(values_strings))
+            a(')')
+        return ''.join(summary)
+
+    def output_summary(self, successful, tests, tests_delta, time, time_delta, values):
+        self._stdout.write(
+            self._format_summary(
+                successful, tests, tests_delta, time, time_delta, values))
+        self._stdout.write('\n')
 
     def _check_cmd(self):
         parser = OptionParser()

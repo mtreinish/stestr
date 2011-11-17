@@ -20,7 +20,6 @@ import itertools
 import operator
 import os.path
 import re
-import string
 import subprocess
 import sys
 import tempfile

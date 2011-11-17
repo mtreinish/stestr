@@ -33,6 +33,7 @@ from testrepository.repository import (
     AbstractTestRun,
     RepositoryNotFound,
     )
+from testrepository.utils import timedelta_to_seconds
 
 
 def atomicish_rename(source, target):
@@ -120,12 +121,12 @@ class Repository(AbstractRepository):
                 run_subunit_content = ''
             else:
                 raise
-        return _DiskRun(run_subunit_content)
+        return _DiskRun(None, run_subunit_content)
 
     def get_test_run(self, run_id):
         run_subunit_content = file(
             os.path.join(self.base, str(run_id)), 'rb').read()
-        return _DiskRun(run_subunit_content)
+        return _DiskRun(run_id, run_subunit_content)
 
     def _get_inserter(self, partial):
         return _Inserter(self, partial)
@@ -164,9 +165,13 @@ class Repository(AbstractRepository):
 class _DiskRun(AbstractTestRun):
     """A test run that was inserted into the repository."""
 
-    def __init__(self, subunit_content):
+    def __init__(self, run_id, subunit_content):
         """Create a _DiskRun with the content subunit_content."""
+        self._run_id = run_id
         self._content = subunit_content
+
+    def get_id(self):
+        return self._run_id
 
     def get_subunit_stream(self):
         return StringIO(self._content)
@@ -228,10 +233,7 @@ class _SafeInserter(TestProtocolClient):
         result = TestProtocolClient.stopTest(self, test)
         if None in (self._test_start, self._time):
             return result
-        duration_delta = self._time - self._test_start
-        duration_seconds = ((duration_delta.microseconds +
-            (duration_delta.seconds + duration_delta.days * 24 * 3600)
-            * 10**6) / float(10**6))
+        duration_seconds = timedelta_to_seconds(self._time - self._test_start)
         self._times[test.id()] = str(duration_seconds)
         return result
 

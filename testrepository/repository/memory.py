@@ -90,6 +90,9 @@ class _Failures(AbstractTestRun):
     def __init__(self, repository):
         self._repository = repository
 
+    def get_id(self):
+        return None
+
     def get_subunit_stream(self):
         result = StringIO()
         serialiser = subunit.TestProtocolClient(result)
@@ -114,6 +117,7 @@ class _Inserter(AbstractTestRun):
         self._repository = repository
         self._partial = partial
         self._outcomes = []
+        self._events = []
         self._time = None
         self._test_start = None
 
@@ -122,6 +126,7 @@ class _Inserter(AbstractTestRun):
 
     def stopTestRun(self):
         self._repository._runs.append(self)
+        self._run_id = len(self._repository._runs) - 1
         if not self._partial:
             self._repository._failing = {}
         for record in self._outcomes:
@@ -130,12 +135,14 @@ class _Inserter(AbstractTestRun):
                 self._repository._failing[test_id] = record
             else:
                 self._repository._failing.pop(test_id, None)
-        return len(self._repository._runs) - 1
+        return self._run_id
 
     def startTest(self, test):
         self._test_start = self._time
+        self._events.append(('startTest', test))
 
     def stopTest(self, test):
+        self._events.append(('stopTest', test))
         if None in (self._test_start, self._time):
             return
         duration_delta = self._time - self._test_start
@@ -148,27 +155,36 @@ class _Inserter(AbstractTestRun):
         self._outcomes.append((outcome, test, details))
 
     def addSuccess(self, test, details=None):
+        self._events.append(('addSuccess', test, details))
         self._addOutcome('Success', test, details)
 
     def addFailure(self, test, err=None, details=None):
         # Don't support old interface for now.
         assert err is None
+        self._events.append(('addFailure', test, None, details))
         self._addOutcome('Failure', test, details)
 
     def addError(self, test, err=None, details=None):
         assert err is None
+        self._events.append(('addError', test, None, details))
         self._addOutcome('Error', test, details)
 
     def addExpectedFailure(self, test, err=None, details=None):
         assert err is None
+        self._events.append(('addExpectedFailure', test, None, details))
         self._addOutcome('ExpectedFailure', test, details)
 
     def addUnexpectedSuccess(self, test, details=None):
+        self._events.append(('addUnexpectedSuccess', test, details))
         self._addOutcome('UnexpectedSuccess', test, details)
 
     def addSkip(self, test, reason=None, details=None):
         assert reason is None
+        self._events.append(('addSkip', test, None, details))
         self._addOutcome('Skip', test, details)
+
+    def get_id(self):
+        return self._run_id
 
     def get_subunit_stream(self):
         result = StringIO()
@@ -181,10 +197,10 @@ class _Inserter(AbstractTestRun):
         return self
 
     def run(self, result):
-        for outcome, test, details in self._outcomes:
-            result.startTest(test)
-            getattr(result, 'add' + outcome)(test, details=details)
-            result.stopTest(test)
+        for event in self._events:
+            method = getattr(result, event[0])
+            method(*event[1:])
 
     def time(self, timestamp):
+        self._events.append(('time', timestamp))
         self._time = timestamp

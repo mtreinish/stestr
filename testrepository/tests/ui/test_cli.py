@@ -28,16 +28,17 @@ from testrepository.ui import cli
 from testrepository.tests import ResourcedTestCase
 
 
-class TestCLIUI(ResourcedTestCase):
+def get_test_ui_and_cmd():
+    stdout = StringIO()
+    stdin = StringIO()
+    stderr = StringIO()
+    ui = cli.UI([], stdin, stdout, stderr)
+    cmd = commands.Command(ui)
+    ui.set_command(cmd)
+    return ui, cmd
 
-    def get_test_ui_and_cmd(self):
-        stdout = StringIO()
-        stdin = StringIO()
-        stderr = StringIO()
-        ui = cli.UI([], stdin, stdout, stderr)
-        cmd = commands.Command(ui)
-        ui.set_command(cmd)
-        return ui, cmd
+
+class TestCLIUI(ResourcedTestCase):
 
     def test_construct(self):
         stdout = StringIO()
@@ -81,12 +82,12 @@ class TestCLIUI(ResourcedTestCase):
         self.assertThat(stderr.getvalue(), DocTestMatches(expected))
 
     def test_outputs_rest_to_stdout(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = get_test_ui_and_cmd()
         ui.output_rest('topic\n=====\n')
         self.assertEqual('topic\n=====\n', ui._stdout.getvalue())
 
     def test_outputs_results_to_stdout(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = get_test_ui_and_cmd()
         class Case(ResourcedTestCase):
             def method(self):
                 self.fail('quux')
@@ -103,19 +104,19 @@ AssertionError: quux...
 """, doctest.ELLIPSIS))
 
     def test_outputs_stream_to_stdout(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = get_test_ui_and_cmd()
         stream = StringIO("Foo \n bar")
         ui.output_stream(stream)
         self.assertEqual("Foo \n bar", ui._stdout.getvalue())
 
     def test_outputs_tables_to_stdout(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = get_test_ui_and_cmd()
         ui.output_table([('foo', 1), ('b', 'quux')])
         self.assertEqual('foo  1\n---  ----\nb    quux\n',
             ui._stdout.getvalue())
 
     def test_outputs_tests_to_stdout(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = get_test_ui_and_cmd()
         ui.output_tests([self, self.__class__('test_construct')])
         self.assertThat(
             ui._stdout.getvalue(),
@@ -124,9 +125,16 @@ AssertionError: quux...
                 '...TestCLIUI.test_construct\n', doctest.ELLIPSIS))
 
     def test_outputs_values_to_stdout(self):
-        ui, cmd = self.get_test_ui_and_cmd()
+        ui, cmd = get_test_ui_and_cmd()
         ui.output_values([('foo', 1), ('bar', 'quux')])
         self.assertEqual('foo=1, bar=quux\n', ui._stdout.getvalue())
+
+    def test_outputs_summary_to_stdout(self):
+        ui, cmd = get_test_ui_and_cmd()
+        summary = [True, 1, None, 2, None, []]
+        expected_summary = ui._format_summary(*summary)
+        ui.output_summary(*summary)
+        self.assertEqual("%s\n" % (expected_summary,), ui._stdout.getvalue())
 
     def test_parse_error_goes_to_stderr(self):
         stdout = StringIO()
@@ -156,6 +164,61 @@ AssertionError: quux...
         cmd.args = [arguments.string.StringArgument('args', max=None)]
         ui.set_command(cmd)
         self.assertEqual({'args':['one', '--two', 'three']}, ui.arguments)
+
+
+class TestCLISummary(TestCase):
+
+    def get_summary(self, successful, tests, tests_delta, time, time_delta, values):
+        """Get the summary that would be output for successful & values."""
+        ui, cmd = get_test_ui_and_cmd()
+        return ui._format_summary(
+            successful, tests, tests_delta, time, time_delta, values)
+
+    def test_success_only(self):
+        x = self.get_summary(True, None, None, None, None, [])
+        self.assertEqual('PASSED', x)
+
+    def test_failure_only(self):
+        x = self.get_summary(False, None, None, None, None, [])
+        self.assertEqual('FAILED', x)
+
+    def test_time(self):
+        x = self.get_summary(True, None, None, 3.4, None, [])
+        self.assertEqual('Ran tests in 3.400s\nPASSED', x)
+
+    def test_time_with_delta(self):
+        x = self.get_summary(True, None, None, 3.4, 0.1, [])
+        self.assertEqual('Ran tests in 3.400s (+0.100s)\nPASSED', x)
+
+    def test_tests_run(self):
+        x = self.get_summary(True, 34, None, None, None, [])
+        self.assertEqual('Ran 34 tests\nPASSED', x)
+
+    def test_tests_run_with_delta(self):
+        x = self.get_summary(True, 34, 5, None, None, [])
+        self.assertEqual('Ran 34 (+5) tests\nPASSED', x)
+
+    def test_tests_and_time(self):
+        x = self.get_summary(True, 34, -5, 3.4, 0.1, [])
+        self.assertEqual('Ran 34 (-5) tests in 3.400s (+0.100s)\nPASSED', x)
+
+    def test_other_values(self):
+        x = self.get_summary(
+            True, None, None, None, None, [('failures', 12, -1), ('errors', 13, 2)])
+        self.assertEqual('PASSED (failures=12 (-1), errors=13 (+2))', x)
+
+    def test_values_no_delta(self):
+        x = self.get_summary(
+            True, None, None, None, None,
+            [('failures', 12, None), ('errors', 13, None)])
+        self.assertEqual('PASSED (failures=12, errors=13)', x)
+
+    def test_combination(self):
+        x = self.get_summary(
+            True, 34, -5, 3.4, 0.1, [('failures', 12, -1), ('errors', 13, 2)])
+        self.assertEqual(
+            ('Ran 34 (-5) tests in 3.400s (+0.100s)\n'
+             'PASSED (failures=12 (-1), errors=13 (+2))'), x)
 
 
 class TestCLITestResult(TestCase):

@@ -22,8 +22,8 @@ import sys
 from testtools.matchers import raises
 
 from testrepository import arguments, commands
-import testrepository.arguments.command
 from testrepository.commands import load
+from testrepository.repository import memory
 from testrepository.ui import cli, decorator, model
 from testrepository.tests import ResourcedTestCase
 
@@ -130,6 +130,12 @@ class TestUIContract(ResourcedTestCase):
         ui = self.get_test_ui()
         ui.output_values([('foo', 1), ('bar', 'quux')])
 
+    def test_output_summary(self):
+        # output_summary can be called, takes success boolean and list of
+        # things to output.
+        ui = self.get_test_ui()
+        ui.output_summary(True, 1, None, 1, None, [])
+
     def test_set_command(self):
         # All ui objects can be given their command.
         ui = self.ui_factory()
@@ -214,6 +220,15 @@ class TestUIContract(ResourcedTestCase):
         ui = self.ui_factory()
         ui.set_command(commands.Command(ui))
         result = ui.make_result(lambda: None)
+        result.startTestRun()
+        result.stopTestRun()
+        self.assertEqual(0, result.testsRun)
+
+    def test_make_result_previous_run(self):
+        # make_result can take a previous run.
+        ui = self.ui_factory()
+        ui.set_command(commands.Command(ui))
+        result = ui.make_result(lambda: None, memory.Repository().get_failing())
         result.startTestRun()
         result.stopTestRun()
         self.assertEqual(0, result.testsRun)

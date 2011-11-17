@@ -91,6 +91,13 @@ class AbstractRepository(object):
         """
         raise NotImplementedError(self._get_inserter)
 
+    def get_latest_run(self):
+        """Return the latest run.
+
+        Equivalent to get_test_run(latest_id()).
+        """
+        return self.get_test_run(self.latest_id())
+
     def get_test_run(self, run_id):
         """Retrieve a TestRun object for run_id.
 
@@ -142,6 +149,14 @@ class AbstractRepository(object):
 
 class AbstractTestRun(object):
     """A test run that has been stored in a repository."""
+
+    def get_id(self):
+        """Get the id of the test run.
+
+        Sometimes test runs will not have an id, e.g. test runs for
+        'failing'. In that case, this should return None.
+        """
+        raise NotImplementedError(self.get_id)
 
     def get_subunit_stream(self):
         """Get a subunit stream for this test run."""

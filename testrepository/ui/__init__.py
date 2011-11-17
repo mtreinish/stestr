@@ -22,7 +22,7 @@ See AbstractUI for details on what UI classes should do and are responsible
 for.
 """
 
-from testtools import TestResult
+from testrepository.results import SummarizingResult
 
 
 class AbstractUI(object):
@@ -85,11 +85,12 @@ class AbstractUI(object):
         """Helper for iter_streams which subclasses should implement."""
         raise NotImplementedError(self._iter_streams)
 
-    def make_result(self, get_id):
+    def make_result(self, get_id, previous_run=None):
         """Make a `TestResult` that can be used to display test results.
 
         :param get_id: A nullary callable that returns the id of the test run
             when called.
+        :param previous_run: An optional previous test run.
         """
         raise NotImplementedError(self.make_result)
 
@@ -140,6 +141,21 @@ class AbstractUI(object):
         """
         raise NotImplementedError(self.output_values)
 
+    def output_summary(self, successful, tests, tests_delta, time, time_delta, values):
+        """Output a summary of a test run.
+
+        An example summary might look like:
+          Run 565 (+2) tests in 2.968s
+          FAILED (errors=13 (-2), succeesses=31 (+2))
+
+        :param successful: A boolean indicating whether the result was
+            successful.
+        :param values: List of tuples in the form ``(name, value, delta)``.
+            e.g. ``('failures', 5, -1)``. ``delta`` is None means that either
+            the delta is unknown or inappropriate.
+        """
+        raise NotImplementedError(self.output_summary)
+
     def set_command(self, cmd):
         """Inform the UI what command it is running.
 
@@ -164,13 +180,13 @@ class AbstractUI(object):
         raise NotImplementedError(self.subprocess_Popen)
 
 
-class BaseUITestResult(TestResult):
+class BaseUITestResult(SummarizingResult):
     """An abstract test result used with the UI.
 
     AbstractUI.make_result probably wants to return an object like this.
     """
 
-    def __init__(self, ui, get_id):
+    def __init__(self, ui, get_id, previous_run=None):
         """Construct an `AbstractUITestResult`.
 
         :param ui: The UI this result is associated with.
@@ -179,6 +195,17 @@ class BaseUITestResult(TestResult):
         super(BaseUITestResult, self).__init__()
         self.ui = ui
         self.get_id = get_id
+        self._previous_run = previous_run
+
+    def _get_previous_summary(self):
+        if self._previous_run is None:
+            return None
+        previous_summary = SummarizingResult()
+        previous_summary.startTestRun()
+        test = self._previous_run.get_test()
+        test.run(previous_summary)
+        previous_summary.stopTestRun()
+        return previous_summary
 
     def _output_summary(self, run_id):
         """Output a test run.
@@ -187,14 +214,29 @@ class BaseUITestResult(TestResult):
         """
         if self.ui.options.quiet:
             return
-        values = [('id', run_id), ('tests', self.testsRun)]
-        failures = len(self.failures) + len(self.errors)
+        time = self.get_time_taken()
+        time_delta = None
+        num_tests_run_delta = None
+        num_failures_delta = None
+        values = [('id', run_id, None)]
+        failures = self.get_num_failures()
+        previous_summary = self._get_previous_summary()
         if failures:
-            values.append(('failures', failures))
+            if previous_summary:
+                num_failures_delta = failures - previous_summary.get_num_failures()
+            values.append(('failures', failures, num_failures_delta))
+        if previous_summary:
+            num_tests_run_delta = self.testsRun - previous_summary.testsRun
+            if time:
+                previous_time_taken = previous_summary.get_time_taken()
+                if previous_time_taken:
+                    time_delta = time - previous_time_taken
         skips = sum(map(len, self.skip_reasons.itervalues()))
         if skips:
-            values.append(('skips', skips))
-        self.ui.output_values(values)
+            values.append(('skips', skips, None))
+        self.ui.output_summary(
+            not bool(failures), self.testsRun, num_tests_run_delta,
+            time, time_delta, values)
 
     def stopTestRun(self):
         super(BaseUITestResult, self).stopTestRun()

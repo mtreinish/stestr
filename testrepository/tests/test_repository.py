@@ -14,7 +14,10 @@
 
 """Tests for Repository support logic and the Repository contract."""
 
-import datetime
+from datetime import (
+    datetime,
+    timedelta,
+    )
 import doctest
 
 from subunit import iso8601
@@ -25,11 +28,15 @@ from testtools import (
     PlaceHolder,
     TestResult,
     )
+from testtools.testresult.doubles import ExtendedTestResult
 from testtools.matchers import DocTestMatches, raises
 
 from testrepository import repository
 from testrepository.repository import file, memory
-from testrepository.tests import ResourcedTestCase
+from testrepository.tests import (
+    ResourcedTestCase,
+    Wildcard,
+    )
 from testrepository.tests.stubpackage import (
     TempDirResource,
     )
@@ -107,11 +114,11 @@ def make_test(id, should_pass):
 
 def run_timed(id, duration, result):
     """Make and run a test taking duration seconds."""
-    start = datetime.datetime.now(tz=iso8601.Utc())
+    start = datetime.now(tz=iso8601.Utc())
     result.time(start)
     test = make_test(id, True)
     result.startTest(test)
-    result.time(start + datetime.timedelta(seconds=duration))
+    result.time(start + timedelta(seconds=duration))
     result.addSuccess(test)
     result.stopTest(test)
 
@@ -286,6 +293,61 @@ class TestRepositoryContract(ResourcedTestCase):
         inserted = result.stopTestRun()
         run = repo.get_test_run(inserted)
         self.assertNotEqual(None, run)
+
+    def test_get_latest_run(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        inserted = result.stopTestRun()
+        run = repo.get_latest_run()
+        self.assertEqual(inserted, run.get_id())
+
+    def test_get_latest_run_empty_repo(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        self.assertRaises(KeyError, repo.get_latest_run)
+
+    def test_get_test_run_get_id(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        inserted = result.stopTestRun()
+        run = repo.get_test_run(inserted)
+        self.assertEqual(inserted, run.get_id())
+
+    def test_get_test_run_preserves_time(self):
+        # The test run outputs the time events that it received.
+        now = datetime(2001, 1, 1, 0, 0, 0, tzinfo=iso8601.Utc())
+        second = timedelta(seconds=1)
+        repo = self.repo_impl.initialise(self.sample_url)
+        test = make_test(self.getUniqueString(), True)
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.time(now)
+        result.startTest(test)
+        result.time(now + 1 * second)
+        result.addSuccess(test)
+        result.stopTest(test)
+        inserted = result.stopTestRun()
+        run = repo.get_test_run(inserted)
+        result = ExtendedTestResult()
+        run.get_test().run(result)
+        self.assertEqual(
+            result._events,
+            [('time', Wildcard), # XXX: Auto-timer inserts clock time
+             ('time', now),
+             ('startTest', Wildcard),
+             ('time', now + 1 * second),
+             ('addSuccess', Wildcard),
+             ('stopTest', Wildcard),
+             ])
+
+    def test_get_failing_get_id(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        run = repo.get_failing()
+        self.assertEqual(None, run.get_id())
 
     def test_get_subunit_from_test_run(self):
         repo = self.repo_impl.initialise(self.sample_url)

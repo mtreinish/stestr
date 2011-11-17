@@ -49,8 +49,8 @@ class TestSuiteModel(object):
 
 class TestResultModel(ui.BaseUITestResult):
 
-    def __init__(self, ui, get_id):
-        super(TestResultModel, self).__init__(ui, get_id)
+    def __init__(self, ui, get_id, previous_run=None):
+        super(TestResultModel, self).__init__(ui, get_id, previous_run)
         self._suite = TestSuiteModel()
 
     def startTest(self, test):
@@ -139,8 +139,8 @@ class UI(ui.AbstractUI):
             else:
                 yield StringIO(stream_value)
 
-    def make_result(self, get_id):
-        return TestResultModel(self, get_id)
+    def make_result(self, get_id, previous_run=None):
+        return TestResultModel(self, get_id, previous_run)
 
     def output_error(self, error_tuple):
         self.outputs.append(('error', error_tuple))
@@ -160,6 +160,10 @@ class UI(ui.AbstractUI):
 
     def output_values(self, values):
         self.outputs.append(('values', values))
+
+    def output_summary(self, successful, tests, tests_delta, time, time_delta, values):
+        self.outputs.append(
+            ('summary', successful, tests, tests_delta, time, time_delta, values))
 
     def subprocess_Popen(self, *args, **kwargs):
         # Really not an output - outputs should be renamed to events.

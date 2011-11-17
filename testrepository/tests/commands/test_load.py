@@ -14,7 +14,12 @@
 
 """Tests for the load command."""
 
+from datetime import datetime
+
+from subunit import iso8601
+
 import testtools
+from testtools.content import text_content
 from testtools.matchers import MatchesException
 
 from testrepository.commands import load
@@ -92,7 +97,8 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(1, cmd.execute())
         self.assertEqual(
-            [('values', [('id', 0), ('tests', 1), ('failures', 1)])],
+            [('summary', False, 1, None, Wildcard, None,
+              [('id', 0, None), ('failures', 1, None)])],
             ui.outputs[1:])
 
     def test_load_new_shows_test_failure_details(self):
@@ -105,7 +111,8 @@ class TestCommandLoad(ResourcedTestCase):
         suite = ui.outputs[0][1]
         self.assertEqual([
             ('results', Wildcard),
-            ('values', [('id', 0), ('tests', 1), ('failures', 1)])],
+            ('summary', False, 1, None, Wildcard, None,
+             [('id', 0, None), ('failures', 1, None)])],
             ui.outputs)
         result = testtools.TestResult()
         result.startTestRun()
@@ -125,7 +132,8 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual(0, cmd.execute())
         self.assertEqual(
             [('results', Wildcard),
-             ('values', [('id', 0), ('tests', 1), ('skips', 1)])],
+             ('summary', True, 1, None, Wildcard, None,
+              [('id', 0, None), ('skips', 1, None)])],
             ui.outputs)
 
     def test_load_new_shows_test_summary_no_tests(self):
@@ -136,7 +144,8 @@ class TestCommandLoad(ResourcedTestCase):
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(0, cmd.execute())
         self.assertEqual(
-            [('results', Wildcard), ('values', [('id', 0), ('tests', 0)])],
+            [('results', Wildcard),
+             ('summary', True, 0, None, None, None, [('id', 0, None)])],
             ui.outputs)
 
     def test_load_quiet_shows_nothing(self):
@@ -158,3 +167,65 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual([], ui.outputs)
         self.assertEqual(True,
             cmd.repository_factory.repos[ui.here].get_test_run(0)._partial)
+
+    def test_load_timed_run(self):
+        ui = UI(
+            [('subunit',
+              ('time: 2011-01-01 00:00:01.000000Z\n'
+               'test: foo\n'
+               'time: 2011-01-01 00:00:03.000000Z\n'
+               'success: foo\n'
+               'time: 2011-01-01 00:00:06.000000Z\n'))])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        cmd.repository_factory = memory.RepositoryFactory()
+        cmd.repository_factory.initialise(ui.here)
+        self.assertEqual(0, cmd.execute())
+        # Note that the time here is 2.0, the difference between first and
+        # second time: directives. That's because 'load' uses a
+        # ThreadsafeForwardingResult (via ConcurrentTestSuite) that suppresses
+        # time information not involved in the start or stop of a test.
+        self.assertEqual(
+            [('summary', True, 1, None, 2.0, None, [('id', 0, None)])],
+            ui.outputs[1:])
+
+    def test_load_second_run(self):
+        # If there's a previous run in the database, then show information
+        # about the high level differences in the test run: how many more
+        # tests, how many more failures, how much longer it takes.
+        ui = UI(
+            [('subunit',
+              ('time: 2011-01-02 00:00:01.000000Z\n'
+               'test: foo\n'
+               'time: 2011-01-02 00:00:03.000000Z\n'
+               'error: foo\n'
+               'time: 2011-01-02 00:00:05.000000Z\n'
+               'test: bar\n'
+               'time: 2011-01-02 00:00:07.000000Z\n'
+               'error: bar\n'
+               ))])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        cmd.repository_factory = memory.RepositoryFactory()
+        repo = cmd.repository_factory.initialise(ui.here)
+        # XXX: Circumvent the AutoTimingTestResultDecorator so we can get
+        # predictable times, rather than ones based on the system
+        # clock. (Would normally expect to use repo.get_inserter())
+        inserter = repo._get_inserter(False)
+        # Insert a run with different results.
+        inserter.startTestRun()
+        inserter.time(datetime(2011, 1, 1, 0, 0, 1, tzinfo=iso8601.Utc()))
+        inserter.startTest(self)
+        inserter.time(datetime(2011, 1, 1, 0, 0, 10, tzinfo=iso8601.Utc()))
+        inserter.addError(self, details={'traceback': text_content('foo')})
+        inserter.stopTest(self)
+        inserter.stopTestRun()
+        self.assertEqual(1, cmd.execute())
+        # Note that the time here is 2.0, the difference between first and
+        # second time: directives. That's because 'load' uses a
+        # ThreadsafeForwardingResult (via ConcurrentTestSuite) that suppresses
+        # time information not involved in the start or stop of a test.
+        self.assertEqual(
+            [('summary', False, 2, 1, 6.0, -3.0,
+              [('id', 1, None), ('failures', 2, 1)])],
+            ui.outputs[1:])
