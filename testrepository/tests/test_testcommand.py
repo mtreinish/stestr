@@ -229,3 +229,8 @@ class TestTestCommand(ResourcedTestCase):
         partitions = fixture.partition_tests(test_ids, 2)
         self.assertEqual(1, len(partitions[0]))
         self.assertEqual(1, len(partitions[1]))
+
+    def test_filter_tags_parsing(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config('[DEFAULT]\nfilter_tags=foo bar\n')
+        self.assertEqual(set(['foo', 'bar']), command.get_filter_tags())

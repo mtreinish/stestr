@@ -38,6 +38,10 @@ testrconf_help = dedent("""
     that have a shell.
 
     The full list of options and variables for .testr.conf:
+    * filter_tags -- a list of tags which should be used to filter test counts.
+      This is useful for stripping out non-test results from the subunit stream
+      such as Zope test layers. These filtered items are still considered for
+      test failures.
     * test_command -- command line to run to execute tests.
     * test_id_option -- the value to substitute into test_command when specific
       test ids should be run.
@@ -253,11 +257,16 @@ class TestCommand(object):
         self.ui = ui
         self.repository = repository
 
-    def get_run_command(self, test_ids=None, testargs=()):
-        """Get the command that would be run to run tests."""
+    def get_parser(self):
+        """Get a parser with the .testr.conf in it."""
         parser = ConfigParser.ConfigParser()
         if not parser.read(os.path.join(self.ui.here, '.testr.conf')):
             raise ValueError("No .testr.conf config file")
+        return parser
+
+    def get_run_command(self, test_ids=None, testargs=()):
+        """Get the command that would be run to run tests."""
+        parser = self.get_parser()
         try:
             command = parser.get('DEFAULT', 'test_command')
         except ConfigParser.NoOptionError, e:
@@ -300,3 +309,13 @@ class TestCommand(object):
             result = self.run_factory(test_ids, cmd, listopt, idoption,
                 self.ui, self.repository)
         return result
+
+    def get_filter_tags(self):
+        parser = self.get_parser()
+        try:
+            tags = parser.get('DEFAULT', 'filter_tags')
+        except ConfigParser.NoOptionError, e:
+            if e.message != "No option 'filter_tags' in section: 'DEFAULT'":
+                raise
+            return set()
+        return set([tag.strip() for tag in tags.split()])

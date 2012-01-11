@@ -46,8 +46,9 @@ through to your test runner command line. To pass options through to your test
 running, use a ``--`` before your options.  For instance, 
 ``testr run quux -- bar --no-plugins`` would run
 ``foo quux bar --no-plugins`` using the above config example.  Shell variables
-are expanded in these commands on platforms that have a shell.  The command
-help for ``testr run`` describes the available options for .testr.conf.
+are expanded in these commands on platforms that have a shell.
+
+To get a full list of these options run ``testr help run``.
 
 Having setup a .testr.conf, a common workflow then becomes::
 
