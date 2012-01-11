@@ -18,6 +18,12 @@ IMPROVEMENTS
 * A horrible thinko in the testrepository test suite came to light and has been
   fixed. How the tests ever ran is a mystery. (Robert Collins, #881497)
 
+* Test partitioning now handles a corner case where multiple tests have a
+  reported duration of 0. Previously they could all accumulate into one
+  partition, now they split across partitions (the length of a partition is
+  used as a tie breaker if two partitions have the same duration).
+  (Robert Collins, #914359)
+
 * The test 'test_outputs_results_to_stdout' was sensitive to changes in
   testtools and has been made more generic. (Robert Collins)
 

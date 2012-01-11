@@ -210,12 +210,12 @@ class TestListingFixture(Fixture):
         # needs:
         # sort the tests by time
         # allocate to partitions by putting each test in to the partition with
-        # the current lowest time.
+        # the current (lowest time, shortest length)
         queue = sorted(timed.items(), key=operator.itemgetter(1), reverse=True)
         for test_id, duration in queue:
             timed_partitions[0][0] = timed_partitions[0][0] + duration
             timed_partitions[0][1].append(test_id)
-            timed_partitions.sort(key=operator.itemgetter(0))
+            timed_partitions.sort(key=lambda item:(item[0], len(item[1])))
         # Assign tests with unknown times in round robin fashion to the partitions.
         for partition, test_id in itertools.izip(itertools.cycle(partitions), unknown):
             partition.append(test_id)

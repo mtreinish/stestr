@@ -206,3 +206,26 @@ class TestTestCommand(ResourcedTestCase):
         self.assertTrue('fast2' in partitions[1])
         self.assertEqual(3, len(partitions[0]))
         self.assertEqual(4, len(partitions[1]))
+
+    def test_partition_tests_914359(self):
+        # When two partitions have the same duration, timed tests should be
+        # appended to the shortest partition. In theory this doesn't matter,
+        # but in practice, if a test is recorded with 0 duration (e.g. due to a
+        # bug), it is better to have them split out rather than all in one
+        # partition. 0 duration tests are unlikely to really be 0 duration.
+        repo = memory.RepositoryFactory().initialise('memory:')
+        # Seed with two 0-duration tests.
+        result = repo.get_inserter()
+        result.startTestRun()
+        run_timed("zero1", 0, result)
+        run_timed("zero2", 0, result)
+        result.stopTestRun()
+        ui, command = self.get_test_ui_and_cmd(repository=repo)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST\n')
+        fixture = self.useFixture(command.get_run_command())
+        # partitioning by two should generate two one-entry partitions.
+        test_ids = frozenset(['zero1', 'zero2'])
+        partitions = fixture.partition_tests(test_ids, 2)
+        self.assertEqual(1, len(partitions[0]))
+        self.assertEqual(1, len(partitions[1]))
