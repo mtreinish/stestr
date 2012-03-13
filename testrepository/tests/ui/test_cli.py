@@ -266,11 +266,26 @@ class TestCLITestResult(TestCase):
             DocTestMatches(result._format_error('ERROR', self, error_text)))
 
     def test_addFailure_outputs_failure(self):
-        # CLITestResult.addError outputs the given error immediately to the
+        # CLITestResult.addFailure outputs the given error immediately to the
         # stream.
         stream = StringIO()
         result = self.make_result(stream)
         error = self.make_exc_info()
+        error_text = result._err_details_to_string(self, error)
+        result.addFailure(self, error)
+        self.assertThat(
+            stream.getvalue(),
+            DocTestMatches(result._format_error('FAIL', self, error_text)))
+
+    def test_addFailure_handles_string_encoding(self):
+        # CLITestResult.addFailure outputs the given error handling non-ascii
+        # characters.
+        stream = StringIO()
+        result = self.make_result(stream)
+        try:
+            1 + 'å'
+        except TypeError:
+            error = sys.exc_info()
         error_text = result._err_details_to_string(self, error)
         result.addFailure(self, error)
         self.assertThat(
