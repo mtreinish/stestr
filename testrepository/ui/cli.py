@@ -33,7 +33,7 @@ class CLITestResult(ui.BaseUITestResult):
         self.sep2 = u'-' * 70 + '\n'
 
     def _format_error(self, label, test, error_text):
-        encoding = getattr(self.stream, 'encoding', 'utf-8')
+        encoding = getattr(self.stream, 'encoding', None) or 'utf-8'
         return u''.join([
             self.sep1,
             u'%s: %s\n' % (label, test.id()),
