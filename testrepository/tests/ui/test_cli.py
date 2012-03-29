@@ -282,12 +282,8 @@ class TestCLITestResult(TestCase):
         # characters.
         stream = StringIO()
         result = self.make_result(stream)
-        try:
-            1 + 'å'
-        except TypeError:
-            error = sys.exc_info()
-        error_text = result._err_details_to_string(self, error)
+        error = (ValueError, ValueError('\xa7'), None)
         result.addFailure(self, error)
         self.assertThat(
             stream.getvalue(),
-            DocTestMatches(result._format_error('FAIL', self, error_text)))
+            DocTestMatches("...ValueError: ?", doctest.ELLIPSIS))

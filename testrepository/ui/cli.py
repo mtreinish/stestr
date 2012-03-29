@@ -19,6 +19,8 @@ import os
 import signal
 import sys
 
+from testtools.compat import unicode_output_stream
+
 from testrepository import ui
 
 
@@ -28,18 +30,17 @@ class CLITestResult(ui.BaseUITestResult):
     def __init__(self, ui, get_id, stream, previous_run=None):
         """Construct a CLITestResult writing to stream."""
         super(CLITestResult, self).__init__(ui, get_id, previous_run)
-        self.stream = stream
+        self.stream = unicode_output_stream(stream)
         self.sep1 = u'=' * 70 + '\n'
         self.sep2 = u'-' * 70 + '\n'
 
     def _format_error(self, label, test, error_text):
-        encoding = getattr(self.stream, 'encoding', None) or 'utf-8'
         return u''.join([
             self.sep1,
             u'%s: %s\n' % (label, test.id()),
             self.sep2,
             error_text,
-            ]).encode(encoding, 'replace')
+            ])
 
     def addError(self, test, err=None, details=None):
         super(CLITestResult, self).addError(test, err=err, details=details)
