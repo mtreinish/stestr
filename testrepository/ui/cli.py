@@ -1,11 +1,11 @@
 #
 # Copyright (c) 2009 Testrepository Contributors
-# 
+#
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
 # project source as Apache-2.0 and BSD. You may not use this file except in
 # compliance with one of these two licences.
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -19,6 +19,8 @@ import os
 import signal
 import sys
 
+from testtools.compat import unicode_output_stream
+
 from testrepository import ui
 
 
@@ -28,7 +30,7 @@ class CLITestResult(ui.BaseUITestResult):
     def __init__(self, ui, get_id, stream, previous_run=None):
         """Construct a CLITestResult writing to stream."""
         super(CLITestResult, self).__init__(ui, get_id, previous_run)
-        self.stream = stream
+        self.stream = unicode_output_stream(stream)
         self.sep1 = u'=' * 70 + '\n'
         self.sep2 = u'-' * 70 + '\n'
 

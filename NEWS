@@ -8,6 +8,10 @@ NEXT (In development)
 IMPROVEMENTS
 ------------
 
+* Much better handling of unicode input from subunit streams.  Specifically,
+  we won't crash when we can't figure something out.  (Francesco Banconi,
+  Martin Packman, #955006)
+
 * Python2.7 changed the interface for DBM.update, this has been worked around.
   (Robert Collins, #775214)
 
