@@ -282,8 +282,11 @@ class TestCLITestResult(TestCase):
         # characters.
         stream = StringIO()
         result = self.make_result(stream)
-        error = (ValueError, ValueError('\xa7'), None)
+        class MyError(ValueError):
+            def __unicode__(self):
+                return u'\u201c'
+        error = (MyError, MyError(), None)
         result.addFailure(self, error)
         self.assertThat(
             stream.getvalue(),
-            DocTestMatches("...ValueError: ?", doctest.ELLIPSIS))
+            DocTestMatches("...MyError: ?", doctest.ELLIPSIS))
