@@ -41,6 +41,10 @@ class load(Command):
             "--force-init", action="store_true",
             default=False,
             help="Initialise the repository if it does not exist already"),
+        optparse.Option("--subunit", action="store_true",
+            default=False, help="Output collated results."),
+        optparse.Option("--full-results", action="store_true",
+            default=False, help="Show all test results."),
         ]
 
     def run(self):
