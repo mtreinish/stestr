@@ -234,6 +234,7 @@ class TestCLITestResult(TestCase):
         if stream is None:
             stream = StringIO()
         ui = cli.UI([], None, stream, None)
+        ui.set_command(commands.Command(ui))
         return ui.make_result(lambda: None)
 
     def test_initial_stream(self):

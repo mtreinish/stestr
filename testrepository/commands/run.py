@@ -1,11 +1,11 @@
 #
-# Copyright (c) 2010 Testrepository Contributors
-# 
+# Copyright (c) 2010-2012 Testrepository Contributors
+#
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
 # project source as Apache-2.0 and BSD. You may not use this file except in
 # compliance with one of these two licences.
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -14,11 +14,7 @@
 
 """Run a projects tests and load them into testrepository."""
 
-import ConfigParser
-from cStringIO import StringIO
 import optparse
-import os.path
-import string
 
 from testtools import TestResult
 
@@ -39,7 +35,10 @@ class run(Command):
         optparse.Option("--parallel", action="store_true",
             default=False, help="Run tests in parallel processes."),
         optparse.Option("--partial", action="store_true",
-            default=False, help="Only some tests will be run. Implied by --failing."),
+            default=False,
+            help="Only some tests will be run. Implied by --failing."),
+        optparse.Option("--subunit", action="store_true",
+            default=False, help="Output collated results."),
         ]
     args = [StringArgument('testargs', 0, None)]
     # Can be assigned to to inject a custom command factory.

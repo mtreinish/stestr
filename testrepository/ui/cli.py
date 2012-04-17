@@ -17,6 +17,7 @@
 from optparse import OptionParser
 import os
 import signal
+import subunit
 import sys
 
 from testtools.compat import unicode_output_stream
@@ -71,7 +72,11 @@ class UI(ui.AbstractUI):
         yield self._stdin
 
     def make_result(self, get_id, previous_run=None):
-        return CLITestResult(self, get_id, self._stdout, previous_run)
+        if vars(self.options).get('subunit'):
+            results = subunit.TestProtocolClient(self._stdout)
+        else:
+            results = CLITestResult(self, get_id, self._stdout, previous_run)
+        return results
 
     def output_error(self, error_tuple):
         self._stderr.write(str(error_tuple[1]) + '\n')

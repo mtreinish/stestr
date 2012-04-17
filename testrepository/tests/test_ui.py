@@ -1,11 +1,11 @@
 #
 # Copyright (c) 2009, 2010 Testrepository Contributors
-# 
+#
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
 # project source as Apache-2.0 and BSD. You may not use this file except in
 # compliance with one of these two licences.
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -17,12 +17,14 @@
 from cStringIO import StringIO
 import optparse
 import subprocess
+import subunit
 import sys
 
 from testtools.matchers import raises
 
 from testrepository import arguments, commands
 from testrepository.commands import load
+from testrepository.commands.run import run
 from testrepository.repository import memory
 from testrepository.ui import cli, decorator, model
 from testrepository.tests import ResourcedTestCase
@@ -119,7 +121,7 @@ class TestUIContract(ResourcedTestCase):
         # output_table shows a table.
         ui = self.get_test_ui()
         ui.output_table([('col1', 'col2'), ('row1c1','row1c2')])
-        
+
     def test_output_tests(self):
         # output_tests can be called, and takes a list of tests to output.
         ui = self.get_test_ui()
@@ -228,7 +230,22 @@ class TestUIContract(ResourcedTestCase):
         # make_result can take a previous run.
         ui = self.ui_factory()
         ui.set_command(commands.Command(ui))
-        result = ui.make_result(lambda: None, memory.Repository().get_failing())
+        result = ui.make_result(
+            lambda: None, memory.Repository().get_failing())
         result.startTestRun()
         result.stopTestRun()
         self.assertEqual(0, result.testsRun)
+
+
+class TestCLIUISpecific(ResourcedTestCase):
+
+    def test_run_subunit_option(self):
+        ui = cli_ui_factory(options=[('subunit', True)])
+        ui.set_command(run)
+        self.assertEqual(True, ui.options.subunit)
+
+    def test_check_result_output(self):
+        ui = cli_ui_factory(options=[('subunit', True)])
+        ui.set_command(run)
+        result = ui.make_result(lambda: None)
+        self.assertTrue(isinstance(result, subunit.TestProtocolClient))
