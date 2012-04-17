@@ -39,6 +39,8 @@ class run(Command):
             help="Only some tests will be run. Implied by --failing."),
         optparse.Option("--subunit", action="store_true",
             default=False, help="Output collated results."),
+        optparse.Option("--full-results", action="store_true",
+            default=False, help="Show all test results."),
         ]
     args = [StringArgument('testargs', 0, None)]
     # Can be assigned to to inject a custom command factory.

@@ -17,6 +17,7 @@
 
 import doctest
 from cStringIO import StringIO
+import optparse
 import sys
 
 from testtools import TestCase
@@ -230,11 +231,19 @@ class TestCLITestResult(TestCase):
         except ZeroDivisionError:
             return sys.exc_info()
 
-    def make_result(self, stream=None):
+    def make_result(self, stream=None, fullresults=False):
         if stream is None:
             stream = StringIO()
-        ui = cli.UI([], None, stream, None)
-        ui.set_command(commands.Command(ui))
+        argv = []
+        if fullresults:
+            argv.append('--full-results')
+        ui = cli.UI(argv, None, stream, None)
+        cmd = commands.Command(ui)
+        if fullresults:
+            cmd.options = [optparse.Option(
+                "--full-results", action="store_true", default=False,
+                help="Show full results.")]
+        ui.set_command(cmd)
         return ui.make_result(lambda: None)
 
     def test_initial_stream(self):
@@ -248,7 +257,7 @@ class TestCLITestResult(TestCase):
         # CLITestResult formats errors by giving them a big fat line, a title
         # made up of their 'label' and the name of the test, another different
         # big fat line, and then the actual error itself.
-        result = self.make_result()
+        result = self.make_result(fullresults=True)
         error = result._format_error('label', self, 'error text')
         expected = '%s%s: %s\n%s%s' % (
             result.sep1, 'label', self.id(), result.sep2, 'error text')
@@ -258,7 +267,7 @@ class TestCLITestResult(TestCase):
         # CLITestResult.addError outputs the given error immediately to the
         # stream.
         stream = StringIO()
-        result = self.make_result(stream)
+        result = self.make_result(stream, fullresults=True)
         error = self.make_exc_info()
         error_text = result._err_details_to_string(self, error)
         result.addError(self, error)
@@ -270,7 +279,7 @@ class TestCLITestResult(TestCase):
         # CLITestResult.addFailure outputs the given error immediately to the
         # stream.
         stream = StringIO()
-        result = self.make_result(stream)
+        result = self.make_result(stream, fullresults=True)
         error = self.make_exc_info()
         error_text = result._err_details_to_string(self, error)
         result.addFailure(self, error)
@@ -282,7 +291,7 @@ class TestCLITestResult(TestCase):
         # CLITestResult.addFailure outputs the given error handling non-ascii
         # characters.
         stream = StringIO()
-        result = self.make_result(stream)
+        result = self.make_result(stream, fullresults=True)
         class MyError(ValueError):
             def __unicode__(self):
                 return u'\u201c'

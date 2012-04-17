@@ -23,6 +23,7 @@ import sys
 from testtools.compat import unicode_output_stream
 
 from testrepository import ui
+from testrepository.results import TestResultFilter
 
 
 class CLITestResult(ui.BaseUITestResult):
@@ -72,10 +73,15 @@ class UI(ui.AbstractUI):
         yield self._stdin
 
     def make_result(self, get_id, previous_run=None):
-        if vars(self.options).get('subunit'):
+        if getattr(self.options, 'subunit', False):
             results = subunit.TestProtocolClient(self._stdout)
         else:
             results = CLITestResult(self, get_id, self._stdout, previous_run)
+
+        if not getattr(self.options, 'full_results', False):
+            # XXX: We want to *count* skips, but not show them.
+            filtered = TestResultFilter(results, filter_skip=False)
+            return filtered
         return results
 
     def output_error(self, error_tuple):
@@ -141,7 +147,8 @@ class UI(ui.AbstractUI):
             outputs.append('%s=%s' % (label, value))
         self._stdout.write('%s\n' % ', '.join(outputs))
 
-    def _format_summary(self, successful, tests, tests_delta, time, time_delta, values):
+    def _format_summary(self, successful, tests, tests_delta,
+                        time, time_delta, values):
         # We build the string by appending to a list of strings and then
         # joining trivially at the end. Avoids expensive string concatenation.
         summary = []
@@ -175,7 +182,8 @@ class UI(ui.AbstractUI):
             a(')')
         return ''.join(summary)
 
-    def output_summary(self, successful, tests, tests_delta, time, time_delta, values):
+    def output_summary(self, successful, tests, tests_delta,
+                       time, time_delta, values):
         self._stdout.write(
             self._format_summary(
                 successful, tests, tests_delta, time, time_delta, values))

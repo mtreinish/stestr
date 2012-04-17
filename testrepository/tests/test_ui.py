@@ -26,8 +26,9 @@ from testrepository import arguments, commands
 from testrepository.commands import load
 from testrepository.commands.run import run
 from testrepository.repository import memory
-from testrepository.ui import cli, decorator, model
+from testrepository.results import TestResultFilter
 from testrepository.tests import ResourcedTestCase
+from testrepository.ui import cli, decorator, model
 
 
 def cli_ui_factory(input_streams=None, options=(), args=()):
@@ -244,8 +245,21 @@ class TestCLIUISpecific(ResourcedTestCase):
         ui.set_command(run)
         self.assertEqual(True, ui.options.subunit)
 
-    def test_check_result_output(self):
-        ui = cli_ui_factory(options=[('subunit', True)])
+    def test_check_result_output_filtered(self):
+        ui = cli_ui_factory(
+            options=[
+                ('subunit', True),
+                ])
+        ui.set_command(run)
+        result = ui.make_result(lambda: None)
+        self.assertTrue(isinstance(result, TestResultFilter))
+
+    def test_check_result_output_unfiltered(self):
+        ui = cli_ui_factory(
+            options=[
+                ('subunit', True),
+                ('full-results', True),
+                ])
         ui.set_command(run)
         result = ui.make_result(lambda: None)
         self.assertTrue(isinstance(result, subunit.TestProtocolClient))

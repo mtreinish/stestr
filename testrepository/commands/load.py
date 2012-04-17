@@ -21,7 +21,6 @@ from testtools import ConcurrentTestSuite, MultiTestResult
 
 from testrepository.commands import Command
 from testrepository.repository import RepositoryNotFound
-from testrepository.results import TestResultFilter
 
 
 class load(Command):
@@ -69,16 +68,14 @@ class load(Command):
         except KeyError:
             previous_run = None
         output_result = self.ui.make_result(lambda: run_id, previous_run)
-        # XXX: We want to *count* skips, but not show them.
-        filtered = TestResultFilter(output_result, filter_skip=False)
-        filtered.startTestRun()
+        output_result.startTestRun()
         inserter.startTestRun()
         try:
-            case.run(MultiTestResult(inserter, filtered))
+            case.run(MultiTestResult(inserter, output_result))
         finally:
             run_id = inserter.stopTestRun()
-            filtered.stopTestRun()
-        if not filtered.wasSuccessful():
+            output_result.stopTestRun()
+        if not output_result.wasSuccessful():
             return 1
         else:
             return 0
