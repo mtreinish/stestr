@@ -38,7 +38,7 @@ class run(Command):
             default=False,
             help="Only some tests will be run. Implied by --failing."),
         optparse.Option("--subunit", action="store_true",
-            default=False, help="Output collated results."),
+            default=False, help="Display results in subunit format."),
         optparse.Option("--full-results", action="store_true",
             default=False, help="Show all test results."),
         ]
