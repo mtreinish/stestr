@@ -69,7 +69,7 @@ class load(Command):
             streams = list(suite)[0]
             for stream in streams():
                 yield subunit.ProtocolTestCase(stream)
-        case = ConcurrentTestSuite(cases, make_tests, wrap_results)
+        case = ConcurrentTestSuite(cases, make_tests, _wrap_result)
         inserter = repo.get_inserter(partial=self.ui.options.partial)
         try:
             previous_run = repo.get_latest_run()
