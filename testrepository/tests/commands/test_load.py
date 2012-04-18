@@ -197,9 +197,7 @@ class TestCommandLoad(ResourcedTestCase):
         log = []
         result = load._wrap_result(LoggingResult(log), 99)
         result.startTestRun()
-        result.time(datetime(2011, 1, 1, 0, 0, 1, tzinfo=iso8601.Utc()))
         result.startTest(self)
-        result.time(datetime(2011, 1, 1, 0, 0, 10, tzinfo=iso8601.Utc()))
         result.addSuccess(self)
         result.stopTest(self)
         result.stopTestRun()
