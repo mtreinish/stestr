@@ -22,6 +22,10 @@ IMPROVEMENTS
 * A horrible thinko in the testrepository test suite came to light and has been
   fixed. How the tests ever ran is a mystery. (Robert Collins, #881497)
 
+* ''run'' and ''load'' now both take a ''--subunit'' option, which displays
+  output in raw subunit format.  If ''--full-results'' is passed too, then all
+  subunit information is displayed.  (Brad Crittenden, #949950)
+
 * Test partitioning now handles a corner case where multiple tests have a
   reported duration of 0. Previously they could all accumulate into one
   partition, now they split across partitions (the length of a partition is

@@ -1,11 +1,11 @@
 #
 # Copyright (c) 2009, 2010 Testrepository Contributors
-# 
+#
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
 # project source as Apache-2.0 and BSD. You may not use this file except in
 # compliance with one of these two licences.
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -17,15 +17,18 @@
 from cStringIO import StringIO
 import optparse
 import subprocess
+import subunit
 import sys
 
+from testtools.content import text_content
 from testtools.matchers import raises
 
 from testrepository import arguments, commands
 from testrepository.commands import load
+from testrepository.commands.run import run
 from testrepository.repository import memory
-from testrepository.ui import cli, decorator, model
 from testrepository.tests import ResourcedTestCase
+from testrepository.ui import cli, decorator, model
 
 
 def cli_ui_factory(input_streams=None, options=(), args=()):
@@ -119,7 +122,7 @@ class TestUIContract(ResourcedTestCase):
         # output_table shows a table.
         ui = self.get_test_ui()
         ui.output_table([('col1', 'col2'), ('row1c1','row1c2')])
-        
+
     def test_output_tests(self):
         # output_tests can be called, and takes a list of tests to output.
         ui = self.get_test_ui()
@@ -228,7 +231,68 @@ class TestUIContract(ResourcedTestCase):
         # make_result can take a previous run.
         ui = self.ui_factory()
         ui.set_command(commands.Command(ui))
-        result = ui.make_result(lambda: None, memory.Repository().get_failing())
+        result = ui.make_result(
+            lambda: None, memory.Repository().get_failing())
         result.startTestRun()
         result.stopTestRun()
         self.assertEqual(0, result.testsRun)
+
+
+class TestCLIUISpecific(ResourcedTestCase):
+
+    def test_run_subunit_option(self):
+        ui = cli_ui_factory(options=[('subunit', True)])
+        ui.set_command(run)
+        self.assertEqual(True, ui.options.subunit)
+
+    def test_subunit_output_filtered_by_default(self):
+        # By default, successes are not included in subunit output.
+        ui = cli_ui_factory(
+            options=[
+                ('subunit', True),
+                ])
+        ui.set_command(run)
+        result = ui.make_result(lambda: None)
+        result.startTest(self)
+        result.addSuccess(self)
+        result.stopTest(self)
+        self.assertEqual('', ui._stdout.getvalue())
+
+    def test_subunit_output_includes_failures(self):
+        # subunit output always includes failures.
+        ui = cli_ui_factory(
+            options=[
+                ('subunit', True),
+                ])
+        ui.set_command(run)
+        stream = StringIO()
+        details={'traceback': text_content('foo')}
+        subunit_result = subunit.TestProtocolClient(stream)
+        subunit_result.startTest(self)
+        subunit_result.addFailure(self, details=details)
+        subunit_result.stopTest(self)
+        ui_result = ui.make_result(lambda: None)
+        ui_result.startTest(self)
+        ui_result.addFailure(self, details=details)
+        ui_result.stopTest(self)
+        self.assertEqual(stream.getvalue(), ui._stdout.getvalue())
+
+    def test_subunit_output_with_full_results(self):
+        # When --full-results is passed in, successes are included in the
+        # subunit output.
+        ui = cli_ui_factory(
+            options=[
+                ('subunit', True),
+                ('full-results', True),
+                ])
+        ui.set_command(run)
+        stream = StringIO()
+        subunit_result = subunit.TestProtocolClient(stream)
+        subunit_result.startTest(self)
+        subunit_result.addSuccess(self)
+        subunit_result.stopTest(self)
+        result = ui.make_result(lambda: None)
+        result.startTest(self)
+        result.addSuccess(self)
+        result.stopTest(self)
+        self.assertEqual(stream.getvalue(), ui._stdout.getvalue())
