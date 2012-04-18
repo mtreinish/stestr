@@ -20,13 +20,13 @@ import subprocess
 import subunit
 import sys
 
+from testtools.content import text_content
 from testtools.matchers import raises
 
 from testrepository import arguments, commands
 from testrepository.commands import load
 from testrepository.commands.run import run
 from testrepository.repository import memory
-from testrepository.results import TestResultFilter
 from testrepository.tests import ResourcedTestCase
 from testrepository.ui import cli, decorator, model
 
@@ -245,21 +245,54 @@ class TestCLIUISpecific(ResourcedTestCase):
         ui.set_command(run)
         self.assertEqual(True, ui.options.subunit)
 
-    def test_check_result_output_filtered(self):
+    def test_subunit_output_filtered_by_default(self):
+        # By default, successes are not included in subunit output.
         ui = cli_ui_factory(
             options=[
                 ('subunit', True),
                 ])
         ui.set_command(run)
         result = ui.make_result(lambda: None)
-        self.assertTrue(isinstance(result, TestResultFilter))
+        result.startTest(self)
+        result.addSuccess(self)
+        result.stopTest(self)
+        self.assertEqual('', ui._stdout.getvalue())
 
-    def test_check_result_output_unfiltered(self):
+    def test_subunit_output_includes_failures(self):
+        # subunit output always includes failures.
+        ui = cli_ui_factory(
+            options=[
+                ('subunit', True),
+                ])
+        ui.set_command(run)
+        stream = StringIO()
+        details={'traceback': text_content('foo')}
+        subunit_result = subunit.TestProtocolClient(stream)
+        subunit_result.startTest(self)
+        subunit_result.addFailure(self, details=details)
+        subunit_result.stopTest(self)
+        ui_result = ui.make_result(lambda: None)
+        ui_result.startTest(self)
+        ui_result.addFailure(self, details=details)
+        ui_result.stopTest(self)
+        self.assertEqual(stream.getvalue(), ui._stdout.getvalue())
+
+    def test_subunit_output_with_full_results(self):
+        # When --full-results is passed in, successes are included in the
+        # subunit output.
         ui = cli_ui_factory(
             options=[
                 ('subunit', True),
                 ('full-results', True),
                 ])
         ui.set_command(run)
+        stream = StringIO()
+        subunit_result = subunit.TestProtocolClient(stream)
+        subunit_result.startTest(self)
+        subunit_result.addSuccess(self)
+        subunit_result.stopTest(self)
         result = ui.make_result(lambda: None)
-        self.assertTrue(isinstance(result, subunit.TestProtocolClient))
+        result.startTest(self)
+        result.addSuccess(self)
+        result.stopTest(self)
+        self.assertEqual(stream.getvalue(), ui._stdout.getvalue())
