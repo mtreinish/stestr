@@ -15,7 +15,6 @@
 """Tests for the load command."""
 
 from datetime import datetime
-import os
 
 from subunit import iso8601
 
