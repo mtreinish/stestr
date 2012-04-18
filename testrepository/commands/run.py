@@ -40,7 +40,8 @@ class run(Command):
         optparse.Option("--subunit", action="store_true",
             default=False, help="Display results in subunit format."),
         optparse.Option("--full-results", action="store_true",
-            default=False, help="Show all test results."),
+            default=False,
+            help="Show all test results. Currently only works with --subunit."),
         ]
     args = [StringArgument('testargs', 0, None)]
     # Can be assigned to to inject a custom command factory.
