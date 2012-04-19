@@ -198,7 +198,7 @@ class TestCommandLoad(ResourcedTestCase):
         result = load._wrap_result(LoggingResult(log), 99)
         result.startTestRun()
         result.startTest(self)
-        result.addSuccess(self)
+        result.addUnexpectedSuccess(self)
         result.stopTest(self)
         result.stopTestRun()
         # Even though no tag data was provided above, the test has been tagged
