@@ -5,12 +5,21 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+CHANGES
+-------
+
+* Now relies on subunit r152 or better and testtools r254 or better.
+
 IMPROVEMENTS
 ------------
 
 * Much better handling of unicode input from subunit streams.  Specifically,
   we won't crash when we can't figure something out.  (Francesco Banconi,
   Martin Packman, #955006)
+
+* Parallel tests now record their worker thread number as tags in tests.
+  This makes identifying test ordering problems much easier.
+  (Benji York, #974622)
 
 * Python2.7 changed the interface for DBM.update, this has been worked around.
   (Robert Collins, #775214)

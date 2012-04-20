@@ -17,10 +17,17 @@
 import optparse
 
 import subunit
-from testtools import ConcurrentTestSuite, MultiTestResult
+from testtools import ConcurrentTestSuite, MultiTestResult, Tagger
 
 from testrepository.commands import Command
 from testrepository.repository import RepositoryNotFound
+
+
+def _wrap_result(result, thread_number):
+    worker_id = 'worker-%s' % thread_number
+    tags_to_add = set([worker_id])
+    tags_to_remove = set()
+    return Tagger(result, tags_to_add, tags_to_remove)
 
 
 class load(Command):
@@ -66,7 +73,7 @@ class load(Command):
             streams = list(suite)[0]
             for stream in streams():
                 yield subunit.ProtocolTestCase(stream)
-        case = ConcurrentTestSuite(cases, make_tests)
+        case = ConcurrentTestSuite(cases, make_tests, _wrap_result)
         inserter = repo.get_inserter(partial=self.ui.options.partial)
         try:
             previous_run = repo.get_latest_run()

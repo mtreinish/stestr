@@ -21,11 +21,13 @@ from subunit import iso8601
 import testtools
 from testtools.content import text_content
 from testtools.matchers import MatchesException
+from testtools.tests.helpers import LoggingResult
 
 from testrepository.commands import load
 from testrepository.ui.model import UI
 from testrepository.tests import ResourcedTestCase, Wildcard
 from testrepository.tests.test_repository import RecordingRepositoryFactory
+from testrepository.tests.repository.test_file import HomeDirTempDir
 from testrepository.repository import memory, RepositoryNotFound
 
 
@@ -188,6 +190,20 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual(
             [('summary', True, 1, None, 2.0, None, [('id', 0, None)])],
             ui.outputs[1:])
+
+    def test_load__wrap_result_inserts_worker_id_tag(self):
+        # The load command uses a result wrapper that tags each test with the
+        # ID of the worker that executed the test.
+        log = []
+        result = load._wrap_result(LoggingResult(log), 99)
+        result.startTestRun()
+        result.startTest(self)
+        result.addUnexpectedSuccess(self)
+        result.stopTest(self)
+        result.stopTestRun()
+        # Even though no tag data was provided above, the test has been tagged
+        # with the worker ID.
+        self.assertIn(('tags', set(['worker-99']), set([])), log)
 
     def test_load_second_run(self):
         # If there's a previous run in the database, then show information
