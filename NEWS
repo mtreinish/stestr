@@ -21,8 +21,8 @@ IMPROVEMENTS
   This makes identifying test ordering problems much easier.
   (Benji York, #974622)
 
-* Python2.7 changed the interface for DBM.update, this has been worked around.
-  (Robert Collins, #775214)
+* Python2.7 changed the interface for DBM, this has been worked around.
+  (Robert Collins, #775214, #961103)
 
 * Subunit 0.0.7 Changes its TestResultFilter implementation, requiring the
   subclass in testrepository.filter to be come more robust.

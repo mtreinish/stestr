@@ -138,6 +138,8 @@ class Repository(AbstractRepository):
         try:
             result = {}
             for test_id in test_ids:
+                if type(test_id) != str:
+                    test_id = test_id.encode('utf8')
                 duration = db.get(test_id, None)
                 if duration is not None:
                     result[test_id] = float(duration)
