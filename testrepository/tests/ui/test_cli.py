@@ -18,8 +18,11 @@
 import doctest
 from cStringIO import StringIO
 import optparse
+import os
 import sys
+from textwrap import dedent
 
+from fixtures import EnvironmentVariable
 from testtools import TestCase
 from testtools.matchers import DocTestMatches
 
@@ -40,6 +43,10 @@ def get_test_ui_and_cmd():
 
 
 class TestCLIUI(ResourcedTestCase):
+
+    def setUp(self):
+        super(TestCLIUI, self).setUp()
+        self.useFixture(EnvironmentVariable('TESTR_PDB'))
 
     def test_construct(self):
         stdout = StringIO()
@@ -81,6 +88,26 @@ class TestCLIUI(ResourcedTestCase):
         ui = cli.UI([], stdin, stdout, stderr)
         ui.output_error(err_tuple)
         self.assertThat(stderr.getvalue(), DocTestMatches(expected))
+
+    def test_error_enters_pdb_when_TESTR_PDB_set(self):
+        os.environ['TESTR_PDB'] = '1'
+        try:
+            raise Exception('fooo')
+        except Exception:
+            err_tuple = sys.exc_info()
+        expected = dedent("""\
+              File "...test_cli.py", line 95, in ...pdb_when_TESTR_PDB_set
+                raise Exception('fooo')
+            <BLANKLINE>
+            fooo
+            """)
+        stdout = StringIO()
+        stdin = StringIO('c\n')
+        stderr = StringIO()
+        ui = cli.UI([], stdin, stdout, stderr)
+        ui.output_error(err_tuple)
+        self.assertThat(stderr.getvalue(),
+            DocTestMatches(expected, doctest.ELLIPSIS))
 
     def test_outputs_rest_to_stdout(self):
         ui, cmd = get_test_ui_and_cmd()

@@ -85,6 +85,14 @@ class UI(ui.AbstractUI):
         return results
 
     def output_error(self, error_tuple):
+        if 'TESTR_PDB' in os.environ:
+            import traceback
+            self._stderr.write(''.join(traceback.format_tb(error_tuple[2])))
+            self._stderr.write('\n')
+            import pdb;
+            p = pdb.Pdb(stdin=self._stdin, stdout=self._stdout)
+            p.reset()
+            p.interaction(None, error_tuple[2])
         self._stderr.write(str(error_tuple[1]) + '\n')
 
     def output_rest(self, rest_string):

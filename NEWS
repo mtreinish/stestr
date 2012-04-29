@@ -35,6 +35,9 @@ IMPROVEMENTS
   output in raw subunit format.  If ''--full-results'' is passed too, then all
   subunit information is displayed.  (Brad Crittenden, #949950)
 
+* ``testr`` will drop into PDB from its command line UI if the environment
+  variable TESTR_PDB is set. (Robert Collins)
+
 * Test partitioning now handles a corner case where multiple tests have a
   reported duration of 0. Previously they could all accumulate into one
   partition, now they split across partitions (the length of a partition is
