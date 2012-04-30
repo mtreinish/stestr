@@ -17,8 +17,12 @@
 
 import doctest
 from cStringIO import StringIO
+import optparse
+import os
 import sys
+from textwrap import dedent
 
+from fixtures import EnvironmentVariable
 from testtools import TestCase
 from testtools.matchers import DocTestMatches
 
@@ -39,6 +43,10 @@ def get_test_ui_and_cmd():
 
 
 class TestCLIUI(ResourcedTestCase):
+
+    def setUp(self):
+        super(TestCLIUI, self).setUp()
+        self.useFixture(EnvironmentVariable('TESTR_PDB'))
 
     def test_construct(self):
         stdout = StringIO()
@@ -80,6 +88,26 @@ class TestCLIUI(ResourcedTestCase):
         ui = cli.UI([], stdin, stdout, stderr)
         ui.output_error(err_tuple)
         self.assertThat(stderr.getvalue(), DocTestMatches(expected))
+
+    def test_error_enters_pdb_when_TESTR_PDB_set(self):
+        os.environ['TESTR_PDB'] = '1'
+        try:
+            raise Exception('fooo')
+        except Exception:
+            err_tuple = sys.exc_info()
+        expected = dedent("""\
+              File "...test_cli.py", line 95, in ...pdb_when_TESTR_PDB_set
+                raise Exception('fooo')
+            <BLANKLINE>
+            fooo
+            """)
+        stdout = StringIO()
+        stdin = StringIO('c\n')
+        stderr = StringIO()
+        ui = cli.UI([], stdin, stdout, stderr)
+        ui.output_error(err_tuple)
+        self.assertThat(stderr.getvalue(),
+            DocTestMatches(expected, doctest.ELLIPSIS))
 
     def test_outputs_rest_to_stdout(self):
         ui, cmd = get_test_ui_and_cmd()
@@ -230,10 +258,19 @@ class TestCLITestResult(TestCase):
         except ZeroDivisionError:
             return sys.exc_info()
 
-    def make_result(self, stream=None):
+    def make_result(self, stream=None, fullresults=False):
         if stream is None:
             stream = StringIO()
-        ui = cli.UI([], None, stream, None)
+        argv = []
+        if fullresults:
+            argv.append('--full-results')
+        ui = cli.UI(argv, None, stream, None)
+        cmd = commands.Command(ui)
+        if fullresults:
+            cmd.options = [optparse.Option(
+                "--full-results", action="store_true", default=False,
+                help="Show full results.")]
+        ui.set_command(cmd)
         return ui.make_result(lambda: None)
 
     def test_initial_stream(self):
@@ -247,7 +284,7 @@ class TestCLITestResult(TestCase):
         # CLITestResult formats errors by giving them a big fat line, a title
         # made up of their 'label' and the name of the test, another different
         # big fat line, and then the actual error itself.
-        result = self.make_result()
+        result = self.make_result(fullresults=True)
         error = result._format_error('label', self, 'error text')
         expected = '%s%s: %s\n%s%s' % (
             result.sep1, 'label', self.id(), result.sep2, 'error text')
@@ -257,7 +294,7 @@ class TestCLITestResult(TestCase):
         # CLITestResult.addError outputs the given error immediately to the
         # stream.
         stream = StringIO()
-        result = self.make_result(stream)
+        result = self.make_result(stream, fullresults=True)
         error = self.make_exc_info()
         error_text = result._err_details_to_string(self, error)
         result.addError(self, error)
@@ -266,13 +303,27 @@ class TestCLITestResult(TestCase):
             DocTestMatches(result._format_error('ERROR', self, error_text)))
 
     def test_addFailure_outputs_failure(self):
-        # CLITestResult.addError outputs the given error immediately to the
+        # CLITestResult.addFailure outputs the given error immediately to the
         # stream.
         stream = StringIO()
-        result = self.make_result(stream)
+        result = self.make_result(stream, fullresults=True)
         error = self.make_exc_info()
         error_text = result._err_details_to_string(self, error)
         result.addFailure(self, error)
         self.assertThat(
             stream.getvalue(),
             DocTestMatches(result._format_error('FAIL', self, error_text)))
+
+    def test_addFailure_handles_string_encoding(self):
+        # CLITestResult.addFailure outputs the given error handling non-ascii
+        # characters.
+        stream = StringIO()
+        result = self.make_result(stream, fullresults=True)
+        class MyError(ValueError):
+            def __unicode__(self):
+                return u'\u201c'
+        error = (MyError, MyError(), None)
+        result.addFailure(self, error)
+        self.assertThat(
+            stream.getvalue(),
+            DocTestMatches("...MyError: ?", doctest.ELLIPSIS))

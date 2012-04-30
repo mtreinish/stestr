@@ -17,11 +17,17 @@
 import optparse
 
 import subunit
-from testtools import ConcurrentTestSuite, MultiTestResult
+from testtools import ConcurrentTestSuite, MultiTestResult, Tagger
 
 from testrepository.commands import Command
 from testrepository.repository import RepositoryNotFound
-from testrepository.results import TestResultFilter
+
+
+def _wrap_result(result, thread_number):
+    worker_id = 'worker-%s' % thread_number
+    tags_to_add = set([worker_id])
+    tags_to_remove = set()
+    return Tagger(result, tags_to_add, tags_to_remove)
 
 
 class load(Command):
@@ -42,6 +48,11 @@ class load(Command):
             "--force-init", action="store_true",
             default=False,
             help="Initialise the repository if it does not exist already"),
+        optparse.Option("--subunit", action="store_true",
+            default=False, help="Display results in subunit format."),
+        optparse.Option("--full-results", action="store_true",
+            default=False,
+            help="Show all test results. Currently only works with --subunit."),
         ]
 
     def run(self):
@@ -62,23 +73,21 @@ class load(Command):
             streams = list(suite)[0]
             for stream in streams():
                 yield subunit.ProtocolTestCase(stream)
-        case = ConcurrentTestSuite(cases, make_tests)
+        case = ConcurrentTestSuite(cases, make_tests, _wrap_result)
         inserter = repo.get_inserter(partial=self.ui.options.partial)
         try:
             previous_run = repo.get_latest_run()
         except KeyError:
             previous_run = None
         output_result = self.ui.make_result(lambda: run_id, previous_run)
-        # XXX: We want to *count* skips, but not show them.
-        filtered = TestResultFilter(output_result, filter_skip=False)
-        filtered.startTestRun()
+        output_result.startTestRun()
         inserter.startTestRun()
         try:
-            case.run(MultiTestResult(inserter, filtered))
+            case.run(MultiTestResult(inserter, output_result))
         finally:
             run_id = inserter.stopTestRun()
-            filtered.stopTestRun()
-        if not filtered.wasSuccessful():
+            output_result.stopTestRun()
+        if not output_result.wasSuccessful():
             return 1
         else:
             return 0

@@ -40,3 +40,9 @@ Running the tests
 Generally just ``make`` is all that is needed to run all the tests. However
 if dropping into pdb, it is currently more convenient to use
 ``python -m testtools.run testrepository.tests.test_suite``.
+
+Diagnosing issues
+-----------------
+
+The cli UI will drop into pdb when an error is thrown if TESTR_PDB is set in
+the environment. This can be very useful for diagnosing problems.

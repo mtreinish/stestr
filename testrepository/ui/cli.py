@@ -1,11 +1,11 @@
 #
 # Copyright (c) 2009 Testrepository Contributors
-# 
+#
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
 # project source as Apache-2.0 and BSD. You may not use this file except in
 # compliance with one of these two licences.
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -17,9 +17,13 @@
 from optparse import OptionParser
 import os
 import signal
+import subunit
 import sys
 
+from testtools.compat import unicode_output_stream
+
 from testrepository import ui
+from testrepository.results import TestResultFilter
 
 
 class CLITestResult(ui.BaseUITestResult):
@@ -28,7 +32,7 @@ class CLITestResult(ui.BaseUITestResult):
     def __init__(self, ui, get_id, stream, previous_run=None):
         """Construct a CLITestResult writing to stream."""
         super(CLITestResult, self).__init__(ui, get_id, previous_run)
-        self.stream = stream
+        self.stream = unicode_output_stream(stream)
         self.sep1 = u'=' * 70 + '\n'
         self.sep2 = u'-' * 70 + '\n'
 
@@ -69,9 +73,26 @@ class UI(ui.AbstractUI):
         yield self._stdin
 
     def make_result(self, get_id, previous_run=None):
-        return CLITestResult(self, get_id, self._stdout, previous_run)
+        if getattr(self.options, 'subunit', False):
+            results = subunit.TestProtocolClient(self._stdout)
+        else:
+            results = CLITestResult(self, get_id, self._stdout, previous_run)
+
+        if not getattr(self.options, 'full_results', False):
+            # XXX: We want to *count* skips, but not show them.
+            filtered = TestResultFilter(results, filter_skip=False)
+            return filtered
+        return results
 
     def output_error(self, error_tuple):
+        if 'TESTR_PDB' in os.environ:
+            import traceback
+            self._stderr.write(''.join(traceback.format_tb(error_tuple[2])))
+            self._stderr.write('\n')
+            import pdb;
+            p = pdb.Pdb(stdin=self._stdin, stdout=self._stdout)
+            p.reset()
+            p.interaction(None, error_tuple[2])
         self._stderr.write(str(error_tuple[1]) + '\n')
 
     def output_rest(self, rest_string):
@@ -134,7 +155,8 @@ class UI(ui.AbstractUI):
             outputs.append('%s=%s' % (label, value))
         self._stdout.write('%s\n' % ', '.join(outputs))
 
-    def _format_summary(self, successful, tests, tests_delta, time, time_delta, values):
+    def _format_summary(self, successful, tests, tests_delta,
+                        time, time_delta, values):
         # We build the string by appending to a list of strings and then
         # joining trivially at the end. Avoids expensive string concatenation.
         summary = []
@@ -168,7 +190,8 @@ class UI(ui.AbstractUI):
             a(')')
         return ''.join(summary)
 
-    def output_summary(self, successful, tests, tests_delta, time, time_delta, values):
+    def output_summary(self, successful, tests, tests_delta,
+                       time, time_delta, values):
         self._stdout.write(
             self._format_summary(
                 successful, tests, tests_delta, time, time_delta, values))
