@@ -80,8 +80,7 @@ class UI(ui.AbstractUI):
 
         if not getattr(self.options, 'full_results', False):
             # XXX: We want to *count* skips, but not show them.
-            filtered = TestResultFilter(results, filter_skip=False)
-            return filtered
+            results = TestResultFilter(results, filter_skip=False)
         return results
 
     def output_error(self, error_tuple):

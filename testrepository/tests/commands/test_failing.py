@@ -22,7 +22,11 @@ from testtools.matchers import DocTestMatches
 from testrepository.commands import failing
 from testrepository.ui.model import UI
 from testrepository.repository import memory
-from testrepository.tests import ResourcedTestCase, Wildcard
+from testrepository.tests import (
+    ResourcedTestCase,
+    StubTestCommand,
+    Wildcard,
+    )
 
 
 class TestCommand(ResourcedTestCase):
@@ -135,3 +139,16 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual(1, cmd.execute())
         self.assertEqual([True], calls)
 
+    def test_grabs_TestCommand_result(self):
+        ui, cmd = self.get_test_ui_and_cmd()
+        cmd.repository_factory = memory.RepositoryFactory()
+        calls = []
+        cmd.repository_factory.initialise(ui.here)
+        cmd.command_factory = StubTestCommand
+        StubTestCommand.results = []
+        # None, None would be nice here, but sigh, default arguments etc.
+        self.addCleanup(StubTestCommand.results.__delslice__, 0, 100)
+        cmd.execute()
+        self.assertEqual(
+            [('startTestRun',), ('stopTestRun',)],
+            StubTestCommand.results[0]._events)

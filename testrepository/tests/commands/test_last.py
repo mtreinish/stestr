@@ -19,7 +19,11 @@ import testtools
 from testrepository.commands import last
 from testrepository.ui.model import UI
 from testrepository.repository import memory
-from testrepository.tests import ResourcedTestCase, Wildcard
+from testrepository.tests import (
+    ResourcedTestCase,
+    StubTestCommand,
+    Wildcard,
+    )
 
 
 class TestCommand(ResourcedTestCase):
@@ -60,3 +64,19 @@ class TestCommand(ResourcedTestCase):
             result.stopTestRun()
         self.assertEqual(1, result.testsRun)
         self.assertEqual(1, len(result.failures))
+
+    def test_grabs_TestCommand_result(self):
+        ui, cmd = self.get_test_ui_and_cmd()
+        cmd.repository_factory = memory.RepositoryFactory()
+        repo = cmd.repository_factory.initialise(ui.here)
+        inserter = repo.get_inserter()
+        inserter.startTestRun()
+        id = inserter.stopTestRun()
+        cmd.command_factory = StubTestCommand
+        StubTestCommand.results = []
+        # None, None would be nice here, but sigh, default arguments etc.
+        self.addCleanup(StubTestCommand.results.__delslice__, 0, 100)
+        cmd.execute()
+        self.assertEqual(
+            [('startTestRun',), Wildcard, Wildcard, ('stopTestRun',)],
+            StubTestCommand.results[0]._events)

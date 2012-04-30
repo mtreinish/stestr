@@ -25,7 +25,11 @@ from testtools.tests.helpers import LoggingResult
 
 from testrepository.commands import load
 from testrepository.ui.model import UI
-from testrepository.tests import ResourcedTestCase, Wildcard
+from testrepository.tests import (
+    ResourcedTestCase,
+    StubTestCommand,
+    Wildcard,
+    )
 from testrepository.tests.test_repository import RecordingRepositoryFactory
 from testrepository.tests.repository.test_file import HomeDirTempDir
 from testrepository.repository import memory, RepositoryNotFound
@@ -245,3 +249,18 @@ class TestCommandLoad(ResourcedTestCase):
             [('summary', False, 2, 1, 6.0, -3.0,
               [('id', 1, None), ('failures', 2, 1)])],
             ui.outputs[1:])
+
+    def test_grabs_TestCommand_result(self):
+        ui = UI([('subunit', '')])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        cmd.repository_factory = memory.RepositoryFactory()
+        cmd.repository_factory.initialise(ui.here)
+        cmd.command_factory = StubTestCommand
+        StubTestCommand.results = []
+        # None, None would be nice here, but sigh, default arguments etc.
+        self.addCleanup(StubTestCommand.results.__delslice__, 0, 100)
+        cmd.execute()
+        self.assertEqual(
+            [('startTestRun',), ('stopTestRun',)],
+            StubTestCommand.results[0]._events)

@@ -25,6 +25,8 @@ import sys
 import tempfile
 from textwrap import dedent
 
+from testrepository.results import TestResultFilter
+
 testrconf_help = dedent("""
     Configuring via .testr.conf:
     ---
@@ -319,3 +321,11 @@ class TestCommand(object):
                 raise
             return set()
         return set([tag.strip() for tag in tags.split()])
+
+    def make_result(self, receiver):
+        """Create a TestResult that will perform any global filtering etc.
+
+        :param receiver: The result to forward the result of global filtering.
+        :return: A TestResult.
+        """
+        return TestResultFilter(receiver, filter_skip=False)

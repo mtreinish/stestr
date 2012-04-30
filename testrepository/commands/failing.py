@@ -20,6 +20,7 @@ from testtools import MultiTestResult, TestResult
 
 from testrepository.commands import Command
 from testrepository.results import TestResultFilter
+from testrepository.testcommand import TestCommand
 
 
 class failing(Command):
@@ -40,6 +41,8 @@ class failing(Command):
             "--list", action="store_true",
             default=False, help="Show only a list of failing tests."),
         ]
+    # Can be assigned to to inject a custom command factory.
+    command_factory = TestCommand
 
     def _list_subunit(self, run):
         # TODO only failing tests.
@@ -52,10 +55,13 @@ class failing(Command):
 
     def _make_result(self, repo, list_result):
         if self.ui.options.list:
-            return list_result
-        output_result = self.ui.make_result(repo.latest_id)
-        filtered = TestResultFilter(output_result, filter_skip=True)
-        return MultiTestResult(list_result, filtered)
+            target = list_result
+        else:
+            output_result = self.ui.make_result(repo.latest_id)
+            errors_only = TestResultFilter(output_result, filter_skip=True)
+            target = MultiTestResult(list_result, output_result)
+        testcommand = self.command_factory(self.ui, repo)
+        return testcommand.make_result(target)
 
     def run(self):
         repo = self.repository_factory.open(self.ui.here)

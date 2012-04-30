@@ -15,7 +15,7 @@
 """Show the last run loaded into a repository."""
 
 from testrepository.commands import Command
-from testrepository.results import TestResultFilter
+from testrepository.testcommand import TestCommand
 
 
 class last(Command):
@@ -25,8 +25,12 @@ class last(Command):
     at the end.
     """
 
+    # Can be assigned to to inject a custom command factory.
+    command_factory = TestCommand
+
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
+        testcommand = self.command_factory(self.ui, repo)
         latest_run = repo.get_latest_run()
         case = latest_run.get_test()
         try:
@@ -35,7 +39,7 @@ class last(Command):
             previous_run = None
         failed = False
         output_result = self.ui.make_result(latest_run.get_id, previous_run)
-        result = TestResultFilter(output_result, filter_skip=True)
+        result = testcommand.make_result(output_result)
         result.startTestRun()
         try:
             case.run(result)

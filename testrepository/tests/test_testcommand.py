@@ -18,6 +18,7 @@ import os.path
 
 from fixtures import Fixture
 from testtools.matchers import MatchesException, Raises
+from testtools.testresult.doubles import ExtendedTestResult
 
 from testrepository.commands import run
 from testrepository.ui.model import UI
@@ -234,3 +235,12 @@ class TestTestCommand(ResourcedTestCase):
         ui, command = self.get_test_ui_and_cmd()
         self.set_config('[DEFAULT]\nfilter_tags=foo bar\n')
         self.assertEqual(set(['foo', 'bar']), command.get_filter_tags())
+
+    def test_make_result(self):
+        # Just a simple 'the dots are joined' test. More later.
+        ui, command = self.get_test_ui_and_cmd()
+        log = ExtendedTestResult()
+        result = command.make_result(log)
+        result.startTestRun()
+        result.stopTestRun()
+        self.assertEqual([('startTestRun',), ('stopTestRun',)], log._events)
