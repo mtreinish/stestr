@@ -38,8 +38,8 @@ class last(Command):
         except KeyError:
             previous_run = None
         failed = False
-        output_result = self.ui.make_result(latest_run.get_id, previous_run)
-        result = testcommand.make_result(output_result)
+        result = self.ui.make_result(
+            latest_run.get_id, testcommand, previous_run=previous_run)
         result.startTestRun()
         try:
             case.run(result)

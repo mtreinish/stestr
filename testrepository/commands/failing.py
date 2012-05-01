@@ -54,14 +54,16 @@ class failing(Command):
             return 0
 
     def _make_result(self, repo, list_result):
-        if self.ui.options.list:
-            target = list_result
-        else:
-            output_result = self.ui.make_result(repo.latest_id)
-            errors_only = TestResultFilter(output_result, filter_skip=True)
-            target = MultiTestResult(list_result, output_result)
         testcommand = self.command_factory(self.ui, repo)
-        return testcommand.make_result(target)
+        if self.ui.options.list:
+            return testcommand.make_result(list_result)
+        else:
+            output_result = self.ui.make_result(repo.latest_id, testcommand)
+            # This probably wants to be removed or pushed into the CLIResult
+            # responsibilities, it attempts to preserve skips, but the ui
+            # make_result filters them - a mismatch.
+            errors_only = TestResultFilter(output_result, filter_skip=True)
+            return MultiTestResult(list_result, output_result)
 
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
@@ -77,6 +79,9 @@ class failing(Command):
             case.run(result)
         finally:
             result.stopTestRun()
+        # XXX: This bypasses the user defined transforms, and also sets a
+        # non-zero return even on --list, which is inappropriate. The UI result
+        # knows about success/failure in more detail.
         failed = not list_result.wasSuccessful()
         if failed:
             result = 1

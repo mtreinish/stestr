@@ -144,11 +144,8 @@ class TestCommand(ResourcedTestCase):
         cmd.repository_factory = memory.RepositoryFactory()
         calls = []
         cmd.repository_factory.initialise(ui.here)
-        cmd.command_factory = StubTestCommand
-        StubTestCommand.results = []
-        # None, None would be nice here, but sigh, default arguments etc.
-        self.addCleanup(StubTestCommand.results.__delslice__, 0, 100)
+        cmd.command_factory = StubTestCommand()
         cmd.execute()
         self.assertEqual(
             [('startTestRun',), ('stopTestRun',)],
-            StubTestCommand.results[0]._events)
+            cmd.command_factory.results[0]._events)

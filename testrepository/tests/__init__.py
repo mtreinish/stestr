@@ -45,10 +45,11 @@ Wildcard = _Wildcard()
 
 class StubTestCommand:
 
-    results = []
+    def __init__(self):
+        self.results = []
 
-    def __init__(self, ui, repo):
-        pass
+    def __call__(self, ui, repo):
+        return self
 
     def make_result(self, receiver):
         result = ExtendedTestResult()

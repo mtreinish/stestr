@@ -85,11 +85,13 @@ class AbstractUI(object):
         """Helper for iter_streams which subclasses should implement."""
         raise NotImplementedError(self._iter_streams)
 
-    def make_result(self, get_id, previous_run=None):
+    def make_result(self, get_id, test_command, previous_run=None):
         """Make a `TestResult` that can be used to display test results.
 
         :param get_id: A nullary callable that returns the id of the test run
             when called.
+        :param test_command: A TestCommand object used to configure user
+            transforms.
         :param previous_run: An optional previous test run.
         """
         raise NotImplementedError(self.make_result)

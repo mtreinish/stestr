@@ -23,21 +23,28 @@ import sys
 from textwrap import dedent
 
 from fixtures import EnvironmentVariable
+import subunit
 from testtools import TestCase
 from testtools.matchers import DocTestMatches
 
 from testrepository import arguments
 from testrepository import commands
+from testrepository.commands import run
 from testrepository.ui import cli
-from testrepository.tests import ResourcedTestCase
+from testrepository.tests import ResourcedTestCase, StubTestCommand
 
 
-def get_test_ui_and_cmd():
+def get_test_ui_and_cmd(options=(), args=()):
     stdout = StringIO()
     stdin = StringIO()
     stderr = StringIO()
-    ui = cli.UI([], stdin, stdout, stderr)
-    cmd = commands.Command(ui)
+    argv = list(args)
+    for option, value in options:
+        # only bool handled so far
+        if value:
+            argv.append('--%s' % option)
+    ui = cli.UI(argv, stdin, stdout, stderr)
+    cmd = run.run(ui)
     ui.set_command(cmd)
     return ui, cmd
 
@@ -96,7 +103,7 @@ class TestCLIUI(ResourcedTestCase):
         except Exception:
             err_tuple = sys.exc_info()
         expected = dedent("""\
-              File "...test_cli.py", line 95, in ...pdb_when_TESTR_PDB_set
+              File "...test_cli.py", line ..., in ...pdb_when_TESTR_PDB_set
                 raise Exception('fooo')
             <BLANKLINE>
             fooo
@@ -119,7 +126,7 @@ class TestCLIUI(ResourcedTestCase):
         class Case(ResourcedTestCase):
             def method(self):
                 self.fail('quux')
-        result = ui.make_result(lambda: None)
+        result = ui.make_result(lambda: None, StubTestCommand())
         Case('method').run(result)
         self.assertThat(ui._stdout.getvalue(),DocTestMatches(
             """======================================================================
@@ -192,6 +199,25 @@ AssertionError: quux...
         cmd.args = [arguments.string.StringArgument('args', max=None)]
         ui.set_command(cmd)
         self.assertEqual({'args':['one', '--two', 'three']}, ui.arguments)
+
+    def test_run_subunit_option(self):
+        ui, cmd = get_test_ui_and_cmd(options=[('subunit', True)])
+        self.assertEqual(True, ui.options.subunit)
+
+    def test_subunit_output_with_full_results(self):
+        # When --full-results is passed in, successes are included in the
+        # subunit output.
+        ui, cmd = get_test_ui_and_cmd(options=[('subunit', True)])
+        stream = StringIO()
+        subunit_result = subunit.TestProtocolClient(stream)
+        subunit_result.startTest(self)
+        subunit_result.addSuccess(self)
+        subunit_result.stopTest(self)
+        result = ui.make_result(lambda: None, StubTestCommand())
+        result.startTest(self)
+        result.addSuccess(self)
+        result.stopTest(self)
+        self.assertEqual(stream.getvalue(), ui._stdout.getvalue())
 
 
 class TestCLISummary(TestCase):
@@ -271,7 +297,7 @@ class TestCLITestResult(TestCase):
                 "--full-results", action="store_true", default=False,
                 help="Show full results.")]
         ui.set_command(cmd)
-        return ui.make_result(lambda: None)
+        return ui.make_result(lambda: None, StubTestCommand())
 
     def test_initial_stream(self):
         # CLITestResult.__init__ does not do anything to the stream it is

@@ -86,9 +86,9 @@ class load(Command):
             previous_run = repo.get_latest_run()
         except KeyError:
             previous_run = None
-        output_result = self.ui.make_result(lambda: run_id, previous_run)
-        filtered = testcommand.make_result(output_result)
-        result = MultiTestResult(inserter, filtered)
+        output_result = self.ui.make_result(
+            lambda: run_id, testcommand, previous_run=previous_run)
+        result = MultiTestResult(inserter, output_result)
         result.startTestRun()
         try:
             case.run(result)
@@ -99,7 +99,7 @@ class load(Command):
             # having a capturing result rather than a lambda, but thats more
             # code.
             run_id = inserter.stopTestRun()
-            filtered.stopTestRun()
+            output_result.stopTestRun()
         if not output_result.wasSuccessful():
             return 1
         else:

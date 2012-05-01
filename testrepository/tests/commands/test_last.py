@@ -72,11 +72,8 @@ class TestCommand(ResourcedTestCase):
         inserter = repo.get_inserter()
         inserter.startTestRun()
         id = inserter.stopTestRun()
-        cmd.command_factory = StubTestCommand
-        StubTestCommand.results = []
-        # None, None would be nice here, but sigh, default arguments etc.
-        self.addCleanup(StubTestCommand.results.__delslice__, 0, 100)
+        cmd.command_factory = StubTestCommand()
         cmd.execute()
         self.assertEqual(
             [('startTestRun',), Wildcard, Wildcard, ('stopTestRun',)],
-            StubTestCommand.results[0]._events)
+            cmd.command_factory.results[0]._events)
