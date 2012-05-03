@@ -35,6 +35,11 @@ IMPROVEMENTS
   displays output in raw subunit format.  If ''--full-results'' is passed too,
   then all subunit information is displayed.  (Brad Crittenden, #949950)
 
+* Setting ''filter_tags'' in ''.testr.conf'' will cause tests tagged with those
+  tags to be hidden unless the fail/error. This requires Subunit 0.0.8. If
+  an older version of subunit is configured, testr will return an error.
+  (Robert Collins, #914166)
+
 * ``testr`` will drop into PDB from its command line UI if the environment
   variable TESTR_PDB is set. (Robert Collins)
 
