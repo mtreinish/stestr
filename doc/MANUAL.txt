@@ -46,8 +46,9 @@ through to your test runner command line. To pass options through to your test
 running, use a ``--`` before your options.  For instance, 
 ``testr run quux -- bar --no-plugins`` would run
 ``foo quux bar --no-plugins`` using the above config example.  Shell variables
-are expanded in these commands on platforms that have a shell.  The command
-help for ``testr run`` describes the available options for .testr.conf.
+are expanded in these commands on platforms that have a shell.
+
+To get a full list of these options run ``testr help run``.
 
 Having setup a .testr.conf, a common workflow then becomes::
 
@@ -96,6 +97,23 @@ This will first list the tests, partition the tests into one partition per CPU
 on the machine, and then invoke multiple test runners at the same time, with
 each test runner getting one partition. Currently the partitioning algorithm
 is a simple round-robin, and the CPU detection is only implemented for Linux.
+
+Hiding tests
+~~~~~~~~~~~~
+
+Some test runners (for instance, zope.testrunner) report pseudo tests having to
+do with bringing up the test environment rather than being actual tests that
+can be executed. These are only relevant to a test run when they fail - the
+rest of the time they tend to be confusing. For instance, the same 'test' may
+show up on multiple parallel test runs, which will inflate the 'executed tests'
+count depending on the number of worker threads that were used. Scheduling such
+'tests' to run is also a bit pointless, as they are only ever executed
+implicitly when preparing (or finishing with) a test environment to run other
+tests in.
+
+testr can ignore such tests if they are tagged, using the filter_tags
+configuration option. Tests tagged with any tag in that (space separated) list
+will only be included in counts and reports if the test failed (or errored).
 
 Repositories
 ~~~~~~~~~~~~

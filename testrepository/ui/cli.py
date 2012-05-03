@@ -72,17 +72,15 @@ class UI(ui.AbstractUI):
     def _iter_streams(self, stream_type):
         yield self._stdin
 
-    def make_result(self, get_id, previous_run=None):
+    def make_result(self, get_id, test_command, previous_run=None):
         if getattr(self.options, 'subunit', False):
-            results = subunit.TestProtocolClient(self._stdout)
-        else:
-            results = CLITestResult(self, get_id, self._stdout, previous_run)
-
-        if not getattr(self.options, 'full_results', False):
-            # XXX: We want to *count* skips, but not show them.
-            filtered = TestResultFilter(results, filter_skip=False)
-            return filtered
-        return results
+            # By pass user transforms - just forward it all.
+            return subunit.TestProtocolClient(self._stdout)
+        output = CLITestResult(self, get_id, self._stdout, previous_run)
+        if getattr(self.options, 'full_results', False):
+            return output
+        # Apply user defined transforms.
+        return test_command.make_result(output)
 
     def output_error(self, error_tuple):
         if 'TESTR_PDB' in os.environ:

@@ -21,6 +21,7 @@ from testtools import ConcurrentTestSuite, MultiTestResult, Tagger
 
 from testrepository.commands import Command
 from testrepository.repository import RepositoryNotFound
+from testrepository.testcommand import TestCommand
 
 
 def _wrap_result(result, thread_number):
@@ -54,6 +55,8 @@ class load(Command):
             default=False,
             help="Show all test results. Currently only works with --subunit."),
         ]
+    # Can be assigned to to inject a custom command factory.
+    command_factory = TestCommand
 
     def run(self):
         path = self.ui.here
@@ -64,6 +67,7 @@ class load(Command):
                 repo = self.repository_factory.initialise(path)
             else:
                 raise
+        testcommand = self.command_factory(self.ui, repo)
         run_id = None
         # Not a full implementation of TestCase, but we only need to iterate
         # back to it. Needs to be a callable - its a head fake for
@@ -74,17 +78,26 @@ class load(Command):
             for stream in streams():
                 yield subunit.ProtocolTestCase(stream)
         case = ConcurrentTestSuite(cases, make_tests, _wrap_result)
+        # One copy of the stream to repository storage
         inserter = repo.get_inserter(partial=self.ui.options.partial)
+        # One copy of the stream to the UI layer after performing global
+        # filters.
         try:
             previous_run = repo.get_latest_run()
         except KeyError:
             previous_run = None
-        output_result = self.ui.make_result(lambda: run_id, previous_run)
-        output_result.startTestRun()
-        inserter.startTestRun()
+        output_result = self.ui.make_result(
+            lambda: run_id, testcommand, previous_run=previous_run)
+        result = MultiTestResult(inserter, output_result)
+        result.startTestRun()
         try:
-            case.run(MultiTestResult(inserter, output_result))
+            case.run(result)
         finally:
+            # Does not call result.stopTestRun because the lambda: run_id above
+            # needs the local variable to be updated before the
+            # filtered.stopTestRun() call is invoked. This could be fixed by
+            # having a capturing result rather than a lambda, but thats more
+            # code.
             run_id = inserter.stopTestRun()
             output_result.stopTestRun()
         if not output_result.wasSuccessful():

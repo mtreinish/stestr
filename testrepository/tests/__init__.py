@@ -19,6 +19,9 @@ import unittest
 import testresources
 from testscenarios import generate_scenarios
 from testtools import TestCase
+from testtools.testresult.doubles import ExtendedTestResult
+from testtools.testresult.real import MultiTestResult
+
 
 class ResourcedTestCase(TestCase, testresources.ResourcedTestCase):
     """Make all testrepository tests have resource support."""
@@ -38,6 +41,20 @@ class _Wildcard(object):
 
 
 Wildcard = _Wildcard()
+
+
+class StubTestCommand:
+
+    def __init__(self):
+        self.results = []
+
+    def __call__(self, ui, repo):
+        return self
+
+    def make_result(self, receiver):
+        result = ExtendedTestResult()
+        self.results.append(result)
+        return MultiTestResult(result, receiver)
 
 
 def test_suite():

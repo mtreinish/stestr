@@ -139,8 +139,9 @@ class UI(ui.AbstractUI):
             else:
                 yield StringIO(stream_value)
 
-    def make_result(self, get_id, previous_run=None):
-        return TestResultModel(self, get_id, previous_run)
+    def make_result(self, get_id, test_command, previous_run=None):
+        return test_command.make_result(
+            TestResultModel(self, get_id, previous_run))
 
     def output_error(self, error_tuple):
         self.outputs.append(('error', error_tuple))

@@ -18,12 +18,13 @@ import os.path
 
 from fixtures import Fixture
 from testtools.matchers import MatchesException, Raises
+from testtools.testresult.doubles import ExtendedTestResult
 
 from testrepository.commands import run
 from testrepository.ui.model import UI
 from testrepository.repository import memory
 from testrepository.testcommand import TestCommand
-from testrepository.tests import ResourcedTestCase
+from testrepository.tests import ResourcedTestCase, Wildcard
 from testrepository.tests.stubpackage import TempDirResource
 from testrepository.tests.test_repository import make_test, run_timed
 
@@ -229,3 +230,54 @@ class TestTestCommand(ResourcedTestCase):
         partitions = fixture.partition_tests(test_ids, 2)
         self.assertEqual(1, len(partitions[0]))
         self.assertEqual(1, len(partitions[1]))
+
+    def test_filter_tags_parsing(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config('[DEFAULT]\nfilter_tags=foo bar\n')
+        self.assertEqual(set(['foo', 'bar']), command.get_filter_tags())
+
+    def test_make_result(self):
+        # Just a simple 'the dots are joined' test. More later.
+        ui, command = self.get_test_ui_and_cmd()
+        log = ExtendedTestResult()
+        self.set_config('[DEFAULT]\n')
+        result = command.make_result(log)
+        result.startTestRun()
+        result.stopTestRun()
+        self.assertEqual([('startTestRun',), ('stopTestRun',)], log._events)
+
+    def test_make_result_tag_filter(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config('[DEFAULT]\nfilter_tags=foo bar\n')
+        log = ExtendedTestResult()
+        class Tests(ResourcedTestCase):
+            def ignored(self): pass
+            def fails(self): self.fail('foo')
+            def filtered(self): pass
+        try:
+            result = command.make_result(log)
+        except ValueError, e:
+            self.skip("Subunit too old for tag filtering support.")
+        result.startTestRun()
+        result.tags(set(['ignored']), set())
+        ignored = Tests("ignored")
+        ignored.run(result)
+        result.tags(set(['foo']), set())
+        fails = Tests("fails")
+        fails.run(result)
+        filtered = Tests("filtered")
+        filtered.run(result)
+        result.stopTestRun()
+        self.assertEqual([
+            ('startTestRun',),
+            ('tags', set(['ignored']), set()),
+            ('startTest', ignored),
+            ('addSuccess', ignored),
+            ('stopTest', ignored),
+            ('tags', set(['foo']), set()),
+            ('startTest', fails),
+            ('addFailure', fails, Wildcard),
+            ('stopTest', fails),
+            ('stopTestRun',),
+            ],
+            log._events)

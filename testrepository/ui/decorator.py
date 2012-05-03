@@ -62,8 +62,9 @@ class UI(ui.AbstractUI):
             else:
                 yield StringIO(stream_value)
 
-    def make_result(self, get_id, previous_run=None):
-        return self._decorated.make_result(get_id, previous_run)
+    def make_result(self, get_id, test_command, previous_run=None):
+        return self._decorated.make_result(
+            get_id, test_command, previous_run=previous_run)
 
     def output_error(self, error_tuple):
         return self._decorated.output_error(error_tuple)

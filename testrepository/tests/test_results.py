@@ -19,6 +19,7 @@ from datetime import (
 import sys
 from threading import Semaphore
 
+from subunit import test_results
 from testtools import (
     TestCase,
     TestResult,
@@ -33,15 +34,23 @@ from testrepository.ui import BaseUITestResult
 from testrepository.ui.model import UI
 
 
-class ResultFilter(TestCase):
+if getattr(test_results, '_PredicateFilter', None) is None:
+    subunit_filter = False
+else:
+    subunit_filter = True
 
-    def test_addSuccess_increases_count(self):
-        result = BaseUITestResult(UI(), lambda:1)
-        filtered = TestResultFilter(result)
-        filtered.startTest(self)
-        filtered.addSuccess(self)
-        filtered.stopTest(self)
-        self.assertEqual(1, result.testsRun)
+
+class ResultFilter(TestCase):
+    # Tests for a to-be-deleted helper class.
+
+    if not subunit_filter:
+        def test_addSuccess_increases_count(self):
+            result = BaseUITestResult(UI(), lambda:1)
+            filtered = TestResultFilter(result)
+            filtered.startTest(self)
+            filtered.addSuccess(self)
+            filtered.stopTest(self)
+            self.assertEqual(1, result.testsRun)
 
     def test_time_goes_through_for_success(self):
         # Success is normally filtered out, but we still want to get the time

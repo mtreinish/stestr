@@ -20,6 +20,7 @@ from testtools import MultiTestResult, TestResult
 
 from testrepository.commands import Command
 from testrepository.results import TestResultFilter
+from testrepository.testcommand import TestCommand
 
 
 class failing(Command):
@@ -40,6 +41,8 @@ class failing(Command):
             "--list", action="store_true",
             default=False, help="Show only a list of failing tests."),
         ]
+    # Can be assigned to to inject a custom command factory.
+    command_factory = TestCommand
 
     def _list_subunit(self, run):
         # TODO only failing tests.
@@ -51,11 +54,16 @@ class failing(Command):
             return 0
 
     def _make_result(self, repo, list_result):
+        testcommand = self.command_factory(self.ui, repo)
         if self.ui.options.list:
-            return list_result
-        output_result = self.ui.make_result(repo.latest_id)
-        filtered = TestResultFilter(output_result, filter_skip=True)
-        return MultiTestResult(list_result, filtered)
+            return testcommand.make_result(list_result)
+        else:
+            output_result = self.ui.make_result(repo.latest_id, testcommand)
+            # This probably wants to be removed or pushed into the CLIResult
+            # responsibilities, it attempts to preserve skips, but the ui
+            # make_result filters them - a mismatch.
+            errors_only = TestResultFilter(output_result, filter_skip=True)
+            return MultiTestResult(list_result, output_result)
 
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
@@ -71,6 +79,9 @@ class failing(Command):
             case.run(result)
         finally:
             result.stopTestRun()
+        # XXX: This bypasses the user defined transforms, and also sets a
+        # non-zero return even on --list, which is inappropriate. The UI result
+        # knows about success/failure in more detail.
         failed = not list_result.wasSuccessful()
         if failed:
             result = 1

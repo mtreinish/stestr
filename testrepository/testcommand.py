@@ -25,6 +25,8 @@ import sys
 import tempfile
 from textwrap import dedent
 
+from testrepository.results import TestResultFilter
+
 testrconf_help = dedent("""
     Configuring via .testr.conf:
     ---
@@ -38,6 +40,10 @@ testrconf_help = dedent("""
     that have a shell.
 
     The full list of options and variables for .testr.conf:
+    * filter_tags -- a list of tags which should be used to filter test counts.
+      This is useful for stripping out non-test results from the subunit stream
+      such as Zope test layers. These filtered items are still considered for
+      test failures.
     * test_command -- command line to run to execute tests.
     * test_id_option -- the value to substitute into test_command when specific
       test ids should be run.
@@ -253,11 +259,19 @@ class TestCommand(object):
         self.ui = ui
         self.repository = repository
 
-    def get_run_command(self, test_ids=None, testargs=()):
-        """Get the command that would be run to run tests."""
+    def get_parser(self):
+        """Get a parser with the .testr.conf in it."""
         parser = ConfigParser.ConfigParser()
+        # This possibly should push down into UI.
+        if self.ui.here == 'memory:':
+            return parser
         if not parser.read(os.path.join(self.ui.here, '.testr.conf')):
             raise ValueError("No .testr.conf config file")
+        return parser
+
+    def get_run_command(self, test_ids=None, testargs=()):
+        """Get the command that would be run to run tests."""
+        parser = self.get_parser()
         try:
             command = parser.get('DEFAULT', 'test_command')
         except ConfigParser.NoOptionError, e:
@@ -300,3 +314,46 @@ class TestCommand(object):
             result = self.run_factory(test_ids, cmd, listopt, idoption,
                 self.ui, self.repository)
         return result
+
+    def get_filter_tags(self):
+        parser = self.get_parser()
+        try:
+            tags = parser.get('DEFAULT', 'filter_tags')
+        except ConfigParser.NoOptionError, e:
+            if e.message != "No option 'filter_tags' in section: 'DEFAULT'":
+                raise
+            return set()
+        return set([tag.strip() for tag in tags.split()])
+
+    def make_result(self, receiver):
+        """Create a TestResult that will perform any global filtering etc.
+
+        :param receiver: The result to forward the result of global filtering.
+        :return: A TestResult.
+        """
+        filter_tags = self.get_filter_tags()
+        if filter_tags:
+            try:
+                from subunit.test_results import make_tag_filter
+            except ImportError:
+                raise ValueError(
+                    "Subunit not installed or does not have tag filtering support")
+            # predicates return False to filter something out. We want to
+            # filter out tagged tests *unless* they fail/error. So we want
+            # tag_p:False + outcome_p:False -> False
+            # tag_p:False + outcome_p:True -> True
+            # tag_p:True + * -> True
+            def error_or_fail(t, outcome, e, d, tags):
+                return outcome in ('error', 'failure')
+            def or_predicates(predicates):
+                def fn(*args, **kwargs):
+                    for predicate in predicates:
+                        if predicate(*args, **kwargs):
+                            return True
+                    return False
+                return fn
+            predicates = [make_tag_filter(None, filter_tags), error_or_fail]
+            predicate = or_predicates(predicates)
+            return TestResultFilter(
+                receiver, filter_success=False, filter_predicate=predicate)
+        return receiver
