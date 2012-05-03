@@ -25,8 +25,6 @@ import sys
 import tempfile
 from textwrap import dedent
 
-from testrepository.results import TestResultFilter
-
 testrconf_help = dedent("""
     Configuring via .testr.conf:
     ---
@@ -328,4 +326,4 @@ class TestCommand(object):
         :param receiver: The result to forward the result of global filtering.
         :return: A TestResult.
         """
-        return TestResultFilter(receiver, filter_skip=False)
+        return receiver

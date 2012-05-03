@@ -62,8 +62,8 @@ class TestCommand(ResourcedTestCase):
             suite.run(result)
         finally:
             result.stopTestRun()
-        self.assertEqual(1, result.testsRun)
         self.assertEqual(1, len(result.failures))
+        self.assertEqual(2, result.testsRun)
 
     def test_grabs_TestCommand_result(self):
         ui, cmd = self.get_test_ui_and_cmd()
