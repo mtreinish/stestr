@@ -5,10 +5,13 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+0.0.6
++++++
+
 CHANGES
 -------
 
-* Now relies on subunit r152 or better and testtools r254 or better.
+* Now relies on subunit 0.0.8 or better and testtools 0.9.15 or better.
 
 IMPROVEMENTS
 ------------
