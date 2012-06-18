@@ -5,6 +5,14 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+IMPROVEMENTS
+------------
+
+* ``testr run`` now accepts a --concurrency option, allowing command line
+  override of the number of workers spawned. This allows conccurency on
+  operating systems where autodetection is not yet implemented, or just
+  debugging problems with concurrent test suites. (Robert Collins, #957145)
+
 0.0.6
 +++++
 

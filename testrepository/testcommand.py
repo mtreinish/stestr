@@ -165,7 +165,9 @@ class TestListingFixture(Fixture):
         if not self.ui.options.parallel or not self.parallel:
             concurrency = 1
         else:
-            concurrency = self.local_concurrency()
+            concurrency = self.ui.options.concurrency
+            if not concurrency:
+                concurrency = self.local_concurrency()
             if not concurrency:
                 concurrency = 1
         if concurrency == 1:

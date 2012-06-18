@@ -34,6 +34,8 @@ class run(Command):
             default=False, help="Run only tests known to be failing."),
         optparse.Option("--parallel", action="store_true",
             default=False, help="Run tests in parallel processes."),
+        optparse.Option("--concurrency", action="store", type="int", default=0,
+            help="How many processes to use. The default (0) autodetects your CPU count."),
         optparse.Option("--partial", action="store_true",
             default=False,
             help="Only some tests will be run. Implied by --failing."),

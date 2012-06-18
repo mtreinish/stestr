@@ -96,7 +96,15 @@ then testr is able to run your tests in parallel::
 This will first list the tests, partition the tests into one partition per CPU
 on the machine, and then invoke multiple test runners at the same time, with
 each test runner getting one partition. Currently the partitioning algorithm
-is a simple round-robin, and the CPU detection is only implemented for Linux.
+is a simple round-robin.
+
+On Linux, testrepository will inspect /proc/cpuinfo to determine how many CPUs
+are present in the machine, and run one worker per CPU. On other operating
+systems, or if you need to control the number of workers that are used, the
+--concurrency option will let you do so::
+
+  $ testr run --parallel --concurrency=2
+
 
 Hiding tests
 ~~~~~~~~~~~~
