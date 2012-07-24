@@ -15,6 +15,7 @@
 """Tests for the testcommand module."""
 
 import os.path
+import optparse
 
 from fixtures import Fixture
 from testtools.matchers import MatchesException, Raises
@@ -138,6 +139,20 @@ class TestTestCommand(ResourcedTestCase):
         expected_cmd = 'foo '
         self.assertEqual(expected_cmd, fixture.cmd)
 
+    def test_get_run_command_default_and_list_expands(self):
+        ui, command = self.get_test_ui_and_cmd()
+        ui.proc_outputs = ['returned\nids\n']
+        ui.options = optparse.Values()
+        ui.options.parallel = True
+        ui.options.concurrency = 2
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST $LISTOPT\n'
+            'test_id_list_default=whoo yea\n'
+            'test_list_option=--list\n')
+        fixture = self.useFixture(command.get_run_command())
+        expected_cmd = 'foo returned ids '
+        self.assertEqual(expected_cmd, fixture.cmd)
+
     def test_get_run_command_IDLIST_default_passed_normally(self):
         ui, command = self.get_test_ui_and_cmd()
         self.set_config(
@@ -192,7 +207,8 @@ class TestTestCommand(ResourcedTestCase):
         result.stopTestRun()
         ui, command = self.get_test_ui_and_cmd(repository=repo)
         self.set_config(
-            '[DEFAULT]\ntest_command=foo $IDLIST\n')
+            '[DEFAULT]\ntest_command=foo $IDLIST $LISTOPT\n'
+            'test_list_option=--list\n')
         fixture = self.useFixture(command.get_run_command())
         # partitioning by two generates 'slow' and the two fast ones as partitions
         # flushed out by equal numbers of unknown duration tests.

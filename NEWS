@@ -13,6 +13,14 @@ IMPROVEMENTS
   operating systems where autodetection is not yet implemented, or just
   debugging problems with concurrent test suites. (Robert Collins, #957145)
 
+* ''test_id_list_default'' would prevent ''test_list_option'' being used in
+  previous releases. For Python environments where the context to load tests
+  from is always needed this was not an issue (and thus not uncovered). However
+  given a test runner which wants either a global context or a list of specific
+  tests with no global context, there was no way to achieve that with this bug.
+  (Robert Collins, #1027042)
+
+
 0.0.6
 +++++
 
