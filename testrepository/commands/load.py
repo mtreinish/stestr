@@ -16,7 +16,7 @@
 
 import optparse
 
-import subunit
+import subunit.test_results
 from testtools import ConcurrentTestSuite, MultiTestResult, Tagger
 
 from testrepository.commands import Command
@@ -28,7 +28,8 @@ def _wrap_result(result, thread_number):
     worker_id = 'worker-%s' % thread_number
     tags_to_add = set([worker_id])
     tags_to_remove = set()
-    return Tagger(result, tags_to_add, tags_to_remove)
+    return subunit.test_results.AutoTimingTestResultDecorator(
+        Tagger(result, tags_to_add, tags_to_remove))
 
 
 class load(Command):

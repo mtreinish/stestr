@@ -52,7 +52,7 @@ class TestCommand(ResourcedTestCase):
         # We should have seen test outputs (of the failure) and summary data.
         self.assertEqual([
             ('results', Wildcard),
-            ('summary', False, 2, 0, Wildcard, 0.0,
+            ('summary', False, 2, 0, Wildcard, Wildcard,
              [('id', id, None), ('failures', 1, 0)])],
             ui.outputs)
         suite = ui.outputs[0][1]
@@ -75,5 +75,5 @@ class TestCommand(ResourcedTestCase):
         cmd.command_factory = StubTestCommand()
         cmd.execute()
         self.assertEqual(
-            [('startTestRun',), Wildcard, Wildcard, ('stopTestRun',)],
+            [('startTestRun',), ('stopTestRun',)],
             cmd.command_factory.results[0]._events)

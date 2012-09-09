@@ -333,8 +333,7 @@ class TestRepositoryContract(ResourcedTestCase):
         run.get_test().run(result)
         self.assertEqual(
             result._events,
-            [('time', Wildcard), # XXX: Auto-timer inserts clock time
-             ('time', now),
+            [('time', now),
              ('startTest', Wildcard),
              ('time', now + 1 * second),
              ('addSuccess', Wildcard),

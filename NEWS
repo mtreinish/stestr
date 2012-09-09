@@ -8,6 +8,18 @@ NEXT (In development)
 IMPROVEMENTS
 ------------
 
+* stream loading will now synthesise datestamps before demultiplexing rather
+  than on insertion into the repository. This fixes erroneously short times
+  being recorded on non timestamped streams. Additionally, moving the automatic
+  addition of timestamp material in front of the demuxer has removed the skew
+  that caused test times to be reported as longer than the stream could
+  indicate (by the amount of time the test runner took to start outputting
+  subunit). This time may be something we want to track later, but the prior
+  mechanism was inconsistent between the current run and reporting on prior
+  runs, which lead to a very confusing UI. Now it is consistent, but totally
+  ignores that overhead.
+  (Robert Collins, #1048126, #980950)
+
 * ``testr run`` now accepts a --concurrency option, allowing command line
   override of the number of workers spawned. This allows conccurency on
   operating systems where autodetection is not yet implemented, or just

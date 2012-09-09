@@ -27,8 +27,6 @@ Repositories are identified by their URL, and new ones are made by calling
 the initialize function in the appropriate repository module.
 """
 
-import subunit.test_results
-
 from testtools import TestResult
 
 
@@ -75,14 +73,16 @@ class AbstractRepository(object):
 
         Repository implementations should implement _get_inserter.
 
+        get_inserter() does not add timing data to streams: it should be
+        provided by the caller of get_inserter (e.g. commands.load).
+
         :param partial: If True, the stream being inserted only executed some
             tests rather than all the projects tests.
         :return an inserter: Inserters meet the extended TestResult protocol
             that testtools 0.9.2 and above offer. The startTestRun and
             stopTestRun methods in particular must be called.
         """
-        return subunit.test_results.AutoTimingTestResultDecorator(
-            self._get_inserter(partial))
+        return self._get_inserter(partial)
     
     def _get_inserter(self):
         """Get an inserter for get_inserter.
