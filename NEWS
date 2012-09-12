@@ -8,6 +8,9 @@ NEXT (In development)
 CHANGES
 -------
 
+0.0.7
++++++
+
 * testrepository is now distributed via distribute rather than distutils,
   allowing installation via pip into virtualenv environments. (Robert Collins)
 
