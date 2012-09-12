@@ -13,7 +13,7 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-from distutils.core import setup
+from setuptools import setup
 import email
 import os
 
@@ -80,4 +80,17 @@ setup(name='testrepository',
         'testrepository.tests.repository',
         'testrepository.tests.ui',
         'testrepository.ui',
-        ])
+        ],
+      install_requires=[
+        'fixtures',
+        'python-subunit',
+        ],
+      extras_require = dict(
+        test=[
+            'bzr',
+            'pytz',
+            'testresources',
+            'testtools',
+            ]
+        ),
+      )
