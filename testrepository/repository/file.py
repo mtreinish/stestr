@@ -124,8 +124,12 @@ class Repository(AbstractRepository):
         return _DiskRun(None, run_subunit_content)
 
     def get_test_run(self, run_id):
-        run_subunit_content = file(
-            os.path.join(self.base, str(run_id)), 'rb').read()
+        try:
+            run_subunit_content = file(
+                os.path.join(self.base, str(run_id)), 'rb').read()
+        except IOError as e:
+            if e.errno == errno.ENOENT:
+                raise KeyError("No such run.")
         return _DiskRun(run_id, run_subunit_content)
 
     def _get_inserter(self, partial):

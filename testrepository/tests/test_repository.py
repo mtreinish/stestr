@@ -286,6 +286,14 @@ class TestRepositoryContract(ResourcedTestCase):
         self.assertEqual(set(['passing', 'missing']),
             set([test[0].id() for test in analyzed.failures]))
 
+    def test_get_test_run_missing_keyerror(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        result.startTestRun()
+        inserted = result.stopTestRun()
+        self.assertThat(lambda:repo.get_test_run(inserted - 1),
+            raises(KeyError))
+
     def test_get_test_run(self):
         repo = self.repo_impl.initialise(self.sample_url)
         result = repo.get_inserter()

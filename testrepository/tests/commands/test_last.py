@@ -34,7 +34,7 @@ class TestCommand(ResourcedTestCase):
         ui.set_command(cmd)
         return ui, cmd
 
-    def test_shows_last_run(self):
+    def test_shows_last_run_first_run(self):
         ui, cmd = self.get_test_ui_and_cmd()
         cmd.repository_factory = memory.RepositoryFactory()
         repo = cmd.repository_factory.initialise(ui.here)
@@ -48,6 +48,40 @@ class TestCommand(ResourcedTestCase):
         Cases('failing').run(inserter)
         Cases('ok').run(inserter)
         id = inserter.stopTestRun()
+        self.assertEqual(1, cmd.execute())
+        # We should have seen test outputs (of the failure) and summary data.
+        self.assertEqual([
+            ('results', Wildcard),
+            ('summary', False, 2, None, Wildcard, Wildcard,
+             [('id', id, None), ('failures', 1, None)])],
+            ui.outputs)
+        suite = ui.outputs[0][1]
+        result = testtools.TestResult()
+        result.startTestRun()
+        try:
+            suite.run(result)
+        finally:
+            result.stopTestRun()
+        self.assertEqual(1, len(result.failures))
+        self.assertEqual(2, result.testsRun)
+
+    def test_shows_last_run(self):
+        ui, cmd = self.get_test_ui_and_cmd()
+        cmd.repository_factory = memory.RepositoryFactory()
+        repo = cmd.repository_factory.initialise(ui.here)
+        def add_run():
+            inserter = repo.get_inserter()
+            inserter.startTestRun()
+            class Cases(ResourcedTestCase):
+                def failing(self):
+                    self.fail('foo')
+                def ok(self):
+                    pass
+            Cases('failing').run(inserter)
+            Cases('ok').run(inserter)
+            return inserter.stopTestRun()
+        add_run()
+        id = add_run()
         self.assertEqual(1, cmd.execute())
         # We should have seen test outputs (of the failure) and summary data.
         self.assertEqual([

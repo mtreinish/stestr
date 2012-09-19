@@ -63,6 +63,8 @@ class Repository(AbstractRepository):
         return _Failures(self)
 
     def get_test_run(self, run_id):
+        if run_id < 0:
+            raise KeyError("No such run.")
         return self._runs[run_id]
 
     def latest_id(self):
