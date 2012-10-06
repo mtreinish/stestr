@@ -95,8 +95,9 @@ then testr is able to run your tests in parallel::
 
 This will first list the tests, partition the tests into one partition per CPU
 on the machine, and then invoke multiple test runners at the same time, with
-each test runner getting one partition. Currently the partitioning algorithm
-is a simple round-robin.
+each test runner getting one partition. A database of previous times for each
+test is maintained, and the partitions are allocated roughly equal times based
+on that historical record.
 
 On Linux, testrepository will inspect /proc/cpuinfo to determine how many CPUs
 are present in the machine, and run one worker per CPU. On other operating
@@ -105,6 +106,64 @@ systems, or if you need to control the number of workers that are used, the
 
   $ testr run --parallel --concurrency=2
 
+A more granular interface is available too - if you insert into .testr.conf::
+
+  test_run_concurrency=foo bar
+
+Then when testr needs to determine concurrency, it will run that command and
+read the first line from stdout, cast that to an int, and use that as the
+number of partitions to create. A count of 0 is interpreted to mean one
+partition per test. For instance in .test.conf::
+
+  test_run_concurrency=echo 2
+
+Would tell testr to use concurrency of 2.
+
+Remote or isolated test environments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A common problem with parallel test running is test runners that use global
+resources such as well known ports, well known database names or predictable
+directories on disk. Test repository has an optional interface where it can ask
+for environments to run your tests in, and then enumerate and execute the tests
+in that environment for you, allowing you to isolate your concurrent test
+processes, or to have testr coordinate tests running on remote machines / in
+virtual machines.
+
+There are three callouts that testrepository depends on - configured in
+.testr.conf as usual. For instance::
+
+  instance_provision=foo -c $INSTANCE_COUNT
+  instance_dispose=bar $INSTANCE_IDS
+  instance_execute=quux $INSTANCE_ID $FILES -- $COMMAND
+
+These should operate as follows:
+
+* instance_provision should start up the number of instances provided in the
+  $INSTANCE_COUNT parameter. It should print out on stdout the instance ids
+  that testr should supply to the dispose and execute commands. There should
+  be no other output on stdout (stderr is entirely up for grabs). An exit code
+  of non-zero will cause testr to consider the command to have failed. A
+  provisioned instance should be able to execute the list tests and execute
+  tests commands that testr will run via the instance_execute callout. Its
+  possible to lazy-provision things if you desire - testr doesn't care - but
+  to reduce latency we suggest performing any rsync or other code
+  synchronisation steps during the provision step.
+
+* instance_dispose should take a list of instance ids and get rid of them
+  this might mean putting them back in a pool of instances, or powering them
+  off, or terminating them - whatever makes sense for your project.
+
+* instance_execute should accept an instance id, a list of files that need to 
+  be copied into the instance and a command to run within the instance. It
+  needs to copy those files into the instance (it may adjust their paths if
+  desired). If the paths are adjusted, the same paths within $COMMAND should
+  be adjusted to match. When the instance_execute terminates, it should use
+  the exit code that the command used within the instance. Stdout and stderr
+  from instance_execute are presumed to be that of $COMMAND. In particular,
+  stdout is where the subunit test output, and subunit test listing output, are
+  expected, and putting other output into stdout can lead to surprising
+  results - such as corrupting the subunit stream.
 
 Hiding tests
 ~~~~~~~~~~~~
