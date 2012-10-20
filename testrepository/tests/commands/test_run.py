@@ -32,9 +32,9 @@ class TestCommand(ResourcedTestCase):
 
     resources = [('tempdir', TempDirResource())]
 
-    def get_test_ui_and_cmd(self, options=(), args=()):
+    def get_test_ui_and_cmd(self, options=(), args=(), proc_outputs=()):
         self.dirty()
-        ui = UI(options=options, args=args)
+        ui = UI(options=options, args=args, proc_outputs=proc_outputs)
         ui.here = self.tempdir
         cmd = run.run(ui)
         ui.set_command(cmd)
@@ -216,3 +216,13 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual(0, result)
         self.assertEqual(True,
             cmd.repository_factory.repos[ui.here].get_test_run(1)._partial)
+
+    def test_load_failure_exposed(self):
+        ui, cmd = self.get_test_ui_and_cmd(options=[('quiet', True),],
+            proc_outputs=['test: foo\nfailure: foo\n'])
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config('[DEFAULT]\ntest_command=foo\n')
+        result = cmd.execute()
+        expected_cmd = 'foo'
+        self.assertEqual(1, result)
