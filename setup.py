@@ -90,6 +90,7 @@ setup(name='testrepository',
             'bzr',
             'pytz',
             'testresources',
+            'testscenarios',
             'testtools',
             ]
         ),

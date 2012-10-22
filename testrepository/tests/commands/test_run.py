@@ -17,10 +17,16 @@
 import os.path
 from subprocess import PIPE
 
-from testtools.matchers import MatchesException
+from subunit import RemotedTestCase
+from testscenarios.scenarios import multiply_scenarios
+from testtools.matchers import (
+    Equals,
+    MatchesException,
+    MatchesListwise,
+    )
 
 from testrepository.commands import run
-from testrepository.ui.model import UI
+from testrepository.ui.model import UI, ProcessModel
 from testrepository.repository import memory
 from testrepository.tests import ResourcedTestCase, Wildcard
 from testrepository.tests.stubpackage import TempDirResource
@@ -32,9 +38,11 @@ class TestCommand(ResourcedTestCase):
 
     resources = [('tempdir', TempDirResource())]
 
-    def get_test_ui_and_cmd(self, options=(), args=()):
+    def get_test_ui_and_cmd(self, options=(), args=(), proc_outputs=(),
+        proc_results=()):
         self.dirty()
-        ui = UI(options=options, args=args)
+        ui = UI(options=options, args=args, proc_outputs=proc_outputs,
+            proc_results=proc_results)
         ui.here = self.tempdir
         cmd = run.run(ui)
         ui.set_command(cmd)
@@ -216,3 +224,89 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual(0, result)
         self.assertEqual(True,
             cmd.repository_factory.repos[ui.here].get_test_run(1)._partial)
+
+    def test_load_failure_exposed(self):
+        ui, cmd = self.get_test_ui_and_cmd(options=[('quiet', True),],
+            proc_outputs=['test: foo\nfailure: foo\n'])
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config('[DEFAULT]\ntest_command=foo\n')
+        result = cmd.execute()
+        run = cmd.repository_factory.repos[ui.here].get_test_run(1)
+        self.assertEqual(1, result)
+
+    def test_process_exit_code_nonzero_causes_synthetic_error_test(self):
+        ui, cmd = self.get_test_ui_and_cmd(options=[('quiet', True),],
+            proc_outputs=['test: foo\nsuccess: foo\n'],
+            proc_results=[2])
+            # 2 is non-zero, and non-zero triggers the behaviour of exiting
+            # with 1 - but we want to see that it doesn't pass-through the
+            # value literally.
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config('[DEFAULT]\ntest_command=foo\n')
+        result = cmd.execute()
+        expected_cmd = 'foo'
+        self.assertEqual(1, result)
+        run = cmd.repository_factory.repos[ui.here].get_test_run(1)
+        self.assertEqual([
+            Wildcard,
+            ('Error', RemotedTestCase('process-returncode'), Wildcard)],
+            run._outcomes)
+
+
+def read_all(stream):
+    return stream.read()
+
+
+def read_single(stream):
+    return stream.read(1)
+
+
+def readline(stream):
+    return stream.readline()
+
+
+def readlines(stream):
+    return ''.join(stream.readlines())
+
+
+def accumulate(stream, reader):
+    accumulator = []
+    content = reader(stream)
+    while content:
+        accumulator.append(content)
+        content = reader(stream)
+    return ''.join(accumulator)
+
+
+class TestReturnCodeToSubunit(ResourcedTestCase):
+
+    scenarios = multiply_scenarios(
+        [('readdefault', dict(reader=read_all)),
+         ('readsingle', dict(reader=read_single)),
+         ('readline', dict(reader=readline)),
+         ('readlines', dict(reader=readlines)),
+         ],
+        [('noeol', dict(stdout='foo\nbar')),
+         ('trailingeol', dict(stdout='foo\nbar\n'))])
+
+    def test_returncode_0_no_change(self):
+        proc = ProcessModel(None)
+        proc.stdout.write(self.stdout)
+        proc.stdout.seek(0)
+        stream = run.ReturnCodeToSubunit(proc)
+        content = accumulate(stream, self.reader)
+        self.assertEqual(self.stdout, content)
+
+    def test_returncode_nonzero_fail_appended_to_content(self):
+        proc = ProcessModel(None)
+        proc.stdout.write(self.stdout)
+        proc.stdout.seek(0)
+        proc.returncode = 1
+        stream = run.ReturnCodeToSubunit(proc)
+        content = accumulate(stream, self.reader)
+        self.assertEqual(
+            'foo\nbar\ntest: process-returncode\n'
+            'error: process-returncode [\n returncode 1\n]\n',
+            content)

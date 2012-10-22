@@ -17,6 +17,7 @@
 from cStringIO import StringIO
 
 import subunit
+from testtools.content import TracebackContent
 
 from testrepository.repository import (
     AbstractRepository,
@@ -160,15 +161,22 @@ class _Inserter(AbstractTestRun):
         self._events.append(('addSuccess', test, details))
         self._addOutcome('Success', test, details)
 
+    def _force_to_details(self, test, err, details):
+        if not details:
+            details = {}
+        if err is not None:
+            details['err'] = TracebackContent(err, test)
+        return details
+
     def addFailure(self, test, err=None, details=None):
         # Don't support old interface for now.
-        assert err is None
-        self._events.append(('addFailure', test, None, details))
+        self._events.append(('addFailure', test, err, details))
+        details = self._force_to_details(test, err, details)
         self._addOutcome('Failure', test, details)
 
     def addError(self, test, err=None, details=None):
-        assert err is None
-        self._events.append(('addError', test, None, details))
+        self._events.append(('addError', test, err, details))
+        details = self._force_to_details(test, err, details)
         self._addOutcome('Error', test, details)
 
     def addExpectedFailure(self, test, err=None, details=None):
