@@ -15,7 +15,9 @@ IMPROVEMENTS
   nonexistant test run. (Robert Collins)
 
 * ``testr run`` will now fail a test run if the test process exits non-zero.
-  (Robert Collins)
+  As a side effect of this change, if the test program closes its stdout but
+  does not exit, ``testr run`` will hang (waiting for the test program to
+  exit). (Robert Collins)
 
 0.0.7
 +++++

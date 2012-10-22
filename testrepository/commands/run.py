@@ -29,8 +29,11 @@ from testrepository.testcommand import TestCommand, testrconf_help
 class ReturnCodeToSubunit(object):
     """Converts a process return code to a subunit error on the process stdout.
 
-    If the process exits non-zero a synthetic test is added to
-    'stdout', converting the exit error into subunit.
+    The ReturnCodeToSubunit object behaves as a readonly stream, supplying
+    the read, readline and readlines methods. If the process exits non-zero a
+    synthetic test is added to the output, making the error accessible to
+    subunit stream consumers. If the process closes its stdout and then does
+    not terminate, reading from the ReturnCodeToSubunit stream will hang.
     """
 
     def __init__(self, process):
@@ -44,18 +47,19 @@ class ReturnCodeToSubunit(object):
         self.source = self.proc.stdout
         self.lastoutput = '\n'
 
-    def _makeextra(self):
+    def _append_return_code_as_test(self):
         if self.done is True:
             return
         self.source = StringIO()
-        if self.proc.returncode != 0:
+        returncode = self.proc.wait()
+        if returncode != 0:
             if self.lastoutput != '\n':
                 # Subunit is line orientated, it has to start on a fresh line.
                 self.source.write('\n')
             self.source.write('test: process-returncode\n'
                 'error: process-returncode [\n'
                 ' returncode %d\n'
-                ']\n' % self.proc.returncode)
+                ']\n' % returncode)
         self.source.seek(0)
         self.done = True
 
@@ -66,7 +70,7 @@ class ReturnCodeToSubunit(object):
         if result:
             self.lastoutput = result[-1]
             return result
-        self._makeextra()
+        self._append_return_code_as_test()
         return self.source.read(count)
 
     def readline(self):
@@ -74,14 +78,14 @@ class ReturnCodeToSubunit(object):
         if result:
             self.lastoutput = result[-1]
             return result
-        self._makeextra()
+        self._append_return_code_as_test()
         return self.source.readline()
 
     def readlines(self):
         result = self.source.readlines()
         if result:
             self.lastoutput = result[-1][-1]
-        self._makeextra()
+        self._append_return_code_as_test()
         result.extend(self.source.readlines())
         return result
 

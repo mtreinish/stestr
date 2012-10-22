@@ -33,6 +33,9 @@ class ProcessModel(object):
         self.ui.outputs.append(('communicate',))
         return self.stdout.getvalue(), ''
 
+    def wait(self):
+        return self.returncode
+
 
 class TestSuiteModel(object):
 
