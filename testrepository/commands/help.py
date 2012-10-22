@@ -14,6 +14,7 @@
 
 """Get help on a command."""
 
+import testrepository
 from testrepository.arguments import command
 from testrepository.commands import Command
 
@@ -24,13 +25,14 @@ class help(Command):
 
     def run(self):
         if not self.ui.arguments['command_name']:
-            help = """testr -- a free test repository
+            version = '.'.join(map(str, testrepository.__version__))
+            help = """testr %s -- a free test repository
 https://launchpad.net/testrepository/
 
 testr commands -- list commands
 testr quickstart -- starter documentation
 testr help [command] -- help system
-"""
+""" % version
         else:
             cmd = self.ui.arguments['command_name'][0]
             help = cmd.__doc__
