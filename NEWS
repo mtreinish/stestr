@@ -8,6 +8,8 @@ NEXT (In development)
 IMPROVEMENTS
 ------------
 
+* ``testr`` will now show the version. (Robert Collins)
+
 * ``testr last`` when just one test run has been run works again.
   (Robert Collins)
 
