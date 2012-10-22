@@ -14,6 +14,7 @@
 
 """Run a projects tests and load them into testrepository."""
 
+from cStringIO import StringIO
 import optparse
 
 from testtools import TestResult
@@ -23,6 +24,66 @@ from testrepository.commands import Command
 from testrepository.commands.load import load
 from testrepository.ui import decorator
 from testrepository.testcommand import TestCommand, testrconf_help
+
+
+class ReturnCodeToSubunit(object):
+    """Converts a process return code to a subunit error on the process stdout.
+
+    If the process exits non-zero a synthetic test is added to
+    'stdout', converting the exit error into subunit.
+    """
+
+    def __init__(self, process):
+        """Adapt a process to a readable stream.
+
+        :param process: A subprocess.Popen object that is
+            generating subunit.
+        """
+        self.proc = process
+        self.done = False
+        self.source = self.proc.stdout
+        self.lastoutput = '\n'
+
+    def _makeextra(self):
+        if self.done is True:
+            return
+        self.source = StringIO()
+        if self.proc.returncode != 0:
+            if self.lastoutput != '\n':
+                # Subunit is line orientated, it has to start on a fresh line.
+                self.source.write('\n')
+            self.source.write('test: process-returncode\n'
+                'error: process-returncode [\n'
+                ' returncode %d\n'
+                ']\n' % self.proc.returncode)
+        self.source.seek(0)
+        self.done = True
+
+    def read(self, count=-1):
+        if count == 0:
+            return ''
+        result = self.source.read(count)
+        if result:
+            self.lastoutput = result[-1]
+            return result
+        self._makeextra()
+        return self.source.read(count)
+
+    def readline(self):
+        result = self.source.readline()
+        if result:
+            self.lastoutput = result[-1]
+            return result
+        self._makeextra()
+        return self.source.readline()
+
+    def readlines(self):
+        result = self.source.readlines()
+        if result:
+            self.lastoutput = result[-1][-1]
+        self._makeextra()
+        result.extend(self.source.readlines())
+        return result
 
 
 class run(Command):
@@ -69,7 +130,7 @@ class run(Command):
         cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'])
         cmd.setUp()
         try:
-            run_procs = [('subunit', proc.stdout) for proc in cmd.run_tests()]
+            run_procs = [('subunit', ReturnCodeToSubunit(proc)) for proc in cmd.run_tests()]
             options = {}
             if self.ui.options.failing:
                 options['partial'] = True

@@ -14,6 +14,9 @@ IMPROVEMENTS
 * ``Repository.get_test_run`` now raises KeyError if asked for a missing or
   nonexistant test run. (Robert Collins)
 
+* ``testr run`` will now fail a test run if the test process exits non-zero.
+  (Robert Collins)
+
 0.0.7
 +++++
 
