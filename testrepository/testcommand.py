@@ -26,6 +26,10 @@ import tempfile
 from textwrap import dedent
 
 from testrepository.results import TestResultFilter
+from testrepository.testlist import (
+    parse_list,
+    write_list,
+    )
 
 testrconf_help = dedent("""
     Configuring via .testr.conf:
@@ -165,7 +169,7 @@ class TestListingFixture(Fixture):
                 fd, name = tempfile.mkstemp()
                 stream = os.fdopen(fd, 'wb')
             self.list_file_name = name
-            stream.write('\n'.join(list(self.test_ids) + ['']))
+            write_list(stream, self.test_ids)
             stream.close()
         except:
             if name:
@@ -186,7 +190,7 @@ class TestListingFixture(Fixture):
             stdout=subprocess.PIPE, stdin=subprocess.PIPE)
         out, err = run_proc.communicate()
         # Should we raise on non-zero exit?
-        ids = [id for id in out.split('\n') if id]
+        ids = parse_list(out)
         return ids
 
     def run_tests(self):

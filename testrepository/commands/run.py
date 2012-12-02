@@ -24,6 +24,7 @@ from testrepository.commands import Command
 from testrepository.commands.load import load
 from testrepository.ui import decorator
 from testrepository.testcommand import TestCommand, testrconf_help
+from testrepository.testlist import parse_list
 
 
 class ReturnCodeToSubunit(object):
@@ -101,6 +102,8 @@ class run(Command):
             default=False, help="Run tests in parallel processes."),
         optparse.Option("--concurrency", action="store", type="int", default=0,
             help="How many processes to use. The default (0) autodetects your CPU count."),
+        optparse.Option("--load-list", default=None,
+            help="Only run tests listed in the named file."),
         optparse.Option("--partial", action="store_true",
             default=False,
             help="Only some tests will be run. Implied by --failing."),
@@ -131,6 +134,17 @@ class run(Command):
             ids.extend([error[0].id() for error in result.errors])
         else:
             ids = None
+        if self.ui.options.load_list:
+            list_ids = set()
+            with file(self.ui.options.load_list) as list_file:
+                list_ids = set(parse_list(list_file.read()))
+            if ids is None:
+                # Use the supplied list verbatim
+                ids = list_ids
+            else:
+                # We have some already limited set of ids, just reduce to ids
+                # that are both failing and listed.
+                ids = list_ids.intersection(ids)
         cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'])
         cmd.setUp()
         try:

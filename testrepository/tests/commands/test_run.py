@@ -16,7 +16,12 @@
 
 import os.path
 from subprocess import PIPE
+import tempfile
 
+from fixtures import (
+    Fixture,
+    MonkeyPatch,
+    )
 from subunit import RemotedTestCase
 from testscenarios.scenarios import multiply_scenarios
 from testtools.matchers import (
@@ -28,6 +33,7 @@ from testtools.matchers import (
 from testrepository.commands import run
 from testrepository.ui.model import UI, ProcessModel
 from testrepository.repository import memory
+from testrepository.testlist import write_list
 from testrepository.tests import ResourcedTestCase, Wildcard
 from testrepository.tests.stubpackage import TempDirResource
 from testrepository.tests.test_testcommand import FakeTestCommand
@@ -67,7 +73,8 @@ class TestCommand(ResourcedTestCase):
         inserter = repo.get_inserter()
         inserter.startTestRun()
         make_test('passing', True).run(inserter)
-        make_test('failing', False).run(inserter)
+        make_test('failing1', False).run(inserter)
+        make_test('failing2', False).run(inserter)
         inserter.stopTestRun()
 
     def test_no_config_file_errors(self):
@@ -104,7 +111,7 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('summary', True, 0, -2, None, None, [('id', 1, None)])
+            ('summary', True, 0, -3, None, None, [('id', 1, None)])
             ], ui.outputs)
         # TODO: check the list file is written, and deleted.
         self.assertEqual(0, result)
@@ -116,13 +123,13 @@ class TestCommand(ResourcedTestCase):
         self.set_config(
             '[DEFAULT]\ntest_command=foo $IDLIST\n')
         self.assertEqual(0, cmd.execute())
-        expected_cmd = 'foo failing'
+        expected_cmd = 'foo failing1 failing2'
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('summary', True, 0, -2, None, None, [('id', 1, None)]),
+            ('summary', True, 0, -3, None, None, [('id', 1, None)]),
             ], ui.outputs)
         # Failing causes partial runs to be used.
         self.assertEqual(True,
@@ -141,7 +148,7 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('summary', True, 0, -2, None, None, [('id', 1, None)])
+            ('summary', True, 0, -3, None, None, [('id', 1, None)])
             ], ui.outputs)
 
     def test_IDLIST_default_passed_normally(self):
@@ -157,7 +164,7 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('summary', True, 0, -2, None, None, [('id', 1, None)])
+            ('summary', True, 0, -3, None, None, [('id', 1, None)])
             ], ui.outputs)
 
     def test_IDFILE_not_passed_normally(self):
@@ -173,8 +180,72 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('summary', True, 0, -2, None, None, [('id', 1, None)]),
+            ('summary', True, 0, -3, None, None, [('id', 1, None)]),
             ], ui.outputs)
+
+    def capture_ids(self):
+        params = []
+        def capture_ids(self, ids, args):
+            params.append(self)
+            params.append(ids)
+            params.append(args)
+            result = Fixture()
+            result.run_tests = lambda:[]
+            return result
+        return params, capture_ids
+
+    def test_load_list_failing_takes_id_intersection(self):
+        list_file = tempfile.NamedTemporaryFile()
+        self.addCleanup(list_file.close)
+        write_list(list_file, ['foo', 'quux', 'failing1'])
+        # The extra tests - foo, quux - won't match known failures, and the
+        # unlisted failure failing2 won't match the list.
+        expected_ids = set(['failing1'])
+        list_file.flush()
+        ui, cmd = self.get_test_ui_and_cmd(
+            options=[('load_list', list_file.name), ('failing', True)])
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
+        params, capture_ids = self.capture_ids()
+        self.useFixture(MonkeyPatch(
+            'testrepository.testcommand.TestCommand.get_run_command',
+            capture_ids))
+        cmd_result = cmd.execute()
+        self.assertEqual([
+            ('results', Wildcard),
+            ('summary', True, 0, -3, None, None, [('id', 1, None)])
+            ], ui.outputs)
+        self.assertEqual(0, cmd_result)
+        self.assertEqual([Wildcard, expected_ids, []], params)
+
+    def test_load_list_passes_ids(self):
+        list_file = tempfile.NamedTemporaryFile()
+        self.addCleanup(list_file.close)
+        expected_ids = set(['foo', 'quux', 'bar'])
+        write_list(list_file, expected_ids)
+        list_file.flush()
+        ui, cmd = self.get_test_ui_and_cmd(
+            options=[('load_list', list_file.name)])
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
+        params, capture_ids = self.capture_ids()
+        self.useFixture(MonkeyPatch(
+            'testrepository.testcommand.TestCommand.get_run_command',
+            capture_ids))
+        self.useFixture(MonkeyPatch(
+            'testrepository.testcommand.TestCommand.get_run_command',
+            capture_ids))
+        cmd_result = cmd.execute()
+        self.assertEqual([
+            ('results', Wildcard),
+            ('summary', True, 0, -3, None, None, [('id', 1, None)])
+            ], ui.outputs)
+        self.assertEqual(0, cmd_result)
+        self.assertEqual([Wildcard, expected_ids, []], params)
 
     def test_extra_options_passed_in(self):
         ui, cmd = self.get_test_ui_and_cmd(args=('bar', 'quux'))
@@ -189,7 +260,7 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('summary', True, 0, -2, None, None, [('id', 1, None)])
+            ('summary', True, 0, -3, None, None, [('id', 1, None)])
             ], ui.outputs)
 
     def test_quiet_passed_down(self):

@@ -21,6 +21,11 @@ IMPROVEMENTS
   does not exit, ``testr run`` will hang (waiting for the test program to
   exit). (Robert Collins)
 
+* ``testr run --load-list FILENAME`` will limit the tests run to the test ids
+  supplied in the list file FILENAME. This is useful for manually specifying
+  the tests to run, or running testr subordinate to testr (e.g. on remote 
+  machines). (Robert Collins, partial fix for #597060)
+
 0.0.7
 +++++
 
