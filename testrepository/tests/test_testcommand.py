@@ -17,7 +17,6 @@
 import os.path
 import optparse
 
-from fixtures import Fixture
 from testtools.matchers import MatchesException, Raises
 from testtools.testresult.doubles import ExtendedTestResult
 
@@ -27,7 +26,7 @@ from testrepository.repository import memory
 from testrepository.testcommand import TestCommand
 from testrepository.tests import ResourcedTestCase, Wildcard
 from testrepository.tests.stubpackage import TempDirResource
-from testrepository.tests.test_repository import make_test, run_timed
+from testrepository.tests.test_repository import run_timed
 
 
 class FakeTestCommand(TestCommand):
@@ -68,14 +67,6 @@ class TestTestCommand(ResourcedTestCase):
             stream.write(bytes)
         finally:
             stream.close()
-
-    def setup_repo(self, cmd, ui):
-        repo = cmd.repository_factory.initialise(ui.here)
-        inserter = repo.get_inserter()
-        inserter.startTestRun()
-        make_test('passing', True).run(inserter)
-        make_test('failing', False).run(inserter)
-        inserter.stopTestRun()
 
     def test_takes_ui(self):
         ui = UI()
@@ -272,7 +263,7 @@ class TestTestCommand(ResourcedTestCase):
             def filtered(self): pass
         try:
             result = command.make_result(log)
-        except ValueError, e:
+        except ValueError:
             self.skip("Subunit too old for tag filtering support.")
         result.startTestRun()
         result.tags(set(['ignored']), set())
