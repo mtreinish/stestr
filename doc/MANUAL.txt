@@ -109,7 +109,7 @@ will be passed through, if a test list is being supplied test_option can be
 used via $IDOPTION.
 
 The output of the test command when this option is supplied should be a series
-of test ids, in any order, `\n' separated on stdout.
+of test ids, in any order, ``\n`` separated on stdout.
 
 To test whether this is working the `testr list-tests` command can be useful.
 

@@ -12,6 +12,9 @@ CHANGES
   run or testr list are only passed to the underlying test runner if they are
   preceeded by '--'. (Robert Collins, #597060)
 
+* Sphinx has been added to tie the documentation toghether (And it is available
+  on testrepository.readthedocs.org). (Robert Collins)
+
 IMPROVEMENTS
 ------------
 

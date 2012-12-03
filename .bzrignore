@@ -5,3 +5,4 @@ build
 .testrepository
 __pycache__
 testrepository.egg-info
+./doc/_build
