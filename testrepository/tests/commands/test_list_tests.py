@@ -71,7 +71,7 @@ class TestCommand(ResourcedTestCase):
             MatchesException(ValueError('No .testr.conf config file')))
 
     def test_calls_list_tests(self):
-        ui, cmd = self.get_test_ui_and_cmd(args=('bar', 'quux'))
+        ui, cmd = self.get_test_ui_and_cmd(args=('--', 'bar', 'quux'))
         cmd.repository_factory = memory.RepositoryFactory()
         ui.proc_outputs = ['returned\n\nvalues\n']
         self.setup_repo(cmd, ui)
@@ -87,4 +87,24 @@ class TestCommand(ResourcedTestCase):
              {'shell': True, 'stdout': PIPE, 'stdin': PIPE}),
             ('communicate',),
             ('stream', 'returned\nvalues\n'),
+            ], ui.outputs)
+
+    def test_filters_use_filtered_list(self):
+        ui, cmd = self.get_test_ui_and_cmd(
+            args=('returned', '--', 'bar', 'quux'))
+        cmd.repository_factory = memory.RepositoryFactory()
+        ui.proc_outputs = ['returned\n\nvalues\n']
+        self.setup_repo(cmd, ui)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $LISTOPT $IDOPTION\n'
+            'test_id_option=--load-list $IDFILE\n'
+            'test_list_option=--list\n')
+        self.assertEqual(0, cmd.execute())
+        expected_cmd = 'foo --list  bar quux'
+        self.assertEqual([
+            ('values', [('running', expected_cmd)]),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdout': PIPE, 'stdin': PIPE}),
+            ('communicate',),
+            ('stream', 'returned\n'),
             ], ui.outputs)

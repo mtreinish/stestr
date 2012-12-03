@@ -206,7 +206,16 @@ class UI(ui.AbstractUI):
             "and any errors.")
         for option in self.cmd.options:
             parser.add_option(option)
-        options, args = parser.parse_args(self._argv)
+        # yank out --, as optparse makes it silly hard to just preserve it.
+        try:
+            where_dashdash = self._argv.index('--')
+            opt_argv = self._argv[:where_dashdash]
+            other_args = self._argv[where_dashdash:]
+        except ValueError:
+            opt_argv = self._argv
+            other_args = []
+        options, args = parser.parse_args(opt_argv)
+        args += other_args
         self.here = options.here
         self.options = options
         parsed_args = {}

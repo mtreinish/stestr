@@ -15,6 +15,7 @@
 """Tests for the run command."""
 
 import os.path
+import re
 from subprocess import PIPE
 import tempfile
 
@@ -28,6 +29,7 @@ from testtools.matchers import (
     Equals,
     MatchesException,
     MatchesListwise,
+    IsInstance,
     )
 
 from testrepository.commands import run
@@ -185,10 +187,11 @@ class TestCommand(ResourcedTestCase):
 
     def capture_ids(self):
         params = []
-        def capture_ids(self, ids, args):
+        def capture_ids(self, ids, args, test_filters=None):
             params.append(self)
             params.append(ids)
             params.append(args)
+            params.append(test_filters)
             result = Fixture()
             result.run_tests = lambda:[]
             return result
@@ -218,7 +221,7 @@ class TestCommand(ResourcedTestCase):
             ('summary', True, 0, -3, None, None, [('id', 1, None)])
             ], ui.outputs)
         self.assertEqual(0, cmd_result)
-        self.assertEqual([Wildcard, expected_ids, []], params)
+        self.assertEqual([Wildcard, expected_ids, [], None], params)
 
     def test_load_list_passes_ids(self):
         list_file = tempfile.NamedTemporaryFile()
@@ -236,19 +239,16 @@ class TestCommand(ResourcedTestCase):
         self.useFixture(MonkeyPatch(
             'testrepository.testcommand.TestCommand.get_run_command',
             capture_ids))
-        self.useFixture(MonkeyPatch(
-            'testrepository.testcommand.TestCommand.get_run_command',
-            capture_ids))
         cmd_result = cmd.execute()
         self.assertEqual([
             ('results', Wildcard),
             ('summary', True, 0, -3, None, None, [('id', 1, None)])
             ], ui.outputs)
         self.assertEqual(0, cmd_result)
-        self.assertEqual([Wildcard, expected_ids, []], params)
+        self.assertEqual([Wildcard, expected_ids, [], None], params)
 
     def test_extra_options_passed_in(self):
-        ui, cmd = self.get_test_ui_and_cmd(args=('bar', 'quux'))
+        ui, cmd = self.get_test_ui_and_cmd(args=('--', 'bar', 'quux'))
         cmd.repository_factory = memory.RepositoryFactory()
         self.setup_repo(cmd, ui)
         self.set_config(
@@ -324,6 +324,56 @@ class TestCommand(ResourcedTestCase):
             Wildcard,
             ('Error', RemotedTestCase('process-returncode'), Wildcard)],
             run._outcomes)
+
+    def test_regex_test_filter(self):
+        ui, cmd = self.get_test_ui_and_cmd(args=('ab.*cd', '--', 'bar', 'quux'))
+        ui.proc_outputs = ['ab-cd\nefgh\n']
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST $LISTOPT\n'
+            'test_id_option=--load-list $IDFILE\n'
+            'test_list_option=--list\n')
+        params, capture_ids = self.capture_ids()
+        self.useFixture(MonkeyPatch(
+            'testrepository.testcommand.TestCommand.get_run_command',
+            capture_ids))
+        cmd_result = cmd.execute()
+        self.assertEqual([
+            ('results', Wildcard),
+            ('summary', True, 0, -3, None, None, [('id', 1, None)])
+            ], ui.outputs)
+        self.assertEqual(0, cmd_result)
+        re_type = type(re.compile(''))
+        self.assertThat(params[1], Equals(None))
+        self.assertThat(
+            params[2], MatchesListwise([Equals('bar'), Equals('quux')]))
+        self.assertThat(params[3], MatchesListwise([Equals('ab.*cd')]))
+
+    def test_regex_test_filter_with_explicit_ids(self):
+        ui, cmd = self.get_test_ui_and_cmd(
+            args=('g1', '--', 'bar', 'quux'),options=[('failing', True)])
+        ui.proc_outputs = ['ab-cd\nefgh\n']
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST $LISTOPT\n'
+            'test_id_option=--load-list $IDFILE\n'
+            'test_list_option=--list\n')
+        params, capture_ids = self.capture_ids()
+        self.useFixture(MonkeyPatch(
+            'testrepository.testcommand.TestCommand.get_run_command',
+            capture_ids))
+        cmd_result = cmd.execute()
+        self.assertEqual([
+            ('results', Wildcard),
+            ('summary', True, 0, -3, None, None, [('id', 1, None)])
+            ], ui.outputs)
+        self.assertEqual(0, cmd_result)
+        self.assertThat(params[1], Equals(['failing1', 'failing2']))
+        self.assertThat(
+            params[2], MatchesListwise([Equals('bar'), Equals('quux')]))
+        self.assertThat(params[3], MatchesListwise([Equals('g1')]))
 
 
 def read_all(stream):

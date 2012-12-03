@@ -16,9 +16,11 @@
 
 from cStringIO import StringIO
 import optparse
+import re
 
 from testtools import TestResult
 
+from testrepository.arguments.doubledash import DoubledashArgument
 from testrepository.arguments.string import StringArgument
 from testrepository.commands import Command
 from testrepository.commands.load import load
@@ -113,7 +115,8 @@ class run(Command):
             default=False,
             help="Show all test results. Currently only works with --subunit."),
         ]
-    args = [StringArgument('testargs', 0, None)]
+    args = [StringArgument('testfilters', 0, None), DoubledashArgument(),
+        StringArgument('testargs', 0, None)]
     # Can be assigned to to inject a custom command factory.
     command_factory = TestCommand
 
@@ -145,7 +148,12 @@ class run(Command):
                 # We have some already limited set of ids, just reduce to ids
                 # that are both failing and listed.
                 ids = list_ids.intersection(ids)
-        cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'])
+        if self.ui.arguments['testfilters']:
+            filters = self.ui.arguments['testfilters']
+        else:
+            filters = None
+        cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'],
+            test_filters = filters)
         cmd.setUp()
         try:
             run_procs = [('subunit', ReturnCodeToSubunit(proc)) for proc in cmd.run_tests()]

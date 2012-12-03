@@ -190,15 +190,34 @@ AssertionError: quux...
         ui.set_command(cmd)
         self.assertEqual("Unexpected arguments: ['one']\n", stderr.getvalue())
 
-    def test_parse_after_double_dash_are_arguments(self):
+    def test_parse_options_after_double_dash_are_arguments(self):
         stdout = StringIO()
         stdin = StringIO()
         stderr = StringIO()
         ui = cli.UI(['one', '--', '--two', 'three'], stdin, stdout, stderr)
         cmd = commands.Command(ui)
-        cmd.args = [arguments.string.StringArgument('args', max=None)]
+        cmd.args = [arguments.string.StringArgument('myargs', max=None),
+            arguments.doubledash.DoubledashArgument(),
+            arguments.string.StringArgument('subargs', max=None)]
         ui.set_command(cmd)
-        self.assertEqual({'args':['one', '--two', 'three']}, ui.arguments)
+        self.assertEqual({
+            'doubledash': ['--'],
+            'myargs': ['one'],
+            'subargs': ['--two', 'three']},
+            ui.arguments)
+
+    def test_double_dash_passed_to_arguments(self):
+        class CaptureArg(arguments.AbstractArgument):
+            def _parse_one(self, arg):
+                return arg
+        stdout = StringIO()
+        stdin = StringIO()
+        stderr = StringIO()
+        ui = cli.UI(['one', '--', '--two', 'three'], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        cmd.args = [CaptureArg('args', max=None)]
+        ui.set_command(cmd)
+        self.assertEqual({'args':['one', '--', '--two', 'three']}, ui.arguments)
 
     def test_run_subunit_option(self):
         ui, cmd = get_test_ui_and_cmd(options=[('subunit', True)])
