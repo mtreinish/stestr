@@ -21,4 +21,6 @@ class StringArgument(AbstractArgument):
     """An argument that stores a string verbatim."""
 
     def _parse_one(self, arg):
+        if arg == '--':
+            raise ValueError('-- is not a valid argument')
         return arg

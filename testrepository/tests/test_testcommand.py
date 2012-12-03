@@ -16,6 +16,7 @@
 
 import os.path
 import optparse
+import re
 
 from testtools.matchers import MatchesException, Raises
 from testtools.testresult.doubles import ExtendedTestResult
@@ -288,3 +289,24 @@ class TestTestCommand(ResourcedTestCase):
             ('stopTestRun',),
             ],
             log._events)
+
+    def test_filter_tests_by_regex_only(self):
+        ui, command = self.get_test_ui_and_cmd()
+        ui.proc_outputs = ['returned\nids\n']
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $LISTOPT $IDLIST\ntest_id_list_default=whoo yea\n'
+            'test_list_option=--list\n')
+        filters = ['return']
+        fixture = self.useFixture(command.get_run_command(test_filters=filters))
+        self.assertEqual(['returned'], fixture.test_ids)
+
+    def test_filter_tests_by_regex_supplied_ids(self):
+        ui, command = self.get_test_ui_and_cmd()
+        ui.proc_outputs = ['returned\nids\n']
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $LISTOPT $IDLIST\ntest_id_list_default=whoo yea\n'
+            'test_list_option=--list\n')
+        filters = ['return']
+        fixture = self.useFixture(command.get_run_command(
+            test_ids=['return', 'of', 'the', 'king'], test_filters=filters))
+        self.assertEqual(['return'], fixture.test_ids)

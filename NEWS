@@ -5,8 +5,26 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+CHANGES
+-------
+
+* As a side effect of fixing bug #597060 additional arguments passed to testr
+  run or testr list are only passed to the underlying test runner if they are
+  preceeded by '--'. (Robert Collins, #597060)
+
 IMPROVEMENTS
 ------------
+
+* ``AbstractArgument`` now handles the case where additional arguments are
+   present that the argument type cannot parse, but enough have been parsed for
+   it to be valid. This allows optional arguments to be in the middle of a
+   grammar. (Robert Collins)
+
+* ``cli.UI`` now passed '--' down to the argument layer for handling rather
+  than implicitly stripping it. (Robert Collins)
+
+* ``DoubledashArgument`` added to allow fine grained control over the impact of
+  -- in command lines. (Robert Collins)
 
 * ``testr`` will now show the version. (Robert Collins)
 
@@ -15,6 +33,11 @@ IMPROVEMENTS
 
 * ``Repository.get_test_run`` now raises KeyError if asked for a missing or
   nonexistant test run. (Robert Collins)
+
+* ``StringArgument`` now rejects '--' - it should be handled by the use of a
+  ``DoubledashArgument`` where one is expected. This is a bit awkward and does
+  not permit passing '--' down to a child process, so further work may be
+  needed - file a bug if this affects you. (Robert Collins)
 
 * ``testr run`` will now fail a test run if the test process exits non-zero.
   As a side effect of this change, if the test program closes its stdout but
@@ -25,6 +48,13 @@ IMPROVEMENTS
   supplied in the list file FILENAME. This is useful for manually specifying
   the tests to run, or running testr subordinate to testr (e.g. on remote 
   machines). (Robert Collins, partial fix for #597060)
+
+* ``testr run foo`` now applies foo as a regex filter against the tests
+  found by doing a listing of the test runners tests. Likewise
+  ``testr list-tests foo`` will apply foo as a filter against the found tests.
+  This makes it easy to limit the tests that will be requested for running by
+  the backend test process - simply pass one or more regex filters into testr
+  run. (Robert Collins, #597060)
 
 0.0.7
 +++++

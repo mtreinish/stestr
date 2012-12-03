@@ -18,6 +18,7 @@ from cStringIO import StringIO
 
 from testtools import TestResult
 
+from testrepository.arguments.doubledash import DoubledashArgument
 from testrepository.arguments.string import StringArgument
 from testrepository.commands import Command
 from testrepository.testcommand import testrconf_help, TestCommand
@@ -27,17 +28,27 @@ class list_tests(Command):
     __doc__ = """Lists the tests for a project.
     """ + testrconf_help
 
-    args = [StringArgument('testargs', 0, None)]
+    args = [StringArgument('testfilters', 0, None), DoubledashArgument(),
+        StringArgument('testargs', 0, None)]
     # Can be assigned to to inject a custom command factory.
     command_factory = TestCommand
 
     def run(self):
         testcommand = self.command_factory(self.ui, None)
         ids = None
-        cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'])
+        filters = None
+        if self.ui.arguments['testfilters']:
+            filters = self.ui.arguments['testfilters']
+        cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'],
+            test_filters=filters)
         cmd.setUp()
         try:
-            ids = cmd.list_tests()
+            # Ugh.
+            # List tests if the fixture has not already needed to to filter.
+            if filters is None:
+                ids = cmd.list_tests()
+            else:
+                ids = cmd.test_ids
             stream = StringIO()
             for id in ids:
                 stream.write('%s\n' % id)

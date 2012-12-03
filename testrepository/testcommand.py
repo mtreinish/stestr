@@ -68,17 +68,22 @@ testrconf_help = dedent("""
     """)
 
 
+compiled_re_type = type(re.compile(''))
+
 class TestListingFixture(Fixture):
     """Write a temporary file to disk with test ids in it."""
 
     def __init__(self, test_ids, cmd_template, listopt, idoption, ui,
-        repository, parallel=True, listpath=None, parser=None):
+        repository, parallel=True, listpath=None, parser=None,
+        test_filters=None):
         """Create a TestListingFixture.
 
         :param test_ids: The test_ids to use. May be None indicating that
-            no ids filtering is requested: run whatever the test program
-            chooses to. For parallel runs None has to be expandable via
-            either a default value or a LISTOPT.
+            no ids are known and they should be discovered by listing or
+            configuration if they must be known to run tests. Test ids are
+            needed to run tests when filtering or partitioning is needed: if
+            the run concurrency is > 1 partitioning is needed, and filtering is
+            needed if the user has passed in filters.
         :param cmd_template: string to be filled out with
             IDFILE.
         :param listopt: Option to substitute into LISTOPT to cause test listing
@@ -92,6 +97,14 @@ class TestListingFixture(Fixture):
         :param listpath: The file listing path to use. If None, a unique path
             is created.
         :param parser: An options parser for reading options from.
+        :param test_filters: An optional list of test filters to apply. Each
+            filter should be a string suitable for passing to re.compile.
+            filters are applied using search() rather than match(), so if
+            anchoring is needed it should be included in the regex.
+            The test ids used for executing are the union of all the individual
+            filters: to take the intersection instead, craft a single regex that
+            matches all your criteria. Filters are automatically applied by
+            run_tests(), or can be applied by calling filter_tests(test_ids).
         """
         self.test_ids = test_ids
         self.template = cmd_template
@@ -102,6 +115,7 @@ class TestListingFixture(Fixture):
         self.parallel = parallel
         self._listpath = listpath
         self._parser = parser
+        self.test_filters = test_filters
 
     def setUp(self):
         super(TestListingFixture, self).setUp()
@@ -136,8 +150,9 @@ class TestListingFixture(Fixture):
             if self.concurrency == 1:
                 if default_idstr:
                     self.test_ids = default_idstr.split()
-            if self.concurrency != 1:
-                # Have to be able to tell each worker what to run.
+            if self.concurrency != 1 or self.test_filters is not None:
+                # Have to be able to tell each worker what to run / filter
+                # tests.
                 self.test_ids = self.list_tests()
         if self.test_ids is None:
             # No test ids to supply to the program.
@@ -145,6 +160,7 @@ class TestListingFixture(Fixture):
             name = ''
             self.test_ids = []
         else:
+            self.test_ids = self.filter_tests(self.test_ids)
             name = self.make_listfile()
             variables['IDFILE'] = name
         idlist = ' '.join(self.test_ids)
@@ -177,6 +193,20 @@ class TestListingFixture(Fixture):
             raise
         self.addCleanup(os.unlink, name)
         return name
+
+    def filter_tests(self, test_ids):
+        """Filter test_ids by the test_filters.
+        
+        :return: A list of test ids.
+        """
+        if self.test_filters is None:
+            return test_ids
+        filters = map(re.compile, self.test_filters)
+        def include(test_id):
+            for pred in filters:
+                if pred.search(test_id):
+                    return True
+        return filter(include, test_ids)
 
     def list_tests(self):
         """List the tests returned by list_cmd.
@@ -294,8 +324,11 @@ class TestCommand(object):
             raise ValueError("No .testr.conf config file")
         return parser
 
-    def get_run_command(self, test_ids=None, testargs=()):
-        """Get the command that would be run to run tests."""
+    def get_run_command(self, test_ids=None, testargs=(), test_filters=None):
+        """Get the command that would be run to run tests.
+        
+        See TestListingFixture for the definition of test_ids and test_filters.
+        """
         parser = self.get_parser()
         try:
             command = parser.get('DEFAULT', 'test_command')
@@ -326,10 +359,12 @@ class TestCommand(object):
         if self.oldschool:
             listpath = os.path.join(self.ui.here, 'failing.list')
             result = self.run_factory(test_ids, cmd, listopt, idoption,
-                self.ui, self.repository, listpath=listpath, parser=parser)
+                self.ui, self.repository, listpath=listpath, parser=parser,
+                test_filters=test_filters)
         else:
             result = self.run_factory(test_ids, cmd, listopt, idoption,
-                self.ui, self.repository, parser=parser)
+                self.ui, self.repository, parser=parser,
+                test_filters=test_filters)
         return result
 
     def get_filter_tags(self):

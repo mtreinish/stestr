@@ -14,7 +14,10 @@
 
 """Tests for the arguments package."""
 
-from testtools.matchers import raises
+from testtools.matchers import (
+    Equals,
+    raises,
+    )
 
 from testrepository import arguments
 from testrepository.tests import ResourcedTestCase
@@ -83,6 +86,15 @@ class TestAbstractArgument(ResourcedTestCase):
                 return arg
         argument = AnArgument('foo')
         self.assertThat(lambda: argument.parse([]), raises(ValueError))
+
+    def test_parsing_optional_not_matching(self):
+        class AnArgument(arguments.AbstractArgument):
+            def _parse_one(self, arg):
+                raise ValueError('not an argument')
+        argument = AnArgument('foo', min=0)
+        args = ['a', 'b']
+        self.assertThat(argument.parse(args), Equals([]))
+        self.assertThat(args, Equals(['a', 'b']))
 
 
 # No interface tests for now, because the interface we expect is really just

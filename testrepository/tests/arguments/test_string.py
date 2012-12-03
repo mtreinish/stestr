@@ -14,6 +14,8 @@
 
 """Tests for the string argument type."""
 
+from testtools.matchers import raises
+
 from testrepository.arguments import string
 from testrepository.tests import ResourcedTestCase
 
@@ -24,3 +26,7 @@ class TestArgument(ResourcedTestCase):
         arg = string.StringArgument('name')
         result = arg.parse(['load'])
         self.assertEqual(['load'], result)
+
+    def test_rejects_doubledash(self):
+        arg = string.StringArgument('name')
+        self.assertThat(lambda: arg.parse(['--']), raises(ValueError))

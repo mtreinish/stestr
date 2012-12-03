@@ -29,6 +29,8 @@ extending the testrepository.arguments __path__ to include a directory
 containing their argument types - no __init__ is needed in that directory.)
 """
 
+import sys
+
 
 class AbstractArgument(object):
     """A argument that a command may need.
@@ -83,13 +85,22 @@ class AbstractArgument(object):
         """
         count = 0
         result = []
+        error = None
         while len(argv) > count and (
             count < self.maximum_count or self.maximum_count is None):
             arg = argv[count]
             count += 1
-            result.append(self._parse_one(arg))
+            try:
+                result.append(self._parse_one(arg))
+            except ValueError:
+                # argument rejected this element
+                error = sys.exc_info()
+                count -= 1
+                break
         if count < self.minimum_count:
-            raise ValueError('not enough arguments present in %s' % argv)
+            if error is not None:
+                raise error[0], error[1], error[2]
+            raise ValueError('not enough arguments present/matched in %s' % argv)
         del argv[:count]
         return result
 

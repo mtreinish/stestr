@@ -41,12 +41,15 @@ file in your cwd. A file like::
 will cause 'testr run' to run 'foo' and process it as 'testr load' would.
 Likewise 'testr run --failing' will run 'foo --bar failing.list' and process it
 as 'testr load' would. failing.list will be a newline separated list of the
-test ids that your test runner outputs. Arguments passed to run are passed
-through to your test runner command line. To pass options through to your test
-running, use a ``--`` before your options.  For instance, 
-``testr run quux -- bar --no-plugins`` would run
-``foo quux bar --no-plugins`` using the above config example.  Shell variables
-are expanded in these commands on platforms that have a shell.
+test ids that your test runner outputs. Arguments passed to 'testr run' are
+used to filter test ids that will be run - testr will query the runner for test
+ids and then apply each argument as a regex filter. Tests that match any of the
+given filters will be run. Arguments passed to run after a ``--`` are passed
+through to your test runner command line. For instance, using the above config
+example ``testr run quux -- bar --no-plugins`` would query for test ids, filter
+for those that match 'quux' and then run
+``foo bar --load-list tempfile.list --no-plugins``. Shell variables are
+expanded in these commands on platforms that have a shell.
 
 To get a full list of these options run ``testr help run``.
 
@@ -109,6 +112,12 @@ The output of the test command when this option is supplied should be a series
 of test ids, in any order, `\n' separated on stdout.
 
 To test whether this is working the `testr list-tests` command can be useful.
+
+You can also use this to see what tests will be run by a given testr run
+command. For instance, the tests that ``testr run myfilter`` will run are shown
+by ``testr list-tests myfilter``. As with 'run', arguments to 'list-tests' are
+used to regex filter the tests of the test runner, and arguments after a '--'
+are passed to the test runner.
 
 Parallel testing
 ~~~~~~~~~~~~~~~~
