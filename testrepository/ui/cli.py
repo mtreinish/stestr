@@ -37,9 +37,13 @@ class CLITestResult(ui.BaseUITestResult):
         self.sep2 = u'-' * 70 + '\n'
 
     def _format_error(self, label, test, error_text):
+        tags = u' '.join(self.current_tags)
+        if tags:
+            tags = u'tags: %s\n' % tags
         return u''.join([
             self.sep1,
             u'%s: %s\n' % (label, test.id()),
+            tags,
             self.sep2,
             error_text,
             ])
@@ -47,6 +51,7 @@ class CLITestResult(ui.BaseUITestResult):
     def addError(self, test, err=None, details=None):
         super(CLITestResult, self).addError(test, err=err, details=details)
         self.stream.write(self._format_error(u'ERROR', *(self.errors[-1])))
+        self.stream.write(''.join(self.current_tags))
 
     def addFailure(self, test, err=None, details=None):
         super(CLITestResult, self).addFailure(test, err=err, details=details)

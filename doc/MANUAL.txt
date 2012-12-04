@@ -150,13 +150,16 @@ To find the tests that ran on a single slave::
   # grab the id from that.
   $ subunit-filter -s --xfail --with-tag=worker-3 < .testrepository/$lastid | subunit-ls > slave-3.list
 
-To find out which slave a failing test ran on::
+This will be better integrated in future.
 
-  $ testr last
-  # grab the id from that
-  $ subunit-filter -m testid < .testrepository/$lastid | subunit-stats
+To find out which slave a failing test ran on just look at the 'tags' line in
+its test error::
 
-These things will be better integrated in future.
+  ======================================================================
+  label: testrepository.tests.ui.TestDemo.test_methodname
+  tags: foo worker-0
+  ----------------------------------------------------------------------
+  error text
 
 Hiding tests
 ~~~~~~~~~~~~

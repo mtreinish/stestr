@@ -15,6 +15,10 @@ CHANGES
 * Sphinx has been added to tie the documentation toghether (And it is available
   on testrepository.readthedocs.org). (Robert Collins)
 
+* Test tags are now shown in failures. Of particular interest for folk debgging
+  cross-test interactions will be the worker-N tags which indicate which
+  backend test process executed a given test. (Robert Collins)
+
 IMPROVEMENTS
 ------------
 

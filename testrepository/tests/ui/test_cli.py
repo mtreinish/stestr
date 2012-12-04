@@ -335,6 +335,14 @@ class TestCLITestResult(TestCase):
             result.sep1, 'label', self.id(), result.sep2, 'error text')
         self.assertThat(error, DocTestMatches(expected))
 
+    def test_format_error_includes_tags(self):
+        result = self.make_result(fullresults=True)
+        result.tags(['foo'], ['bar'])
+        error = result._format_error('label', self, 'error text')
+        expected = '%s%s: %s\ntags: foo\n%s%s' % (
+            result.sep1, 'label', self.id(), result.sep2, 'error text')
+        self.assertThat(error, DocTestMatches(expected))
+
     def test_addError_outputs_error(self):
         # CLITestResult.addError outputs the given error immediately to the
         # stream.
