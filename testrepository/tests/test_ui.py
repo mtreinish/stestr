@@ -167,6 +167,12 @@ class TestUIContract(ResourcedTestCase):
         self.assertEqual(True, ui.set_command(cmd))
         self.assertEqual({'foo':[load.load]}, ui.arguments)
 
+    def test_set_command_with_no_name_works(self):
+        # Degrade gracefully if the name attribute has not been set.
+        ui = self.ui_factory()
+        cmd = commands.Command(ui)
+        self.assertEqual(True, ui.set_command(cmd))
+
     def test_options_at_options(self):
         ui = self.get_test_ui()
         self.assertEqual(False, ui.options.quiet)

@@ -14,11 +14,16 @@
 
 """Tests for the commands module."""
 
+import optparse
 import os.path
 import sys
 
 from testresources import TestResource
-from testtools.matchers import MatchesException, raises
+from testtools.matchers import (
+    IsInstance,
+    MatchesException,
+    raises,
+    )
 
 from testrepository import commands
 from testrepository.repository import file
@@ -161,6 +166,14 @@ class TestRunArgv(ResourcedTestCase):
         self.stub__find_command(lambda x:1)
         self.assertEqual(1, commands.run_argv(['testr', 'foo'], 'in', 'out',
             'err'))
+
+
+class TestGetCommandParser(ResourcedTestCase):
+
+    def test_trivial(self):
+        cmd = InstrumentedCommand(model.UI())
+        parser = commands.get_command_parser(cmd)
+        self.assertThat(parser, IsInstance(optparse.OptionParser))
 
 
 class InstrumentedCommand(commands.Command):

@@ -14,7 +14,6 @@
 
 """A command line UI for testrepository."""
 
-from optparse import OptionParser
 import os
 import signal
 import subunit
@@ -23,6 +22,7 @@ import sys
 from testtools.compat import unicode_output_stream
 
 from testrepository import ui
+from testrepository.commands import get_command_parser
 from testrepository.results import TestResultFilter
 
 
@@ -51,7 +51,6 @@ class CLITestResult(ui.BaseUITestResult):
     def addError(self, test, err=None, details=None):
         super(CLITestResult, self).addError(test, err=err, details=details)
         self.stream.write(self._format_error(u'ERROR', *(self.errors[-1])))
-        self.stream.write(''.join(self.current_tags))
 
     def addFailure(self, test, err=None, details=None):
         super(CLITestResult, self).addFailure(test, err=err, details=details)
@@ -201,7 +200,7 @@ class UI(ui.AbstractUI):
         self._stdout.write('\n')
 
     def _check_cmd(self):
-        parser = OptionParser()
+        parser = get_command_parser(self.cmd)
         parser.add_option("-d", "--here", dest="here",
             help="Set the directory or url that a command should run from. "
             "This affects all default path lookups but does not affect paths "
@@ -209,8 +208,6 @@ class UI(ui.AbstractUI):
         parser.add_option("-q", "--quiet", action="store_true", default=False,
             help="Turn off output other than the primary output for a command "
             "and any errors.")
-        for option in self.cmd.options:
-            parser.add_option(option)
         # yank out --, as optparse makes it silly hard to just preserve it.
         try:
             where_dashdash = self._argv.index('--')
@@ -219,6 +216,11 @@ class UI(ui.AbstractUI):
         except ValueError:
             opt_argv = self._argv
             other_args = []
+        if '-h' in opt_argv or '--help' in opt_argv or '-?' in opt_argv:
+            self.output_rest(parser.format_help())
+            # Fugly, but its what optparse does: we're just overriding the
+            # output path.
+            raise SystemExit(0)
         options, args = parser.parse_args(opt_argv)
         args += other_args
         self.here = options.here
