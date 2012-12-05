@@ -33,6 +33,9 @@ IMPROVEMENTS
 * ``DoubledashArgument`` added to allow fine grained control over the impact of
   -- in command lines. (Robert Collins)
 
+* New argument type ``ExistingPathArgument`` for use when commands want to take
+  the name of a file. (Robert Collins)
+
 * ``testr`` will now show the version. (Robert Collins)
 
 * ``testr last`` when just one test run has been run works again.
