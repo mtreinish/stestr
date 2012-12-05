@@ -86,7 +86,7 @@ class UI(ui.AbstractUI):
     testing testrepository commands.
     """
 
-    def __init__(self, input_streams=None, options=(), args={},
+    def __init__(self, input_streams=None, options=(), args=(),
         here='memory:', proc_outputs=(), proc_results=()):
         """Create a model UI.
 

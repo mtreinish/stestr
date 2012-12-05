@@ -14,11 +14,13 @@
 
 """Load data into a repository."""
 
+from functools import partial
 import optparse
 
 import subunit.test_results
 from testtools import ConcurrentTestSuite, MultiTestResult, Tagger
 
+from testrepository.arguments.path import ExistingPathArgument
 from testrepository.commands import Command
 from testrepository.repository import RepositoryNotFound
 from testrepository.testcommand import TestCommand
@@ -43,6 +45,7 @@ class load(Command):
 
     input_streams = ['subunit+']
 
+    args = [ExistingPathArgument('streams', min=0, max=None)]
     options = [
         optparse.Option("--partial", action="store_true",
             default=False, help="The stream being loaded was a partial run."),
@@ -73,7 +76,13 @@ class load(Command):
         # Not a full implementation of TestCase, but we only need to iterate
         # back to it. Needs to be a callable - its a head fake for
         # testsuite.add.
-        cases = lambda:self.ui.iter_streams('subunit')
+        # XXX: Be nice if we could declare that the argument, which is a path,
+        # is to be an input stream.
+        if self.ui.arguments.get('streams'):
+            opener = partial(open, mode='rb')
+            cases = lambda:map(opener, self.ui.arguments['streams'])
+        else:
+            cases = lambda:self.ui.iter_streams('subunit')
         def make_tests(suite):
             streams = list(suite)[0]
             for stream in streams():
