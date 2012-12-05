@@ -34,6 +34,11 @@ IMPROVEMENTS
 * ``testr last`` when just one test run has been run works again.
   (Robert Collins)
 
+* ``testr help command`` now shows the docstring for commands (Robert Collins)
+
+* ``testr --help command`` or ``testr command --help`` now shows the options
+  for the command. (Robert Collins)
+
 * ``Repository.get_test_run`` now raises KeyError if asked for a missing or
   nonexistant test run. (Robert Collins)
 

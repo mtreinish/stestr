@@ -25,7 +25,10 @@ from textwrap import dedent
 from fixtures import EnvironmentVariable
 import subunit
 from testtools import TestCase
-from testtools.matchers import DocTestMatches
+from testtools.matchers import (
+    DocTestMatches,
+    MatchesException,
+    )
 
 from testrepository import arguments
 from testrepository import commands
@@ -238,6 +241,29 @@ AssertionError: quux...
         result.stopTest(self)
         self.assertEqual(stream.getvalue(), ui._stdout.getvalue())
 
+    def test_dash_dash_help_shows_help(self):
+        stdout = StringIO()
+        stdin = StringIO()
+        stderr = StringIO()
+        ui = cli.UI(['--help'], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        cmd.args = [arguments.string.StringArgument('foo')]
+        cmd.name = "bar"
+        # By definition SystemExit is not caught by 'except Exception'.
+        try:
+            ui.set_command(cmd)
+        except SystemExit:
+            exc_info = sys.exc_info()
+            self.assertThat(exc_info, MatchesException(SystemExit(0)))
+        else:
+            self.fail('ui.set_command did not raise')
+        self.assertThat(stdout.getvalue(),
+            DocTestMatches("""Usage: run.py bar [options] foo
+...
+A command that can be run...
+...
+  -d HERE, --here=HERE...
+...""", doctest.ELLIPSIS))
 
 class TestCLISummary(TestCase):
 

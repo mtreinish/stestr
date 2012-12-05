@@ -16,7 +16,10 @@
 
 import testrepository
 from testrepository.arguments import command
-from testrepository.commands import Command
+from testrepository.commands import (
+    Command,
+    get_command_parser,
+    )
 
 class help(Command):
     """Get help on a command."""
@@ -35,6 +38,7 @@ testr help [command] -- help system
 """ % version
         else:
             cmd = self.ui.arguments['command_name'][0]
-            help = cmd.__doc__
+            parser = get_command_parser(cmd)
+            help = parser.format_help()
         self.ui.output_rest(help)
         return 0
