@@ -64,7 +64,7 @@ Query the repository::
   $ testr failing
 
 Delete a repository::
-  $ testr delete
+  $ rm -rf .testrepository
 
 Documentation
 ~~~~~~~~~~~~~
