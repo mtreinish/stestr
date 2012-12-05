@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 Testrepository Contributors
+# Copyright (c) 2009, 2012 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -15,6 +15,7 @@
 """Tests for the load command."""
 
 from datetime import datetime
+from tempfile import NamedTemporaryFile
 
 from subunit import iso8601
 
@@ -51,6 +52,27 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual([('open', ui.here)], calls)
         # Stream consumed
         self.assertFalse('subunit' in ui.input_streams)
+        # Results loaded
+        self.assertEqual(1, repo.count())
+
+    def test_load_loads_named_file_if_given(self):
+        datafile = NamedTemporaryFile()
+        self.addCleanup(datafile.close)
+        ui = UI([('subunit', '')], args=[datafile.name])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        calls = []
+        cmd.repository_factory = RecordingRepositoryFactory(calls,
+            memory.RepositoryFactory())
+        repo = cmd.repository_factory.initialise(ui.here)
+        del calls[:]
+        self.assertEqual(0, cmd.execute())
+        # Right repo
+        self.assertEqual([('open', ui.here)], calls)
+        # Stream not consumed - otherwise CLI would block when someone runs
+        # 'testr load foo'. XXX: Be nice if we could declare that the argument,
+        # which is a path, is to be an input stream.
+        self.assertTrue('subunit' in ui.input_streams)
         # Results loaded
         self.assertEqual(1, repo.count())
 
