@@ -71,7 +71,8 @@ Documentation
 
 More detailed documentation including design and implementation details, a
 user manual, and guidelines for development of Test Repository itself can be
-found in the doc/ directory.
+found at https://testrepository.readthedocs.org/en/latest, or in the source
+tree at doc/ (run make -C doc html).
 """
         self.ui.output_rest(help)
         return 0
