@@ -98,6 +98,10 @@ that only fail in combination with some other test - you can bisect the tests
 that were run to get smaller and smaller (or larger and larger) test subsets
 until the error is pinpointed.
 
+``testr run --until-failure`` will run your test suite again and again and
+again stopping only when interrupted or a failure occurs. This is useful
+for repeating timing-related test failures.
+
 Listing tests
 ~~~~~~~~~~~~~
 
