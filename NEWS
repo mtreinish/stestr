@@ -42,6 +42,9 @@ IMPROVEMENTS
 * ``testr --help command`` or ``testr command --help`` now shows the options
   for the command. (Robert Collins)
 
+* ``testr run --until-failure`` will repeat a test run until interrupted by
+  ctrl-C or until a failure occurs. (Robert Collins, #680995)
+
 * ``Repository.get_test_run`` now raises KeyError if asked for a missing or
   nonexistant test run. (Robert Collins)
 

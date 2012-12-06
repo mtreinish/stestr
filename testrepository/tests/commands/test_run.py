@@ -372,6 +372,35 @@ class TestCommand(ResourcedTestCase):
             params[2], MatchesListwise([Equals('bar'), Equals('quux')]))
         self.assertThat(params[3], MatchesListwise([Equals('g1')]))
 
+    def test_until_failure(self):
+        ui, cmd = self.get_test_ui_and_cmd(options=[('until_failure', True)])
+        ui.proc_outputs = [
+            'test: foo\nsuccess: foo\n', # stream one, works
+            'test: foo\nfailure: foo\n' # stream two, fails
+            ]
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST $LISTOPT\n'
+            'test_id_option=--load-list $IDFILE\n'
+            'test_list_option=--list\n')
+        cmd_result = cmd.execute()
+        expected_cmd = 'foo  '
+        self.assertEqual([
+            ('values', [('running', expected_cmd)]),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
+            ('results', Wildcard),
+            ('summary', True, 1, -2, Wildcard, None, [('id', 1, None)]),
+            ('values', [('running', expected_cmd)]),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
+            ('results', Wildcard),
+            ('summary', False, 1, 0, Wildcard, Wildcard,
+             [('id', 2, None), ('failures', 1, 1)])
+            ], ui.outputs)
+        self.assertEqual(1, cmd_result)
+
     def test_failure_no_tests_run_when_no_failures_failures(self):
         ui, cmd = self.get_test_ui_and_cmd(options=[('failing', True)])
         cmd.repository_factory = memory.RepositoryFactory()

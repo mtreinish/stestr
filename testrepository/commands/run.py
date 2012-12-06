@@ -114,6 +114,9 @@ class run(Command):
         optparse.Option("--full-results", action="store_true",
             default=False,
             help="Show all test results. Currently only works with --subunit."),
+        optparse.Option("--until-failure", action="store_true",
+            default=False,
+            help="Repeat the run again and again until failure occurs."),
         ]
     args = [StringArgument('testfilters', 0, None), DoubledashArgument(),
         StringArgument('testargs', 0, None)]
@@ -156,13 +159,21 @@ class run(Command):
             test_filters = filters)
         cmd.setUp()
         try:
-            run_procs = [('subunit', ReturnCodeToSubunit(proc)) for proc in cmd.run_tests()]
-            options = {}
-            if self.ui.options.failing:
-                options['partial'] = True
-            load_ui = decorator.UI(input_streams=run_procs, options=options,
-                decorated=self.ui)
-            load_cmd = load(load_ui)
-            return load_cmd.execute()
+            def run_tests():
+                run_procs = [('subunit', ReturnCodeToSubunit(proc)) for proc in cmd.run_tests()]
+                options = {}
+                if self.ui.options.failing:
+                    options['partial'] = True
+                load_ui = decorator.UI(input_streams=run_procs, options=options,
+                    decorated=self.ui)
+                load_cmd = load(load_ui)
+                return load_cmd.execute()
+            if not self.ui.options.until_failure:
+                return run_tests()
+            else:
+                result = run_tests()
+                while not result:
+                    result = run_tests()
+                return result
         finally:
             cmd.cleanUp()
