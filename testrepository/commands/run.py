@@ -117,6 +117,9 @@ class run(Command):
         optparse.Option("--until-failure", action="store_true",
             default=False,
             help="Repeat the run again and again until failure occurs."),
+        optparse.Option("--analyze-isolation", action="store_true",
+            default=False,
+            help="Search the last test run for 2-test test isolation interactions."),
         ]
     args = [StringArgument('testfilters', 0, None), DoubledashArgument(),
         StringArgument('testargs', 0, None)]
@@ -125,7 +128,6 @@ class run(Command):
 
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
-        testcommand = self.command_factory(self.ui, repo)
         if self.ui.options.failing:
             # Run only failing tests
             run = repo.get_failing()
@@ -155,6 +157,7 @@ class run(Command):
             filters = self.ui.arguments['testfilters']
         else:
             filters = None
+        testcommand = self.command_factory(self.ui, repo)
         cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'],
             test_filters = filters)
         cmd.setUp()
