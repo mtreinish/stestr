@@ -158,12 +158,12 @@ class TestListingFixture(Fixture):
             # No test ids to supply to the program.
             self.list_file_name = None
             name = ''
-            self.test_ids = []
+            idlist = ''
         else:
             self.test_ids = self.filter_tests(self.test_ids)
             name = self.make_listfile()
             variables['IDFILE'] = name
-        idlist = ' '.join(self.test_ids)
+            idlist = ' '.join(self.test_ids)
         variables['IDLIST'] = idlist
         def subst(match):
             return variables.get(match.groups(1)[0], '')
