@@ -27,6 +27,10 @@ class last(Command):
 
     Failing tests are shown on the console and a summary of the run is printed
     at the end.
+
+    Without --subunit, the process exit code will be non-zero if the test run
+    was not successful. With --subunit, the process exit code is non-zero if
+    the subunit stream could not be generated successfully.
     """
 
     options = [

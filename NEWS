@@ -56,8 +56,9 @@ IMPROVEMENTS
   not permit passing '--' down to a child process, so further work may be
   needed - file a bug if this affects you. (Robert Collins)
 
-* ``test failing --subunit`` now exits 0 if there are no failing tests.
-  (Robert Collins)
+* ``test failing --subunit`` now exits 0 unless there was a problem generating
+  the stream. This is consistent with the general processing model of subunit
+  generators. (Robert Collins)
 
 * ``testr last`` now supports ``--subunit`` and when passed will output
   the stored subunit stream. Note that the exit code is always 0 when this

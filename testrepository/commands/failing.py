@@ -31,6 +31,10 @@ class failing(Command):
     full run combined with any failures in subsequent partial runs, minus any
     passes that have occured in a run more recent than a given failure. Deleted
     tests will only be detected on full runs with this approach.
+
+    Without --subunit, the process exit code will be non-zero if the test run
+    was not successful. With --subunit, the process exit code is non-zero if
+    the subunit stream could not be generated successfully.
     """
 
     options = [
@@ -47,10 +51,7 @@ class failing(Command):
     def _show_subunit(self, run):
         stream = run.get_subunit_stream()
         self.ui.output_stream(stream)
-        if stream.tell():
-            return 1
-        else:
-            return 0
+        return 0
 
     def _make_result(self, repo, list_result):
         testcommand = self.command_factory(self.ui, repo)
