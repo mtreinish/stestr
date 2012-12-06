@@ -44,8 +44,7 @@ class failing(Command):
     # Can be assigned to to inject a custom command factory.
     command_factory = TestCommand
 
-    def _list_subunit(self, run):
-        # TODO only failing tests.
+    def _show_subunit(self, run):
         stream = run.get_subunit_stream()
         self.ui.output_stream(stream)
         if stream.tell():
@@ -69,7 +68,7 @@ class failing(Command):
         repo = self.repository_factory.open(self.ui.here)
         run = repo.get_failing()
         if self.ui.options.subunit:
-            return self._list_subunit(run)
+            return self._show_subunit(run)
         case = run.get_test()
         failed = False
         list_result = TestResult()
