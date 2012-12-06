@@ -14,6 +14,10 @@
 
 """Show the last run loaded into a repository."""
 
+import optparse
+
+import testtools
+
 from testrepository.commands import Command
 from testrepository.testcommand import TestCommand
 
@@ -25,6 +29,11 @@ class last(Command):
     at the end.
     """
 
+    options = [
+        optparse.Option(
+            "--subunit", action="store_true",
+            default=False, help="Show output as a subunit stream."),
+        ]
     # Can be assigned to to inject a custom command factory.
     command_factory = TestCommand
 
@@ -32,6 +41,11 @@ class last(Command):
         repo = self.repository_factory.open(self.ui.here)
         testcommand = self.command_factory(self.ui, repo)
         latest_run = repo.get_latest_run()
+        if self.ui.options.subunit:
+            stream = latest_run.get_subunit_stream()
+            self.ui.output_stream(stream)
+            # Exits 0 if we successfully wrote the stream.
+            return 0
         case = latest_run.get_test()
         try:
             previous_run = repo.get_test_run(repo.latest_id() - 1)

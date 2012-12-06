@@ -155,14 +155,6 @@ the worker that executed the test. The tags are of the form ``worker-%d`` and
 are usually used to reproduce test isolation failures, where knowing exactly
 what test ran on a given backend is important.
 
-To find the tests that ran on a single slave::
-
-  $ testr last
-  # grab the id from that.
-  $ subunit-filter -s --xfail --with-tag=worker-3 < .testrepository/$lastid | subunit-ls > slave-3.list
-
-This will be better integrated in future.
-
 To find out which slave a failing test ran on just look at the 'tags' line in
 its test error::
 
@@ -171,6 +163,10 @@ its test error::
   tags: foo worker-0
   ----------------------------------------------------------------------
   error text
+
+And then find tests with that tag::
+
+  $ testr last --subunit | subunit-filter -s --xfail --with-tag=worker-3 | subunit-ls > slave-3.list
 
 Hiding tests
 ~~~~~~~~~~~~

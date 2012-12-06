@@ -59,6 +59,11 @@ IMPROVEMENTS
 * ``test failing --subunit`` now exits 0 if there are no failing tests.
   (Robert Collins)
 
+* ``testr last`` now supports ``--subunit`` and when passed will output
+  the stored subunit stream. Note that the exit code is always 0 when this
+  is done (unless an exception occurs reading the stream) - subunit consumers
+  should parse the subunit to determine success/failure. (Robert Collins)
+
 * ``testr load`` now supports passing filenames to subunit streams to load.
   (Robert Collins, #620386)
 
