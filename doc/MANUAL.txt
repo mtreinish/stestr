@@ -8,8 +8,9 @@ Test repository is a small application for tracking test results. Any test run
 that can be represented as a subunit stream can be inserted into a repository.
 
 Typical workflow is to have a repository into which test runs are inserted, and
-then to query the repository to find out about issues that need addressing. For
-instance, using the sample subunit stream included with Test repository::
+then to query the repository to find out about issues that need addressing.
+testr can fully automate this, but lets start with the low level facilities,
+using the sample subunit stream included with testr::
 
   # Note that there is a .testr.conf already:
   ls .testr.conf
@@ -42,17 +43,20 @@ file in your cwd. A file like::
   test_id_option=--bar $IDFILE
 
 will cause 'testr run' to run 'foo' and process it as 'testr load' would.
-Likewise 'testr run --failing' will run 'foo --bar failing.list' and process it
-as 'testr load' would. failing.list will be a newline separated list of the
-test ids that your test runner outputs. Arguments passed to 'testr run' are
-used to filter test ids that will be run - testr will query the runner for test
-ids and then apply each argument as a regex filter. Tests that match any of the
-given filters will be run. Arguments passed to run after a ``--`` are passed
-through to your test runner command line. For instance, using the above config
-example ``testr run quux -- bar --no-plugins`` would query for test ids, filter
-for those that match 'quux' and then run
-``foo bar --load-list tempfile.list --no-plugins``. Shell variables are
-expanded in these commands on platforms that have a shell.
+Likewise 'testr run --failing' will automatically create a list file listing
+just the failing tests, and then run 'foo --bar failing.list' and process it as
+'testr load' would. failing.list will be a newline separated list of the
+test ids that your test runner outputs. If there are no failing tests, no test
+execution will happen at all.
+
+Arguments passed to 'testr run' are used to filter test ids that will be run -
+testr will query the runner for test ids and then apply each argument as a
+regex filter. Tests that match any of the given filters will be run. Arguments
+passed to run after a ``--`` are passed through to your test runner command
+line. For instance, using the above config example ``testr run quux -- bar
+--no-plugins`` would query for test ids, filter for those that match 'quux' and
+then run ``foo bar --load-list tempfile.list --no-plugins``. Shell variables
+are expanded in these commands on platforms that have a shell.
 
 To get a full list of these options run ``testr help run``.
 

@@ -15,7 +15,6 @@
 """Tests for the run command."""
 
 import os.path
-import re
 from subprocess import PIPE
 import tempfile
 
@@ -29,7 +28,6 @@ from testtools.matchers import (
     Equals,
     MatchesException,
     MatchesListwise,
-    IsInstance,
     )
 
 from testrepository.commands import run
@@ -70,18 +68,19 @@ class TestCommand(ResourcedTestCase):
         finally:
             stream.close()
 
-    def setup_repo(self, cmd, ui):
+    def setup_repo(self, cmd, ui, failures=True):
         repo = cmd.repository_factory.initialise(ui.here)
         inserter = repo.get_inserter()
         inserter.startTestRun()
         make_test('passing', True).run(inserter)
-        make_test('failing1', False).run(inserter)
-        make_test('failing2', False).run(inserter)
+        if failures:
+            make_test('failing1', False).run(inserter)
+            make_test('failing2', False).run(inserter)
         inserter.stopTestRun()
 
     def test_no_config_file_errors(self):
         ui, cmd = self.get_test_ui_and_cmd()
-        repo = cmd.repository_factory.initialise(ui.here)
+        cmd.repository_factory.initialise(ui.here)
         self.assertEqual(3, cmd.execute())
         self.assertEqual(1, len(ui.outputs))
         self.assertEqual('error', ui.outputs[0][0])
@@ -90,7 +89,7 @@ class TestCommand(ResourcedTestCase):
 
     def test_no_config_settings_errors(self):
         ui, cmd = self.get_test_ui_and_cmd()
-        repo = cmd.repository_factory.initialise(ui.here)
+        cmd.repository_factory.initialise(ui.here)
         self.set_config('')
         self.assertEqual(3, cmd.execute())
         self.assertEqual(1, len(ui.outputs))
@@ -303,7 +302,7 @@ class TestCommand(ResourcedTestCase):
         self.setup_repo(cmd, ui)
         self.set_config('[DEFAULT]\ntest_command=foo\n')
         result = cmd.execute()
-        run = cmd.repository_factory.repos[ui.here].get_test_run(1)
+        cmd.repository_factory.repos[ui.here].get_test_run(1)
         self.assertEqual(1, result)
 
     def test_process_exit_code_nonzero_causes_synthetic_error_test(self):
@@ -317,7 +316,6 @@ class TestCommand(ResourcedTestCase):
         self.setup_repo(cmd, ui)
         self.set_config('[DEFAULT]\ntest_command=foo\n')
         result = cmd.execute()
-        expected_cmd = 'foo'
         self.assertEqual(1, result)
         run = cmd.repository_factory.repos[ui.here].get_test_run(1)
         self.assertEqual([
@@ -344,7 +342,6 @@ class TestCommand(ResourcedTestCase):
             ('summary', True, 0, -3, None, None, [('id', 1, None)])
             ], ui.outputs)
         self.assertEqual(0, cmd_result)
-        re_type = type(re.compile(''))
         self.assertThat(params[1], Equals(None))
         self.assertThat(
             params[2], MatchesListwise([Equals('bar'), Equals('quux')]))
@@ -374,6 +371,20 @@ class TestCommand(ResourcedTestCase):
         self.assertThat(
             params[2], MatchesListwise([Equals('bar'), Equals('quux')]))
         self.assertThat(params[3], MatchesListwise([Equals('g1')]))
+
+    def test_failure_no_tests_run_when_no_failures_failures(self):
+        ui, cmd = self.get_test_ui_and_cmd(options=[('failing', True)])
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui, failures=False)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
+        cmd.command_factory = FakeTestCommand
+        result = cmd.execute()
+        self.assertEqual([
+            ('results', Wildcard),
+            ('summary', True, 0, -1, None, None, [('id', 1, None)])
+            ], ui.outputs)
+        self.assertEqual(0, result)
 
 
 def read_all(stream):
