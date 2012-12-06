@@ -52,6 +52,9 @@ Test Repository is under BSD / Apache 2.0 licences. See the file COPYING in the 
 Quick Start
 ~~~~~~~~~~~
 
+Create a config file::
+  $ touch .testr.conf
+
 Create a repository::
   $ testr init
 
@@ -64,7 +67,7 @@ Query the repository::
   $ testr failing
 
 Delete a repository::
-  $ testr delete
+  $ rm -rf .testrepository
 
 Documentation
 ~~~~~~~~~~~~~
