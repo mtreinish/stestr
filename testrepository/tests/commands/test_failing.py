@@ -17,7 +17,10 @@
 import doctest
 
 import testtools
-from testtools.matchers import DocTestMatches
+from testtools.matchers import (
+    DocTestMatches,
+    Equals,
+    )
 
 from testrepository.commands import failing
 from testrepository.ui.model import UI
@@ -86,6 +89,22 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual('stream', ui.outputs[0][0])
         self.assertThat(ui.outputs[0][1], DocTestMatches("""...test: ...failing
 ...failure: ...failing...""", doctest.ELLIPSIS))
+
+    def test_with_subunit_no_failures_exit_0(self):
+        ui, cmd = self.get_test_ui_and_cmd(options=[('subunit', True)])
+        cmd.repository_factory = memory.RepositoryFactory()
+        repo = cmd.repository_factory.initialise(ui.here)
+        inserter = repo.get_inserter()
+        inserter.startTestRun()
+        class Cases(ResourcedTestCase):
+            def ok(self):
+                pass
+        Cases('ok').run(inserter)
+        inserter.stopTestRun()
+        self.assertEqual(0, cmd.execute())
+        self.assertEqual(1, len(ui.outputs))
+        self.assertEqual('stream', ui.outputs[0][0])
+        self.assertThat(ui.outputs[0][1], Equals(''))
 
     def test_with_list_shows_list_of_tests(self):
         ui, cmd = self.get_test_ui_and_cmd(options=[('list', True)])

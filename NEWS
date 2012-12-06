@@ -56,6 +56,9 @@ IMPROVEMENTS
   not permit passing '--' down to a child process, so further work may be
   needed - file a bug if this affects you. (Robert Collins)
 
+* ``test failing --subunit`` now exits 0 if there are no failing tests.
+  (Robert Collins)
+
 * ``testr load`` now supports passing filenames to subunit streams to load.
   (Robert Collins, #620386)
 

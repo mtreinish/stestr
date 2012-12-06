@@ -48,7 +48,7 @@ class failing(Command):
         # TODO only failing tests.
         stream = run.get_subunit_stream()
         self.ui.output_stream(stream)
-        if stream:
+        if stream.tell():
             return 1
         else:
             return 0
