@@ -12,6 +12,9 @@ CHANGES
   run or testr list are only passed to the underlying test runner if they are
   preceeded by '--'. (Robert Collins, #597060)
 
+* ``testr run --failing`` will no longer run any tests at all if there are
+  no failing tests. (Robert Collins, #904400)
+
 IMPROVEMENTS
 ------------
 

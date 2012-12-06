@@ -158,16 +158,16 @@ class TestListingFixture(Fixture):
             # No test ids to supply to the program.
             self.list_file_name = None
             name = ''
-            self.test_ids = []
+            idlist = ''
         else:
             self.test_ids = self.filter_tests(self.test_ids)
             name = self.make_listfile()
             variables['IDFILE'] = name
-        idlist = ' '.join(self.test_ids)
+            idlist = ' '.join(self.test_ids)
         variables['IDLIST'] = idlist
         def subst(match):
             return variables.get(match.groups(1)[0], '')
-        if not self.test_ids:
+        if self.test_ids is None:
             # No test ids, no id option.
             idoption = ''
         else:
@@ -230,7 +230,7 @@ class TestListingFixture(Fixture):
         """
         result = []
         test_ids = self.test_ids
-        if self.concurrency == 1:
+        if self.concurrency == 1 and (test_ids is None or test_ids):
             self.ui.output_values([('running', self.cmd)])
             run_proc = self.ui.subprocess_Popen(self.cmd, shell=True,
                 stdout=subprocess.PIPE, stdin=subprocess.PIPE)
