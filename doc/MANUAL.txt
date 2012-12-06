@@ -11,6 +11,8 @@ Typical workflow is to have a repository into which test runs are inserted, and
 then to query the repository to find out about issues that need addressing. For
 instance, using the sample subunit stream included with Test repository::
 
+  # Note that there is a .testr.conf already:
+  ls .testr.conf
   # Create a store to manage test results in.
   $ testr init
   # add a test result (shows failures)
@@ -23,6 +25,7 @@ instance, using the sample subunit stream included with Test repository::
   $ testr failing
 
 Most commands in testr have comprehensive online help, and the commands::
+
   $ testr help
   $ testr commands
 
@@ -31,7 +34,7 @@ Will be useful to explore the system.
 Running tests
 ~~~~~~~~~~~~~
 
-Test Repository can be taught how to run your tests by setting up a .testr.conf
+testr can be taught how to run your tests by setting up a .testr.conf
 file in your cwd. A file like::
 
   [DEFAULT]

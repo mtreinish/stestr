@@ -29,6 +29,9 @@ Test Repository is under BSD / Apache 2.0 licences. See the file COPYING in the 
 Quick Start
 ~~~~~~~~~~~
 
+Create a config file::
+  $ touch .testr.conf
+
 Create a repository::
   $ testr init
 
