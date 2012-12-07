@@ -202,7 +202,10 @@ will perform that analysis for you. (This requires that your test runner is
 
 1. The last run in the repository is used as a basis for analysing against -
    tests are only cross checked against tests run in the same worker in that
-   run.
+   run. This means that failures accrued from several different runs would not
+   be processed with the right basis tests - you should do a full test run to
+   seed your repository. This can be local, or just testr load a full run from
+   your Jenkins or other remote run environment.
 
 1. Each test that is currently listed as a failure is run in a test process
    given just that id to run.

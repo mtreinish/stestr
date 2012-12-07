@@ -42,6 +42,10 @@ IMPROVEMENTS
 * ``testr --help command`` or ``testr command --help`` now shows the options
   for the command. (Robert Collins)
 
+* ``testr run --analyze-isolation`` will search the current failing tests for
+  spurious failures caused by interactions with other tests.
+  (Robert Collins, #684069)
+
 * ``testr run --until-failure`` will repeat a test run until interrupted by
   ctrl-C or until a failure occurs. (Robert Collins, #680995)
 
