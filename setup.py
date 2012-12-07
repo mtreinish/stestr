@@ -84,6 +84,7 @@ setup(name='testrepository',
       install_requires=[
         'fixtures',
         'python-subunit',
+        'testtools',
         ],
       extras_require = dict(
         test=[
@@ -91,7 +92,6 @@ setup(name='testrepository',
             'pytz',
             'testresources',
             'testscenarios',
-            'testtools',
             ]
         ),
       )
