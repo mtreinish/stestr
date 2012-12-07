@@ -15,10 +15,14 @@
 """Run a projects tests and load them into testrepository."""
 
 from cStringIO import StringIO
+from math import ceil
 import optparse
 import re
 
-from testtools import TestResult
+from testtools import (
+    TestResult,
+    TestByTestResult,
+    )
 
 from testrepository.arguments.doubledash import DoubledashArgument
 from testrepository.arguments.string import StringArgument
@@ -117,27 +121,32 @@ class run(Command):
         optparse.Option("--until-failure", action="store_true",
             default=False,
             help="Repeat the run again and again until failure occurs."),
+        optparse.Option("--analyze-isolation", action="store_true",
+            default=False,
+            help="Search the last test run for 2-test test isolation interactions."),
         ]
     args = [StringArgument('testfilters', 0, None), DoubledashArgument(),
         StringArgument('testargs', 0, None)]
     # Can be assigned to to inject a custom command factory.
     command_factory = TestCommand
 
+    def _find_failing(self, repo):
+        run = repo.get_failing()
+        case = run.get_test()
+        result = TestResult()
+        result.startTestRun()
+        try:
+            case.run(result)
+        finally:
+            result.stopTestRun()
+        ids = [failure[0].id() for failure in result.failures]
+        ids.extend([error[0].id() for error in result.errors])
+        return ids
+
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
-        testcommand = self.command_factory(self.ui, repo)
-        if self.ui.options.failing:
-            # Run only failing tests
-            run = repo.get_failing()
-            case = run.get_test()
-            result = TestResult()
-            result.startTestRun()
-            try:
-                case.run(result)
-            finally:
-                result.stopTestRun()
-            ids = [failure[0].id() for failure in result.failures]
-            ids.extend([error[0].id() for error in result.errors])
+        if self.ui.options.failing or self.ui.options.analyze_isolation:
+            ids = self._find_failing(repo)
         else:
             ids = None
         if self.ui.options.load_list:
@@ -155,14 +164,142 @@ class run(Command):
             filters = self.ui.arguments['testfilters']
         else:
             filters = None
-        cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'],
-            test_filters = filters)
+        testcommand = self.command_factory(self.ui, repo)
+        if not self.ui.options.analyze_isolation:
+            cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'],
+                test_filters = filters)
+            return self._run_tests(cmd)
+        else:
+            # Where do we source data about the cause of conflicts.
+            # XXX: Should instead capture the run id in with the failing test
+            # data so that we can deal with failures split across many partial
+            # runs.
+            latest_run = repo.get_latest_run()
+            # Stage one: reduce the list of failing tests (possibly further
+            # reduced by testfilters) to eliminate fails-on-own tests.
+            spurious_failures = set()
+            for test_id in ids:
+                cmd = testcommand.get_run_command([test_id],
+                    self.ui.arguments['testargs'], test_filters = filters)
+                if not self._run_tests(cmd):
+                    spurious_failures.add(test_id)
+                    # This is arguably ugly, why not just tell the system that
+                    # a pass here isn't a real pass? [so that when we find a
+                    # test that is spuriously failing, we don't forget
+                    # that it is actually failng.
+                    # Alternatively, perhaps this is a case for data mining:
+                    # when a test starts passing, keep a journal, and allow
+                    # digging back in time to see that it was a failure,
+                    # what it failed with etc...
+                    # The current solution is to just let it get marked as
+                    # a pass temporarily.
+            if not spurious_failures:
+                # All done.
+                return 0
+            # spurious-failure -> cause.
+            test_conflicts = {}
+            for spurious_failure in spurious_failures:
+                candidate_causes = self._prior_tests(
+                    latest_run, spurious_failure)
+                bottom = 0
+                top = len(candidate_causes)
+                width = top - bottom
+                while width:
+                    check_width = int(ceil(width / 2.0))
+                    cmd = testcommand.get_run_command(
+                        candidate_causes[bottom:bottom + check_width]
+                        + [spurious_failure],
+                        self.ui.arguments['testargs'])
+                    self._run_tests(cmd)
+                    # check that the test we're probing still failed - still
+                    # awkward.
+                    found_fail = []
+                    def find_fail(test, status, start_time, stop_time, tags,
+                        details):
+                        if test.id() == spurious_failure:
+                            found_fail.append(True)
+                    checker = TestByTestResult(find_fail)
+                    checker.startTestRun()
+                    try:
+                        repo.get_failing().get_test().run(checker)
+                    finally:
+                        checker.stopTestRun()
+                    if found_fail:
+                        # Our conflict is in bottom - clamp the range down.
+                        top = bottom + check_width
+                        if width == 1:
+                            # found the cause
+                            test_conflicts[
+                                spurious_failure] = candidate_causes[bottom]
+                            width = 0
+                        else:
+                            width = top - bottom
+                    else:
+                        # Conflict in the range we did not run: discard bottom.
+                        bottom = bottom + check_width
+                        if width == 1:
+                            # there will be no more to check, so we didn't
+                            # reproduce the failure.
+                            width = 0
+                        else:
+                            width = top - bottom
+                if spurious_failure not in test_conflicts:
+                    # Could not determine cause
+                    test_conflicts[spurious_failure] = 'unknown - no conflicts'
+            if test_conflicts:
+                table = [('failing test', 'caused by test')]
+                for failure, causes in test_conflicts.items():
+                    table.append((failure, causes))
+                self.ui.output_table(table)
+                return 3
+            return 0
+
+    def _prior_tests(self, run, failing_id):
+        """Calculate what tests from the test run run ran before test_id.
+
+        Tests that ran in a different worker are not included in the result.
+        """
+        if not getattr(self, '_worker_to_test', False):
+            case = run.get_test()
+            # Use None if there is no worker-N tag
+            # If there are multiple, map them all.
+            # (worker-N -> [testid, ...])
+            worker_to_test = {}
+            # (testid -> [workerN, ...])
+            test_to_worker = {}
+            def map_test(test, status, start_time, stop_time, tags, details):
+                workers = []
+                for tag in tags:
+                    if tag.startswith('worker-'):
+                        workers.append(tag)
+                if not workers:
+                    workers = [None]
+                for worker in workers:
+                    worker_to_test.setdefault(worker, []).append(test.id())
+                test_to_worker.setdefault(test.id(), []).extend(workers)
+            mapper = TestByTestResult(map_test)
+            mapper.startTestRun()
+            try:
+                case.run(mapper)
+            finally:
+                mapper.stopTestRun()
+            self._worker_to_test = worker_to_test
+            self._test_to_worker = test_to_worker
+        failing_workers = self._test_to_worker[failing_id]
+        prior_tests = []
+        for worker in failing_workers:
+            worker_tests = self._worker_to_test[worker]
+            prior_tests.extend(worker_tests[:worker_tests.index(failing_id)])
+        return prior_tests
+
+    def _run_tests(self, cmd):
+        """Run the tests cmd was parameterised with."""
         cmd.setUp()
         try:
             def run_tests():
                 run_procs = [('subunit', ReturnCodeToSubunit(proc)) for proc in cmd.run_tests()]
                 options = {}
-                if self.ui.options.failing:
+                if self.ui.options.failing or self.ui.options.analyze_isolation:
                     options['partial'] = True
                 load_ui = decorator.UI(input_streams=run_procs, options=options,
                     decorated=self.ui)
