@@ -5,6 +5,12 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+IMPROVEMENTS
+------------
+
+* ``testr --analyze-improvements`` now honours test regex filters and only
+  analyzes matching tests. (Robert Collins)
+
 0.0.8
 +++++
 

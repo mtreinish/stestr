@@ -182,7 +182,9 @@ class run(Command):
                 cmd = testcommand.get_run_command([test_id],
                     self.ui.arguments['testargs'], test_filters = filters)
                 if not self._run_tests(cmd):
-                    spurious_failures.add(test_id)
+                    # If the test was filtered, it won't have been run.
+                    if test_id in repo.get_test_ids(repo.latest_id()):
+                        spurious_failures.add(test_id)
                     # This is arguably ugly, why not just tell the system that
                     # a pass here isn't a real pass? [so that when we find a
                     # test that is spuriously failing, we don't forget
