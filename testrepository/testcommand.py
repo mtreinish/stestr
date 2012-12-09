@@ -65,6 +65,10 @@ testrconf_help = dedent("""
     * $IDLIST -- A list of the test ids to run, separated by spaces. IDLIST
       defaults to an empty string when no test ids are known and no explicit
       default is provided. This will not handle test ids with spaces.
+
+    See the testrepository manual for example .testr.conf files in different
+    programming languages.
+
     """)
 
 

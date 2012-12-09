@@ -27,16 +27,36 @@ using the sample subunit stream included with testr::
 
 Most commands in testr have comprehensive online help, and the commands::
 
-  $ testr help
+  $ testr help [command]
   $ testr commands
 
 Will be useful to explore the system.
 
+Configuration
+~~~~~~~~~~~~~
+
+testr is configured via the '.testr.conf' file which needs to be in the same
+directory that testr is run from. testr includes online help for all the
+options that can be set within it::
+
+  $ testr help run
+
+Python
+------
+
+If your test suite is written in Python, the simplest - and usually correct
+configuration is::
+
+    [DEFAULT]
+    test_command=python -m subunit.run $LISTOPT $IDOPTION discover .
+    test_id_option=--load-list $IDFILE
+    test_list_option=--list
+
 Running tests
 ~~~~~~~~~~~~~
 
-testr can be taught how to run your tests by setting up a .testr.conf
-file in your cwd. A file like::
+testr is taught how to run your tests by interepreting your .testr.conf file.
+For instance::
 
   [DEFAULT]
   test_command=foo $IDOPTION
@@ -57,8 +77,6 @@ line. For instance, using the above config example ``testr run quux -- bar
 --no-plugins`` would query for test ids, filter for those that match 'quux' and
 then run ``foo bar --load-list tempfile.list --no-plugins``. Shell variables
 are expanded in these commands on platforms that have a shell.
-
-To get a full list of these options run ``testr help run``.
 
 Having setup a .testr.conf, a common workflow then becomes::
 
@@ -198,7 +216,7 @@ However that is tedious. testr can perform this analysis for you::
   $ testr run --analyze-isolation 
 
 will perform that analysis for you. (This requires that your test runner is
-(mostly) deterministic on test ordering). The process is::
+(mostly) deterministic on test ordering). The process is:
 
 1. The last run in the repository is used as a basis for analysing against -
    tests are only cross checked against tests run in the same worker in that
@@ -207,22 +225,22 @@ will perform that analysis for you. (This requires that your test runner is
    seed your repository. This can be local, or just testr load a full run from
    your Jenkins or other remote run environment.
 
-1. Each test that is currently listed as a failure is run in a test process
+2. Each test that is currently listed as a failure is run in a test process
    given just that id to run.
 
-1. Tests that fail are excluded from analysis - they are broken on their own.
+3. Tests that fail are excluded from analysis - they are broken on their own.
 
-1. The remaining failures are then individually analysed one by one.
+4. The remaining failures are then individually analysed one by one.
 
-1. For each failing, it gets run in one work along with the first 1/2 of the
+5. For each failing, it gets run in one work along with the first 1/2 of the
    tests that were previously run prior to it.
 
-1. If the test now passes, that set of prior tests are discarded, and the
+6. If the test now passes, that set of prior tests are discarded, and the
    other half of the tests is promoted to be the full list. If the test fails
    then other other half of the tests are discarded and the current set
    promoted.
 
-1. Go back to running the failing test along with 1/2 of the current list of
+7. Go back to running the failing test along with 1/2 of the current list of
    priors unless the list only has 1 test in it. If the failing test still
    failed with that test, we have found the isolation issue. If it did not
    then either the isolation issue is racy, or it is a 3-or-more test
