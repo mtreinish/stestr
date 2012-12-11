@@ -48,7 +48,7 @@ If your test suite is written in Python, the simplest - and usually correct
 configuration is::
 
     [DEFAULT]
-    test_command=python -m subunit.run $LISTOPT $IDOPTION discover .
+    test_command=python -m subunit.run discover . $LISTOPT $IDOPTION
     test_id_option=--load-list $IDFILE
     test_list_option=--list
 
