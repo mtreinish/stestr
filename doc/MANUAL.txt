@@ -159,7 +159,11 @@ then testr is able to run your tests in parallel::
 This will first list the tests, partition the tests into one partition per CPU
 on the machine, and then invoke multiple test runners at the same time, with
 each test runner getting one partition. Currently the partitioning algorithm
-is a simple round-robin.
+is simple round-robin for tests that testr has not seen run before, and
+equal-time buckets for tests that testr has seen run. NB: This uses the anydbm
+Python module to store the duration of each test. On some platforms (to date
+only OSX) there is no bulk-update API and performance may be impacted if you
+have many (10's of thousands) of tests.
 
 On Linux, testrepository will inspect /proc/cpuinfo to determine how many CPUs
 are present in the machine, and run one worker per CPU. On other operating
