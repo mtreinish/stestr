@@ -8,6 +8,10 @@ NEXT (In development)
 IMPROVEMENTS
 ------------
 
+* On OSX the ``anydbm`` module by default returns an implementation that
+  doesn't support update(). Workaround that by falling back to a loop.
+  (Robert Collins, #1091500)
+
 * ``testr --analyze-improvements`` now honours test regex filters and only
   analyzes matching tests. (Robert Collins)
 

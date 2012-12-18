@@ -220,7 +220,11 @@ class _SafeInserter(TestProtocolClient):
                 if type(key) != str:
                     key = key.encode('utf8')
                 db_times[key] = value
-            db.update(db_times)
+            if getattr(db, 'update', None):
+                db.update(db_times)
+            else:
+                for key, value in db_times.items():
+                    db[key] = value
         finally:
             db.close()
         return run_id
