@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2010 Testrepository Contributors
+# Copyright (c) 2012 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -12,18 +12,18 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for individual arguments."""
+"""An Argument that checks for '--'."""
 
-import unittest
+from testrepository.arguments import AbstractArgument
 
-def test_suite():
-    names = [
-        'command',
-        'doubledash',
-        'path',
-        'string',
-        ]
-    module_names = ['testrepository.tests.arguments.test_' + name for name in
-        names]
-    loader = unittest.TestLoader()
-    return loader.loadTestsFromNames(module_names)
+
+class DoubledashArgument(AbstractArgument):
+    """An argument that captures '--'."""
+
+    def __init__(self):
+        super(DoubledashArgument, self).__init__('doubledash', min=0)
+
+    def _parse_one(self, arg):
+        if arg != '--':
+            raise ValueError('not a doubledash %r' % (arg,))
+        return arg

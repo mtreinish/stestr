@@ -33,6 +33,9 @@ class ProcessModel(object):
         self.ui.outputs.append(('communicate',))
         return self.stdout.getvalue(), ''
 
+    def wait(self):
+        return self.returncode
+
 
 class TestSuiteModel(object):
 
@@ -83,8 +86,8 @@ class UI(ui.AbstractUI):
     testing testrepository commands.
     """
 
-    def __init__(self, input_streams=None, options=(), args={},
-        here='memory:', proc_outputs=()):
+    def __init__(self, input_streams=None, options=(), args=(),
+        here='memory:', proc_outputs=(), proc_results=()):
         """Create a model UI.
 
         :param input_streams: A list of stream name, (file or bytes) tuples to
@@ -94,6 +97,8 @@ class UI(ui.AbstractUI):
         :param here: Set the here value for the UI.
         :param proc_outputs: byte strings to be returned in the stdout from
             created processes.
+        :param proc_results: numeric exit code to be set in each created
+            process.
         """
         self.input_streams = {}
         if input_streams:
@@ -106,6 +111,7 @@ class UI(ui.AbstractUI):
         # Could take parsed args, but for now this is easier.
         self.unparsed_args = args
         self.proc_outputs = list(proc_outputs)
+        self.proc_results = list(proc_results)
 
     def _check_cmd(self):
         options = list(self.unparsed_opts)
@@ -172,4 +178,6 @@ class UI(ui.AbstractUI):
         result = ProcessModel(self)
         if self.proc_outputs:
             result.stdout = StringIO(self.proc_outputs.pop(0))
+        if self.proc_results:
+            result.returncode = self.proc_results.pop(0)
         return result

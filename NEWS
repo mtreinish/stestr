@@ -5,14 +5,109 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+0.0.9
++++++
+
 IMPROVEMENTS
 ------------
+
+* On OSX the ``anydbm`` module by default returns an implementation that
+  doesn't support update(). Workaround that by falling back to a loop.
+  (Robert Collins, #1091500)
+
+* ``testr --analyze-improvements`` now honours test regex filters and only
+  analyzes matching tests. (Robert Collins)
+
+0.0.8
++++++
+
+CHANGES
+-------
+
+* As a side effect of fixing bug #597060 additional arguments passed to testr
+  run or testr list are only passed to the underlying test runner if they are
+  preceeded by '--'. (Robert Collins, #597060)
+
+* ``testr run --failing`` will no longer run any tests at all if there are
+  no failing tests. (Robert Collins, #904400)
+
+IMPROVEMENTS
+------------
+
+* ``AbstractArgument`` now handles the case where additional arguments are
+   present that the argument type cannot parse, but enough have been parsed for
+   it to be valid. This allows optional arguments to be in the middle of a
+   grammar. (Robert Collins)
+
+* ``cli.UI`` now passed '--' down to the argument layer for handling rather
+  than implicitly stripping it. (Robert Collins)
+
+* ``DoubledashArgument`` added to allow fine grained control over the impact of
+  -- in command lines. (Robert Collins)
+
+* New argument type ``ExistingPathArgument`` for use when commands want to take
+  the name of a file. (Robert Collins)
+
+* ``testr`` will now show the version. (Robert Collins)
 
 * ``testr last`` when just one test run has been run works again.
   (Robert Collins)
 
+* ``testr help command`` now shows the docstring for commands (Robert Collins)
+
+* ``testr --help command`` or ``testr command --help`` now shows the options
+  for the command. (Robert Collins)
+
+* ``testr run --analyze-isolation`` will search the current failing tests for
+  spurious failures caused by interactions with other tests.
+  (Robert Collins, #684069)
+
+* ``testr run --until-failure`` will repeat a test run until interrupted by
+  ctrl-C or until a failure occurs. (Robert Collins, #680995)
+
 * ``Repository.get_test_run`` now raises KeyError if asked for a missing or
   nonexistant test run. (Robert Collins)
+
+* Sphinx has been added to tie the documentation toghether (And it is available
+  on testrepository.readthedocs.org). (Robert Collins)
+
+* ``StringArgument`` now rejects '--' - it should be handled by the use of a
+  ``DoubledashArgument`` where one is expected. This is a bit awkward and does
+  not permit passing '--' down to a child process, so further work may be
+  needed - file a bug if this affects you. (Robert Collins)
+
+* ``test failing --subunit`` now exits 0 unless there was a problem generating
+  the stream. This is consistent with the general processing model of subunit
+  generators. (Robert Collins)
+
+* ``testr last`` now supports ``--subunit`` and when passed will output
+  the stored subunit stream. Note that the exit code is always 0 when this
+  is done (unless an exception occurs reading the stream) - subunit consumers
+  should parse the subunit to determine success/failure. (Robert Collins)
+
+* ``testr load`` now supports passing filenames to subunit streams to load.
+  (Robert Collins, #620386)
+
+* ``testr run`` will now fail a test run if the test process exits non-zero.
+  As a side effect of this change, if the test program closes its stdout but
+  does not exit, ``testr run`` will hang (waiting for the test program to
+  exit). (Robert Collins)
+
+* ``testr run --load-list FILENAME`` will limit the tests run to the test ids
+  supplied in the list file FILENAME. This is useful for manually specifying
+  the tests to run, or running testr subordinate to testr (e.g. on remote 
+  machines). (Robert Collins, partial fix for #597060)
+
+* ``testr run foo`` now applies foo as a regex filter against the tests
+  found by doing a listing of the test runners tests. Likewise
+  ``testr list-tests foo`` will apply foo as a filter against the found tests.
+  This makes it easy to limit the tests that will be requested for running by
+  the backend test process - simply pass one or more regex filters into testr
+  run. (Robert Collins, #597060)
+
+* Test tags are now shown in failures. Of particular interest for folk debgging
+  cross-test interactions will be the worker-N tags which indicate which
+  backend test process executed a given test. (Robert Collins)
 
 0.0.7
 +++++

@@ -14,7 +14,6 @@
 
 """A command line UI for testrepository."""
 
-from optparse import OptionParser
 import os
 import signal
 import subunit
@@ -23,6 +22,7 @@ import sys
 from testtools.compat import unicode_output_stream
 
 from testrepository import ui
+from testrepository.commands import get_command_parser
 from testrepository.results import TestResultFilter
 
 
@@ -37,9 +37,13 @@ class CLITestResult(ui.BaseUITestResult):
         self.sep2 = u'-' * 70 + '\n'
 
     def _format_error(self, label, test, error_text):
+        tags = u' '.join(self.current_tags)
+        if tags:
+            tags = u'tags: %s\n' % tags
         return u''.join([
             self.sep1,
             u'%s: %s\n' % (label, test.id()),
+            tags,
             self.sep2,
             error_text,
             ])
@@ -196,7 +200,7 @@ class UI(ui.AbstractUI):
         self._stdout.write('\n')
 
     def _check_cmd(self):
-        parser = OptionParser()
+        parser = get_command_parser(self.cmd)
         parser.add_option("-d", "--here", dest="here",
             help="Set the directory or url that a command should run from. "
             "This affects all default path lookups but does not affect paths "
@@ -204,9 +208,21 @@ class UI(ui.AbstractUI):
         parser.add_option("-q", "--quiet", action="store_true", default=False,
             help="Turn off output other than the primary output for a command "
             "and any errors.")
-        for option in self.cmd.options:
-            parser.add_option(option)
-        options, args = parser.parse_args(self._argv)
+        # yank out --, as optparse makes it silly hard to just preserve it.
+        try:
+            where_dashdash = self._argv.index('--')
+            opt_argv = self._argv[:where_dashdash]
+            other_args = self._argv[where_dashdash:]
+        except ValueError:
+            opt_argv = self._argv
+            other_args = []
+        if '-h' in opt_argv or '--help' in opt_argv or '-?' in opt_argv:
+            self.output_rest(parser.format_help())
+            # Fugly, but its what optparse does: we're just overriding the
+            # output path.
+            raise SystemExit(0)
+        options, args = parser.parse_args(opt_argv)
+        args += other_args
         self.here = options.here
         self.options = options
         parsed_args = {}

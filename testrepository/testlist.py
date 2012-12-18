@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2010 Testrepository Contributors
+# Copyright (c) 2012 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -12,18 +12,17 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for individual arguments."""
+"""Handling of lists of tests - common code to --load-list etc."""
 
-import unittest
+def write_list(stream, test_ids):
+    """Write test_ids out to stream.
 
-def test_suite():
-    names = [
-        'command',
-        'doubledash',
-        'path',
-        'string',
-        ]
-    module_names = ['testrepository.tests.arguments.test_' + name for name in
-        names]
-    loader = unittest.TestLoader()
-    return loader.loadTestsFromNames(module_names)
+    :param stream: A file-like object.
+    :param test_ids: An iterable of test ids.
+    """
+    stream.write('\n'.join(list(test_ids) + ['']))
+
+
+def parse_list(list_bytes):
+    """Parse list_bytes into a list of test ids."""
+    return [id.strip() for id in list_bytes.split('\n') if id.strip()]

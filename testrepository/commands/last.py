@@ -14,6 +14,10 @@
 
 """Show the last run loaded into a repository."""
 
+import optparse
+
+import testtools
+
 from testrepository.commands import Command
 from testrepository.testcommand import TestCommand
 
@@ -23,8 +27,17 @@ class last(Command):
 
     Failing tests are shown on the console and a summary of the run is printed
     at the end.
+
+    Without --subunit, the process exit code will be non-zero if the test run
+    was not successful. With --subunit, the process exit code is non-zero if
+    the subunit stream could not be generated successfully.
     """
 
+    options = [
+        optparse.Option(
+            "--subunit", action="store_true",
+            default=False, help="Show output as a subunit stream."),
+        ]
     # Can be assigned to to inject a custom command factory.
     command_factory = TestCommand
 
@@ -32,6 +45,11 @@ class last(Command):
         repo = self.repository_factory.open(self.ui.here)
         testcommand = self.command_factory(self.ui, repo)
         latest_run = repo.get_latest_run()
+        if self.ui.options.subunit:
+            stream = latest_run.get_subunit_stream()
+            self.ui.output_stream(stream)
+            # Exits 0 if we successfully wrote the stream.
+            return 0
         case = latest_run.get_test()
         try:
             previous_run = repo.get_test_run(repo.latest_id() - 1)

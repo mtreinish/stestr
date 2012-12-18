@@ -14,7 +14,7 @@
 
 """Monkeypatch helper function for tests.
 
-This should be moved to testtools or something, its very generic.
+This has been moved to fixtures, and should be removed from here.
 """
 
 def monkeypatch(name, new_value):

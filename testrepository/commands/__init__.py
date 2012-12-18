@@ -32,6 +32,8 @@ __path__ to include a directory containing their commands - no __init__ is
 needed in that directory.)
 """
 
+from inspect import getdoc
+from optparse import OptionParser
 import os
 import sys
 
@@ -185,3 +187,25 @@ def run_argv(argv, stdin, stdout, stderr):
     if not result:
         return 0
     return result
+
+
+def get_command_parser(cmd):
+    """Return an OptionParser for cmd.
+
+    This populates the parser with the commands options and sets its usage
+    string based on the arguments and docstring the command has.
+
+    Global options are not provided (as they are UI specific).
+
+    :return: An OptionParser instance.
+    """
+    parser = OptionParser()
+    for option in cmd.options:
+        parser.add_option(option)
+    usage = u'%%prog %(cmd)s [options] %(args)s\n\n%(help)s' % {
+        'args': u' '.join(map(lambda x:x.summary(), cmd.args)),
+        'cmd': getattr(cmd, 'name', cmd),
+        'help': getdoc(cmd),
+        }
+    parser.set_usage(usage)
+    return parser

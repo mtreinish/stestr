@@ -25,7 +25,10 @@ from textwrap import dedent
 from fixtures import EnvironmentVariable
 import subunit
 from testtools import TestCase
-from testtools.matchers import DocTestMatches
+from testtools.matchers import (
+    DocTestMatches,
+    MatchesException,
+    )
 
 from testrepository import arguments
 from testrepository import commands
@@ -190,15 +193,34 @@ AssertionError: quux...
         ui.set_command(cmd)
         self.assertEqual("Unexpected arguments: ['one']\n", stderr.getvalue())
 
-    def test_parse_after_double_dash_are_arguments(self):
+    def test_parse_options_after_double_dash_are_arguments(self):
         stdout = StringIO()
         stdin = StringIO()
         stderr = StringIO()
         ui = cli.UI(['one', '--', '--two', 'three'], stdin, stdout, stderr)
         cmd = commands.Command(ui)
-        cmd.args = [arguments.string.StringArgument('args', max=None)]
+        cmd.args = [arguments.string.StringArgument('myargs', max=None),
+            arguments.doubledash.DoubledashArgument(),
+            arguments.string.StringArgument('subargs', max=None)]
         ui.set_command(cmd)
-        self.assertEqual({'args':['one', '--two', 'three']}, ui.arguments)
+        self.assertEqual({
+            'doubledash': ['--'],
+            'myargs': ['one'],
+            'subargs': ['--two', 'three']},
+            ui.arguments)
+
+    def test_double_dash_passed_to_arguments(self):
+        class CaptureArg(arguments.AbstractArgument):
+            def _parse_one(self, arg):
+                return arg
+        stdout = StringIO()
+        stdin = StringIO()
+        stderr = StringIO()
+        ui = cli.UI(['one', '--', '--two', 'three'], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        cmd.args = [CaptureArg('args', max=None)]
+        ui.set_command(cmd)
+        self.assertEqual({'args':['one', '--', '--two', 'three']}, ui.arguments)
 
     def test_run_subunit_option(self):
         ui, cmd = get_test_ui_and_cmd(options=[('subunit', True)])
@@ -219,6 +241,29 @@ AssertionError: quux...
         result.stopTest(self)
         self.assertEqual(stream.getvalue(), ui._stdout.getvalue())
 
+    def test_dash_dash_help_shows_help(self):
+        stdout = StringIO()
+        stdin = StringIO()
+        stderr = StringIO()
+        ui = cli.UI(['--help'], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        cmd.args = [arguments.string.StringArgument('foo')]
+        cmd.name = "bar"
+        # By definition SystemExit is not caught by 'except Exception'.
+        try:
+            ui.set_command(cmd)
+        except SystemExit:
+            exc_info = sys.exc_info()
+            self.assertThat(exc_info, MatchesException(SystemExit(0)))
+        else:
+            self.fail('ui.set_command did not raise')
+        self.assertThat(stdout.getvalue(),
+            DocTestMatches("""Usage: run.py bar [options] foo
+...
+A command that can be run...
+...
+  -d HERE, --here=HERE...
+...""", doctest.ELLIPSIS))
 
 class TestCLISummary(TestCase):
 
@@ -313,6 +358,14 @@ class TestCLITestResult(TestCase):
         result = self.make_result(fullresults=True)
         error = result._format_error('label', self, 'error text')
         expected = '%s%s: %s\n%s%s' % (
+            result.sep1, 'label', self.id(), result.sep2, 'error text')
+        self.assertThat(error, DocTestMatches(expected))
+
+    def test_format_error_includes_tags(self):
+        result = self.make_result(fullresults=True)
+        result.tags(['foo'], ['bar'])
+        error = result._format_error('label', self, 'error text')
+        expected = '%s%s: %s\ntags: foo\n%s%s' % (
             result.sep1, 'label', self.id(), result.sep2, 'error text')
         self.assertThat(error, DocTestMatches(expected))
 

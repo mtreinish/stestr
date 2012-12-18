@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2010 Testrepository Contributors
+# Copyright (c) 2012 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -12,18 +12,19 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for individual arguments."""
+"""An Argument that gets the name of an existing path."""
 
-import unittest
+import os.path
 
-def test_suite():
-    names = [
-        'command',
-        'doubledash',
-        'path',
-        'string',
-        ]
-    module_names = ['testrepository.tests.arguments.test_' + name for name in
-        names]
-    loader = unittest.TestLoader()
-    return loader.loadTestsFromNames(module_names)
+from testrepository.arguments import AbstractArgument
+
+
+class ExistingPathArgument(AbstractArgument):
+    """An argument that stores a string verbatim."""
+
+    def _parse_one(self, arg):
+        if arg == '--':
+            raise ValueError('-- is not a valid argument')
+        if not os.path.exists(arg):
+            raise ValueError('No such path %r' % (arg,))
+        return arg
