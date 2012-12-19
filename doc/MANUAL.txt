@@ -223,23 +223,18 @@ for both statically and dynamically provisioned environments.
 
 The process testr follows is:
 
-# The user should perform any one-time or once-per-session setup. For instance,
-  checking out source code, creating a template container, sourcing your cloud
-  credentials.
-
-# Execute testr run.
-
-# testr queries for concurrency.
-
-# testr will make a callout request to provision that many instances.
-  The provisioning callout needs to synchronise source code and do any other
-  per-instance setup at this stage.
-
-# testr will make callouts to execute tests, supplying files that should be
+1. The user should perform any one-time or once-per-session setup. For instance,
+   checking out source code, creating a template container, sourcing your cloud
+   credentials.
+2. Execute testr run.
+3. testr queries for concurrency.
+4. testr will make a callout request to provision that many instances.
+   The provisioning callout needs to synchronise source code and do any other
+   per-instance setup at this stage.
+5. testr will make callouts to execute tests, supplying files that should be
   copied into the execution environment. Note that instances may be used for
-  more than one command execution.
-
-# testr will callout to dispose of the instances after the test run completes.
+   more than one command execution.
+6. testr will callout to dispose of the instances after the test run completes.
 
 Instances may be expensive to create and dispose of. testr does not perform
 any caching, but the callout pattern is intended to facilitate external
