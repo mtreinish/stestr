@@ -346,7 +346,7 @@ class TestCommand(Fixture):
 
     def setUp(self):
         super(TestCommand, self).setUp()
-        self._instances = set(['qwe'])
+        self._instances = set()
         self.addCleanup(self._dispose_instances)
 
     def _dispose_instances(self):
@@ -359,7 +359,8 @@ class TestCommand(Fixture):
         except (ValueError, ConfigParser.NoOptionError):
             return
         variable_regex = '\$INSTANCE_IDS'
-        dispose_cmd = re.sub(variable_regex, ' ' .join(instances), dispose_cmd)
+        dispose_cmd = re.sub(variable_regex, ' ' .join(sorted(instances)),
+            dispose_cmd)
         self.ui.output_values([('running', dispose_cmd)])
         run_proc = self.ui.subprocess_Popen(dispose_cmd, shell=True)
         run_proc.communicate()

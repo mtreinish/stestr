@@ -102,8 +102,8 @@ class TestTestCommand(ResourcedTestCase):
         command.cleanUp()
         command.setUp()
         self.assertEqual([
-            ('values', [('running', 'bar quux qwe baz')]),
-            ('popen', ('bar quux qwe baz',), {'shell': True}),
+            ('values', [('running', 'bar baz quux')]),
+            ('popen', ('bar baz quux',), {'shell': True}),
             ('communicate',)], ui.outputs)
 
     def test_TestCommand_cleanUp_disposes_instances_fail_raises(self):
@@ -280,6 +280,19 @@ class TestTestCommand(ResourcedTestCase):
         partitions = fixture.partition_tests(test_ids, 2)
         self.assertEqual(1, len(partitions[0]))
         self.assertEqual(1, len(partitions[1]))
+
+    def test_run_tests_with_instances(self):
+        # when there are instances and no instance_execute, run_tests acts as
+        # normal.
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST\n')
+        command._instances.update(['foo', 'bar'])
+        fixture = self.useFixture(command.get_run_command())
+        procs = fixture.run_tests()
+        self.assertEqual([
+            ('values', [('running', 'foo ')]),
+            ('popen', ('foo ',), {'shell': True, 'stdin': -1, 'stdout': -1})], ui.outputs)
 
     def test_filter_tags_parsing(self):
         ui, command = self.get_test_ui_and_cmd()
