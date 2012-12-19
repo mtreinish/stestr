@@ -18,7 +18,12 @@ import os.path
 import optparse
 import re
 
-from testtools.matchers import MatchesException, raises
+from testtools.matchers import (
+    Equals,
+    MatchesAny,
+    MatchesException,
+    raises,
+    )
 from testtools.testresult.doubles import ExtendedTestResult
 
 from testrepository.commands import run
@@ -212,6 +217,42 @@ class TestTestCommand(ResourcedTestCase):
         expected_cmd = 'foo  bar quux'
         self.assertEqual(expected_cmd, fixture.cmd)
 
+    def test_list_tests_requests_concurrency_instances(self):
+        # testr list-tests is non-parallel, so needs 1 instance.
+        # testr run triggering list-tests will want to run parallel on all, so
+        # avoid latency by asking for whatever concurrency is up front.
+        self.dirty()
+        ui = UI(options= [('concurrency', 2), ('parallel', True)])
+        ui.here = self.tempdir
+        cmd = run.run(ui)
+        ui.set_command(cmd)
+        ui.proc_outputs = ['returned\ninstances\n']
+        command = self.useFixture(TestCommand(ui, None))
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $LISTOPT $IDLIST\ntest_id_list_default=whoo yea\n'
+            'test_list_option=--list\n'
+            'instance_provision=provision -c $INSTANCE_COUNT\n'
+            'instance_execute=quux $INSTANCE_ID -- $COMMAND\n')
+        fixture = self.useFixture(command.get_run_command(test_ids=['1']))
+        fixture.list_tests()
+        self.assertEqual(set(['returned', 'instances']), command._instances)
+        self.assertEqual(set([]), command._allocated_instances)
+        self.assertThat(ui.outputs, MatchesAny(Equals([
+            ('values', [('running', 'provision -c 2')]),
+            ('popen', ('provision -c 2',), {'shell': True, 'stdout': -1}),
+            ('communicate',),
+            ('values', [('running', 'quux instances -- foo --list whoo yea')]),
+            ('popen',('quux instances -- foo --list whoo yea',),
+             {'shell': True, 'stdin': -1, 'stdout': -1}),
+            ('communicate',)]), Equals([
+            ('values', [('running', 'provision -c 2')]),
+            ('popen', ('provision -c 2',), {'shell': True, 'stdout': -1}),
+            ('communicate',),
+            ('values', [('running', 'quux returned -- foo --list whoo yea')]),
+            ('popen',('quux returned -- foo --list whoo yea',),
+             {'shell': True, 'stdin': -1, 'stdout': -1}),
+            ('communicate',)])))
+
     def test_list_tests_uses_instances(self):
         ui, command = self.get_test_ui_and_cmd()
         self.set_config(
@@ -332,6 +373,7 @@ class TestTestCommand(ResourcedTestCase):
         self.assertEqual(set(['bar']), command._allocated_instances)
         # And after the process is run, bar is returned for re-use.
         procs[0].stdout.read()
+        procs[0].wait()
         self.assertEqual(0, procs[0].returncode)
         self.assertEqual(set(['bar']), command._instances)
         self.assertEqual(set(), command._allocated_instances)
@@ -354,6 +396,7 @@ class TestTestCommand(ResourcedTestCase):
         self.assertEqual(set(['bar', 'baz']), command._instances)
         self.assertEqual(set(['bar', 'baz']), command._allocated_instances)
         # And after the process is run, bar is returned for re-use.
+        procs[0].wait()
         procs[0].stdout.read()
         self.assertEqual(0, procs[0].returncode)
         self.assertEqual(set(['bar', 'baz']), command._instances)

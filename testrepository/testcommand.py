@@ -109,6 +109,9 @@ class CallWhenProcFinishes(object):
             self._callback()
         return result
 
+    def wait(self):
+        return self._proc.wait()
+
 
 compiled_re_type = type(re.compile(''))
 
@@ -148,8 +151,8 @@ class TestListingFixture(Fixture):
             matches all your criteria. Filters are automatically applied by
             run_tests(), or can be applied by calling filter_tests(test_ids).
         :param instance_source: A source of test run instances. Must support
-            obtain_instances(count) -> [id, id, id] and release_instance(id)
-            calls.
+            obtain_instances(count) -> [id, id, id] and release_instances([id,
+            ...]) calls.
         """
         self.test_ids = test_ids
         self.template = cmd_template
@@ -263,7 +266,8 @@ class TestListingFixture(Fixture):
         """
         if '$LISTOPT' not in self.template:
             raise ValueError("LISTOPT not configured in .testr.conf")
-        instance, list_cmd = self._per_instance_command(self.list_cmd)
+        instance, list_cmd = self._per_instance_command(self.list_cmd,
+            self.concurrency)
         try:
             self.ui.output_values([('running', list_cmd)])
             run_proc = self.ui.subprocess_Popen(list_cmd, shell=True,
@@ -274,23 +278,29 @@ class TestListingFixture(Fixture):
             return ids
         finally:
             if instance:
-                self._instance_source.release_instance(instance)
+                self._instance_source.release_instances([instance])
 
-    def _per_instance_command(self, cmd):
-        """Customise cmd to with an instance-id."""
+    def _per_instance_command(self, cmd, concurrency=1):
+        """Customise cmd to with an instance-id.
+        
+        :param concurrency: The number of instances to ask for (used to avoid
+            death-by-1000 cuts of latency.
+        """
         if self._instance_source is None:
             return None, cmd
         instance = None
-        instances = self._instance_source.obtain_instances(1)
+        instances = self._instance_source.obtain_instances(concurrency)
         if instances is not None:
             instance = instances[0]
+            self._instance_source.release_instances(instances[1:])
             try:
                 instance_prefix = self._parser.get(
                     'DEFAULT', 'instance_execute')
                 variables = {
                     'INSTANCE_ID': instance,
                     'COMMAND': cmd,
-                    'FILES': self.list_file_name or '',
+                    # --list-tests cannot use FILES, so handle it being unset.
+                    'FILES': getattr(self, 'list_file_name', None) or '',
                 }
                 variable_regex = '\$(INSTANCE_ID|COMMAND|FILES)'
                 def subst(match):
@@ -321,7 +331,7 @@ class TestListingFixture(Fixture):
             run_proc.stdin.close()
             if instance:
                 return [CallWhenProcFinishes(run_proc,
-                    lambda:self._instance_source.release_instance(instance))]
+                    lambda:self._instance_source.release_instances([instance]))]
             else:
                 return [run_proc]
         test_id_groups = self.partition_tests(test_ids, self.concurrency)
@@ -522,17 +532,32 @@ class TestCommand(Fixture):
         Note this is not threadsafe: calling it from multiple threads would
         likely result in shared results.
         """
+        orig_count = count
         # Cached first.
         available_instances = self._instances - self._allocated_instances
         result = list(available_instances)[:count]
         count = count - len(result)
-        if count > 0:
+        while count > 0:
             try:
-                self.get_parser().get('DEFAULT', 'instance_provision')
+                cmd = self.get_parser().get('DEFAULT', 'instance_provision')
             except ConfigParser.NoOptionError:
                 # Instance allocation not configured
                 return None
-            raise ValueError('Not done yet')
+            variable_regex = '\$INSTANCE_COUNT'
+            cmd = re.sub(variable_regex, str(count), cmd)
+            self.ui.output_values([('running', cmd)])
+            proc = self.ui.subprocess_Popen(
+                cmd, shell=True, stdout=subprocess.PIPE)
+            out, _ = proc.communicate()
+            if proc.returncode:
+                raise ValueError('Provisioning instances failed, return %d' %
+                    proc.returncode)
+            new_instances = set([item.strip() for item in out.split()])
+            self._instances.update(new_instances)
+            available_instances = self._instances - self._allocated_instances
+            available_instances = available_instances - set(result)
+            result.extend(list(available_instances)[:count])
+            count = orig_count - len(result)
         self._allocated_instances.update(result)
         return result
 
@@ -569,6 +594,7 @@ class TestCommand(Fixture):
                 receiver, filter_success=False, filter_predicate=predicate)
         return receiver
 
-    def release_instance(self, instance_id):
-        """Return instance_id to the pool for reuse."""
-        self._allocated_instances.remove(instance_id)
+    def release_instances(self, instance_ids):
+        """Return instance_ids to the pool for reuse."""
+        for instance_id in instance_ids:
+            self._allocated_instances.remove(instance_id)

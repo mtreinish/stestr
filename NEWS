@@ -11,6 +11,10 @@ IMPROVEMENTS
 * It's now possible to configure ``test_run_concurrency`` in ``.testr.conf``
   to have concurrency defined by a callout. (Robert Collins)
 
+* Testr supports running tests in arbitrary environments. See ``Remote or
+  isolated test environments`` in MANUAL.txt / ``testr help run``
+  (Robert Collins)
+
 INTERNALS
 ---------
 
