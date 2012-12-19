@@ -221,6 +221,8 @@ class TestTestCommand(ResourcedTestCase):
         # testr list-tests is non-parallel, so needs 1 instance.
         # testr run triggering list-tests will want to run parallel on all, so
         # avoid latency by asking for whatever concurrency is up front.
+        # This covers the case for non-listing runs as well, as the code path
+        # is common.
         self.dirty()
         ui = UI(options= [('concurrency', 2), ('parallel', True)])
         ui.here = self.tempdir

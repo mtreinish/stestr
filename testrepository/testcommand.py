@@ -151,8 +151,8 @@ class TestListingFixture(Fixture):
             matches all your criteria. Filters are automatically applied by
             run_tests(), or can be applied by calling filter_tests(test_ids).
         :param instance_source: A source of test run instances. Must support
-            obtain_instances(count) -> [id, id, id] and release_instances([id,
-            ...]) calls.
+            obtain_instance(max_concurrency) -> id and release_instance(id)
+            calls.
         """
         self.test_ids = test_ids
         self.template = cmd_template
@@ -266,8 +266,7 @@ class TestListingFixture(Fixture):
         """
         if '$LISTOPT' not in self.template:
             raise ValueError("LISTOPT not configured in .testr.conf")
-        instance, list_cmd = self._per_instance_command(self.list_cmd,
-            self.concurrency)
+        instance, list_cmd = self._per_instance_command(self.list_cmd)
         try:
             self.ui.output_values([('running', list_cmd)])
             run_proc = self.ui.subprocess_Popen(list_cmd, shell=True,
@@ -278,9 +277,9 @@ class TestListingFixture(Fixture):
             return ids
         finally:
             if instance:
-                self._instance_source.release_instances([instance])
+                self._instance_source.release_instance(instance)
 
-    def _per_instance_command(self, cmd, concurrency=1):
+    def _per_instance_command(self, cmd):
         """Customise cmd to with an instance-id.
         
         :param concurrency: The number of instances to ask for (used to avoid
@@ -288,11 +287,8 @@ class TestListingFixture(Fixture):
         """
         if self._instance_source is None:
             return None, cmd
-        instance = None
-        instances = self._instance_source.obtain_instances(concurrency)
-        if instances is not None:
-            instance = instances[0]
-            self._instance_source.release_instances(instances[1:])
+        instance = self._instance_source.obtain_instance(self.concurrency)
+        if instance is not None:
             try:
                 instance_prefix = self._parser.get(
                     'DEFAULT', 'instance_execute')
@@ -331,7 +327,7 @@ class TestListingFixture(Fixture):
             run_proc.stdin.close()
             if instance:
                 return [CallWhenProcFinishes(run_proc,
-                    lambda:self._instance_source.release_instances([instance]))]
+                    lambda:self._instance_source.release_instance(instance))]
             else:
                 return [run_proc]
         test_id_groups = self.partition_tests(test_ids, self.concurrency)
@@ -526,25 +522,21 @@ class TestCommand(Fixture):
             return set()
         return set([tag.strip() for tag in tags.split()])
 
-    def obtain_instances(self, count):
+    def obtain_instance(self, concurrency):
         """If possible, get one or more test run environment instance ids.
         
         Note this is not threadsafe: calling it from multiple threads would
         likely result in shared results.
         """
-        orig_count = count
-        # Cached first.
-        available_instances = self._instances - self._allocated_instances
-        result = list(available_instances)[:count]
-        count = count - len(result)
-        while count > 0:
+        while len(self._instances) < concurrency:
             try:
                 cmd = self.get_parser().get('DEFAULT', 'instance_provision')
             except ConfigParser.NoOptionError:
                 # Instance allocation not configured
                 return None
             variable_regex = '\$INSTANCE_COUNT'
-            cmd = re.sub(variable_regex, str(count), cmd)
+            cmd = re.sub(variable_regex,
+                str(concurrency - len(self._instances)), cmd)
             self.ui.output_values([('running', cmd)])
             proc = self.ui.subprocess_Popen(
                 cmd, shell=True, stdout=subprocess.PIPE)
@@ -554,11 +546,11 @@ class TestCommand(Fixture):
                     proc.returncode)
             new_instances = set([item.strip() for item in out.split()])
             self._instances.update(new_instances)
-            available_instances = self._instances - self._allocated_instances
-            available_instances = available_instances - set(result)
-            result.extend(list(available_instances)[:count])
-            count = orig_count - len(result)
-        self._allocated_instances.update(result)
+        # Cached first.
+        available_instances = self._instances - self._allocated_instances
+        # We only ask for instances when one should be available.
+        result = available_instances.pop()
+        self._allocated_instances.add(result)
         return result
 
     def make_result(self, receiver):
@@ -594,7 +586,6 @@ class TestCommand(Fixture):
                 receiver, filter_success=False, filter_predicate=predicate)
         return receiver
 
-    def release_instances(self, instance_ids):
+    def release_instance(self, instance_id):
         """Return instance_ids to the pool for reuse."""
-        for instance_id in instance_ids:
-            self._allocated_instances.remove(instance_id)
+        self._allocated_instances.remove(instance_id)
