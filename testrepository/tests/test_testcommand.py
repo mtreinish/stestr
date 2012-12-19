@@ -18,7 +18,12 @@ import os.path
 import optparse
 import re
 
-from testtools.matchers import MatchesException, Raises
+from testtools.matchers import (
+    Equals,
+    MatchesAny,
+    MatchesException,
+    raises,
+    )
 from testtools.testresult.doubles import ExtendedTestResult
 
 from testrepository.commands import run
@@ -45,7 +50,7 @@ class TestTestCommand(ResourcedTestCase):
         self.dirty()
         ui = UI(options=options, args=args)
         ui.here = self.tempdir
-        return ui, TestCommand(ui, repository)
+        return ui, self.useFixture(TestCommand(ui, repository))
 
     def get_test_ui_and_cmd2(self, options=(), args=()):
         self.dirty()
@@ -75,17 +80,59 @@ class TestTestCommand(ResourcedTestCase):
         command = TestCommand(ui, None)
         self.assertEqual(command.ui, ui)
 
+    def test_TestCommand_is_a_fixture(self):
+        ui = UI()
+        ui.here = self.tempdir
+        command = TestCommand(ui, None)
+        command.setUp()
+        command.cleanUp()
+
+    def test_TestCommand_get_run_command_outside_setUp_fails(self):
+        self.dirty()
+        ui = UI()
+        ui.here = self.tempdir
+        command = TestCommand(ui, None)
+        self.set_config('[DEFAULT]\ntest_command=foo\n')
+        self.assertThat(command.get_run_command, raises(TypeError))
+        command.setUp()
+        command.cleanUp()
+        self.assertThat(command.get_run_command, raises(TypeError))
+
+    def test_TestCommand_cleanUp_disposes_instances(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo\n'
+            'instance_dispose=bar $INSTANCE_IDS\n')
+        command._instances.update(['baz', 'quux'])
+        command.cleanUp()
+        command.setUp()
+        self.assertEqual([
+            ('values', [('running', 'bar baz quux')]),
+            ('popen', ('bar baz quux',), {'shell': True}),
+            ('communicate',)], ui.outputs)
+
+    def test_TestCommand_cleanUp_disposes_instances_fail_raises(self):
+        ui, command = self.get_test_ui_and_cmd()
+        ui.proc_results = [1]
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo\n'
+            'instance_dispose=bar $INSTANCE_IDS\n')
+        command._instances.update(['baz', 'quux'])
+        self.assertThat(command.cleanUp,
+            raises(ValueError('Disposing of instances failed, return 1')))
+        command.setUp()
+
     def test_get_run_command_no_config_file_errors(self):
         ui, command = self.get_test_ui_and_cmd()
         self.assertThat(command.get_run_command,
-            Raises(MatchesException(ValueError('No .testr.conf config file'))))
+            raises(ValueError('No .testr.conf config file')))
 
     def test_get_run_command_no_config_settings_errors(self):
         ui, command = self.get_test_ui_and_cmd()
         self.set_config('')
         self.assertThat(command.get_run_command,
-            Raises(MatchesException(ValueError(
-            'No test_command option present in .testr.conf'))))
+            raises(ValueError(
+            'No test_command option present in .testr.conf')))
 
     def test_get_run_command_returns_fixture_makes_IDFILE(self):
         ui, command = self.get_test_ui_and_cmd()
@@ -170,6 +217,61 @@ class TestTestCommand(ResourcedTestCase):
         expected_cmd = 'foo  bar quux'
         self.assertEqual(expected_cmd, fixture.cmd)
 
+    def test_list_tests_requests_concurrency_instances(self):
+        # testr list-tests is non-parallel, so needs 1 instance.
+        # testr run triggering list-tests will want to run parallel on all, so
+        # avoid latency by asking for whatever concurrency is up front.
+        # This covers the case for non-listing runs as well, as the code path
+        # is common.
+        self.dirty()
+        ui = UI(options= [('concurrency', 2), ('parallel', True)])
+        ui.here = self.tempdir
+        cmd = run.run(ui)
+        ui.set_command(cmd)
+        ui.proc_outputs = ['returned\ninstances\n']
+        command = self.useFixture(TestCommand(ui, None))
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $LISTOPT $IDLIST\ntest_id_list_default=whoo yea\n'
+            'test_list_option=--list\n'
+            'instance_provision=provision -c $INSTANCE_COUNT\n'
+            'instance_execute=quux $INSTANCE_ID -- $COMMAND\n')
+        fixture = self.useFixture(command.get_run_command(test_ids=['1']))
+        fixture.list_tests()
+        self.assertEqual(set(['returned', 'instances']), command._instances)
+        self.assertEqual(set([]), command._allocated_instances)
+        self.assertThat(ui.outputs, MatchesAny(Equals([
+            ('values', [('running', 'provision -c 2')]),
+            ('popen', ('provision -c 2',), {'shell': True, 'stdout': -1}),
+            ('communicate',),
+            ('values', [('running', 'quux instances -- foo --list whoo yea')]),
+            ('popen',('quux instances -- foo --list whoo yea',),
+             {'shell': True, 'stdin': -1, 'stdout': -1}),
+            ('communicate',)]), Equals([
+            ('values', [('running', 'provision -c 2')]),
+            ('popen', ('provision -c 2',), {'shell': True, 'stdout': -1}),
+            ('communicate',),
+            ('values', [('running', 'quux returned -- foo --list whoo yea')]),
+            ('popen',('quux returned -- foo --list whoo yea',),
+             {'shell': True, 'stdin': -1, 'stdout': -1}),
+            ('communicate',)])))
+
+    def test_list_tests_uses_instances(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $LISTOPT $IDLIST\ntest_id_list_default=whoo yea\n'
+            'test_list_option=--list\n'
+            'instance_execute=quux $INSTANCE_ID -- $COMMAND\n')
+        fixture = self.useFixture(command.get_run_command())
+        command._instances.add('bar')
+        fixture.list_tests()
+        self.assertEqual(set(['bar']), command._instances)
+        self.assertEqual(set([]), command._allocated_instances)
+        self.assertEqual([
+            ('values', [('running', 'quux bar -- foo --list whoo yea')]),
+            ('popen', ('quux bar -- foo --list whoo yea',),
+             {'shell': True, 'stdin': -1, 'stdout': -1}), ('communicate',)],
+            ui.outputs)
+
     def test_list_tests_cmd(self):
         ui, command = self.get_test_ui_and_cmd()
         self.set_config(
@@ -239,10 +341,131 @@ class TestTestCommand(ResourcedTestCase):
         self.assertEqual(1, len(partitions[0]))
         self.assertEqual(1, len(partitions[1]))
 
+    def test_run_tests_with_instances(self):
+        # when there are instances and no instance_execute, run_tests acts as
+        # normal.
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST\n')
+        command._instances.update(['foo', 'bar'])
+        fixture = self.useFixture(command.get_run_command())
+        procs = fixture.run_tests()
+        self.assertEqual([
+            ('values', [('running', 'foo ')]),
+            ('popen', ('foo ',), {'shell': True, 'stdin': -1, 'stdout': -1})],
+            ui.outputs)
+
+    def test_run_tests_with_existing_instances_configured(self):
+        # when there are instances present, they are pulled out for running
+        # tests.
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST\n'
+            'instance_execute=quux $INSTANCE_ID -- $COMMAND\n')
+        command._instances.add('bar')
+        fixture = self.useFixture(command.get_run_command(test_ids=['1']))
+        procs = fixture.run_tests()
+        self.assertEqual([
+            ('values', [('running', 'quux bar -- foo 1')]),
+            ('popen', ('quux bar -- foo 1',),
+             {'shell': True, 'stdin': -1, 'stdout': -1})],
+            ui.outputs)
+        # No --parallel, so the one instance should have been allocated.
+        self.assertEqual(set(['bar']), command._instances)
+        self.assertEqual(set(['bar']), command._allocated_instances)
+        # And after the process is run, bar is returned for re-use.
+        procs[0].stdout.read()
+        procs[0].wait()
+        self.assertEqual(0, procs[0].returncode)
+        self.assertEqual(set(['bar']), command._instances)
+        self.assertEqual(set(), command._allocated_instances)
+        
+    def test_run_tests_allocated_instances_skipped(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST\n'
+            'instance_execute=quux $INSTANCE_ID -- $COMMAND\n')
+        command._instances.update(['bar', 'baz'])
+        command._allocated_instances.add('baz')
+        fixture = self.useFixture(command.get_run_command(test_ids=['1']))
+        procs = fixture.run_tests()
+        self.assertEqual([
+            ('values', [('running', 'quux bar -- foo 1')]),
+            ('popen', ('quux bar -- foo 1',),
+             {'shell': True, 'stdin': -1, 'stdout': -1})],
+            ui.outputs)
+        # No --parallel, so the one instance should have been allocated.
+        self.assertEqual(set(['bar', 'baz']), command._instances)
+        self.assertEqual(set(['bar', 'baz']), command._allocated_instances)
+        # And after the process is run, bar is returned for re-use.
+        procs[0].wait()
+        procs[0].stdout.read()
+        self.assertEqual(0, procs[0].returncode)
+        self.assertEqual(set(['bar', 'baz']), command._instances)
+        self.assertEqual(set(['baz']), command._allocated_instances)
+
+    def test_run_tests_list_file_in_FILES(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDFILE\n'
+            'instance_execute=quux $INSTANCE_ID $FILES -- $COMMAND\n')
+        command._instances.add('bar')
+        fixture = self.useFixture(command.get_run_command(test_ids=['1']))
+        list_file = fixture.list_file_name
+        procs = fixture.run_tests()
+        expected_cmd = 'quux bar %s -- foo %s' % (list_file, list_file)
+        self.assertEqual([
+            ('values', [('running', expected_cmd)]),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdin': -1, 'stdout': -1})],
+            ui.outputs)
+        # No --parallel, so the one instance should have been allocated.
+        self.assertEqual(set(['bar']), command._instances)
+        self.assertEqual(set(['bar']), command._allocated_instances)
+        # And after the process is run, bar is returned for re-use.
+        procs[0].stdout.read()
+        self.assertEqual(0, procs[0].returncode)
+        self.assertEqual(set(['bar']), command._instances)
+        self.assertEqual(set(), command._allocated_instances)
+
     def test_filter_tags_parsing(self):
         ui, command = self.get_test_ui_and_cmd()
         self.set_config('[DEFAULT]\nfilter_tags=foo bar\n')
         self.assertEqual(set(['foo', 'bar']), command.get_filter_tags())
+
+    def test_callout_concurrency(self):
+        ui, command = self.get_test_ui_and_cmd()
+        ui.proc_outputs = ['4']
+        self.set_config(
+            '[DEFAULT]\ntest_run_concurrency=probe\n'
+            'test_command=foo\n')
+        fixture = self.useFixture(command.get_run_command())
+        self.assertEqual(4, fixture.callout_concurrency())
+        self.assertEqual([
+            ('popen', ('probe',), {'shell': True, 'stdin': -1, 'stdout': -1}),
+            ('communicate',)], ui.outputs)
+
+    def test_callout_concurrency_failed(self):
+        ui, command = self.get_test_ui_and_cmd()
+        ui.proc_results = [1]
+        self.set_config(
+            '[DEFAULT]\ntest_run_concurrency=probe\n'
+            'test_command=foo\n')
+        fixture = self.useFixture(command.get_run_command())
+        self.assertThat(lambda:fixture.callout_concurrency(), raises(
+            ValueError("test_run_concurrency failed: exit code 1, stderr=''")))
+        self.assertEqual([
+            ('popen', ('probe',), {'shell': True, 'stdin': -1, 'stdout': -1}),
+            ('communicate',)], ui.outputs)
+
+    def test_callout_concurrency_not_set(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\n'
+            'test_command=foo\n')
+        fixture = self.useFixture(command.get_run_command())
+        self.assertEqual(None, fixture.callout_concurrency())
+        self.assertEqual([], ui.outputs)
 
     def test_make_result(self):
         # Just a simple 'the dots are joined' test. More later.
