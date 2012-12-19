@@ -18,7 +18,7 @@ import os.path
 import optparse
 import re
 
-from testtools.matchers import MatchesException, Raises
+from testtools.matchers import MatchesException, raises
 from testtools.testresult.doubles import ExtendedTestResult
 
 from testrepository.commands import run
@@ -78,14 +78,14 @@ class TestTestCommand(ResourcedTestCase):
     def test_get_run_command_no_config_file_errors(self):
         ui, command = self.get_test_ui_and_cmd()
         self.assertThat(command.get_run_command,
-            Raises(MatchesException(ValueError('No .testr.conf config file'))))
+            raises(ValueError('No .testr.conf config file')))
 
     def test_get_run_command_no_config_settings_errors(self):
         ui, command = self.get_test_ui_and_cmd()
         self.set_config('')
         self.assertThat(command.get_run_command,
-            Raises(MatchesException(ValueError(
-            'No test_command option present in .testr.conf'))))
+            raises(ValueError(
+            'No test_command option present in .testr.conf')))
 
     def test_get_run_command_returns_fixture_makes_IDFILE(self):
         ui, command = self.get_test_ui_and_cmd()
@@ -243,6 +243,40 @@ class TestTestCommand(ResourcedTestCase):
         ui, command = self.get_test_ui_and_cmd()
         self.set_config('[DEFAULT]\nfilter_tags=foo bar\n')
         self.assertEqual(set(['foo', 'bar']), command.get_filter_tags())
+
+    def test_callout_concurrency(self):
+        ui, command = self.get_test_ui_and_cmd()
+        ui.proc_outputs = ['4']
+        self.set_config(
+            '[DEFAULT]\ntest_run_concurrency=probe\n'
+            'test_command=foo\n')
+        fixture = self.useFixture(command.get_run_command())
+        self.assertEqual(4, fixture.callout_concurrency())
+        self.assertEqual([
+            ('popen', ('probe',), {'shell': True, 'stdin': -1, 'stdout': -1}),
+            ('communicate',)], ui.outputs)
+
+    def test_callout_concurrency_failed(self):
+        ui, command = self.get_test_ui_and_cmd()
+        ui.proc_results = [1]
+        self.set_config(
+            '[DEFAULT]\ntest_run_concurrency=probe\n'
+            'test_command=foo\n')
+        fixture = self.useFixture(command.get_run_command())
+        self.assertThat(lambda:fixture.callout_concurrency(), raises(
+            ValueError("test_run_concurrency failed: exit code 1, stderr=''")))
+        self.assertEqual([
+            ('popen', ('probe',), {'shell': True, 'stdin': -1, 'stdout': -1}),
+            ('communicate',)], ui.outputs)
+
+    def test_callout_concurrency_not_set(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\n'
+            'test_command=foo\n')
+        fixture = self.useFixture(command.get_run_command())
+        self.assertEqual(None, fixture.callout_concurrency())
+        self.assertEqual([], ui.outputs)
 
     def test_make_result(self):
         # Just a simple 'the dots are joined' test. More later.

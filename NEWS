@@ -5,6 +5,12 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+IMPROVEMENTS
+------------
+
+* It's now possible to configure ``test_run_concurrency`` in ``.testr.conf``
+  to have concurrency defined by a callout. (Robert Collins)
+
 0.0.9
 +++++
 

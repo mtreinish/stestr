@@ -147,6 +147,8 @@ class TestListingFixture(Fixture):
         else:
             self.concurrency = self.ui.options.concurrency
             if not self.concurrency:
+                self.concurrency = self.callout_concurrency()
+            if not self.concurrency:
                 self.concurrency = self.local_concurrency()
             if not self.concurrency:
                 self.concurrency = 1
@@ -285,6 +287,22 @@ class TestListingFixture(Fixture):
         for partition, test_id in itertools.izip(itertools.cycle(partitions), unknown):
             partition.append(test_id)
         return partitions
+
+    def callout_concurrency(self):
+        """Callout for user defined concurrency."""
+        try:
+            concurrency_cmd = self._parser.get(
+                'DEFAULT', 'test_run_concurrency', None)
+        except ConfigParser.NoOptionError:
+            return None
+        run_proc = self.ui.subprocess_Popen(concurrency_cmd, shell=True,
+            stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        out, err = run_proc.communicate()
+        if run_proc.returncode:
+            raise ValueError(
+                "test_run_concurrency failed: exit code %d, stderr=%r" % (
+                run_proc.returncode, err))
+        return int(out.strip())
 
     def local_concurrency(self):
         if sys.platform == 'linux2':
