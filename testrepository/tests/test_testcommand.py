@@ -76,9 +76,46 @@ class TestTestCommand(ResourcedTestCase):
         self.assertEqual(command.ui, ui)
 
     def test_TestCommand_is_a_fixture(self):
-        ui, command = self.get_test_ui_and_cmd()
+        ui = UI()
+        ui.here = self.tempdir
+        command = TestCommand(ui, None)
         command.setUp()
         command.cleanUp()
+
+    def test_TestCommand_get_run_command_outside_setUp_fails(self):
+        self.dirty()
+        ui = UI()
+        ui.here = self.tempdir
+        command = TestCommand(ui, None)
+        self.set_config('[DEFAULT]\ntest_command=foo\n')
+        self.assertThat(command.get_run_command, raises(TypeError))
+        command.setUp()
+        command.cleanUp()
+        self.assertThat(command.get_run_command, raises(TypeError))
+
+    def test_TestCommand_cleanUp_disposes_instances(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo\n'
+            'instance_dispose=bar $INSTANCE_IDS\n')
+        command._instances.update(['baz', 'quux'])
+        command.cleanUp()
+        command.setUp()
+        self.assertEqual([
+            ('values', [('running', 'bar quux qwe baz')]),
+            ('popen', ('bar quux qwe baz',), {'shell': True}),
+            ('communicate',)], ui.outputs)
+
+    def test_TestCommand_cleanUp_disposes_instances_fail_raises(self):
+        ui, command = self.get_test_ui_and_cmd()
+        ui.proc_results = [1]
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo\n'
+            'instance_dispose=bar $INSTANCE_IDS\n')
+        command._instances.update(['baz', 'quux'])
+        self.assertThat(command.cleanUp,
+            raises(ValueError('Disposing of instances failed, return 1')))
+        command.setUp()
 
     def test_get_run_command_no_config_file_errors(self):
         ui, command = self.get_test_ui_and_cmd()

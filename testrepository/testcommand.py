@@ -346,8 +346,26 @@ class TestCommand(Fixture):
 
     def setUp(self):
         super(TestCommand, self).setUp()
-        self._instances = set()
-        self.addCleanup(setattr, self, '_instances', None)
+        self._instances = set(['qwe'])
+        self.addCleanup(self._dispose_instances)
+
+    def _dispose_instances(self):
+        instances = self._instances
+        if instances is None:
+            return
+        self._instances = None
+        try:
+            dispose_cmd = self.get_parser().get('DEFAULT', 'instance_dispose')
+        except (ValueError, ConfigParser.NoOptionError):
+            return
+        variable_regex = '\$INSTANCE_IDS'
+        dispose_cmd = re.sub(variable_regex, ' ' .join(instances), dispose_cmd)
+        self.ui.output_values([('running', dispose_cmd)])
+        run_proc = self.ui.subprocess_Popen(dispose_cmd, shell=True)
+        run_proc.communicate()
+        if run_proc.returncode:
+            raise ValueError('Disposing of instances failed, return %d' %
+                run_proc.returncode)
 
     def get_parser(self):
         """Get a parser with the .testr.conf in it."""
