@@ -18,6 +18,10 @@ INTERNALS
   are disposed of - if using the object to run or list tests, you will need
   to adjust your calls. (Robert Collins)
 
+* ``TestCommand`` now offers, and ``TestListingFixture`` consumes a small
+  protocol for obtaining and releasing test execution instances.
+  (Robert Collins)
+
 0.0.9
 +++++
 

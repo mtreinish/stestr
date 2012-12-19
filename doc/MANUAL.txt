@@ -278,13 +278,17 @@ These should operate as follows:
 * instance_execute should accept an instance id, a list of files that need to 
   be copied into the instance and a command to run within the instance. It
   needs to copy those files into the instance (it may adjust their paths if
-  desired). If the paths are adjusted, the same paths within $COMMAND should
-  be adjusted to match. When the instance_execute terminates, it should use
-  the exit code that the command used within the instance. Stdout and stderr
-  from instance_execute are presumed to be that of $COMMAND. In particular,
-  stdout is where the subunit test output, and subunit test listing output, are
-  expected, and putting other output into stdout can lead to surprising
-  results - such as corrupting the subunit stream.
+  desired). If the paths are adjusted, the same paths within $COMMAND should be
+  adjusted to match. Execution that takes place with a shared filesystem can
+  obviously skip file copying or adjusting (and the $FILES parameter). When the
+  instance_execute terminates, it should use the exit code that the command
+  used within the instance. Stdout and stderr from instance_execute are
+  presumed to be that of $COMMAND. In particular, stdout is where the subunit
+  test output, and subunit test listing output, are expected, and putting other
+  output into stdout can lead to surprising results - such as corrupting the
+  subunit stream.
+  instance_execute is invoked for both test listing and test executing
+  callouts.
 
 Hiding tests
 ~~~~~~~~~~~~

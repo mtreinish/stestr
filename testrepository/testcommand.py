@@ -72,6 +72,44 @@ testrconf_help = dedent("""
     """)
 
 
+class CallWhenProcFinishes(object):
+    """Convert a process object to trigger a callback when returncode is set.
+    
+    This just wraps the entire object and when the returncode attribute access
+    finds a set value, calls the callback.
+    """
+
+    def __init__(self, process, callback):
+        """Adapt process
+
+        :param process: A subprocess.Popen object.
+        :param callback: The process to call when the process completes.
+        """
+        self._proc = process
+        self._callback = callback
+        self._done = False
+
+    @property
+    def stdin(self):
+        return self._proc.stdin
+
+    @property
+    def stdout(self):
+        return self._proc.stdout
+
+    @property
+    def stderr(self):
+        return self._proc.stderr
+
+    @property
+    def returncode(self):
+        result = self._proc.returncode
+        if not self._done and result is not None:
+            self._done = True
+            self._callback()
+        return result
+
+
 compiled_re_type = type(re.compile(''))
 
 class TestListingFixture(Fixture):
@@ -79,7 +117,7 @@ class TestListingFixture(Fixture):
 
     def __init__(self, test_ids, cmd_template, listopt, idoption, ui,
         repository, parallel=True, listpath=None, parser=None,
-        test_filters=None):
+        test_filters=None, instance_source=None):
         """Create a TestListingFixture.
 
         :param test_ids: The test_ids to use. May be None indicating that
@@ -109,6 +147,9 @@ class TestListingFixture(Fixture):
             filters: to take the intersection instead, craft a single regex that
             matches all your criteria. Filters are automatically applied by
             run_tests(), or can be applied by calling filter_tests(test_ids).
+        :param instance_source: A source of test run instances. Must support
+            obtain_instances(count) -> [id, id, id] and release_instance(id)
+            calls.
         """
         self.test_ids = test_ids
         self.template = cmd_template
@@ -120,6 +161,7 @@ class TestListingFixture(Fixture):
         self._listpath = listpath
         self._parser = parser
         self.test_filters = test_filters
+        self._instance_source = instance_source
 
     def setUp(self):
         super(TestListingFixture, self).setUp()
@@ -221,13 +263,43 @@ class TestListingFixture(Fixture):
         """
         if '$LISTOPT' not in self.template:
             raise ValueError("LISTOPT not configured in .testr.conf")
-        self.ui.output_values([('running', self.list_cmd)])
-        run_proc = self.ui.subprocess_Popen(self.list_cmd, shell=True,
-            stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-        out, err = run_proc.communicate()
-        # Should we raise on non-zero exit?
-        ids = parse_list(out)
-        return ids
+        instance, list_cmd = self._per_instance_command(self.list_cmd)
+        try:
+            self.ui.output_values([('running', list_cmd)])
+            run_proc = self.ui.subprocess_Popen(list_cmd, shell=True,
+                stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            out, err = run_proc.communicate()
+            # Should we raise on non-zero exit?
+            ids = parse_list(out)
+            return ids
+        finally:
+            if instance:
+                self._instance_source.release_instance(instance)
+
+    def _per_instance_command(self, cmd):
+        """Customise cmd to with an instance-id."""
+        if self._instance_source is None:
+            return None, cmd
+        instance = None
+        instances = self._instance_source.obtain_instances(1)
+        if instances is not None:
+            instance = instances[0]
+            try:
+                instance_prefix = self._parser.get(
+                    'DEFAULT', 'instance_execute')
+                variables = {
+                    'INSTANCE_ID': instance,
+                    'COMMAND': cmd,
+                    'FILES': self.list_file_name or '',
+                }
+                variable_regex = '\$(INSTANCE_ID|COMMAND|FILES)'
+                def subst(match):
+                    return variables.get(match.groups(1)[0], '')
+                cmd = re.sub(variable_regex, subst, instance_prefix)
+            except ConfigParser.NoOptionError:
+                # Per-instance execution environment not configured.
+                pass
+        return instance, cmd
 
     def run_tests(self):
         """Run the tests defined by the command and ui.
@@ -237,14 +309,21 @@ class TestListingFixture(Fixture):
         result = []
         test_ids = self.test_ids
         if self.concurrency == 1 and (test_ids is None or test_ids):
-            self.ui.output_values([('running', self.cmd)])
-            run_proc = self.ui.subprocess_Popen(self.cmd, shell=True,
+            # Have to customise cmd here, as instances are allocated
+            # just-in-time. XXX: Indicates this whole region needs refactoring.
+            instance, cmd = self._per_instance_command(self.cmd)
+            self.ui.output_values([('running', cmd)])
+            run_proc = self.ui.subprocess_Popen(cmd, shell=True,
                 stdout=subprocess.PIPE, stdin=subprocess.PIPE)
             # Prevent processes stalling if they read from stdin; we could
             # pass this through in future, but there is no point doing that
             # until we have a working can-run-debugger-inline story.
             run_proc.stdin.close()
-            return [run_proc]
+            if instance:
+                return [CallWhenProcFinishes(run_proc,
+                    lambda:self._instance_source.release_instance(instance))]
+            else:
+                return [run_proc]
         test_id_groups = self.partition_tests(test_ids, self.concurrency)
         for test_ids in test_id_groups:
             if not test_ids:
@@ -252,7 +331,8 @@ class TestListingFixture(Fixture):
                 continue
             fixture = self.useFixture(TestListingFixture(test_ids,
                 self.template, self.listopt, self.idoption, self.ui,
-                self.repository, parallel=False, parser=self._parser))
+                self.repository, parallel=False, parser=self._parser,
+                instance_source=self._instance_source))
             result.extend(fixture.run_tests())
         return result
 
@@ -343,10 +423,12 @@ class TestCommand(Fixture):
         self.ui = ui
         self.repository = repository
         self._instances = None
+        self._allocated_instances = None
 
     def setUp(self):
         super(TestCommand, self).setUp()
         self._instances = set()
+        self._allocated_instances = set()
         self.addCleanup(self._dispose_instances)
 
     def _dispose_instances(self):
@@ -354,6 +436,7 @@ class TestCommand(Fixture):
         if instances is None:
             return
         self._instances = None
+        self._allocated_instances = None
         try:
             dispose_cmd = self.get_parser().get('DEFAULT', 'instance_dispose')
         except (ValueError, ConfigParser.NoOptionError):
@@ -416,11 +499,11 @@ class TestCommand(Fixture):
             listpath = os.path.join(self.ui.here, 'failing.list')
             result = self.run_factory(test_ids, cmd, listopt, idoption,
                 self.ui, self.repository, listpath=listpath, parser=parser,
-                test_filters=test_filters)
+                test_filters=test_filters, instance_source=self)
         else:
             result = self.run_factory(test_ids, cmd, listopt, idoption,
                 self.ui, self.repository, parser=parser,
-                test_filters=test_filters)
+                test_filters=test_filters, instance_source=self)
         return result
 
     def get_filter_tags(self):
@@ -432,6 +515,26 @@ class TestCommand(Fixture):
                 raise
             return set()
         return set([tag.strip() for tag in tags.split()])
+
+    def obtain_instances(self, count):
+        """If possible, get one or more test run environment instance ids.
+        
+        Note this is not threadsafe: calling it from multiple threads would
+        likely result in shared results.
+        """
+        # Cached first.
+        available_instances = self._instances - self._allocated_instances
+        result = list(available_instances)[:count]
+        count = count - len(result)
+        if count > 0:
+            try:
+                self.get_parser().get('DEFAULT', 'instance_provision')
+            except ConfigParser.NoOptionError:
+                # Instance allocation not configured
+                return None
+            raise ValueError('Not done yet')
+        self._allocated_instances.update(result)
+        return result
 
     def make_result(self, receiver):
         """Create a TestResult that will perform any global filtering etc.
@@ -465,3 +568,7 @@ class TestCommand(Fixture):
             return TestResultFilter(
                 receiver, filter_success=False, filter_predicate=predicate)
         return receiver
+
+    def release_instance(self, instance_id):
+        """Return instance_id to the pool for reuse."""
+        self._allocated_instances.remove(instance_id)

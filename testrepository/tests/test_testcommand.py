@@ -212,6 +212,23 @@ class TestTestCommand(ResourcedTestCase):
         expected_cmd = 'foo  bar quux'
         self.assertEqual(expected_cmd, fixture.cmd)
 
+    def test_list_tests_uses_instances(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $LISTOPT $IDLIST\ntest_id_list_default=whoo yea\n'
+            'test_list_option=--list\n'
+            'instance_execute=quux $INSTANCE_ID -- $COMMAND\n')
+        fixture = self.useFixture(command.get_run_command())
+        command._instances.add('bar')
+        fixture.list_tests()
+        self.assertEqual(set(['bar']), command._instances)
+        self.assertEqual(set([]), command._allocated_instances)
+        self.assertEqual([
+            ('values', [('running', 'quux bar -- foo --list whoo yea')]),
+            ('popen', ('quux bar -- foo --list whoo yea',),
+             {'shell': True, 'stdin': -1, 'stdout': -1}), ('communicate',)],
+            ui.outputs)
+
     def test_list_tests_cmd(self):
         ui, command = self.get_test_ui_and_cmd()
         self.set_config(
@@ -292,7 +309,79 @@ class TestTestCommand(ResourcedTestCase):
         procs = fixture.run_tests()
         self.assertEqual([
             ('values', [('running', 'foo ')]),
-            ('popen', ('foo ',), {'shell': True, 'stdin': -1, 'stdout': -1})], ui.outputs)
+            ('popen', ('foo ',), {'shell': True, 'stdin': -1, 'stdout': -1})],
+            ui.outputs)
+
+    def test_run_tests_with_existing_instances_configured(self):
+        # when there are instances present, they are pulled out for running
+        # tests.
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST\n'
+            'instance_execute=quux $INSTANCE_ID -- $COMMAND\n')
+        command._instances.add('bar')
+        fixture = self.useFixture(command.get_run_command(test_ids=['1']))
+        procs = fixture.run_tests()
+        self.assertEqual([
+            ('values', [('running', 'quux bar -- foo 1')]),
+            ('popen', ('quux bar -- foo 1',),
+             {'shell': True, 'stdin': -1, 'stdout': -1})],
+            ui.outputs)
+        # No --parallel, so the one instance should have been allocated.
+        self.assertEqual(set(['bar']), command._instances)
+        self.assertEqual(set(['bar']), command._allocated_instances)
+        # And after the process is run, bar is returned for re-use.
+        procs[0].stdout.read()
+        self.assertEqual(0, procs[0].returncode)
+        self.assertEqual(set(['bar']), command._instances)
+        self.assertEqual(set(), command._allocated_instances)
+        
+    def test_run_tests_allocated_instances_skipped(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST\n'
+            'instance_execute=quux $INSTANCE_ID -- $COMMAND\n')
+        command._instances.update(['bar', 'baz'])
+        command._allocated_instances.add('baz')
+        fixture = self.useFixture(command.get_run_command(test_ids=['1']))
+        procs = fixture.run_tests()
+        self.assertEqual([
+            ('values', [('running', 'quux bar -- foo 1')]),
+            ('popen', ('quux bar -- foo 1',),
+             {'shell': True, 'stdin': -1, 'stdout': -1})],
+            ui.outputs)
+        # No --parallel, so the one instance should have been allocated.
+        self.assertEqual(set(['bar', 'baz']), command._instances)
+        self.assertEqual(set(['bar', 'baz']), command._allocated_instances)
+        # And after the process is run, bar is returned for re-use.
+        procs[0].stdout.read()
+        self.assertEqual(0, procs[0].returncode)
+        self.assertEqual(set(['bar', 'baz']), command._instances)
+        self.assertEqual(set(['baz']), command._allocated_instances)
+
+    def test_run_tests_list_file_in_FILES(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDFILE\n'
+            'instance_execute=quux $INSTANCE_ID $FILES -- $COMMAND\n')
+        command._instances.add('bar')
+        fixture = self.useFixture(command.get_run_command(test_ids=['1']))
+        list_file = fixture.list_file_name
+        procs = fixture.run_tests()
+        expected_cmd = 'quux bar %s -- foo %s' % (list_file, list_file)
+        self.assertEqual([
+            ('values', [('running', expected_cmd)]),
+            ('popen', (expected_cmd,),
+             {'shell': True, 'stdin': -1, 'stdout': -1})],
+            ui.outputs)
+        # No --parallel, so the one instance should have been allocated.
+        self.assertEqual(set(['bar']), command._instances)
+        self.assertEqual(set(['bar']), command._allocated_instances)
+        # And after the process is run, bar is returned for re-use.
+        procs[0].stdout.read()
+        self.assertEqual(0, procs[0].returncode)
+        self.assertEqual(set(['bar']), command._instances)
+        self.assertEqual(set(), command._allocated_instances)
 
     def test_filter_tags_parsing(self):
         ui, command = self.get_test_ui_and_cmd()
