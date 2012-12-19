@@ -58,6 +58,17 @@ testrconf_help = dedent("""
       test_command should output on stdout all the test ids that would have
       been run if every other option and argument was honoured, one per line.
       This is required for parallel testing, and is substituted into $LISTOPT.
+    * test_run_concurrency -- Optional call out to establish concurrency.
+      Should return one line containing the number of concurrent test runner
+      processes to run.
+    * instance_provision -- provision one or more test run environments.
+      Accepts $INSTANCE_COUNT for the number of instances desired.
+    * instance_execute -- execute a test runner process in a given environment.
+      Accepts $INSTANCE_ID, $FILES and $COMMAND. Paths in $FILES should be
+      synchronised into the test runner environment filesystem. $COMMAND can
+      be adjusted if the paths are synched with different names.
+    * instance_dispose -- dispose of one or more test running environments.
+      Accepts $INSTANCE_IDS.
     * $IDOPTION -- the variable to use to trigger running some specific tests.
     * $IDFILE -- A file created before the test command is run and deleted
       afterwards which contains a list of test ids, one per line. This can
