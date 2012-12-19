@@ -320,6 +320,12 @@ class TestCommand(Fixture):
     
     :ivar run_factory: The fixture to use to execute a command.
     :ivar oldschool: Use failing.list rather than a unique file path.
+
+    TestCommand is a Fixture. Many uses of it will not require it to be setUp,
+    but calling get_run_command does require it: the fixture state is used to
+    track test environment instances, which are disposed of when cleanUp
+    happens. This is not done per-run-command, because test bisection (amongst
+    other things) uses multiple get_run_command configurations.
     """
     
     run_factory = TestListingFixture
@@ -336,6 +342,12 @@ class TestCommand(Fixture):
         super(TestCommand, self).__init__()
         self.ui = ui
         self.repository = repository
+        self._instances = None
+
+    def setUp(self):
+        super(TestCommand, self).setUp()
+        self._instances = set()
+        self.addCleanup(setattr, self, '_instances', None)
 
     def get_parser(self):
         """Get a parser with the .testr.conf in it."""
@@ -352,6 +364,8 @@ class TestCommand(Fixture):
         
         See TestListingFixture for the definition of test_ids and test_filters.
         """
+        if self._instances is None:
+            raise TypeError('TestCommand not setUp')
         parser = self.get_parser()
         try:
             command = parser.get('DEFAULT', 'test_command')

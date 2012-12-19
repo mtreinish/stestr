@@ -45,7 +45,7 @@ class TestTestCommand(ResourcedTestCase):
         self.dirty()
         ui = UI(options=options, args=args)
         ui.here = self.tempdir
-        return ui, TestCommand(ui, repository)
+        return ui, self.useFixture(TestCommand(ui, repository))
 
     def get_test_ui_and_cmd2(self, options=(), args=()):
         self.dirty()
