@@ -11,6 +11,13 @@ IMPROVEMENTS
 * It's now possible to configure ``test_run_concurrency`` in ``.testr.conf``
   to have concurrency defined by a callout. (Robert Collins)
 
+INTERNALS
+---------
+
+* TestCommand is now a fixture. This is used to ensure cached test instances
+  are disposed of - if using the object to run or list tests, you will need
+  to adjust your calls. (Robert Collins)
+
 0.0.9
 +++++
 

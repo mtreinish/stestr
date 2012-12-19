@@ -315,7 +315,7 @@ class TestListingFixture(Fixture):
         return None
 
 
-class TestCommand(object):
+class TestCommand(Fixture):
     """Represents the test command defined in .testr.conf.
     
     :ivar run_factory: The fixture to use to execute a command.
@@ -333,6 +333,7 @@ class TestCommand(object):
         :param repository: A testrepository.repository.Repository used for
             determining test times when partitioning tests.
         """
+        super(TestCommand, self).__init__()
         self.ui = ui
         self.repository = repository
 

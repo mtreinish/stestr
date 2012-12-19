@@ -39,21 +39,25 @@ class list_tests(Command):
         filters = None
         if self.ui.arguments['testfilters']:
             filters = self.ui.arguments['testfilters']
-        cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'],
-            test_filters=filters)
-        cmd.setUp()
+        testcommand.setUp()
         try:
-            # Ugh.
-            # List tests if the fixture has not already needed to to filter.
-            if filters is None:
-                ids = cmd.list_tests()
-            else:
-                ids = cmd.test_ids
-            stream = StringIO()
-            for id in ids:
-                stream.write('%s\n' % id)
-            stream.seek(0)
-            self.ui.output_stream(stream)
-            return 0
+            cmd = testcommand.get_run_command(
+                ids, self.ui.arguments['testargs'], test_filters=filters)
+            cmd.setUp()
+            try:
+                # Ugh.
+                # List tests if the fixture has not already needed to to filter.
+                if filters is None:
+                    ids = cmd.list_tests()
+                else:
+                    ids = cmd.test_ids
+                stream = StringIO()
+                for id in ids:
+                    stream.write('%s\n' % id)
+                stream.seek(0)
+                self.ui.output_stream(stream)
+                return 0
+            finally:
+                cmd.cleanUp()
         finally:
-            cmd.cleanUp()
+            testcommand.cleanUp()

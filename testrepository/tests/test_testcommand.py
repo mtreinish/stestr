@@ -75,6 +75,11 @@ class TestTestCommand(ResourcedTestCase):
         command = TestCommand(ui, None)
         self.assertEqual(command.ui, ui)
 
+    def test_TestCommand_is_a_fixture(self):
+        ui, command = self.get_test_ui_and_cmd()
+        command.setUp()
+        command.cleanUp()
+
     def test_get_run_command_no_config_file_errors(self):
         ui, command = self.get_test_ui_and_cmd()
         self.assertThat(command.get_run_command,

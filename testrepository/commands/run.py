@@ -165,96 +165,100 @@ class run(Command):
         else:
             filters = None
         testcommand = self.command_factory(self.ui, repo)
-        if not self.ui.options.analyze_isolation:
-            cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'],
-                test_filters = filters)
-            return self._run_tests(cmd)
-        else:
-            # Where do we source data about the cause of conflicts.
-            # XXX: Should instead capture the run id in with the failing test
-            # data so that we can deal with failures split across many partial
-            # runs.
-            latest_run = repo.get_latest_run()
-            # Stage one: reduce the list of failing tests (possibly further
-            # reduced by testfilters) to eliminate fails-on-own tests.
-            spurious_failures = set()
-            for test_id in ids:
-                cmd = testcommand.get_run_command([test_id],
-                    self.ui.arguments['testargs'], test_filters = filters)
-                if not self._run_tests(cmd):
-                    # If the test was filtered, it won't have been run.
-                    if test_id in repo.get_test_ids(repo.latest_id()):
-                        spurious_failures.add(test_id)
-                    # This is arguably ugly, why not just tell the system that
-                    # a pass here isn't a real pass? [so that when we find a
-                    # test that is spuriously failing, we don't forget
-                    # that it is actually failng.
-                    # Alternatively, perhaps this is a case for data mining:
-                    # when a test starts passing, keep a journal, and allow
-                    # digging back in time to see that it was a failure,
-                    # what it failed with etc...
-                    # The current solution is to just let it get marked as
-                    # a pass temporarily.
-            if not spurious_failures:
-                # All done.
+        testcommand.setUp()
+        try:
+            if not self.ui.options.analyze_isolation:
+                cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'],
+                    test_filters = filters)
+                return self._run_tests(cmd)
+            else:
+                # Where do we source data about the cause of conflicts.
+                # XXX: Should instead capture the run id in with the failing test
+                # data so that we can deal with failures split across many partial
+                # runs.
+                latest_run = repo.get_latest_run()
+                # Stage one: reduce the list of failing tests (possibly further
+                # reduced by testfilters) to eliminate fails-on-own tests.
+                spurious_failures = set()
+                for test_id in ids:
+                    cmd = testcommand.get_run_command([test_id],
+                        self.ui.arguments['testargs'], test_filters = filters)
+                    if not self._run_tests(cmd):
+                        # If the test was filtered, it won't have been run.
+                        if test_id in repo.get_test_ids(repo.latest_id()):
+                            spurious_failures.add(test_id)
+                        # This is arguably ugly, why not just tell the system that
+                        # a pass here isn't a real pass? [so that when we find a
+                        # test that is spuriously failing, we don't forget
+                        # that it is actually failng.
+                        # Alternatively, perhaps this is a case for data mining:
+                        # when a test starts passing, keep a journal, and allow
+                        # digging back in time to see that it was a failure,
+                        # what it failed with etc...
+                        # The current solution is to just let it get marked as
+                        # a pass temporarily.
+                if not spurious_failures:
+                    # All done.
+                    return 0
+                # spurious-failure -> cause.
+                test_conflicts = {}
+                for spurious_failure in spurious_failures:
+                    candidate_causes = self._prior_tests(
+                        latest_run, spurious_failure)
+                    bottom = 0
+                    top = len(candidate_causes)
+                    width = top - bottom
+                    while width:
+                        check_width = int(ceil(width / 2.0))
+                        cmd = testcommand.get_run_command(
+                            candidate_causes[bottom:bottom + check_width]
+                            + [spurious_failure],
+                            self.ui.arguments['testargs'])
+                        self._run_tests(cmd)
+                        # check that the test we're probing still failed - still
+                        # awkward.
+                        found_fail = []
+                        def find_fail(test, status, start_time, stop_time, tags,
+                            details):
+                            if test.id() == spurious_failure:
+                                found_fail.append(True)
+                        checker = TestByTestResult(find_fail)
+                        checker.startTestRun()
+                        try:
+                            repo.get_failing().get_test().run(checker)
+                        finally:
+                            checker.stopTestRun()
+                        if found_fail:
+                            # Our conflict is in bottom - clamp the range down.
+                            top = bottom + check_width
+                            if width == 1:
+                                # found the cause
+                                test_conflicts[
+                                    spurious_failure] = candidate_causes[bottom]
+                                width = 0
+                            else:
+                                width = top - bottom
+                        else:
+                            # Conflict in the range we did not run: discard bottom.
+                            bottom = bottom + check_width
+                            if width == 1:
+                                # there will be no more to check, so we didn't
+                                # reproduce the failure.
+                                width = 0
+                            else:
+                                width = top - bottom
+                    if spurious_failure not in test_conflicts:
+                        # Could not determine cause
+                        test_conflicts[spurious_failure] = 'unknown - no conflicts'
+                if test_conflicts:
+                    table = [('failing test', 'caused by test')]
+                    for failure, causes in test_conflicts.items():
+                        table.append((failure, causes))
+                    self.ui.output_table(table)
+                    return 3
                 return 0
-            # spurious-failure -> cause.
-            test_conflicts = {}
-            for spurious_failure in spurious_failures:
-                candidate_causes = self._prior_tests(
-                    latest_run, spurious_failure)
-                bottom = 0
-                top = len(candidate_causes)
-                width = top - bottom
-                while width:
-                    check_width = int(ceil(width / 2.0))
-                    cmd = testcommand.get_run_command(
-                        candidate_causes[bottom:bottom + check_width]
-                        + [spurious_failure],
-                        self.ui.arguments['testargs'])
-                    self._run_tests(cmd)
-                    # check that the test we're probing still failed - still
-                    # awkward.
-                    found_fail = []
-                    def find_fail(test, status, start_time, stop_time, tags,
-                        details):
-                        if test.id() == spurious_failure:
-                            found_fail.append(True)
-                    checker = TestByTestResult(find_fail)
-                    checker.startTestRun()
-                    try:
-                        repo.get_failing().get_test().run(checker)
-                    finally:
-                        checker.stopTestRun()
-                    if found_fail:
-                        # Our conflict is in bottom - clamp the range down.
-                        top = bottom + check_width
-                        if width == 1:
-                            # found the cause
-                            test_conflicts[
-                                spurious_failure] = candidate_causes[bottom]
-                            width = 0
-                        else:
-                            width = top - bottom
-                    else:
-                        # Conflict in the range we did not run: discard bottom.
-                        bottom = bottom + check_width
-                        if width == 1:
-                            # there will be no more to check, so we didn't
-                            # reproduce the failure.
-                            width = 0
-                        else:
-                            width = top - bottom
-                if spurious_failure not in test_conflicts:
-                    # Could not determine cause
-                    test_conflicts[spurious_failure] = 'unknown - no conflicts'
-            if test_conflicts:
-                table = [('failing test', 'caused by test')]
-                for failure, causes in test_conflicts.items():
-                    table.append((failure, causes))
-                self.ui.output_table(table)
-                return 3
-            return 0
+        finally:
+            testcommand.cleanUp()
 
     def _prior_tests(self, run, failing_id):
         """Calculate what tests from the test run run ran before test_id.
