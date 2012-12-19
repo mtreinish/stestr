@@ -186,9 +186,11 @@ partition per test. For instance in .test.conf::
 Would tell testr to use concurrency of 2.
 
 When running tests in parallel, testrepository tags each test with a tag for
-the worker that executed the test. The tags are of the form ``worker-%d`` and
-are usually used to reproduce test isolation failures, where knowing exactly
-what test ran on a given backend is important.
+the worker that executed the test. The tags are of the form ``worker-%d``
+and are usually used to reproduce test isolation failures, where knowing
+exactly what test ran on a given backend is important. The %d that is
+substituted in is the partition number of tests from the test run - all tests
+in a single run with the same worker-N ran in the same test runner instance.
 
 To find out which slave a failing test ran on just look at the 'tags' line in
 its test error::
