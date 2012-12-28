@@ -144,7 +144,11 @@ class Repository(AbstractRepository):
             for test_id in test_ids:
                 if type(test_id) != str:
                     test_id = test_id.encode('utf8')
-                duration = db.get(test_id, None)
+                # gdbm does not support get().
+                try:
+                    duration = db[test_id]
+                except KeyError:
+                    duration = None
                 if duration is not None:
                     result[test_id] = float(duration)
             return result

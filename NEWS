@@ -5,6 +5,12 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+IMPROVEMENTS
+------------
+
+* Fix another incompatability with Mac OS X - gdbm dbm modules don't support
+  get. (Robert Collins, #1094330)
+
 0.0.10
 ++++++
 
