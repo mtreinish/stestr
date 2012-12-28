@@ -47,5 +47,6 @@ reuse from other programs.
 Threads/concurrency
 ~~~~~~~~~~~~~~~~~~~
 
-In general using any public interface 
+In general using any public interface is fine, but keeping syncronisation
+needs to a minimum for code readability.
 
