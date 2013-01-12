@@ -5,6 +5,13 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+INTERNALS
+---------
+
+* .testr.conf is now shipped in the source distribution to aid folk wanting to
+  validate that testrepository works correctly on their machine.
+  (Robert Collins)
+
 0.0.11
 ++++++
 
