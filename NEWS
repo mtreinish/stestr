@@ -8,6 +8,9 @@ NEXT (In development)
 INTERNALS
 ---------
 
+* BSD license file incorrectly claimed copyright by subunit contributors.
+  (Monty Taylor)
+
 * .testr.conf is now shipped in the source distribution to aid folk wanting to
   validate that testrepository works correctly on their machine.
   (Robert Collins)
