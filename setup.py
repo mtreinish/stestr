@@ -41,7 +41,7 @@ def get_version_from_pkg_info():
 
 
 def get_version():
-    """Return the version of testtools that we are building."""
+    """Return the version of testrepository that we are building."""
     version = '.'.join(
         str(component) for component in testrepository.__version__[0:3])
     phase = testrepository.__version__[3]
