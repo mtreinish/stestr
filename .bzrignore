@@ -4,3 +4,4 @@ test.xml
 build
 .testrepository
 __pycache__
+testrepository.egg-info/

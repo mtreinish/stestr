@@ -93,4 +93,10 @@ setup(name='testrepository',
             'testtools',
             ]
         ),
+      entry_points={
+        'distutils.commands': [
+          'testr = testrepository.setup_command:Testr',
+          'testr_coverage = testrepository.setup_command:Coverage',
+          ],
+        },
       )

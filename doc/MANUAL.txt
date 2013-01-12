@@ -144,3 +144,23 @@ files (for a format 1 repository - the only current format):
 * repo.conf: This file contains user configuration settings for the repository.
   ``testr repo-config`` will dump a repo configration and
   ``test help repo-config`` has online help for all the repository settings.
+
+setuptools integration
+~~~~~~~~~~~~~~~~~~~~~~
+
+testrepository provides two different setuptools commands for ease of
+integration with setuptools-based workflows:
+
+* testr:
+  ``python setup.py testr`` will run testr in parallel mode
+  Options that would normally be passed to testr run can be added to the
+  testr-options argument.
+  ``python setup.py testr --testr-options="--failing"`` will append --failing
+  to the test run.
+* testr_coverage:
+  ``python setup.py testr_coverage`` will run testr in code coverage mode. This
+  assumes the installation of the python coverage module. testr_coverage
+  supports the options from the testr command, and in addition supports the
+  omit option.
+  ``python setup.py testr_coverage --omit=ModuleThatSucks.py`` will append
+  --omit=ModuleThatSucks.py to the coverage report command.
