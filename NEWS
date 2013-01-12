@@ -5,6 +5,13 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+IMPROVEMENTS
+------------
+
+* There is now a setuptools extension provided by ``testrespository`` making it
+  easy to invoke testr from setup.py driven workflows.
+  (Monty Taylor, Robert Collins)
+
 INTERNALS
 ---------
 

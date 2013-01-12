@@ -232,7 +232,7 @@ The process testr follows is:
    The provisioning callout needs to synchronise source code and do any other
    per-instance setup at this stage.
 5. testr will make callouts to execute tests, supplying files that should be
-  copied into the execution environment. Note that instances may be used for
+   copied into the execution environment. Note that instances may be used for
    more than one command execution.
 6. testr will callout to dispose of the instances after the test run completes.
 
@@ -366,3 +366,21 @@ files (for a format 1 repository - the only current format):
 * repo.conf: This file contains user configuration settings for the repository.
   ``testr repo-config`` will dump a repo configration and
   ``test help repo-config`` has online help for all the repository settings.
+
+setuptools integration
+~~~~~~~~~~~~~~~~~~~~~~
+
+testrepository provides a setuptools commands for ease of integration with
+setuptools-based workflows:
+
+* testr:
+  ``python setup.py testr`` will run testr in parallel mode
+  Options that would normally be passed to testr run can be added to the
+  testr-options argument.
+  ``python setup.py testr --testr-options="--failing"`` will append --failing
+  to the test run.
+* testr --coverage:
+  ``python setup.py testr --coverage`` will run testr in code coverage mode. This
+  assumes the installation of the python coverage module.
+* ``python testr --coverage --omit=ModuleThatSucks.py`` will append
+  --omit=ModuleThatSucks.py to the coverage report command.

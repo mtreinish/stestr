@@ -106,4 +106,9 @@ setup(name='testrepository',
             'testscenarios',
             ]
         ),
+      entry_points={
+        'distutils.commands': [
+          'testr = testrepository.setuptools_command:Testr',
+          ],
+        },
       )
