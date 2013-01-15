@@ -48,8 +48,8 @@ class Testr(cmd.Command):
     boolean_options = ['coverage', 'slowest']
 
     def _run_testr(self, *args):
-        commands.run_argv([sys.argv[0]] + list(args),
-                          sys.stdin, sys.stdout, sys.stderr)
+        return commands.run_argv([sys.argv[0]] + list(args),
+                                 sys.stdin, sys.stdout, sys.stderr)
 
     def initialize_options(self):
         self.testr_args = None

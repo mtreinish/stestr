@@ -5,6 +5,12 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+IMPROVEMENTS
+------------
+
+* ``setup.py testr`` was not indicating test failures via it's return code.
+  (Monty Taylor)
+
 0.0.12
 ++++++
 
