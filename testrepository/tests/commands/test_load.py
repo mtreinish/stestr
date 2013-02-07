@@ -20,6 +20,7 @@ from tempfile import NamedTemporaryFile
 from subunit import iso8601
 
 import testtools
+from testtools.compat import _b
 from testtools.content import text_content
 from testtools.matchers import MatchesException
 from testtools.tests.helpers import LoggingResult
@@ -39,7 +40,7 @@ from testrepository.repository import memory, RepositoryNotFound
 class TestCommandLoad(ResourcedTestCase):
 
     def test_load_loads_subunit_stream_to_default_repository(self):
-        ui = UI([('subunit', '')])
+        ui = UI([('subunit', _b(''))])
         cmd = load.load(ui)
         ui.set_command(cmd)
         calls = []
@@ -58,7 +59,7 @@ class TestCommandLoad(ResourcedTestCase):
     def test_load_loads_named_file_if_given(self):
         datafile = NamedTemporaryFile()
         self.addCleanup(datafile.close)
-        ui = UI([('subunit', '')], args=[datafile.name])
+        ui = UI([('subunit', _b(''))], args=[datafile.name])
         cmd = load.load(ui)
         ui.set_command(cmd)
         calls = []
@@ -77,7 +78,7 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual(1, repo.count())
 
     def test_load_initialises_repo_if_doesnt_exist_and_init_forced(self):
-        ui = UI([('subunit', '')], options=[('force_init', True)])
+        ui = UI([('subunit', _b(''))], options=[('force_init', True)])
         cmd = load.load(ui)
         ui.set_command(cmd)
         calls = []
@@ -88,7 +89,7 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual([('open', ui.here), ('initialise', ui.here)], calls)
 
     def test_load_errors_if_repo_doesnt_exist(self):
-        ui = UI([('subunit', '')])
+        ui = UI([('subunit', _b(''))])
         cmd = load.load(ui)
         ui.set_command(cmd)
         calls = []
@@ -102,7 +103,7 @@ class TestCommandLoad(ResourcedTestCase):
             ui.outputs[0][1], MatchesException(RepositoryNotFound('memory:')))
 
     def test_load_returns_0_normally(self):
-        ui = UI([('subunit', '')])
+        ui = UI([('subunit', _b(''))])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
@@ -110,7 +111,7 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual(0, cmd.execute())
 
     def test_load_returns_1_on_failed_stream(self):
-        ui = UI([('subunit', 'test: foo\nfailure: foo\n')])
+        ui = UI([('subunit', _b('test: foo\nfailure: foo\n'))])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
@@ -118,7 +119,7 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual(1, cmd.execute())
 
     def test_load_new_shows_test_failures(self):
-        ui = UI([('subunit', 'test: foo\nfailure: foo\n')])
+        ui = UI([('subunit', _b('test: foo\nfailure: foo\n'))])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
@@ -130,7 +131,7 @@ class TestCommandLoad(ResourcedTestCase):
             ui.outputs[1:])
 
     def test_load_new_shows_test_failure_details(self):
-        ui = UI([('subunit', 'test: foo\nfailure: foo [\narg\n]\n')])
+        ui = UI([('subunit', _b('test: foo\nfailure: foo [\narg\n]\n'))])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
@@ -152,7 +153,7 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual(1, len(result.failures))
 
     def test_load_new_shows_test_skips(self):
-        ui = UI([('subunit', 'test: foo\nskip: foo\n')])
+        ui = UI([('subunit', _b('test: foo\nskip: foo\n'))])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
@@ -165,7 +166,7 @@ class TestCommandLoad(ResourcedTestCase):
             ui.outputs)
 
     def test_load_new_shows_test_summary_no_tests(self):
-        ui = UI([('subunit', '')])
+        ui = UI([('subunit', _b(''))])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
@@ -177,7 +178,7 @@ class TestCommandLoad(ResourcedTestCase):
             ui.outputs)
 
     def test_load_quiet_shows_nothing(self):
-        ui = UI([('subunit', '')], [('quiet', True)])
+        ui = UI([('subunit', _b(''))], [('quiet', True)])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
@@ -186,20 +187,21 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual([], ui.outputs)
 
     def test_partial_passed_to_repo(self):
-        ui = UI([('subunit', '')], [('quiet', True), ('partial', True)])
+        ui = UI([('subunit', _b(''))], [('quiet', True), ('partial', True)])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
         cmd.repository_factory.initialise(ui.here)
-        self.assertEqual(0, cmd.execute())
+        retcode = cmd.execute()
         self.assertEqual([], ui.outputs)
+        self.assertEqual(0, retcode)
         self.assertEqual(True,
             cmd.repository_factory.repos[ui.here].get_test_run(0)._partial)
 
     def test_load_timed_run(self):
         ui = UI(
             [('subunit',
-              ('time: 2011-01-01 00:00:01.000000Z\n'
+              _b('time: 2011-01-01 00:00:01.000000Z\n'
                'test: foo\n'
                'time: 2011-01-01 00:00:03.000000Z\n'
                'success: foo\n'
@@ -237,7 +239,7 @@ class TestCommandLoad(ResourcedTestCase):
         # tests, how many more failures, how much longer it takes.
         ui = UI(
             [('subunit',
-              ('time: 2011-01-02 00:00:01.000000Z\n'
+              _b('time: 2011-01-02 00:00:01.000000Z\n'
                'test: foo\n'
                'time: 2011-01-02 00:00:03.000000Z\n'
                'error: foo\n'
@@ -273,7 +275,7 @@ class TestCommandLoad(ResourcedTestCase):
             ui.outputs[1:])
 
     def test_grabs_TestCommand_result(self):
-        ui = UI([('subunit', '')])
+        ui = UI([('subunit', _b(''))])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()

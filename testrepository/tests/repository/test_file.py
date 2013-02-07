@@ -56,13 +56,13 @@ class TestFileRepository(ResourcedTestCase):
     def test_initialise(self):
         self.useFixture(FileRepositoryFixture(self))
         base = os.path.join(self.tempdir, '.testrepository')
-        stream = open(os.path.join(base, 'format'), 'rb')
+        stream = open(os.path.join(base, 'format'), 'rt')
         try:
             contents = stream.read()
         finally:
             stream.close()
         self.assertEqual("1\n", contents)
-        stream = open(os.path.join(base, 'next-stream'), 'rb')
+        stream = open(os.path.join(base, 'next-stream'), 'rt')
         try:
             contents = stream.read()
         finally:

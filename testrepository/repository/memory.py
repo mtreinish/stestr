@@ -14,7 +14,7 @@
 
 """In memory storage of test results."""
 
-from cStringIO import StringIO
+from io import BytesIO
 
 import subunit
 from testtools.content import TracebackContent
@@ -97,7 +97,7 @@ class _Failures(AbstractTestRun):
         return None
 
     def get_subunit_stream(self):
-        result = StringIO()
+        result = BytesIO()
         serialiser = subunit.TestProtocolClient(result)
         self.run(serialiser)
         result.seek(0)
@@ -107,7 +107,7 @@ class _Failures(AbstractTestRun):
         return self
 
     def run(self, result):
-        for outcome, test, details in self._repository._failing.itervalues():
+        for outcome, test, details in self._repository._failing.values():
             result.startTest(test)
             getattr(result, 'add' + outcome)(test, details=details)
             result.stopTest(test)
@@ -197,7 +197,7 @@ class _Inserter(AbstractTestRun):
         return self._run_id
 
     def get_subunit_stream(self):
-        result = StringIO()
+        result = BytesIO()
         serialiser = subunit.TestProtocolClient(result)
         self.run(serialiser)
         result.seek(0)

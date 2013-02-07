@@ -14,7 +14,7 @@
 
 """Run a projects tests and load them into testrepository."""
 
-from cStringIO import StringIO
+from io import BytesIO
 from math import ceil
 import optparse
 import re
@@ -23,6 +23,7 @@ from testtools import (
     TestResult,
     TestByTestResult,
     )
+from testtools.compat import _b
 
 from testrepository.arguments.doubledash import DoubledashArgument
 from testrepository.arguments.string import StringArgument
@@ -31,6 +32,9 @@ from testrepository.commands.load import load
 from testrepository.ui import decorator
 from testrepository.testcommand import TestCommand, testrconf_help
 from testrepository.testlist import parse_list
+
+
+LINEFEED = _b('\n')[0]
 
 
 class ReturnCodeToSubunit(object):
@@ -52,27 +56,27 @@ class ReturnCodeToSubunit(object):
         self.proc = process
         self.done = False
         self.source = self.proc.stdout
-        self.lastoutput = '\n'
+        self.lastoutput = LINEFEED
 
     def _append_return_code_as_test(self):
         if self.done is True:
             return
-        self.source = StringIO()
+        self.source = BytesIO()
         returncode = self.proc.wait()
         if returncode != 0:
-            if self.lastoutput != '\n':
+            if self.lastoutput != LINEFEED:
                 # Subunit is line orientated, it has to start on a fresh line.
-                self.source.write('\n')
-            self.source.write('test: process-returncode\n'
+                self.source.write(_b('\n'))
+            self.source.write(_b('test: process-returncode\n'
                 'error: process-returncode [\n'
                 ' returncode %d\n'
-                ']\n' % returncode)
+                ']\n' % returncode))
         self.source.seek(0)
         self.done = True
 
     def read(self, count=-1):
         if count == 0:
-            return ''
+            return _b('')
         result = self.source.read(count)
         if result:
             self.lastoutput = result[-1]
@@ -151,7 +155,8 @@ class run(Command):
             ids = None
         if self.ui.options.load_list:
             list_ids = set()
-            with file(self.ui.options.load_list) as list_file:
+            # Should perhaps be text.. currently does its own decode.
+            with open(self.ui.options.load_list, 'rb') as list_file:
                 list_ids = set(parse_list(list_file.read()))
             if ids is None:
                 # Use the supplied list verbatim

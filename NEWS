@@ -5,6 +5,15 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+0.0.14
+++++++
+
+IMPROVEMENTS
+------------
+
+* First cut at full Python 3 support. The 'works for me' release.
+  (Robert Collins)
+
 0.0.13
 ++++++
 

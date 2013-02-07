@@ -233,7 +233,7 @@ class BaseUITestResult(SummarizingResult):
                 previous_time_taken = previous_summary.get_time_taken()
                 if previous_time_taken:
                     time_delta = time - previous_time_taken
-        skips = sum(map(len, self.skip_reasons.itervalues()))
+        skips = sum(map(len, self.skip_reasons.values()))
         if skips:
             values.append(('skips', skips, None))
         self.ui.output_summary(

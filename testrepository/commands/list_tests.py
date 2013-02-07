@@ -14,9 +14,10 @@
 
 """List the tests from a project and show them."""
 
-from cStringIO import StringIO
+from io import BytesIO
 
 from testtools import TestResult
+from testtools.compat import _b
 
 from testrepository.arguments.doubledash import DoubledashArgument
 from testrepository.arguments.string import StringArgument
@@ -51,9 +52,9 @@ class list_tests(Command):
                     ids = cmd.list_tests()
                 else:
                     ids = cmd.test_ids
-                stream = StringIO()
+                stream = BytesIO()
                 for id in ids:
-                    stream.write('%s\n' % id)
+                    stream.write(('%s\n' % id).encode('utf8'))
                 stream.seek(0)
                 self.ui.output_stream(stream)
                 return 0

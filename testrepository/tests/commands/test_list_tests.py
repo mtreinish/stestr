@@ -17,6 +17,7 @@
 import os.path
 from subprocess import PIPE
 
+from testtools.compat import _b
 from testtools.matchers import MatchesException
 
 from testrepository.commands import list_tests
@@ -47,12 +48,9 @@ class TestCommand(ResourcedTestCase):
     def config_path(self):
         return os.path.join(self.tempdir, '.testr.conf')
 
-    def set_config(self, bytes):
-        stream = file(self.config_path(), 'wb')
-        try:
-            stream.write(bytes)
-        finally:
-            stream.close()
+    def set_config(self, text):
+        with open(self.config_path(), 'wt') as stream:
+            stream.write(text)
 
     def setup_repo(self, cmd, ui):
         repo = cmd.repository_factory.initialise(ui.here)
@@ -73,7 +71,7 @@ class TestCommand(ResourcedTestCase):
     def test_calls_list_tests(self):
         ui, cmd = self.get_test_ui_and_cmd(args=('--', 'bar', 'quux'))
         cmd.repository_factory = memory.RepositoryFactory()
-        ui.proc_outputs = ['returned\n\nvalues\n']
+        ui.proc_outputs = [_b('returned\n\nvalues\n')]
         self.setup_repo(cmd, ui)
         self.set_config(
             '[DEFAULT]\ntest_command=foo $LISTOPT $IDOPTION\n'
@@ -86,25 +84,26 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdout': PIPE, 'stdin': PIPE}),
             ('communicate',),
-            ('stream', 'returned\nvalues\n'),
+            ('stream', _b('returned\nvalues\n')),
             ], ui.outputs)
 
     def test_filters_use_filtered_list(self):
         ui, cmd = self.get_test_ui_and_cmd(
             args=('returned', '--', 'bar', 'quux'))
         cmd.repository_factory = memory.RepositoryFactory()
-        ui.proc_outputs = ['returned\n\nvalues\n']
+        ui.proc_outputs = [_b('returned\n\nvalues\n')]
         self.setup_repo(cmd, ui)
         self.set_config(
             '[DEFAULT]\ntest_command=foo $LISTOPT $IDOPTION\n'
             'test_id_option=--load-list $IDFILE\n'
             'test_list_option=--list\n')
-        self.assertEqual(0, cmd.execute())
+        retcode = cmd.execute()
         expected_cmd = 'foo --list  bar quux'
         self.assertEqual([
             ('values', [('running', expected_cmd)]),
             ('popen', (expected_cmd,),
              {'shell': True, 'stdout': PIPE, 'stdin': PIPE}),
             ('communicate',),
-            ('stream', 'returned\n'),
+            ('stream', _b('returned\n')),
             ], ui.outputs)
+        self.assertEqual(0, retcode)

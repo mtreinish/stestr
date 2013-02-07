@@ -61,12 +61,12 @@ def run_argv(argv, stdin, stdout, stderr):
         # Make a copy of the testr script as running in place uses the current
         # library, not the stub library.
         execpath = os.path.join(stub.base, 'testr')
-        source = file(path, 'rb')
+        source = open(path, 'rb')
         try:
             testr_contents = source.read()
         finally:
             source.close()
-        target = file(execpath, 'wb')
+        target = open(execpath, 'wb')
         try:
             target.write(testr_contents)
         finally:

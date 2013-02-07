@@ -14,15 +14,19 @@
 
 """Handling of lists of tests - common code to --load-list etc."""
 
+from testtools.compat import _b, _u
+
 def write_list(stream, test_ids):
     """Write test_ids out to stream.
 
     :param stream: A file-like object.
     :param test_ids: An iterable of test ids.
     """
-    stream.write('\n'.join(list(test_ids) + ['']))
+    # May need utf8 explicitly?
+    stream.write(_b('\n'.join(list(test_ids) + [''])))
 
 
 def parse_list(list_bytes):
     """Parse list_bytes into a list of test ids."""
-    return [id.strip() for id in list_bytes.split('\n') if id.strip()]
+    return [id.strip() for id in list_bytes.decode('utf8').split(_u('\n'))
+        if id.strip()]

@@ -39,6 +39,7 @@ class slowest(Command):
 
     @staticmethod
     def format_times(times):
+        times = list(times)
         precision = 3
         digits_before_point = int(
             math.log10(times[0][1])) + 1
@@ -59,7 +60,7 @@ class slowest(Command):
             return 3
         # what happens when there is no timing info?
         test_times = repo.get_test_times(repo.get_test_ids(latest_id))
-        known_times = test_times['known'].items()
+        known_times =list( test_times['known'].items())
         known_times.sort(key=itemgetter(1), reverse=True)
         if len(known_times) > 0:
             if not self.ui.options.all:

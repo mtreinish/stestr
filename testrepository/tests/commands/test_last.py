@@ -15,6 +15,7 @@
 """Tests for the last command."""
 
 import testtools
+from testtools.compat import _b
 from testtools.matchers import Equals
 
 from testrepository.commands import last
@@ -124,14 +125,14 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual([
             ('stream', Wildcard),
             ], ui.outputs)
-        self.assertThat(ui.outputs[0][1], Equals("""\
+        self.assertThat(ui.outputs[0][1], Equals(_b("""\
 test: testrepository.tests.commands.test_last.Cases.failing
 failure: testrepository.tests.commands.test_last.Cases.failing [ multipart
 Content-Type: text/x-traceback;charset=utf8,language=python
 traceback
 95\r
 Traceback (most recent call last):
-  File "testrepository/tests/commands/test_last.py", line 74, in failing
+  File "testrepository/tests/commands/test_last.py", line 75, in failing
     self.fail('foo')
 AssertionError: foo
 0\r
@@ -139,4 +140,4 @@ AssertionError: foo
 test: testrepository.tests.commands.test_last.Cases.ok
 successful: testrepository.tests.commands.test_last.Cases.ok [ multipart
 ]
-"""))
+""")))

@@ -31,6 +31,8 @@ containing their argument types - no __init__ is needed in that directory.)
 
 import sys
 
+from testtools.compat import reraise
+
 
 class AbstractArgument(object):
     """A argument that a command may need.
@@ -87,7 +89,7 @@ class AbstractArgument(object):
         result = []
         error = None
         while len(argv) > count and (
-            count < self.maximum_count or self.maximum_count is None):
+            self.maximum_count is None or count < self.maximum_count):
             arg = argv[count]
             count += 1
             try:
@@ -99,7 +101,7 @@ class AbstractArgument(object):
                 break
         if count < self.minimum_count:
             if error is not None:
-                raise error[0], error[1], error[2]
+                reraise(error[0], error[1], error[2])
             raise ValueError('not enough arguments present/matched in %s' % argv)
         del argv[:count]
         return result

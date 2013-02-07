@@ -39,7 +39,7 @@ class TestArgument(ResourcedTestCase):
         arg = path.ExistingPathArgument('path')
         self.addCleanup(os.chdir, os.getcwd())
         os.chdir(base)
-        with file('--', 'wb') as f:pass
+        with open('--', 'wt') as f:pass
         self.assertThat(lambda: arg.parse(['--']), raises(ValueError))
 
     def test_rejects_missing_file(self):

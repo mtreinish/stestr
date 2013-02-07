@@ -14,11 +14,12 @@
 
 """Tests for UI support logic and the UI contract."""
 
-from cStringIO import StringIO
+from io import BytesIO, TextIOWrapper
 import optparse
 import subprocess
 import sys
 
+from testtools.compat import _b, _u
 from testtools.content import text_content
 from testtools.matchers import raises
 
@@ -35,12 +36,12 @@ def cli_ui_factory(input_streams=None, options=(), args=()):
         # something - however, may need to be cli specific tests at that
         # point.
         raise NotImplementedError(cli_ui_factory)
-    stdout = StringIO()
+    stdout = TextIOWrapper(BytesIO(), line_buffering=True)
     if input_streams:
-        stdin = StringIO(input_streams[0][1])
+        stdin = TextIOWrapper(BytesIO(input_streams[0][1]))
     else:
-        stdin = StringIO()
-    stderr = StringIO()
+        stdin = TextIOWrapper(BytesIO())
+    stderr = TextIOWrapper(BytesIO(), line_buffering=True)
     argv = list(args)
     for option, value in options:
         # only bool handled so far
@@ -76,7 +77,7 @@ class TestUIContract(ResourcedTestCase):
         ui = self.ui_factory()
 
     def test_factory_input_stream_args(self):
-        ui = self.ui_factory([('subunit', 'value')])
+        ui = self.ui_factory([('subunit', _b('value'))])
 
     def test_here(self):
         ui = self.get_test_ui()
@@ -85,14 +86,14 @@ class TestUIContract(ResourcedTestCase):
     def test_iter_streams_load_stdin_use_case(self):
         # A UI can be asked for the streams that a command has indicated it
         # accepts, which is what load < foo will require.
-        ui = self.ui_factory([('subunit', 'test: foo\nsuccess: foo\n')])
+        ui = self.ui_factory([('subunit', _b('test: foo\nsuccess: foo\n'))])
         cmd = commands.Command(ui)
         cmd.input_streams = ['subunit+']
         ui.set_command(cmd)
         results = []
         for result in ui.iter_streams('subunit'):
             results.append(result.read())
-        self.assertEqual(['test: foo\nsuccess: foo\n'], results)
+        self.assertEqual([_b('test: foo\nsuccess: foo\n')], results)
 
     def test_iter_streams_unexpected_type_raises(self):
         ui = self.get_test_ui()
@@ -109,12 +110,12 @@ class TestUIContract(ResourcedTestCase):
     def test_output_rest(self):
         # output some ReST - used for help and docs.
         ui = self.get_test_ui()
-        ui.output_rest('')
+        ui.output_rest(_u(''))
 
     def test_output_stream(self):
         # a stream of bytes can be output.
         ui = self.get_test_ui()
-        ui.output_stream(StringIO())
+        ui.output_stream(BytesIO())
 
     def test_output_table(self):
         # output_table shows a table.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2009, 2010 Testrepository Contributors
+# Copyright (c) 2009-2013 Testrepository Contributors
 # 
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
@@ -59,7 +59,7 @@ def get_version():
         return version + '-r%s' % revno
 
 
-description = file(os.path.join(os.path.dirname(__file__), 'README.txt'), 'rb').read()
+description = open(os.path.join(os.path.dirname(__file__), 'README.txt'), 'rt').read()
 
 
 setup(name='testrepository',
@@ -95,8 +95,8 @@ setup(name='testrepository',
         ],
       install_requires=[
         'fixtures',
-        'python-subunit',
-        'testtools',
+        'python-subunit >= 0.0.10',
+        'testtools >= 0.9.29',
         ],
       extras_require = dict(
         test=[

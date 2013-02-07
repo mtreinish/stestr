@@ -14,7 +14,7 @@
 
 """Persistent storage of test results."""
 
-from cStringIO import StringIO
+from io import BytesIO
 try:
     import anydbm as dbm
 except ImportError:
@@ -26,6 +26,7 @@ import tempfile
 
 import subunit
 from subunit import TestProtocolClient
+from testtools.compat import _b
 
 from testrepository.repository import (
     AbstractRepository,
@@ -48,7 +49,7 @@ class RepositoryFactory(AbstractRepositoryFactory):
         """Create a repository at url/path."""
         base = os.path.join(os.path.expanduser(url), '.testrepository')
         os.mkdir(base)
-        stream = file(os.path.join(base, 'format'), 'wb')
+        stream = open(os.path.join(base, 'format'), 'wt')
         try:
             stream.write('1\n')
         finally:
@@ -61,8 +62,8 @@ class RepositoryFactory(AbstractRepositoryFactory):
         path = os.path.expanduser(url)
         base = os.path.join(path, '.testrepository')
         try:
-            stream = file(os.path.join(base, 'format'), 'rb')
-        except (IOError, OSError), e:
+            stream = open(os.path.join(base, 'format'), 'rt')
+        except (IOError, OSError) as e:
             if e.errno == errno.ENOENT:
                 raise RepositoryNotFound(url)
             raise
@@ -96,7 +97,7 @@ class Repository(AbstractRepository):
         return value
 
     def _next_stream(self):
-        next_content = file(os.path.join(self.base, 'next-stream'), 'rb').read()
+        next_content = open(os.path.join(self.base, 'next-stream'), 'rt').read()
         try:
             return int(next_content)
         except ValueError:
@@ -113,19 +114,19 @@ class Repository(AbstractRepository):
  
     def get_failing(self):
         try:
-            run_subunit_content = file(
+            run_subunit_content = open(
                 os.path.join(self.base, "failing"), 'rb').read()
         except IOError:
             err = sys.exc_info()[1]
             if err.errno == errno.ENOENT:
-                run_subunit_content = ''
+                run_subunit_content = _b('')
             else:
                 raise
         return _DiskRun(None, run_subunit_content)
 
     def get_test_run(self, run_id):
         try:
-            run_subunit_content = file(
+            run_subunit_content = open(
                 os.path.join(self.base, str(run_id)), 'rb').read()
         except IOError as e:
             if e.errno == errno.ENOENT:
@@ -164,7 +165,7 @@ class Repository(AbstractRepository):
         # term. Likewise we don't fsync - this data isn't valuable enough to
         # force disk IO.
         prefix = self._path('next-stream')
-        stream = file(prefix + '.new', 'wb')
+        stream = open(prefix + '.new', 'wt')
         try:
             stream.write('%d\n' % value)
         finally:
@@ -179,12 +180,13 @@ class _DiskRun(AbstractTestRun):
         """Create a _DiskRun with the content subunit_content."""
         self._run_id = run_id
         self._content = subunit_content
+        assert type(subunit_content) is bytes
 
     def get_id(self):
         return self._run_id
 
     def get_subunit_stream(self):
-        return StringIO(self._content)
+        return BytesIO(self._content)
 
     def get_test(self):
         return subunit.ProtocolTestCase(self.get_subunit_stream())
@@ -275,7 +277,7 @@ class _Inserter(_SafeInserter):
         # file).
         # Combine failing + this run : strip passed tests, add failures.
         # use memory repo to aggregate. a bit awkward on layering ;).
-        import memory
+        from testrepository.repository import memory
         repo = memory.Repository()
         if self.partial:
             # Seed with current failing
@@ -293,11 +295,10 @@ class _Inserter(_SafeInserter):
         inserter = _FailingInserter(self._repository)
         inserter.startTestRun()
         try:
-            try:
-                repo.get_failing().get_test().run(inserter)
-            except:
-                inserter._cancel()
-                raise
-        finally:
+            repo.get_failing().get_test().run(inserter)
+        except:
+            inserter._cancel()
+            raise
+        else:
             inserter.stopTestRun()
         return run_id

@@ -38,6 +38,7 @@ import os
 import sys
 
 import subunit
+from testtools.compat import _u
 
 from testrepository.repository import file
 
@@ -75,6 +76,7 @@ def iter_commands():
             name = name.replace('_', '-')
             names.add(name)
     names.discard('--init--')
+    names.discard('--pycache--')
     names = sorted(names)
     for name in names:
         yield _find_command(name)
@@ -202,8 +204,8 @@ def get_command_parser(cmd):
     parser = OptionParser()
     for option in cmd.options:
         parser.add_option(option)
-    usage = u'%%prog %(cmd)s [options] %(args)s\n\n%(help)s' % {
-        'args': u' '.join(map(lambda x:x.summary(), cmd.args)),
+    usage = _u('%%prog %(cmd)s [options] %(args)s\n\n%(help)s') % {
+        'args': _u(' ').join(map(lambda x:x.summary(), cmd.args)),
         'cmd': getattr(cmd, 'name', cmd),
         'help': getdoc(cmd),
         }

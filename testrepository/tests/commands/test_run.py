@@ -24,6 +24,7 @@ from fixtures import (
     )
 from subunit import RemotedTestCase
 from testscenarios.scenarios import multiply_scenarios
+from testtools.compat import _b
 from testtools.matchers import (
     Equals,
     MatchesException,
@@ -61,12 +62,9 @@ class TestCommand(ResourcedTestCase):
     def config_path(self):
         return os.path.join(self.tempdir, '.testr.conf')
 
-    def set_config(self, bytes):
-        stream = file(self.config_path(), 'wb')
-        try:
-            stream.write(bytes)
-        finally:
-            stream.close()
+    def set_config(self, text):
+        with open(self.config_path(), 'wt') as stream:
+            stream.write(text)
 
     def setup_repo(self, cmd, ui, failures=True):
         repo = cmd.repository_factory.initialise(ui.here)
@@ -297,7 +295,7 @@ class TestCommand(ResourcedTestCase):
 
     def test_load_failure_exposed(self):
         ui, cmd = self.get_test_ui_and_cmd(options=[('quiet', True),],
-            proc_outputs=['test: foo\nfailure: foo\n'])
+            proc_outputs=[_b('test: foo\nfailure: foo\n')])
         cmd.repository_factory = memory.RepositoryFactory()
         self.setup_repo(cmd, ui)
         self.set_config('[DEFAULT]\ntest_command=foo\n')
@@ -307,7 +305,7 @@ class TestCommand(ResourcedTestCase):
 
     def test_process_exit_code_nonzero_causes_synthetic_error_test(self):
         ui, cmd = self.get_test_ui_and_cmd(options=[('quiet', True),],
-            proc_outputs=['test: foo\nsuccess: foo\n'],
+            proc_outputs=[_b('test: foo\nsuccess: foo\n')],
             proc_results=[2])
             # 2 is non-zero, and non-zero triggers the behaviour of exiting
             # with 1 - but we want to see that it doesn't pass-through the
@@ -325,7 +323,7 @@ class TestCommand(ResourcedTestCase):
 
     def test_regex_test_filter(self):
         ui, cmd = self.get_test_ui_and_cmd(args=('ab.*cd', '--', 'bar', 'quux'))
-        ui.proc_outputs = ['ab-cd\nefgh\n']
+        ui.proc_outputs = [_b('ab-cd\nefgh\n')]
         cmd.repository_factory = memory.RepositoryFactory()
         self.setup_repo(cmd, ui)
         self.set_config(
@@ -375,8 +373,8 @@ class TestCommand(ResourcedTestCase):
     def test_until_failure(self):
         ui, cmd = self.get_test_ui_and_cmd(options=[('until_failure', True)])
         ui.proc_outputs = [
-            'test: foo\nsuccess: foo\n', # stream one, works
-            'test: foo\nfailure: foo\n' # stream two, fails
+            _b('test: foo\nsuccess: foo\n'), # stream one, works
+            _b('test: foo\nfailure: foo\n') # stream two, fails
             ]
         cmd.repository_factory = memory.RepositoryFactory()
         self.setup_repo(cmd, ui)
@@ -429,7 +427,7 @@ def readline(stream):
 
 
 def readlines(stream):
-    return ''.join(stream.readlines())
+    return _b('').join(stream.readlines())
 
 
 def accumulate(stream, reader):
@@ -438,7 +436,7 @@ def accumulate(stream, reader):
     while content:
         accumulator.append(content)
         content = reader(stream)
-    return ''.join(accumulator)
+    return _b('').join(accumulator)
 
 
 class TestReturnCodeToSubunit(ResourcedTestCase):
@@ -449,8 +447,8 @@ class TestReturnCodeToSubunit(ResourcedTestCase):
          ('readline', dict(reader=readline)),
          ('readlines', dict(reader=readlines)),
          ],
-        [('noeol', dict(stdout='foo\nbar')),
-         ('trailingeol', dict(stdout='foo\nbar\n'))])
+        [('noeol', dict(stdout=_b('foo\nbar'))),
+         ('trailingeol', dict(stdout=_b('foo\nbar\n')))])
 
     def test_returncode_0_no_change(self):
         proc = ProcessModel(None)
@@ -468,6 +466,6 @@ class TestReturnCodeToSubunit(ResourcedTestCase):
         stream = run.ReturnCodeToSubunit(proc)
         content = accumulate(stream, self.reader)
         self.assertEqual(
-            'foo\nbar\ntest: process-returncode\n'
-            'error: process-returncode [\n returncode 1\n]\n',
+            _b('foo\nbar\ntest: process-returncode\n'
+            'error: process-returncode [\n returncode 1\n]\n'),
             content)

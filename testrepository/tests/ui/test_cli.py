@@ -16,7 +16,7 @@
 """Tests for UI support logic and the UI contract."""
 
 import doctest
-from cStringIO import StringIO
+from io import BytesIO, StringIO, TextIOWrapper
 import optparse
 import os
 import sys
@@ -25,6 +25,7 @@ from textwrap import dedent
 from fixtures import EnvironmentVariable
 import subunit
 from testtools import TestCase
+from testtools.compat import _b, _u
 from testtools.matchers import (
     DocTestMatches,
     MatchesException,
@@ -38,7 +39,7 @@ from testrepository.tests import ResourcedTestCase, StubTestCommand
 
 
 def get_test_ui_and_cmd(options=(), args=()):
-    stdout = StringIO()
+    stdout = TextIOWrapper(BytesIO(), 'utf8', line_buffering=True)
     stdin = StringIO()
     stderr = StringIO()
     argv = list(args)
@@ -59,15 +60,15 @@ class TestCLIUI(ResourcedTestCase):
         self.useFixture(EnvironmentVariable('TESTR_PDB'))
 
     def test_construct(self):
-        stdout = StringIO()
-        stdin = StringIO()
-        stderr = StringIO()
+        stdout = BytesIO()
+        stdin = BytesIO()
+        stderr = BytesIO()
         cli.UI([], stdin, stdout, stderr)
 
     def test_stream_comes_from_stdin(self):
-        stdout = StringIO()
-        stdin = StringIO('foo\n')
-        stderr = StringIO()
+        stdout = BytesIO()
+        stdin = BytesIO(_b('foo\n'))
+        stderr = BytesIO()
         ui = cli.UI([], stdin, stdout, stderr)
         cmd = commands.Command(ui)
         cmd.input_streams = ['subunit']
@@ -75,12 +76,12 @@ class TestCLIUI(ResourcedTestCase):
         results = []
         for stream in ui.iter_streams('subunit'):
             results.append(stream.read())
-        self.assertEqual(['foo\n'], results)
+        self.assertEqual([_b('foo\n')], results)
 
     def test_dash_d_sets_here_option(self):
-        stdout = StringIO()
-        stdin = StringIO('foo\n')
-        stderr = StringIO()
+        stdout = BytesIO()
+        stdin = BytesIO(_b('foo\n'))
+        stderr = BytesIO()
         ui = cli.UI(['-d', '/nowhere/'], stdin, stdout, stderr)
         cmd = commands.Command(ui)
         ui.set_command(cmd)
@@ -112,7 +113,7 @@ class TestCLIUI(ResourcedTestCase):
             fooo
             """)
         stdout = StringIO()
-        stdin = StringIO('c\n')
+        stdin = StringIO(_u('c\n'))
         stderr = StringIO()
         ui = cli.UI([], stdin, stdout, stderr)
         ui.output_error(err_tuple)
@@ -121,8 +122,8 @@ class TestCLIUI(ResourcedTestCase):
 
     def test_outputs_rest_to_stdout(self):
         ui, cmd = get_test_ui_and_cmd()
-        ui.output_rest('topic\n=====\n')
-        self.assertEqual('topic\n=====\n', ui._stdout.getvalue())
+        ui.output_rest(_u('topic\n=====\n'))
+        self.assertEqual(_b('topic\n=====\n'), ui._stdout.buffer.getvalue())
 
     def test_outputs_results_to_stdout(self):
         ui, cmd = get_test_ui_and_cmd()
@@ -131,8 +132,9 @@ class TestCLIUI(ResourcedTestCase):
                 self.fail('quux')
         result = ui.make_result(lambda: None, StubTestCommand())
         Case('method').run(result)
-        self.assertThat(ui._stdout.getvalue(),DocTestMatches(
-            """======================================================================
+        self.assertThat(ui._stdout.buffer.getvalue().decode('utf8'),
+            DocTestMatches("""\
+======================================================================
 FAIL: testrepository.tests.ui.test_cli.Case.method
 ----------------------------------------------------------------------
 ...Traceback (most recent call last):...
@@ -143,21 +145,21 @@ AssertionError: quux...
 
     def test_outputs_stream_to_stdout(self):
         ui, cmd = get_test_ui_and_cmd()
-        stream = StringIO("Foo \n bar")
+        stream = BytesIO(_b("Foo \n bar"))
         ui.output_stream(stream)
-        self.assertEqual("Foo \n bar", ui._stdout.getvalue())
+        self.assertEqual(_b("Foo \n bar"), ui._stdout.buffer.getvalue())
 
     def test_outputs_tables_to_stdout(self):
         ui, cmd = get_test_ui_and_cmd()
         ui.output_table([('foo', 1), ('b', 'quux')])
-        self.assertEqual('foo  1\n---  ----\nb    quux\n',
-            ui._stdout.getvalue())
+        self.assertEqual(_b('foo  1\n---  ----\nb    quux\n'),
+            ui._stdout.buffer.getvalue())
 
     def test_outputs_tests_to_stdout(self):
         ui, cmd = get_test_ui_and_cmd()
         ui.output_tests([self, self.__class__('test_construct')])
         self.assertThat(
-            ui._stdout.getvalue(),
+            ui._stdout.buffer.getvalue().decode('utf8'),
             DocTestMatches(
                 '...TestCLIUI.test_outputs_tests_to_stdout\n'
                 '...TestCLIUI.test_construct\n', doctest.ELLIPSIS))
@@ -165,14 +167,15 @@ AssertionError: quux...
     def test_outputs_values_to_stdout(self):
         ui, cmd = get_test_ui_and_cmd()
         ui.output_values([('foo', 1), ('bar', 'quux')])
-        self.assertEqual('foo=1, bar=quux\n', ui._stdout.getvalue())
+        self.assertEqual(_b('foo=1, bar=quux\n'), ui._stdout.buffer.getvalue())
 
     def test_outputs_summary_to_stdout(self):
         ui, cmd = get_test_ui_and_cmd()
         summary = [True, 1, None, 2, None, []]
         expected_summary = ui._format_summary(*summary)
         ui.output_summary(*summary)
-        self.assertEqual("%s\n" % (expected_summary,), ui._stdout.getvalue())
+        self.assertEqual(_b("%s\n" % (expected_summary,)),
+            ui._stdout.buffer.getvalue())
 
     def test_parse_error_goes_to_stderr(self):
         stdout = StringIO()
@@ -194,9 +197,9 @@ AssertionError: quux...
         self.assertEqual("Unexpected arguments: ['one']\n", stderr.getvalue())
 
     def test_parse_options_after_double_dash_are_arguments(self):
-        stdout = StringIO()
-        stdin = StringIO()
-        stderr = StringIO()
+        stdout = BytesIO()
+        stdin = BytesIO()
+        stderr = BytesIO()
         ui = cli.UI(['one', '--', '--two', 'three'], stdin, stdout, stderr)
         cmd = commands.Command(ui)
         cmd.args = [arguments.string.StringArgument('myargs', max=None),
@@ -213,9 +216,9 @@ AssertionError: quux...
         class CaptureArg(arguments.AbstractArgument):
             def _parse_one(self, arg):
                 return arg
-        stdout = StringIO()
-        stdin = StringIO()
-        stderr = StringIO()
+        stdout = BytesIO()
+        stdin = BytesIO()
+        stderr = BytesIO()
         ui = cli.UI(['one', '--', '--two', 'three'], stdin, stdout, stderr)
         cmd = commands.Command(ui)
         cmd.args = [CaptureArg('args', max=None)]
@@ -230,7 +233,7 @@ AssertionError: quux...
         # When --full-results is passed in, successes are included in the
         # subunit output.
         ui, cmd = get_test_ui_and_cmd(options=[('subunit', True)])
-        stream = StringIO()
+        stream = BytesIO()
         subunit_result = subunit.TestProtocolClient(stream)
         subunit_result.startTest(self)
         subunit_result.addSuccess(self)
@@ -239,7 +242,7 @@ AssertionError: quux...
         result.startTest(self)
         result.addSuccess(self)
         result.stopTest(self)
-        self.assertEqual(stream.getvalue(), ui._stdout.getvalue())
+        self.assertEqual(stream.getvalue(), ui._stdout.buffer.getvalue())
 
     def test_dash_dash_help_shows_help(self):
         stdout = StringIO()
@@ -331,7 +334,7 @@ class TestCLITestResult(TestCase):
 
     def make_result(self, stream=None, fullresults=False):
         if stream is None:
-            stream = StringIO()
+            stream = BytesIO()
         argv = []
         if fullresults:
             argv.append('--full-results')
@@ -396,13 +399,19 @@ class TestCLITestResult(TestCase):
     def test_addFailure_handles_string_encoding(self):
         # CLITestResult.addFailure outputs the given error handling non-ascii
         # characters.
-        stream = StringIO()
+        # Lets say we have bytes output, not string for some reason.
+        stream = BytesIO()
         result = self.make_result(stream, fullresults=True)
         class MyError(ValueError):
-            def __unicode__(self):
-                return u'\u201c'
+            if sys.version_info[0] < 3:
+                def __unicode__(self):
+                    return _u('\u201c')
+            else:
+                def __str__(self):
+                    return _u('\u201c')
         error = (MyError, MyError(), None)
         result.addFailure(self, error)
+        pattern = _u("...MyError: ?")
         self.assertThat(
-            stream.getvalue(),
-            DocTestMatches("...MyError: ?", doctest.ELLIPSIS))
+            stream.getvalue().decode('utf8'),
+            DocTestMatches(pattern, doctest.ELLIPSIS))

@@ -17,6 +17,7 @@
 import doctest
 
 import testtools
+from testtools.compat import _b
 from testtools.matchers import (
     DocTestMatches,
     Equals,
@@ -87,7 +88,8 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual(0, cmd.execute())
         self.assertEqual(1, len(ui.outputs))
         self.assertEqual('stream', ui.outputs[0][0])
-        self.assertThat(ui.outputs[0][1], DocTestMatches("""...test: ...failing
+        self.assertThat(ui.outputs[0][1].decode('utf8'),
+            DocTestMatches("""...test: ...failing
 ...failure: ...failing...""", doctest.ELLIPSIS))
 
     def test_with_subunit_no_failures_exit_0(self):
@@ -104,7 +106,7 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual(0, cmd.execute())
         self.assertEqual(1, len(ui.outputs))
         self.assertEqual('stream', ui.outputs[0][0])
-        self.assertThat(ui.outputs[0][1], Equals(''))
+        self.assertThat(ui.outputs[0][1], Equals(_b('')))
 
     def test_with_list_shows_list_of_tests(self):
         ui, cmd = self.get_test_ui_and_cmd(options=[('list', True)])

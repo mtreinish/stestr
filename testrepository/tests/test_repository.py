@@ -28,6 +28,7 @@ from testtools import (
     PlaceHolder,
     TestResult,
     )
+from testtools.compat import _b
 from testtools.testresult.doubles import ExtendedTestResult
 from testtools.matchers import DocTestMatches, raises
 
@@ -364,7 +365,8 @@ class TestRepositoryContract(ResourcedTestCase):
         inserted = result.stopTestRun()
         run = repo.get_test_run(inserted)
         as_subunit = run.get_subunit_stream()
-        self.assertThat(as_subunit.read(), DocTestMatches("""...test: testrepository.tests.test_repository.Case.method...
+        self.assertThat(as_subunit.read().decode('utf8'),
+            DocTestMatches("""...test: testrepository.tests.test_repository.Case.method...
 successful: testrepository.tests.test_repository.Case.method...
 """, doctest.ELLIPSIS))
 

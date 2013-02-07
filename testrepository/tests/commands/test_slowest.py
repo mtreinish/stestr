@@ -76,12 +76,12 @@ class TestCommand(ResourcedTestCase):
             inserter, runtime)
         inserter.stopTestRun()
         retcode = cmd.execute()
-        self.assertEqual(0, retcode)
         self.assertEqual(
             [('table',
                 [slowest.slowest.TABLE_HEADER]
                 + slowest.slowest.format_times([(test_id, runtime)]))],
             ui.outputs)
+        self.assertEqual(0, retcode)
 
     def test_orders_tests_based_on_runtime(self):
         """Longer running tests are shown first."""
@@ -125,7 +125,8 @@ class TestCommand(ResourcedTestCase):
         repo = cmd.repository_factory.initialise(ui.here)
         test_ids, runtimes = self.insert_lots_of_tests_with_timing(repo)
         retcode = cmd.execute()
-        rows = zip(reversed(test_ids), reversed(runtimes))[:slowest.slowest.DEFAULT_ROWS_SHOWN]
+        rows = list(zip(reversed(test_ids), reversed(runtimes))
+            )[:slowest.slowest.DEFAULT_ROWS_SHOWN]
         rows = slowest.slowest.format_times(rows)
         self.assertEqual(0, retcode)
         self.assertEqual(

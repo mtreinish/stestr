@@ -14,7 +14,7 @@
 
 """Am object based UI for testrepository."""
 
-from cStringIO import StringIO
+from io import BytesIO
 import optparse
 
 from testrepository import ui
@@ -26,8 +26,8 @@ class ProcessModel(object):
     def __init__(self, ui):
         self.ui = ui
         self.returncode = 0
-        self.stdin = StringIO()
-        self.stdout = StringIO()
+        self.stdin = BytesIO()
+        self.stdout = BytesIO()
 
     def communicate(self):
         self.ui.outputs.append(('communicate',))
@@ -103,6 +103,8 @@ class UI(ui.AbstractUI):
         self.input_streams = {}
         if input_streams:
             for stream_type, stream_value in input_streams:
+                if isinstance(stream_value, str) and str is not bytes:
+                    raise Exception('bad stream_value')
                 self.input_streams.setdefault(stream_type, []).append(
                     stream_value)
         self.here = here
@@ -143,7 +145,7 @@ class UI(ui.AbstractUI):
             if getattr(stream_value, 'read', None):
                 yield stream_value
             else:
-                yield StringIO(stream_value)
+                yield BytesIO(stream_value)
 
     def make_result(self, get_id, test_command, previous_run=None):
         return test_command.make_result(
@@ -177,7 +179,7 @@ class UI(ui.AbstractUI):
         self.outputs.append(('popen', args, kwargs))
         result = ProcessModel(self)
         if self.proc_outputs:
-            result.stdout = StringIO(self.proc_outputs.pop(0))
+            result.stdout = BytesIO(self.proc_outputs.pop(0))
         if self.proc_results:
             result.returncode = self.proc_results.pop(0)
         return result

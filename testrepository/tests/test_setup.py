@@ -36,7 +36,6 @@ class TestCanSetup(TestCase):
             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT, universal_newlines=True)
         output, _ = proc.communicate()
-        self.assertEqual(0, proc.returncode)
         self.assertThat(output, MatchesAny(
             # win32
             DocTestMatches("""...
@@ -49,3 +48,4 @@ adding '...testr'
 ...bin/testr ...
 """, doctest.ELLIPSIS)
             ))
+        self.assertEqual(0, proc.returncode)

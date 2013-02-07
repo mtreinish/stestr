@@ -14,7 +14,7 @@
 
 """A decorator for UIs to allow use of additional command objects in-process."""
 
-from StringIO import StringIO
+from io import BytesIO
 import optparse
 
 from testrepository import ui
@@ -60,7 +60,7 @@ class UI(ui.AbstractUI):
             if getattr(stream_value, 'read', None):
                 yield stream_value
             else:
-                yield StringIO(stream_value)
+                yield BytesIO(stream_value)
 
     def make_result(self, get_id, test_command, previous_run=None):
         return self._decorated.make_result(
@@ -98,6 +98,8 @@ class UI(ui.AbstractUI):
         # Merge options
         self.options = optparse.Values()
         for option in dir(self._decorated.options):
+            if option.startswith('_'):
+                continue
             setattr(self.options, option,
                 getattr(self._decorated.options, option))
         for option, value in self._options.items():

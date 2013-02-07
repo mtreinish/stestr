@@ -34,9 +34,9 @@ class TestStubPackageResource(ResourcedTestCase):
         resource = StubPackageResource('foo', [('bar.py', 'woo')])
         pkg = resource.getResource()
         self.addCleanup(resource.finishedWith, pkg)
-        self.assertEqual('', file(os.path.join(pkg.base, 'foo',
+        self.assertEqual('', open(os.path.join(pkg.base, 'foo',
             '__init__.py')).read())
-        self.assertEqual('woo', file(os.path.join(pkg.base, 'foo',
+        self.assertEqual('woo', open(os.path.join(pkg.base, 'foo',
             'bar.py')).read())
 
     def test_no__init__(self):

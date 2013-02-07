@@ -14,8 +14,9 @@
 
 """The test command that test repository knows how to run."""
 
-import ConfigParser
-from fixtures import Fixture
+from extras import try_imports
+
+ConfigParser = try_imports(['ConfigParser', 'configparser'])
 import itertools
 import operator
 import os.path
@@ -24,6 +25,9 @@ import subprocess
 import sys
 import tempfile
 from textwrap import dedent
+
+from fixtures import Fixture
+from testtools.compat import _b
 
 from testrepository.results import TestResultFilter
 from testrepository.testlist import (
@@ -188,7 +192,7 @@ class TestListingFixture(Fixture):
             list_variables['IDLIST'] = default_idstr
             # In theory we should also support casting this into IDFILE etc -
             # needs this horrible class refactored.
-        except ConfigParser.NoOptionError, e:
+        except ConfigParser.NoOptionError as e:
             if e.message != "No option 'test_id_list_default' in section: 'DEFAULT'":
                 raise
             default_idstr = None
@@ -268,7 +272,7 @@ class TestListingFixture(Fixture):
             for pred in filters:
                 if pred.search(test_id):
                     return True
-        return filter(include, test_ids)
+        return list(filter(include, test_ids))
 
     def list_tests(self):
         """List the tests returned by list_cmd.
@@ -304,7 +308,7 @@ class TestListingFixture(Fixture):
                 instance_prefix = self._parser.get(
                     'DEFAULT', 'instance_execute')
                 variables = {
-                    'INSTANCE_ID': instance,
+                    'INSTANCE_ID': instance.decode('utf8'),
                     'COMMAND': cmd,
                     # --list-tests cannot use FILES, so handle it being unset.
                     'FILES': getattr(self, 'list_file_name', None) or '',
@@ -381,7 +385,7 @@ class TestListingFixture(Fixture):
             timed_partitions[0][1].append(test_id)
             timed_partitions.sort(key=lambda item:(item[0], len(item[1])))
         # Assign tests with unknown times in round robin fashion to the partitions.
-        for partition, test_id in itertools.izip(itertools.cycle(partitions), unknown):
+        for partition, test_id in zip(itertools.cycle(partitions), unknown):
             partition.append(test_id)
         return partitions
 
@@ -389,7 +393,7 @@ class TestListingFixture(Fixture):
         """Callout for user defined concurrency."""
         try:
             concurrency_cmd = self._parser.get(
-                'DEFAULT', 'test_run_concurrency', None)
+                'DEFAULT', 'test_run_concurrency')
         except ConfigParser.NoOptionError:
             return None
         run_proc = self.ui.subprocess_Popen(concurrency_cmd, shell=True,
@@ -404,7 +408,7 @@ class TestListingFixture(Fixture):
     def local_concurrency(self):
         if sys.platform == 'linux2':
             concurrency = None
-            for line in file('/proc/cpuinfo', 'rb'):
+            for line in open('/proc/cpuinfo', 'rt'):
                 if line.startswith('processor'):
                     concurrency = int(line[line.find(':')+1:]) + 1
             return concurrency
@@ -459,7 +463,7 @@ class TestCommand(Fixture):
         except (ValueError, ConfigParser.NoOptionError):
             return
         variable_regex = '\$INSTANCE_IDS'
-        dispose_cmd = re.sub(variable_regex, ' ' .join(sorted(instances)),
+        dispose_cmd = re.sub(variable_regex, ' '.join(sorted(instance.decode('utf') for instance in instances)),
             dispose_cmd)
         self.ui.output_values([('running', dispose_cmd)])
         run_proc = self.ui.subprocess_Popen(dispose_cmd, shell=True)
@@ -488,7 +492,7 @@ class TestCommand(Fixture):
         parser = self.get_parser()
         try:
             command = parser.get('DEFAULT', 'test_command')
-        except ConfigParser.NoOptionError, e:
+        except ConfigParser.NoOptionError as e:
             if e.message != "No option 'test_command' in section: 'DEFAULT'":
                 raise
             raise ValueError("No test_command option present in .testr.conf")
@@ -499,7 +503,7 @@ class TestCommand(Fixture):
             # IDOPTION is used, we must have it configured.
             try:
                 idoption = parser.get('DEFAULT', 'test_id_option')
-            except ConfigParser.NoOptionError, e:
+            except ConfigParser.NoOptionError as e:
                 if e.message != "No option 'test_id_option' in section: 'DEFAULT'":
                     raise
                 raise ValueError("No test_id_option option present in .testr.conf")
@@ -508,7 +512,7 @@ class TestCommand(Fixture):
             # LISTOPT is used, test_list_option must be configured.
             try:
                 listopt = parser.get('DEFAULT', 'test_list_option')
-            except ConfigParser.NoOptionError, e:
+            except ConfigParser.NoOptionError as e:
                 if e.message != "No option 'test_list_option' in section: 'DEFAULT'":
                     raise
                 raise ValueError("No test_list_option option present in .testr.conf")
@@ -527,7 +531,7 @@ class TestCommand(Fixture):
         parser = self.get_parser()
         try:
             tags = parser.get('DEFAULT', 'filter_tags')
-        except ConfigParser.NoOptionError, e:
+        except ConfigParser.NoOptionError as e:
             if e.message != "No option 'filter_tags' in section: 'DEFAULT'":
                 raise
             return set()
