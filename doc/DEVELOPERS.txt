@@ -46,3 +46,9 @@ Diagnosing issues
 
 The cli UI will drop into pdb when an error is thrown if TESTR_PDB is set in
 the environment. This can be very useful for diagnosing problems.
+
+Releasing
+---------
+
+Update testrepository/__init__.py version numbers. Release to pypi. Pivot the
+next milestone on LP to version, and make a new next milestone.
