@@ -113,6 +113,7 @@ class UI(ui.AbstractUI):
         # Could take parsed args, but for now this is easier.
         self.unparsed_args = args
         self.proc_outputs = list(proc_outputs)
+        self.require_proc_stdout = False
         self.proc_results = list(proc_results)
 
     def _check_cmd(self):
@@ -180,6 +181,8 @@ class UI(ui.AbstractUI):
         result = ProcessModel(self)
         if self.proc_outputs:
             result.stdout = BytesIO(self.proc_outputs.pop(0))
+        elif self.require_proc_stdout:
+            raise Exception("No process output available")
         if self.proc_results:
             result.returncode = self.proc_results.pop(0)
         return result

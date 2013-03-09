@@ -19,6 +19,9 @@ from math import ceil
 import optparse
 import re
 
+from extras import try_import
+import subunit
+v2_avail = try_import('subunit.ByteStreamToStreamResult')
 from testtools import (
     TestResult,
     TestByTestResult,
@@ -67,10 +70,16 @@ class ReturnCodeToSubunit(object):
             if self.lastoutput != LINEFEED:
                 # Subunit is line orientated, it has to start on a fresh line.
                 self.source.write(_b('\n'))
-            self.source.write(_b('test: process-returncode\n'
-                'error: process-returncode [\n'
-                ' returncode %d\n'
-                ']\n' % returncode))
+            if v2_avail:
+                stream = subunit.StreamResultToBytes(self.source)
+                stream.status(test_id='process-returncode', test_status='fail',
+                    file_name='traceback', mime_type='test/plain;charset=utf8',
+                    file_bytes=('returncode %d' % returncode).encode('utf8'))
+            else:
+                self.source.write(_b('test: process-returncode\n'
+                    'failure: process-returncode [\n'
+                    ' returncode %d\n'
+                    ']\n' % returncode))
         self.source.seek(0)
         self.done = True
 

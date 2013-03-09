@@ -14,9 +14,13 @@
 
 """Tests for the list_tests command."""
 
+from io import BytesIO
 import os.path
 from subprocess import PIPE
 
+from extras import try_import
+import subunit
+v2_avail = try_import('subunit.ByteStreamToStreamResult')
 from testtools.compat import _b
 from testtools.matchers import MatchesException
 
@@ -71,7 +75,15 @@ class TestCommand(ResourcedTestCase):
     def test_calls_list_tests(self):
         ui, cmd = self.get_test_ui_and_cmd(args=('--', 'bar', 'quux'))
         cmd.repository_factory = memory.RepositoryFactory()
-        ui.proc_outputs = [_b('returned\n\nvalues\n')]
+        if v2_avail:
+            buffer = BytesIO()
+            stream = subunit.StreamResultToBytes(buffer)
+            stream.status(test_id='returned', test_status='exists')
+            stream.status(test_id='values', test_status='exists')
+            subunit_bytes = buffer.getvalue()
+        else:
+            subunit_bytes = _b('returned\n\nvalues\n')
+        ui.proc_outputs = [subunit_bytes]
         self.setup_repo(cmd, ui)
         self.set_config(
             '[DEFAULT]\ntest_command=foo $LISTOPT $IDOPTION\n'
@@ -91,7 +103,15 @@ class TestCommand(ResourcedTestCase):
         ui, cmd = self.get_test_ui_and_cmd(
             args=('returned', '--', 'bar', 'quux'))
         cmd.repository_factory = memory.RepositoryFactory()
-        ui.proc_outputs = [_b('returned\n\nvalues\n')]
+        if v2_avail:
+            buffer = BytesIO()
+            stream = subunit.StreamResultToBytes(buffer)
+            stream.status(test_id='returned', test_status='exists')
+            stream.status(test_id='values', test_status='exists')
+            subunit_bytes = buffer.getvalue()
+        else:
+            subunit_bytes = _b('returned\nvalues\n')
+        ui.proc_outputs = [subunit_bytes]
         self.setup_repo(cmd, ui)
         self.set_config(
             '[DEFAULT]\ntest_command=foo $LISTOPT $IDOPTION\n'

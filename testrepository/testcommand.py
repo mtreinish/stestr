@@ -31,7 +31,7 @@ from testtools.compat import _b
 
 from testrepository.results import TestResultFilter
 from testrepository.testlist import (
-    parse_list,
+    parse_enumeration,
     write_list,
     )
 
@@ -288,7 +288,7 @@ class TestListingFixture(Fixture):
                 stdout=subprocess.PIPE, stdin=subprocess.PIPE)
             out, err = run_proc.communicate()
             # Should we raise on non-zero exit?
-            ids = parse_list(out)
+            ids = parse_enumeration(out)
             return ids
         finally:
             if instance:

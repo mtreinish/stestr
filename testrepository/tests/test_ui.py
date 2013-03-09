@@ -19,6 +19,7 @@ import optparse
 import subprocess
 import sys
 
+from fixtures import EnvironmentVariable
 from testtools.compat import _b, _u
 from testtools.content import text_content
 from testtools.matchers import raises
@@ -100,6 +101,7 @@ class TestUIContract(ResourcedTestCase):
         self.assertThat(lambda: ui.iter_streams('subunit'), raises(KeyError))
 
     def test_output_error(self):
+        self.useFixture(EnvironmentVariable('TESTR_PDB'))
         try:
             raise Exception('fooo')
         except Exception:

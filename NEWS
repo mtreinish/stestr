@@ -5,6 +5,15 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+CHANGES
+-------
+
+* Expects subunit v2 if the local library has v2 support in the subunit
+  library. This should be seamless if the system under test shares the
+  Python libraries. If it doesn't, either arrange to use ``subunit-2to1``
+  or upgrade the subunit libraries for the system under test.
+  (Robert Collins)
+
 0.0.14
 ++++++
 

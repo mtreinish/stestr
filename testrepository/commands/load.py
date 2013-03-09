@@ -15,9 +15,14 @@
 """Load data into a repository."""
 
 from functools import partial
+from operator import methodcaller
 import optparse
 
+from extras import try_import
+v2_avail = try_import('subunit.ByteStreamToStreamResult')
+
 import subunit.test_results
+import testtools
 from testtools import ConcurrentTestSuite, MultiTestResult, Tagger
 
 from testrepository.arguments.path import ExistingPathArgument
@@ -83,11 +88,24 @@ class load(Command):
             cases = lambda:map(opener, self.ui.arguments['streams'])
         else:
             cases = lambda:self.ui.iter_streams('subunit')
-        def make_tests(suite):
-            streams = list(suite)[0]
-            for stream in streams():
-                yield subunit.ProtocolTestCase(stream)
-        case = ConcurrentTestSuite(cases, make_tests, _wrap_result)
+        if v2_avail:
+            def make_tests(suite):
+                streams = list(suite)[0]
+                for pos, stream in enumerate(streams()):
+                    case = subunit.ByteStreamToStreamResult(
+                        stream, non_subunit_name='stdout')
+                    case = testtools.DecorateTestCaseResult(case,
+                        lambda result:testtools.StreamTagger(
+                            [result], add=['worker-%d' % pos]))
+                    yield (case, str(pos))
+            case = testtools.ConcurrentStreamTestSuite(cases, make_tests)
+        else:
+            # TODO: switch this to the new threadsafesuite thingy. Do the decorate on the backend.
+            def make_tests(suite):
+                streams = list(suite)[0]
+                for stream in streams():
+                    yield subunit.ProtocolTestCase(stream)
+            case = ConcurrentTestSuite(cases, make_tests, _wrap_result)
         # One copy of the stream to repository storage
         inserter = repo.get_inserter(partial=self.ui.options.partial)
         # One copy of the stream to the UI layer after performing global
@@ -99,6 +117,8 @@ class load(Command):
         output_result = self.ui.make_result(
             lambda: run_id, testcommand, previous_run=previous_run)
         result = MultiTestResult(inserter, output_result)
+        if v2_avail:
+            result = testtools.StreamToExtendedDecorator(result)
         result.startTestRun()
         try:
             case.run(result)

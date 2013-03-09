@@ -14,9 +14,13 @@
 
 """Tests for the load command."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from io import BytesIO
 from tempfile import NamedTemporaryFile
 
+from extras import try_import
+v2_avail = try_import('subunit.ByteStreamToStreamResult')
+import subunit
 from subunit import iso8601
 
 import testtools
@@ -111,7 +115,15 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual(0, cmd.execute())
 
     def test_load_returns_1_on_failed_stream(self):
-        ui = UI([('subunit', _b('test: foo\nfailure: foo\n'))])
+        if v2_avail:
+            buffer = BytesIO()
+            stream = subunit.StreamResultToBytes(buffer)
+            stream.status(test_id='foo', test_status='inprogress')
+            stream.status(test_id='foo', test_status='fail')
+            subunit_bytes = buffer.getvalue()
+        else:
+            subunit_bytes = _b('test: foo\nfailure: foo\n')
+        ui = UI([('subunit', subunit_bytes)])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
@@ -119,7 +131,15 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual(1, cmd.execute())
 
     def test_load_new_shows_test_failures(self):
-        ui = UI([('subunit', _b('test: foo\nfailure: foo\n'))])
+        if v2_avail:
+            buffer = BytesIO()
+            stream = subunit.StreamResultToBytes(buffer)
+            stream.status(test_id='foo', test_status='inprogress')
+            stream.status(test_id='foo', test_status='fail')
+            subunit_bytes = buffer.getvalue()
+        else:
+            subunit_bytes = b'test: foo\nfailure: foo\n'
+        ui = UI([('subunit', subunit_bytes)])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
@@ -131,7 +151,17 @@ class TestCommandLoad(ResourcedTestCase):
             ui.outputs[1:])
 
     def test_load_new_shows_test_failure_details(self):
-        ui = UI([('subunit', _b('test: foo\nfailure: foo [\narg\n]\n'))])
+        if v2_avail:
+            buffer = BytesIO()
+            stream = subunit.StreamResultToBytes(buffer)
+            stream.status(test_id='foo', test_status='inprogress')
+            stream.status(test_id='foo', test_status='fail',
+                file_name="traceback", mime_type='text/plain;charset=utf8',
+                file_bytes=b'arg\n')
+            subunit_bytes = buffer.getvalue()
+        else:
+            subunit_bytes = b'test: foo\nfailure: foo [\narg\n]\n'
+        ui = UI([('subunit', subunit_bytes)])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
@@ -153,7 +183,15 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual(1, len(result.failures))
 
     def test_load_new_shows_test_skips(self):
-        ui = UI([('subunit', _b('test: foo\nskip: foo\n'))])
+        if v2_avail:
+            buffer = BytesIO()
+            stream = subunit.StreamResultToBytes(buffer)
+            stream.status(test_id='foo', test_status='inprogress')
+            stream.status(test_id='foo', test_status='skip')
+            subunit_bytes = buffer.getvalue()
+        else:
+            subunit_bytes = b'test: foo\nskip: foo\n'
+        ui = UI([('subunit', subunit_bytes)])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
@@ -199,13 +237,22 @@ class TestCommandLoad(ResourcedTestCase):
             cmd.repository_factory.repos[ui.here].get_test_run(0)._partial)
 
     def test_load_timed_run(self):
-        ui = UI(
-            [('subunit',
-              _b('time: 2011-01-01 00:00:01.000000Z\n'
+        if v2_avail:
+            buffer = BytesIO()
+            stream = subunit.StreamResultToBytes(buffer)
+            time = datetime(2011, 1, 1, 0, 0, 1, tzinfo=iso8601.Utc())
+            stream.status(test_id='foo', test_status='inprogress', timestamp=time)
+            stream.status(test_id='foo', test_status='success',
+                timestamp=time+timedelta(seconds=2))
+            timed_bytes = buffer.getvalue()
+        else:
+            timed_bytes = _b('time: 2011-01-01 00:00:01.000000Z\n'
                'test: foo\n'
                'time: 2011-01-01 00:00:03.000000Z\n'
                'success: foo\n'
-               'time: 2011-01-01 00:00:06.000000Z\n'))])
+               'time: 2011-01-01 00:00:06.000000Z\n')
+        ui = UI(
+            [('subunit', timed_bytes)])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
@@ -237,17 +284,29 @@ class TestCommandLoad(ResourcedTestCase):
         # If there's a previous run in the database, then show information
         # about the high level differences in the test run: how many more
         # tests, how many more failures, how much longer it takes.
-        ui = UI(
-            [('subunit',
-              _b('time: 2011-01-02 00:00:01.000000Z\n'
+        if v2_avail:
+            buffer = BytesIO()
+            stream = subunit.StreamResultToBytes(buffer)
+            time = datetime(2011, 1, 2, 0, 0, 1, tzinfo=iso8601.Utc())
+            stream.status(test_id='foo', test_status='inprogress', timestamp=time)
+            stream.status(test_id='foo', test_status='fail',
+                timestamp=time+timedelta(seconds=2))
+            stream.status(test_id='bar', test_status='inprogress',
+                timestamp=time+timedelta(seconds=4))
+            stream.status(test_id='bar', test_status='fail',
+                timestamp=time+timedelta(seconds=6))
+            timed_bytes = buffer.getvalue()
+        else:
+            timed_bytes = _b('time: 2011-01-02 00:00:01.000000Z\n'
                'test: foo\n'
                'time: 2011-01-02 00:00:03.000000Z\n'
                'error: foo\n'
                'time: 2011-01-02 00:00:05.000000Z\n'
                'test: bar\n'
                'time: 2011-01-02 00:00:07.000000Z\n'
-               'error: bar\n'
-               ))])
+               'error: bar\n')
+        ui = UI(
+            [('subunit', timed_bytes)])
         cmd = load.load(ui)
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
