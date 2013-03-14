@@ -271,6 +271,13 @@ class _Inserter(_SafeInserter):
     def _name(self):
         return self._repository._allocate()
 
+    def get_id(self):
+        return self._run_id
+
+    def startTestRun(self):
+        super(_Inserter, self).startTestRun()
+        self._run_id = None
+
     def stopTestRun(self):
         run_id = _SafeInserter.stopTestRun(self)
         self._run_id = run_id

@@ -116,7 +116,7 @@ class load(Command):
         except KeyError:
             previous_run = None
         output_result = self.ui.make_result(
-            lambda: inserter._run_id, testcommand, previous_run=previous_run)
+            inserter.get_id, testcommand, previous_run=previous_run)
         result = testtools.CopyStreamResult([
             testtools.StreamToExtendedDecorator(inserter), output_result])
         result.startTestRun()

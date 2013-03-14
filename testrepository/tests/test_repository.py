@@ -173,6 +173,7 @@ class TestRepositoryContract(ResourcedTestCase):
         case.run(result)
         result.stopTestRun()
         self.assertEqual(1, repo.count())
+        self.assertNotEqual(None, result.get_id())
 
     def test_open(self):
         self.repo_impl.initialise(self.sample_url)
