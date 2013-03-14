@@ -77,7 +77,6 @@ class load(Command):
             else:
                 raise
         testcommand = self.command_factory(self.ui, repo)
-        run_id = None
         # Not a full implementation of TestCase, but we only need to iterate
         # back to it. Needs to be a callable - its a head fake for
         # testsuite.add.
@@ -117,20 +116,14 @@ class load(Command):
         except KeyError:
             previous_run = None
         output_result = self.ui.make_result(
-            lambda: run_id, testcommand, previous_run=previous_run)
-        result = MultiTestResult(inserter, output_result)
-        result = testtools.StreamToExtendedDecorator(result)
+            lambda: inserter._run_id, testcommand, previous_run=previous_run)
+        result = testtools.CopyStreamResult([
+            testtools.StreamToExtendedDecorator(inserter), output_result])
         result.startTestRun()
         try:
             case.run(result)
         finally:
-            # Does not call result.stopTestRun because the lambda: run_id above
-            # needs the local variable to be updated before the
-            # filtered.stopTestRun() call is invoked. This could be fixed by
-            # having a capturing result rather than a lambda, but thats more
-            # code.
-            run_id = inserter.stopTestRun()
-            output_result.stopTestRun()
+            result.stopTestRun()
         if not output_result.wasSuccessful():
             return 1
         else:

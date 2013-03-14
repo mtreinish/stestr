@@ -273,6 +273,7 @@ class _Inserter(_SafeInserter):
 
     def stopTestRun(self):
         run_id = _SafeInserter.stopTestRun(self)
+        self._run_id = run_id
         # XXX: locking (other inserts may happen while we update the failing
         # file).
         # Combine failing + this run : strip passed tests, add failures.
