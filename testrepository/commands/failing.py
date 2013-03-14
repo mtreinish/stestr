@@ -16,7 +16,7 @@
 
 import optparse
 
-from testtools import MultiTestResult, TestResult
+from testtools import ExtendedToStreamDecorator, MultiTestResult, TestResult
 
 from testrepository.commands import Command
 from testrepository.results import TestResultFilter
@@ -58,7 +58,8 @@ class failing(Command):
         if self.ui.options.list:
             return testcommand.make_result(list_result)
         else:
-            output_result = self.ui.make_result(repo.latest_id, testcommand)
+            output_result = ExtendedToStreamDecorator(
+                self.ui.make_result(repo.latest_id, testcommand))
             # This probably wants to be removed or pushed into the CLIResult
             # responsibilities, it attempts to preserve skips, but the ui
             # make_result filters them - a mismatch.

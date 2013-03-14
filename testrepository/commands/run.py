@@ -130,7 +130,7 @@ class run(Command):
             default=False, help="Display results in subunit format."),
         optparse.Option("--full-results", action="store_true",
             default=False,
-            help="Show all test results. Currently only works with --subunit."),
+            help="No-op - deprecated and kept only for backwards compat."),
         optparse.Option("--until-failure", action="store_true",
             default=False,
             help="Repeat the run again and again until failure occurs."),

@@ -166,7 +166,9 @@ class AbstractTestRun(object):
         """Get a testtools.TestCase-like object that can be run.
 
         :return: A TestCase like object which can be run to get the individual
-            tests reported to a testtools.TestResult.
+            tests reported to a testtools.StreamResult/TestResult.
+            (Clients of repository should provide an ExtendedToStreamDecorator
+            decorator to permit either API to be used).
         """
         raise NotImplementedError(self.get_test)
 

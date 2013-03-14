@@ -62,7 +62,7 @@ class load(Command):
             default=False, help="Display results in subunit format."),
         optparse.Option("--full-results", action="store_true",
             default=False,
-            help="Show all test results. Currently only works with --subunit."),
+            help="No-op - deprecated and kept only for backwards compat."),
         ]
     # Can be assigned to to inject a custom command factory.
     command_factory = TestCommand
@@ -100,7 +100,6 @@ class load(Command):
                     yield (case, str(pos))
             case = testtools.ConcurrentStreamTestSuite(cases, make_tests)
         else:
-            # TODO: switch this to the new threadsafesuite thingy. Do the decorate on the backend.
             def make_tests(suite):
                 streams = list(suite)[0]
                 for stream in streams():

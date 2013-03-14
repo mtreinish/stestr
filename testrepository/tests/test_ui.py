@@ -226,13 +226,13 @@ class TestUIContract(ResourcedTestCase):
         out, err = proc.communicate()
 
     def test_make_result(self):
-        # make_result should return a TestResult.
+        # make_result should return a StreamResult.
         ui = self.ui_factory()
         ui.set_command(commands.Command(ui))
         result = ui.make_result(lambda: None, StubTestCommand())
         result.startTestRun()
+        result.status()
         result.stopTestRun()
-        self.assertEqual(0, result.testsRun)
 
     def test_make_result_previous_run(self):
         # make_result can take a previous run.
@@ -242,5 +242,5 @@ class TestUIContract(ResourcedTestCase):
             lambda: None, StubTestCommand(),
             previous_run=memory.Repository().get_failing())
         result.startTestRun()
+        result.status()
         result.stopTestRun()
-        self.assertEqual(0, result.testsRun)

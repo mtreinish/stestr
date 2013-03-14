@@ -14,6 +14,9 @@ CHANGES
   or upgrade the subunit libraries for the system under test.
   (Robert Collins)
 
+* ``--full-results`` is now a no-op, use ``--subunit`` to get unfiltered
+  output. (Robert Collins)
+
 0.0.14
 ++++++
 

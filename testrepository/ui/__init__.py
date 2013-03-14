@@ -86,7 +86,10 @@ class AbstractUI(object):
         raise NotImplementedError(self._iter_streams)
 
     def make_result(self, get_id, test_command, previous_run=None):
-        """Make a `TestResult` that can be used to display test results.
+        """Make a `StreamResult` that can be used to display test results.
+
+        This will also support the `TestResult` API until at least
+        testrepository 0.0.16 to permit clients to migrate gracefully.
 
         :param get_id: A nullary callable that returns the id of the test run
             when called.

@@ -24,6 +24,7 @@ from textwrap import dedent
 
 from fixtures import EnvironmentVariable
 import subunit
+import testtools
 from testtools import TestCase
 from testtools.compat import _b, _u
 from testtools.matchers import (
@@ -131,7 +132,9 @@ class TestCLIUI(ResourcedTestCase):
             def method(self):
                 self.fail('quux')
         result = ui.make_result(lambda: None, StubTestCommand())
-        Case('method').run(result)
+        result.startTestRun()
+        Case('method').run(testtools.ExtendedToStreamDecorator(result))
+        result.stopTestRun()
         self.assertThat(ui._stdout.buffer.getvalue().decode('utf8'),
             DocTestMatches("""\
 ======================================================================
@@ -229,21 +232,6 @@ AssertionError: quux...
         ui, cmd = get_test_ui_and_cmd(options=[('subunit', True)])
         self.assertEqual(True, ui.options.subunit)
 
-    def test_subunit_output_with_full_results(self):
-        # When --full-results is passed in, successes are included in the
-        # subunit output.
-        ui, cmd = get_test_ui_and_cmd(options=[('subunit', True)])
-        stream = BytesIO()
-        subunit_result = subunit.TestProtocolClient(stream)
-        subunit_result.startTest(self)
-        subunit_result.addSuccess(self)
-        subunit_result.stopTest(self)
-        result = ui.make_result(lambda: None, StubTestCommand())
-        result.startTest(self)
-        result.addSuccess(self)
-        result.stopTest(self)
-        self.assertEqual(stream.getvalue(), ui._stdout.buffer.getvalue())
-
     def test_dash_dash_help_shows_help(self):
         stdout = StringIO()
         stdin = StringIO()
@@ -332,18 +320,12 @@ class TestCLITestResult(TestCase):
         except ZeroDivisionError:
             return sys.exc_info()
 
-    def make_result(self, stream=None, fullresults=False):
+    def make_result(self, stream=None):
         if stream is None:
             stream = BytesIO()
         argv = []
-        if fullresults:
-            argv.append('--full-results')
         ui = cli.UI(argv, None, stream, None)
         cmd = commands.Command(ui)
-        if fullresults:
-            cmd.options = [optparse.Option(
-                "--full-results", action="store_true", default=False,
-                help="Show full results.")]
         ui.set_command(cmd)
         return ui.make_result(lambda: None, StubTestCommand())
 
@@ -354,64 +336,60 @@ class TestCLITestResult(TestCase):
         cli.CLITestResult(cli.UI(None, None, None, None), stream, lambda: None)
         self.assertEqual('', stream.getvalue())
 
+    def _unwrap(self, result):
+        """Unwrap result to get to the CLI result object."""
+        return result.targets[0].decorated.decorated._results[1].decorated
+
     def test_format_error(self):
         # CLITestResult formats errors by giving them a big fat line, a title
         # made up of their 'label' and the name of the test, another different
         # big fat line, and then the actual error itself.
-        result = self.make_result(fullresults=True)
+        result = self._unwrap(self.make_result())
         error = result._format_error('label', self, 'error text')
         expected = '%s%s: %s\n%s%s' % (
             result.sep1, 'label', self.id(), result.sep2, 'error text')
         self.assertThat(error, DocTestMatches(expected))
 
     def test_format_error_includes_tags(self):
-        result = self.make_result(fullresults=True)
-        result.tags(['foo'], ['bar'])
+        result1 = self.make_result()
+        result = self._unwrap(result1)
+        #result1.startTestRun()
+        #result1.status(test_id=self.id(), test_status='fail', eof=True,
+        #    test_tags=set(['foo']), file_name='traceback',
+        #    mime_type='test/plain;charset=utf8', file_bytes=b'error text')
+        result.tags(set(['foo']), set())
         error = result._format_error('label', self, 'error text')
         expected = '%s%s: %s\ntags: foo\n%s%s' % (
             result.sep1, 'label', self.id(), result.sep2, 'error text')
         self.assertThat(error, DocTestMatches(expected))
 
-    def test_addError_outputs_error(self):
-        # CLITestResult.addError outputs the given error immediately to the
-        # stream.
+    def test_addFail_outputs_error(self):
+        # CLITestResult.status test_status='fail' outputs the given error
+        # immediately to the stream.
         stream = StringIO()
-        result = self.make_result(stream, fullresults=True)
+        result = self.make_result(stream)
         error = self.make_exc_info()
-        error_text = result._err_details_to_string(self, error)
-        result.addError(self, error)
+        error_text = 'foo\nbar\n'
+        result.startTestRun()
+        result.status(test_id=self.id(), test_status='fail', eof=True,
+            file_name='traceback', mime_type='text/plain;charset=utf8',
+            file_bytes=error_text.encode('utf8'))
+        result1 = self._unwrap(result)
         self.assertThat(
             stream.getvalue(),
-            DocTestMatches(result._format_error('ERROR', self, error_text)))
-
-    def test_addFailure_outputs_failure(self):
-        # CLITestResult.addFailure outputs the given error immediately to the
-        # stream.
-        stream = StringIO()
-        result = self.make_result(stream, fullresults=True)
-        error = self.make_exc_info()
-        error_text = result._err_details_to_string(self, error)
-        result.addFailure(self, error)
-        self.assertThat(
-            stream.getvalue(),
-            DocTestMatches(result._format_error('FAIL', self, error_text)))
+            DocTestMatches(result1._format_error('FAIL', self, error_text)))
 
     def test_addFailure_handles_string_encoding(self):
         # CLITestResult.addFailure outputs the given error handling non-ascii
         # characters.
         # Lets say we have bytes output, not string for some reason.
         stream = BytesIO()
-        result = self.make_result(stream, fullresults=True)
-        class MyError(ValueError):
-            if sys.version_info[0] < 3:
-                def __unicode__(self):
-                    return _u('\u201c')
-            else:
-                def __str__(self):
-                    return _u('\u201c')
-        error = (MyError, MyError(), None)
-        result.addFailure(self, error)
-        pattern = _u("...MyError: ?")
+        result = self.make_result(stream)
+        result.startTestRun()
+        result.status(test_id='foo', test_status='fail', file_name='traceback',
+            mime_type='text/plain;charset=utf8',
+            file_bytes='-->\u201c<--'.encode('utf8'), eof=True)
+        pattern = _u("...-->?<--...")
         self.assertThat(
             stream.getvalue().decode('utf8'),
             DocTestMatches(pattern, doctest.ELLIPSIS))

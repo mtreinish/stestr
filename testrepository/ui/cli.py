@@ -20,6 +20,7 @@ import signal
 import subunit
 import sys
 
+from testtools import ExtendedToStreamDecorator, StreamToExtendedDecorator
 from testtools.compat import unicode_output_stream, _u
 
 from testrepository import ui
@@ -80,12 +81,12 @@ class UI(ui.AbstractUI):
     def make_result(self, get_id, test_command, previous_run=None):
         if getattr(self.options, 'subunit', False):
             # By pass user transforms - just forward it all.
-            return subunit.TestProtocolClient(self._stdout)
+            return ExtendedToStreamDecorator(StreamToExtendedDecorator(
+                subunit.TestProtocolClient(self._stdout)))
         output = CLITestResult(self, get_id, self._stdout, previous_run)
-        if getattr(self.options, 'full_results', False):
-            return output
         # Apply user defined transforms.
-        return test_command.make_result(output)
+        return ExtendedToStreamDecorator(
+            StreamToExtendedDecorator(test_command.make_result(output)))
 
     def output_error(self, error_tuple):
         if 'TESTR_PDB' in os.environ:

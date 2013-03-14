@@ -17,6 +17,8 @@
 from io import BytesIO
 import optparse
 
+import testtools
+
 from testrepository import ui
 
 
@@ -62,6 +64,11 @@ class TestResultModel(ui.BaseUITestResult):
 
     def stopTest(self, test):
         self._suite.recordResult('stopTest', test)
+
+    def status(self, test_id=None, test_status=None, test_tags=None,
+        runnable=True, file_name=None, file_bytes=None, eof=False,
+        mime_type=None, route_code=None, timestamp=None):
+        self._suite.recordResult('status', test_id, test_status)
 
     def addError(self, test, *args):
         super(TestResultModel, self).addError(test, *args)
@@ -149,8 +156,10 @@ class UI(ui.AbstractUI):
                 yield BytesIO(stream_value)
 
     def make_result(self, get_id, test_command, previous_run=None):
-        return test_command.make_result(
-            TestResultModel(self, get_id, previous_run))
+        return testtools.ExtendedToStreamDecorator(
+            testtools.StreamToExtendedDecorator(
+            test_command.make_result(
+            TestResultModel(self, get_id, previous_run))))
 
     def output_error(self, error_tuple):
         self.outputs.append(('error', error_tuple))
