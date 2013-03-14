@@ -388,7 +388,7 @@ class TestCLITestResult(TestCase):
         result.startTestRun()
         result.status(test_id='foo', test_status='fail', file_name='traceback',
             mime_type='text/plain;charset=utf8',
-            file_bytes='-->\u201c<--'.encode('utf8'), eof=True)
+            file_bytes=b'-->\xe2\x80\x9c<--', eof=True)
         pattern = _u("...-->?<--...")
         self.assertThat(
             stream.getvalue().decode('utf8'),
