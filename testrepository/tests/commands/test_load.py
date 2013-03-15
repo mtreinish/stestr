@@ -317,17 +317,12 @@ class TestCommandLoad(ResourcedTestCase):
         inserter = repo._get_inserter(False)
         # Insert a run with different results.
         inserter.startTestRun()
-        inserter.time(datetime(2011, 1, 1, 0, 0, 1, tzinfo=iso8601.Utc()))
-        inserter.startTest(self)
-        inserter.time(datetime(2011, 1, 1, 0, 0, 10, tzinfo=iso8601.Utc()))
-        inserter.addError(self, details={'traceback': text_content('foo')})
-        inserter.stopTest(self)
+        inserter.status(test_id=self.id(), test_status='inprogress',
+            timestamp=datetime(2011, 1, 1, 0, 0, 1, tzinfo=iso8601.Utc()))
+        inserter.status(test_id=self.id(), test_status='fail',
+            timestamp=datetime(2011, 1, 1, 0, 0, 10, tzinfo=iso8601.Utc()))
         inserter.stopTestRun()
         self.assertEqual(1, cmd.execute())
-        # Note that the time here is 2.0, the difference between first and
-        # second time: directives. That's because 'load' uses a
-        # ThreadsafeForwardingResult (via ConcurrentTestSuite) that suppresses
-        # time information not involved in the start or stop of a test.
         self.assertEqual(
             [('summary', False, 2, 1, 6.0, -3.0,
               [('id', 1, None), ('failures', 2, 1)])],

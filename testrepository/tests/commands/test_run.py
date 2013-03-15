@@ -74,10 +74,10 @@ class TestCommand(ResourcedTestCase):
         repo = cmd.repository_factory.initialise(ui.here)
         inserter = repo.get_inserter()
         inserter.startTestRun()
-        make_test('passing', True).run(inserter)
+        inserter.status(test_id='passing', test_status='success')
         if failures:
-            make_test('failing1', False).run(inserter)
-            make_test('failing2', False).run(inserter)
+            inserter.status(test_id='failing1', test_status='fail')
+            inserter.status(test_id='failing2', test_status='fail')
         inserter.stopTestRun()
 
     def test_no_config_file_errors(self):
@@ -336,8 +336,8 @@ class TestCommand(ResourcedTestCase):
         result = cmd.execute()
         self.assertEqual(1, result)
         run = cmd.repository_factory.repos[ui.here].get_test_run(1)
-        self.assertEqual([Wildcard, 'Failure'],
-            [outcome[0] for outcome in run._outcomes])
+        self.assertEqual([Wildcard, 'fail'],
+            [test['status'] for test in run._tests])
 
     def test_regex_test_filter(self):
         ui, cmd = self.get_test_ui_and_cmd(args=('ab.*cd', '--', 'bar', 'quux'))

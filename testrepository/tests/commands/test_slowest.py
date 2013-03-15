@@ -55,13 +55,10 @@ class TestCommand(ResourcedTestCase):
         """
         test_id = self.getUniqueString()
         start_time = datetime.now(pytz.UTC)
-        inserter.time(start_time)
-        test_case = PlaceHolder(test_id)
-        inserter.startTest(test_case)
-        inserter.time(
-            start_time + timedelta(seconds=runtime))
-        inserter.addSuccess(test_case)
-        inserter.stopTest(test_case)
+        inserter.status(test_id=test_id, test_status='inprogress',
+            timestamp=start_time)
+        inserter.status(test_id=test_id, test_status='success',
+            timestamp=start_time + timedelta(seconds=runtime))
         return test_id
 
     def test_shows_one_test_when_one_test(self):

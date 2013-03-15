@@ -42,14 +42,10 @@ class TestCommand(ResourcedTestCase):
         repo = cmd.repository_factory.initialise(ui.here)
         inserter = repo.get_inserter()
         inserter.startTestRun()
-        class Cases(ResourcedTestCase):
-            def failing(self):
-                self.fail('foo')
-            def ok(self):
-                pass
-        Cases('failing').run(inserter)
-        Cases('ok').run(inserter)
-        id = inserter.stopTestRun()
+        inserter.status(test_id='failing', test_status='fail')
+        inserter.status(test_id='ok', test_status='success')
+        inserter.stopTestRun()
+        id = inserter.get_id()
         self.assertEqual(1, cmd.execute())
         # We should have seen test outputs (of the failure) and summary data.
         self.assertEqual([
@@ -70,14 +66,10 @@ class TestCommand(ResourcedTestCase):
     def _add_run(self, repo):
         inserter = repo.get_inserter()
         inserter.startTestRun()
-        class Cases(ResourcedTestCase):
-            def failing(self):
-                self.fail('foo')
-            def ok(self):
-                pass
-        Cases('failing').run(inserter)
-        Cases('ok').run(inserter)
-        return inserter.stopTestRun()
+        inserter.status(test_id='failing', test_status='fail')
+        inserter.status(test_id='ok', test_status='success')
+        inserter.stopTestRun()
+        return inserter.get_id()
 
     def test_shows_last_run(self):
         ui, cmd = self.get_test_ui_and_cmd()
@@ -126,18 +118,10 @@ class TestCommand(ResourcedTestCase):
             ('stream', Wildcard),
             ], ui.outputs)
         self.assertThat(ui.outputs[0][1], Equals(_b("""\
-test: testrepository.tests.commands.test_last.Cases.failing
-failure: testrepository.tests.commands.test_last.Cases.failing [ multipart
-Content-Type: text/x-traceback;charset=utf8,language=python
-traceback
-95\r
-Traceback (most recent call last):
-  File "testrepository/tests/commands/test_last.py", line 75, in failing
-    self.fail('foo')
-AssertionError: foo
-0\r
+test: failing
+failure: failing [ multipart
 ]
-test: testrepository.tests.commands.test_last.Cases.ok
-successful: testrepository.tests.commands.test_last.Cases.ok [ multipart
+test: ok
+successful: ok [ multipart
 ]
 """)))

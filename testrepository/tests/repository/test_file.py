@@ -86,7 +86,8 @@ class TestFileRepository(ResourcedTestCase):
         repo = self.useFixture(FileRepositoryFixture(self)).repo
         result = repo.get_inserter()
         result.startTestRun()
-        self.assertEqual(0, result.stopTestRun())
+        result.stopTestRun()
+        self.assertEqual(0, result.get_id())
 
     def test_open_expands_user_directory(self):
         short_path = self.useFixture(HomeDirTempDir()).short_path

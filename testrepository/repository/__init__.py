@@ -148,7 +148,11 @@ class AbstractRepository(object):
 
 
 class AbstractTestRun(object):
-    """A test run that has been stored in a repository."""
+    """A test run that has been stored in a repository.
+    
+    Should implement the StreamResult protocol as well
+    as the testrepository specific methods documented here.
+    """
 
     def get_id(self):
         """Get the id of the test run.

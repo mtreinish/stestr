@@ -47,13 +47,8 @@ class TestCommand(ResourcedTestCase):
         repo = cmd.repository_factory.initialise(ui.here)
         inserter = repo.get_inserter()
         inserter.startTestRun()
-        class Cases(ResourcedTestCase):
-            def failing(self):
-                self.fail('foo')
-            def ok(self):
-                pass
-        Cases('failing').run(inserter)
-        Cases('ok').run(inserter)
+        inserter.status(test_id='failing', test_status='fail')
+        inserter.status(test_id='ok', test_status='success')
         inserter.stopTestRun()
         self.assertEqual(1, cmd.execute())
         # We should have seen test outputs (of the failure) and summary data.
@@ -77,13 +72,8 @@ class TestCommand(ResourcedTestCase):
         repo = cmd.repository_factory.initialise(ui.here)
         inserter = repo.get_inserter()
         inserter.startTestRun()
-        class Cases(ResourcedTestCase):
-            def failing(self):
-                self.fail('foo')
-            def ok(self):
-                pass
-        Cases('failing').run(inserter)
-        Cases('ok').run(inserter)
+        inserter.status(test_id='failing', test_status='fail')
+        inserter.status(test_id='ok', test_status='success')
         inserter.stopTestRun()
         self.assertEqual(0, cmd.execute())
         self.assertEqual(1, len(ui.outputs))
@@ -98,10 +88,7 @@ class TestCommand(ResourcedTestCase):
         repo = cmd.repository_factory.initialise(ui.here)
         inserter = repo.get_inserter()
         inserter.startTestRun()
-        class Cases(ResourcedTestCase):
-            def ok(self):
-                pass
-        Cases('ok').run(inserter)
+        inserter.status(test_id='ok', test_status='success')
         inserter.stopTestRun()
         self.assertEqual(0, cmd.execute())
         self.assertEqual(1, len(ui.outputs))
@@ -114,22 +101,15 @@ class TestCommand(ResourcedTestCase):
         repo = cmd.repository_factory.initialise(ui.here)
         inserter = repo.get_inserter()
         inserter.startTestRun()
-        class Cases(ResourcedTestCase):
-            def failing1(self):
-                self.fail('foo')
-            def failing2(self):
-                self.fail('bar')
-            def ok(self):
-                pass
-        Cases('failing1').run(inserter)
-        Cases('ok').run(inserter)
-        Cases('failing2').run(inserter)
+        inserter.status(test_id='failing1', test_status='fail')
+        inserter.status(test_id='ok', test_status='success')
+        inserter.status(test_id='failing2', test_status='fail')
         inserter.stopTestRun()
         self.assertEqual(1, cmd.execute(), ui.outputs)
         self.assertEqual(1, len(ui.outputs))
         self.assertEqual('tests', ui.outputs[0][0])
         self.assertEqual(
-            set([Cases('failing1').id(), Cases('failing2').id()]),
+            set(['failing1', 'failing2']),
             set([test.id() for test in ui.outputs[0][1]]))
 
     def test_uses_get_failing(self):
@@ -141,13 +121,8 @@ class TestCommand(ResourcedTestCase):
             repo = open(url)
             inserter = repo.get_inserter()
             inserter.startTestRun()
-            class Cases(ResourcedTestCase):
-                def failing(self):
-                    self.fail('foo')
-                def ok(self):
-                    pass
-            Cases('failing').run(inserter)
-            Cases('ok').run(inserter)
+            inserter.status(test_id='failing', test_status='fail')
+            inserter.status(test_id='ok', test_status='success')
             inserter.stopTestRun()
             orig = repo.get_failing
             def get_failing():

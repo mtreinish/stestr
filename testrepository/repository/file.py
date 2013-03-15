@@ -26,6 +26,7 @@ import tempfile
 
 import subunit
 from subunit import TestProtocolClient
+import testtools
 from testtools.compat import _b
 
 from testrepository.repository import (
@@ -192,7 +193,7 @@ class _DiskRun(AbstractTestRun):
         return subunit.ProtocolTestCase(self.get_subunit_stream())
 
 
-class _SafeInserter(TestProtocolClient):
+class _SafeInserter(object):
 
     def __init__(self, repository, partial=False):
         # XXX: Perhaps should factor into a decorator and use an unaltered
@@ -206,13 +207,25 @@ class _SafeInserter(TestProtocolClient):
         self._times = {}
         self._test_start = None
         self._time = None
-        TestProtocolClient.__init__(self, stream)
+        subunit_client = testtools.StreamToExtendedDecorator(
+            TestProtocolClient(stream))
+        self.hook = testtools.CopyStreamResult([
+            subunit_client,
+            testtools.StreamToDict(self._handle_test)])
+        self._stream = stream
+
+    def _handle_test(self, test_dict):
+        start, stop = test_dict['timestamps']
+        if None in (start, stop):
+            return
+        self._times[test_dict['id']] = str(timedelta_to_seconds(stop - start))
 
     def startTestRun(self):
-        pass
+        self.hook.startTestRun()
+        self._run_id = None
 
     def stopTestRun(self):
-        # TestProtocolClient.stopTestRun(self)
+        self.hook.stopTestRun()
         self._stream.flush()
         self._stream.close()
         run_id = self._name()
@@ -233,30 +246,18 @@ class _SafeInserter(TestProtocolClient):
                     db[key] = value
         finally:
             db.close()
-        return run_id
+        self._run_id = run_id
+
+    def status(self, *args, **kwargs):
+        self.hook.status(*args, **kwargs)
 
     def _cancel(self):
         """Cancel an insertion."""
         self._stream.close()
         os.unlink(self.fname)
 
-    def startTest(self, test):
-        result = TestProtocolClient.startTest(self, test)
-        self._test_start = self._time
-        return result
-
-    def stopTest(self, test):
-        result = TestProtocolClient.stopTest(self, test)
-        if None in (self._test_start, self._time):
-            return result
-        duration_seconds = timedelta_to_seconds(self._time - self._test_start)
-        self._times[test.id()] = str(duration_seconds)
-        return result
-
-    def time(self, timestamp):
-        result = TestProtocolClient.time(self, timestamp)
-        self._time = timestamp
-        return result
+    def get_id(self):
+        return self._run_id
 
 
 class _FailingInserter(_SafeInserter):
@@ -271,42 +272,37 @@ class _Inserter(_SafeInserter):
     def _name(self):
         return self._repository._allocate()
 
-    def get_id(self):
-        return self._run_id
-
-    def startTestRun(self):
-        super(_Inserter, self).startTestRun()
-        self._run_id = None
-
     def stopTestRun(self):
-        run_id = _SafeInserter.stopTestRun(self)
-        self._run_id = run_id
+        super(_Inserter, self).stopTestRun()
         # XXX: locking (other inserts may happen while we update the failing
         # file).
         # Combine failing + this run : strip passed tests, add failures.
         # use memory repo to aggregate. a bit awkward on layering ;).
+        # Should just pull the failing items aside as they happen perhaps.
+        # Or use a router and avoid using a memory object at all.
         from testrepository.repository import memory
         repo = memory.Repository()
         if self.partial:
             # Seed with current failing
-            inserter = repo.get_inserter()
+            inserter = testtools.ExtendedToStreamDecorator(repo.get_inserter())
             inserter.startTestRun()
             failing = self._repository.get_failing()
             failing.get_test().run(inserter)
             inserter.stopTestRun()
-        inserter= repo.get_inserter(partial=True)
+        inserter= testtools.ExtendedToStreamDecorator(repo.get_inserter(partial=True))
         inserter.startTestRun()
-        run = self._repository.get_test_run(run_id)
+        run = self._repository.get_test_run(self.get_id())
         run.get_test().run(inserter)
         inserter.stopTestRun()
         # and now write to failing
         inserter = _FailingInserter(self._repository)
-        inserter.startTestRun()
+        _inserter = testtools.ExtendedToStreamDecorator(inserter)
+        _inserter.startTestRun()
         try:
-            repo.get_failing().get_test().run(inserter)
+            repo.get_failing().get_test().run(_inserter)
         except:
             inserter._cancel()
             raise
         else:
-            inserter.stopTestRun()
-        return run_id
+            _inserter.stopTestRun()
+        return self.get_id()

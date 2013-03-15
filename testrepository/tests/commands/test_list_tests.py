@@ -60,8 +60,8 @@ class TestCommand(ResourcedTestCase):
         repo = cmd.repository_factory.initialise(ui.here)
         inserter = repo.get_inserter()
         inserter.startTestRun()
-        make_test('passing', True).run(inserter)
-        make_test('failing', False).run(inserter)
+        inserter.status(test_id='passing', test_status='success')
+        inserter.status(test_id='failing', test_status='fail')
         inserter.stopTestRun()
 
     def test_no_config_file_errors(self):
