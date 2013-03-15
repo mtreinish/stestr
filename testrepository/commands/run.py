@@ -68,7 +68,10 @@ class ReturnCodeToSubunit(object):
         returncode = self.proc.wait()
         if returncode != 0:
             if self.lastoutput != LINEFEED:
-                # Subunit is line orientated, it has to start on a fresh line.
+                # Subunit V1 is line orientated, it has to start on a fresh
+                # line. V2 needs to start on any fresh utf8 character border
+                # - which is not guaranteed in an arbitrary stream endpoint, so
+                # injecting a \n gives us such a guarantee.
                 self.source.write(_b('\n'))
             if v2_avail:
                 stream = subunit.StreamResultToBytes(self.source)
