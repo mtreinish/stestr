@@ -56,14 +56,14 @@ class last(Command):
         except KeyError:
             previous_run = None
         failed = False
-        result = self.ui.make_result(
+        result, summary = self.ui.make_result(
             latest_run.get_id, testcommand, previous_run=previous_run)
         result.startTestRun()
         try:
             case.run(result)
         finally:
             result.stopTestRun()
-        failed = not result.wasSuccessful()
+        failed = not summary.wasSuccessful()
         if failed:
             return 1
         else:

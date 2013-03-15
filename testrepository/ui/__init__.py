@@ -96,6 +96,8 @@ class AbstractUI(object):
         :param test_command: A TestCommand object used to configure user
             transforms.
         :param previous_run: An optional previous test run.
+        :return: A two-tuple with the stream to forward events to, and a
+            StreamSummary for querying success after the stream is finished.
         """
         raise NotImplementedError(self.make_result)
 

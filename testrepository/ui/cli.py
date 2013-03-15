@@ -81,12 +81,13 @@ class UI(ui.AbstractUI):
     def make_result(self, get_id, test_command, previous_run=None):
         if getattr(self.options, 'subunit', False):
             # By pass user transforms - just forward it all.
-            return ExtendedToStreamDecorator(StreamToExtendedDecorator(
+            result = ExtendedToStreamDecorator(StreamToExtendedDecorator(
                 subunit.TestProtocolClient(self._stdout)))
-        output = CLITestResult(self, get_id, self._stdout, previous_run)
-        # Apply user defined transforms.
-        return ExtendedToStreamDecorator(
-            StreamToExtendedDecorator(test_command.make_result(output)))
+        else:
+            output = CLITestResult(self, get_id, self._stdout, previous_run)
+            # Apply user defined transforms.
+            result = ExtendedToStreamDecorator(StreamToExtendedDecorator(test_command.make_result(output)))
+        return result, result
 
     def output_error(self, error_tuple):
         if 'TESTR_PDB' in os.environ:

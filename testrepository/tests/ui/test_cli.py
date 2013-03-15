@@ -131,7 +131,7 @@ class TestCLIUI(ResourcedTestCase):
         class Case(ResourcedTestCase):
             def method(self):
                 self.fail('quux')
-        result = ui.make_result(lambda: None, StubTestCommand())
+        result, summary = ui.make_result(lambda: None, StubTestCommand())
         result.startTestRun()
         Case('method').run(testtools.ExtendedToStreamDecorator(result))
         result.stopTestRun()
@@ -344,7 +344,7 @@ class TestCLITestResult(TestCase):
         # CLITestResult formats errors by giving them a big fat line, a title
         # made up of their 'label' and the name of the test, another different
         # big fat line, and then the actual error itself.
-        result = self._unwrap(self.make_result())
+        result = self._unwrap(self.make_result()[0])
         error = result._format_error('label', self, 'error text')
         expected = '%s%s: %s\n%s%s' % (
             result.sep1, 'label', self.id(), result.sep2, 'error text')
@@ -352,7 +352,7 @@ class TestCLITestResult(TestCase):
 
     def test_format_error_includes_tags(self):
         result1 = self.make_result()
-        result = self._unwrap(result1)
+        result = self._unwrap(result1[0])
         #result1.startTestRun()
         #result1.status(test_id=self.id(), test_status='fail', eof=True,
         #    test_tags=set(['foo']), file_name='traceback',
@@ -367,7 +367,7 @@ class TestCLITestResult(TestCase):
         # CLITestResult.status test_status='fail' outputs the given error
         # immediately to the stream.
         stream = StringIO()
-        result = self.make_result(stream)
+        result = self.make_result(stream)[0]
         error = self.make_exc_info()
         error_text = 'foo\nbar\n'
         result.startTestRun()
@@ -384,7 +384,7 @@ class TestCLITestResult(TestCase):
         # characters.
         # Lets say we have bytes output, not string for some reason.
         stream = BytesIO()
-        result = self.make_result(stream)
+        result = self.make_result(stream)[0]
         result.startTestRun()
         result.status(test_id='foo', test_status='fail', file_name='traceback',
             mime_type='text/plain;charset=utf8',

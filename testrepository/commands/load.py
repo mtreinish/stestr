@@ -97,6 +97,7 @@ class load(Command):
                 else:
                     # Calls TestResult API.
                     case = subunit.ProtocolTestCase(stream)
+                    # Now calls StreamResult API :).
                     case = testtools.DecorateTestCaseResult(
                         case,
                         testtools.ExtendedToStreamDecorator,
@@ -107,7 +108,7 @@ class load(Command):
                         [result], add=['worker-%d' % pos]))
                 yield (case, str(pos))
         case = testtools.ConcurrentStreamTestSuite(cases, make_tests)
-        # One copy of the stream to repository storage
+        # One unmodified copy of the stream to repository storage
         inserter = repo.get_inserter(partial=self.ui.options.partial)
         # One copy of the stream to the UI layer after performing global
         # filters.
@@ -115,7 +116,7 @@ class load(Command):
             previous_run = repo.get_latest_run()
         except KeyError:
             previous_run = None
-        output_result = self.ui.make_result(
+        output_result, summary_result = self.ui.make_result(
             inserter.get_id, testcommand, previous_run=previous_run)
         result = testtools.CopyStreamResult([inserter, output_result])
         result.startTestRun()
@@ -123,7 +124,7 @@ class load(Command):
             case.run(result)
         finally:
             result.stopTestRun()
-        if not output_result.wasSuccessful():
+        if not summary_result.wasSuccessful():
             return 1
         else:
             return 0

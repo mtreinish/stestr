@@ -56,15 +56,17 @@ class failing(Command):
     def _make_result(self, repo, list_result):
         testcommand = self.command_factory(self.ui, repo)
         if self.ui.options.list:
-            return testcommand.make_result(list_result)
+            result = testcommand.make_result(list_result)
+            return result, result
         else:
-            output_result = ExtendedToStreamDecorator(
-                self.ui.make_result(repo.latest_id, testcommand))
+            output_result, summary_result = self.ui.make_result(
+                repo.latest_id, testcommand)
+            output_result = ExtendedToStreamDecorator(output_result)
             # This probably wants to be removed or pushed into the CLIResult
             # responsibilities, it attempts to preserve skips, but the ui
             # make_result filters them - a mismatch.
             errors_only = TestResultFilter(output_result, filter_skip=True)
-            return MultiTestResult(list_result, output_result)
+            return MultiTestResult(list_result, output_result), summary_result
 
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
@@ -74,16 +76,13 @@ class failing(Command):
         case = run.get_test()
         failed = False
         list_result = TestResult()
-        result = self._make_result(repo, list_result)
+        result, summary = self._make_result(repo, list_result)
         result.startTestRun()
         try:
             case.run(result)
         finally:
             result.stopTestRun()
-        # XXX: This bypasses the user defined transforms, and also sets a
-        # non-zero return even on --list, which is inappropriate. The UI result
-        # knows about success/failure in more detail.
-        failed = not list_result.wasSuccessful()
+        failed = not summary.wasSuccessful()
         if failed:
             result = 1
         else:
