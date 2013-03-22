@@ -80,9 +80,14 @@ class UI(ui.AbstractUI):
 
     def make_result(self, get_id, test_command, previous_run=None):
         if getattr(self.options, 'subunit', False):
-            # By pass user transforms - just forward it all.
+            # By pass user transforms - just forward it all and interpret
+            # everything as success.
             result = ExtendedToStreamDecorator(StreamToExtendedDecorator(
                 subunit.TestProtocolClient(self._stdout)))
+            summary = testtools.StreamSummary()
+            summary.startTestRun()
+            summary.stopTestRun()
+            return result, summary
         else:
             output = CLITestResult(self, get_id, self._stdout, previous_run)
             # Apply user defined transforms.

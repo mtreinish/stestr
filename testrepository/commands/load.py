@@ -23,20 +23,11 @@ v2_avail = try_import('subunit.ByteStreamToStreamResult')
 
 import subunit.test_results
 import testtools
-from testtools import ConcurrentTestSuite, MultiTestResult, Tagger
 
 from testrepository.arguments.path import ExistingPathArgument
 from testrepository.commands import Command
 from testrepository.repository import RepositoryNotFound
 from testrepository.testcommand import TestCommand
-
-
-def _wrap_result(result, thread_number):
-    worker_id = 'worker-%s' % thread_number
-    tags_to_add = set([worker_id])
-    tags_to_remove = set()
-    return subunit.test_results.AutoTimingTestResultDecorator(
-        Tagger(result, tags_to_add, tags_to_remove))
 
 
 class load(Command):
@@ -88,8 +79,8 @@ class load(Command):
         else:
             cases = lambda:self.ui.iter_streams('subunit')
         def make_tests(suite):
-            streams = list(suite)[0]
-            for pos, stream in enumerate(streams()):
+            streams = list(suite)
+            for pos, stream in enumerate(streams):
                 if v2_avail:
                     # Calls StreamResult API.
                     case = subunit.ByteStreamToStreamResult(
@@ -107,7 +98,7 @@ class load(Command):
                     lambda result:testtools.StreamTagger(
                         [result], add=['worker-%d' % pos]))
                 yield (case, str(pos))
-        case = testtools.ConcurrentStreamTestSuite(cases, make_tests)
+        case = testtools.ConcurrentStreamTestSuite(lambda: list(make_tests(cases())))
         # One unmodified copy of the stream to repository storage
         inserter = repo.get_inserter(partial=self.ui.options.partial)
         # One copy of the stream to the UI layer after performing global
