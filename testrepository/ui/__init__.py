@@ -22,8 +22,10 @@ See AbstractUI for details on what UI classes should do and are responsible
 for.
 """
 
-from testrepository.results import SummarizingResult
+from testtools import TestResult
 
+from testrepository.results import SummarizingResult
+from testrepository.utils import timedelta_to_seconds
 
 class AbstractUI(object):
     """The base class for UI objects, this providers helpers and the interface.
@@ -187,7 +189,7 @@ class AbstractUI(object):
         raise NotImplementedError(self.subprocess_Popen)
 
 
-class BaseUITestResult(SummarizingResult):
+class BaseUITestResult(TestResult):
     """An abstract test result used with the UI.
 
     AbstractUI.make_result probably wants to return an object like this.
@@ -203,6 +205,7 @@ class BaseUITestResult(SummarizingResult):
         self.ui = ui
         self.get_id = get_id
         self._previous_run = previous_run
+        self._first_time = None
 
     def _get_previous_summary(self):
         if self._previous_run is None:
@@ -245,7 +248,25 @@ class BaseUITestResult(SummarizingResult):
             not bool(failures), self.testsRun, num_tests_run_delta,
             time, time_delta, values)
 
+    def startTestRun(self):
+        super(BaseUITestResult, self).startTestRun()
+        self._first_time = None
+
     def stopTestRun(self):
         super(BaseUITestResult, self).stopTestRun()
         run_id = self.get_id()
         self._output_summary(run_id)
+
+    def get_num_failures(self):
+        return len(self.failures) + len(self.errors)
+
+    def time(self, a_time):
+        if self._first_time is None:
+            self._first_time = a_time
+        super(BaseUITestResult, self).time(a_time)
+
+    def get_time_taken(self):
+        now = self._now()
+        if None in (self._first_time, now):
+            return None
+        return timedelta_to_seconds(now - self._first_time)

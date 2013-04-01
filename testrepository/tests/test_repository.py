@@ -26,7 +26,6 @@ from testresources import TestResource
 from testtools import (
     clone_test_with_new_id,
     PlaceHolder,
-    TestResult,
     )
 import testtools
 from testtools.compat import _b
@@ -139,15 +138,23 @@ class TestRepositoryContract(ResourcedTestCase):
     def get_failing(self, repo):
         """Analyze a failing stream from repo and return it."""
         run = repo.get_failing()
-        analyzer = TestResult()
-        run.get_test().run(analyzer)
+        analyzer = testtools.StreamSummary()
+        analyzer.startTestRun()
+        try:
+            run.get_test().run(analyzer)
+        finally:
+            analyzer.stopTestRun()
         return analyzer
 
     def get_last_run(self, repo):
         """Return the results from a stream."""
         run = repo.get_test_run(repo.latest_id())
-        analyzer = TestResult()
-        run.get_test().run(analyzer)
+        analyzer = testtools.StreamSummary()
+        analyzer.startTestRun()
+        try:
+            run.get_test().run(analyzer)
+        finally:
+            analyzer.stopTestRun()
         return analyzer
 
     def test_can_initialise_with_param(self):
@@ -233,8 +240,8 @@ class TestRepositoryContract(ResourcedTestCase):
         legacy_result.stopTestRun()
         analyzed = self.get_failing(repo)
         self.assertEqual(1, analyzed.testsRun)
-        self.assertEqual(1, len(analyzed.failures))
-        self.assertEqual('failing', analyzed.failures[0][0].id())
+        self.assertEqual(1, len(analyzed.errors))
+        self.assertEqual('failing', analyzed.errors[0][0].id())
 
     def test_unexpected_success(self):
         # Unexpected successes get forwarded too. (Test added because of a
@@ -269,8 +276,8 @@ class TestRepositoryContract(ResourcedTestCase):
         legacy_result.stopTestRun()
         analyzed = self.get_failing(repo)
         self.assertEqual(1, analyzed.testsRun)
-        self.assertEqual(1, len(analyzed.failures))
-        self.assertEqual('passing', analyzed.failures[0][0].id())
+        self.assertEqual(1, len(analyzed.errors))
+        self.assertEqual('passing', analyzed.errors[0][0].id())
 
     def test_get_failing_partial_runs_preserve_missing_failures(self):
         # failures from two runs add to existing failures, and successes remove
@@ -291,9 +298,9 @@ class TestRepositoryContract(ResourcedTestCase):
         legacy_result.stopTestRun()
         analyzed = self.get_failing(repo)
         self.assertEqual(2, analyzed.testsRun)
-        self.assertEqual(2, len(analyzed.failures))
+        self.assertEqual(2, len(analyzed.errors))
         self.assertEqual(set(['passing', 'missing']),
-            set([test[0].id() for test in analyzed.failures]))
+            set([test[0].id() for test in analyzed.errors]))
 
     def test_get_test_run_missing_keyerror(self):
         repo = self.repo_impl.initialise(self.sample_url)
@@ -392,7 +399,7 @@ successful: testrepository.tests.test_repository.Case.method...
         inserted = result.get_id()
         run = repo.get_test_run(inserted)
         test = run.get_test()
-        result = TestResult()
+        result = testtools.StreamSummary()
         result.startTestRun()
         try:
             test.run(result)

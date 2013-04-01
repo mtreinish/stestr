@@ -1,6 +1,6 @@
 from subunit import test_results
 
-from testtools import TestResult
+from testtools import StreamSummary
 
 from testrepository.utils import timedelta_to_seconds
 
@@ -46,26 +46,32 @@ else:
     TestResultFilter = test_results.TestResultFilter
 
 
-class SummarizingResult(TestResult):
+class SummarizingResult(StreamSummary):
 
     def __init__(self):
         super(SummarizingResult, self).__init__()
-        self._first_time = None
 
     def startTestRun(self):
         super(SummarizingResult, self).startTestRun()
         self._first_time = None
+        self._last_time = None
+
+    def status(self, *args, **kwargs):
+        if 'timestamp' in kwargs:
+            timestamp = kwargs['timestamp']
+            if self._last_time is None:
+                self._first_time = timestamp
+                self._last_time = timestamp
+            if timestamp < self._first_time:
+                self._first_time = timestamp
+            if timestamp > self._last_time:
+                self._last_time = timestamp
+        super(SummarizingResult, self).status(*args, **kwargs)
 
     def get_num_failures(self):
         return len(self.failures) + len(self.errors)
 
-    def time(self, a_time):
-        if self._first_time is None:
-            self._first_time = a_time
-        super(SummarizingResult, self).time(a_time)
-
     def get_time_taken(self):
-        now = self._now()
-        if None in (self._first_time, now):
+        if None in (self._last_time, self._first_time):
             return None
-        return timedelta_to_seconds(now - self._first_time)
+        return timedelta_to_seconds(self._last_time - self._first_time)

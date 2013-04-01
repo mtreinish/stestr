@@ -22,8 +22,8 @@ import re
 from extras import try_import
 import subunit
 v2_avail = try_import('subunit.ByteStreamToStreamResult')
+import testtools
 from testtools import (
-    TestResult,
     TestByTestResult,
     )
 from testtools.compat import _b
@@ -48,6 +48,9 @@ class ReturnCodeToSubunit(object):
     synthetic test is added to the output, making the error accessible to
     subunit stream consumers. If the process closes its stdout and then does
     not terminate, reading from the ReturnCodeToSubunit stream will hang.
+
+    This class will be deleted at some point, allowing parsing to read from the
+    actual fd and benefit from select for aggregating non-subunit output.
     """
 
     def __init__(self, process):
@@ -149,14 +152,16 @@ class run(Command):
     def _find_failing(self, repo):
         run = repo.get_failing()
         case = run.get_test()
-        result = TestResult()
+        ids = []
+        def gather_errors(test_dict):
+            if test_dict['status'] == 'fail':
+                ids.append(test_dict['id'])
+        result = testtools.StreamToDict(gather_errors)
         result.startTestRun()
         try:
             case.run(result)
         finally:
             result.stopTestRun()
-        ids = [failure[0].id() for failure in result.failures]
-        ids.extend([error[0].id() for error in result.errors])
         return ids
 
     def run(self):
@@ -235,11 +240,10 @@ class run(Command):
                         # check that the test we're probing still failed - still
                         # awkward.
                         found_fail = []
-                        def find_fail(test, status, start_time, stop_time, tags,
-                            details):
-                            if test.id() == spurious_failure:
+                        def find_fail(test_dict):
+                            if test_dict['id'] == spurious_failure:
                                 found_fail.append(True)
-                        checker = TestByTestResult(find_fail)
+                        checker = testtools.StreamToDict(find_fail)
                         checker.startTestRun()
                         try:
                             repo.get_failing().get_test().run(checker)
@@ -283,6 +287,7 @@ class run(Command):
         Tests that ran in a different worker are not included in the result.
         """
         if not getattr(self, '_worker_to_test', False):
+            # TODO: switch to route codes?
             case = run.get_test()
             # Use None if there is no worker-N tag
             # If there are multiple, map them all.
@@ -290,7 +295,9 @@ class run(Command):
             worker_to_test = {}
             # (testid -> [workerN, ...])
             test_to_worker = {}
-            def map_test(test, status, start_time, stop_time, tags, details):
+            def map_test(test_dict):
+                tags = test_dict['tags']
+                id = test_dict['id']
                 workers = []
                 for tag in tags:
                     if tag.startswith('worker-'):
@@ -298,9 +305,9 @@ class run(Command):
                 if not workers:
                     workers = [None]
                 for worker in workers:
-                    worker_to_test.setdefault(worker, []).append(test.id())
-                test_to_worker.setdefault(test.id(), []).extend(workers)
-            mapper = TestByTestResult(map_test)
+                    worker_to_test.setdefault(worker, []).append(id)
+                test_to_worker.setdefault(id, []).extend(workers)
+            mapper = testtools.StreamToDict(map_test)
             mapper.startTestRun()
             try:
                 case.run(mapper)

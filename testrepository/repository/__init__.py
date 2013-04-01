@@ -27,7 +27,7 @@ Repositories are identified by their URL, and new ones are made by calling
 the initialize function in the appropriate repository module.
 """
 
-from testtools import TestResult
+from testtools import StreamToDict, TestResult
 
 
 class AbstractRepositoryFactory(object):
@@ -142,9 +142,16 @@ class AbstractRepository(object):
             were part of the specified test run.
         """
         run = self.get_test_run(run_id)
-        result = TestIDCapturer()
-        run.get_test().run(result)
-        return result.ids
+        ids = []
+        def gather(test_dict):
+            ids.append(test_dict['id'])
+        result = StreamToDict(gather)
+        result.startTestRun()
+        try:
+            run.get_test().run(result)
+        finally:
+            result.stopTestRun()
+        return ids
 
 
 class AbstractTestRun(object):
@@ -184,20 +191,3 @@ class RepositoryNotFound(Exception):
         self.url = url
         msg = 'No repository found in %s. Create one by running "testr init".'
         Exception.__init__(self, msg % url)
-
-
-class TestIDCapturer(TestResult):
-    """Capture the test ids from a test run.
-
-    After using the result with a test run, the ids of
-    the tests that were run are available in the ids
-    attribute.
-    """
-
-    def __init__(self):
-        super(TestIDCapturer, self).__init__()
-        self.ids = []
-
-    def startTest(self, test):
-        super(TestIDCapturer, self).startTest(test)
-        self.ids.append(test.id())

@@ -91,6 +91,8 @@ class TestSummarizingResult(TestCase):
 
     def test_empty(self):
         result = SummarizingResult()
+        result.startTestRun()
+        result.stopTestRun()
         self.assertEqual(0, result.testsRun)
         self.assertEqual(0, result.get_num_failures())
         self.assertIs(None, result.get_time_taken())
@@ -99,8 +101,8 @@ class TestSummarizingResult(TestCase):
         result = SummarizingResult()
         now = datetime.now()
         result.startTestRun()
-        result.time(now)
-        result.time(now + timedelta(seconds=5))
+        result.status(timestamp=now)
+        result.status(timestamp=now + timedelta(seconds=5))
         result.stopTestRun()
         self.assertEqual(5.0, result.get_time_taken())
 
@@ -111,10 +113,8 @@ class TestSummarizingResult(TestCase):
             1/0
         except ZeroDivisionError:
             error = sys.exc_info()
-        for method in ('addError', 'addFailure'):
-            result.startTest(self)
-            getattr(result, method)(self, error)
-            result.stopTest(self)
+        result.status(test_id='foo', test_status='fail')
+        result.status(test_id='foo', test_status='fail')
         result.stopTestRun()
         self.assertEqual(2, result.get_num_failures())
 
@@ -122,8 +122,6 @@ class TestSummarizingResult(TestCase):
         result = SummarizingResult()
         result.startTestRun()
         for i in range(5):
-            result.startTest(self)
-            result.addSuccess(self)
-            result.stopTest(self)
+            result.status(test_id='foo', test_status='success')
         result.stopTestRun()
         self.assertEqual(5, result.testsRun)

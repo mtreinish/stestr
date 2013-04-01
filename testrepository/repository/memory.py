@@ -15,6 +15,7 @@
 """In memory storage of test results."""
 
 from io import BytesIO
+from operator import methodcaller
 
 import subunit
 import testtools
@@ -104,7 +105,16 @@ class _Failures(AbstractTestRun):
         return result
 
     def get_test(self):
-        return self
+        def wrap_result(result):
+            # Wrap in a router to mask out startTestRun/stopTestRun from the
+            # ExtendedToStreamDecorator.
+            result = testtools.StreamResultRouter(result, do_start_stop_run=False)
+            # Wrap that in ExtendedToStreamDecorator to convert v1 calls to
+            # StreamResult.
+            return testtools.ExtendedToStreamDecorator(result)
+        return testtools.DecorateTestCaseResult(
+            self, wrap_result, methodcaller('startTestRun'),
+            methodcaller('stopTestRun'))
 
     def run(self, result):
         # Speaks original.
@@ -168,7 +178,16 @@ class _Inserter(AbstractTestRun):
         return self._subunit
 
     def get_test(self):
-        return self
+        def wrap_result(result):
+            # Wrap in a router to mask out startTestRun/stopTestRun from the
+            # ExtendedToStreamDecorator.
+            result = testtools.StreamResultRouter(result, do_start_stop_run=False)
+            # Wrap that in ExtendedToStreamDecorator to convert v1 calls to
+            # StreamResult.
+            return testtools.ExtendedToStreamDecorator(result)
+        return testtools.DecorateTestCaseResult(
+            self, wrap_result, methodcaller('startTestRun'),
+            methodcaller('stopTestRun'))
 
     def run(self, result):
         # Speaks original.

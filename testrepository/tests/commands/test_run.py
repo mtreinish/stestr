@@ -422,7 +422,7 @@ class TestCommand(ResourcedTestCase):
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),
             ('results', Wildcard),
-            ('summary', True, 1, -2, Wildcard, None, [('id', 1, None)]),
+            ('summary', True, 1, -2, Wildcard, Wildcard, [('id', 1, None)]),
             ('values', [('running', expected_cmd)]),
             ('popen', (expected_cmd,),
              {'shell': True, 'stdin': PIPE, 'stdout': PIPE}),

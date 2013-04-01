@@ -16,7 +16,8 @@
 
 import optparse
 
-from testtools import ExtendedToStreamDecorator, MultiTestResult, TestResult
+import testtools
+from testtools import ExtendedToStreamDecorator, MultiTestResult
 
 from testrepository.commands import Command
 from testrepository.results import TestResultFilter
@@ -61,12 +62,12 @@ class failing(Command):
         else:
             output_result, summary_result = self.ui.make_result(
                 repo.latest_id, testcommand)
-            output_result = ExtendedToStreamDecorator(output_result)
             # This probably wants to be removed or pushed into the CLIResult
             # responsibilities, it attempts to preserve skips, but the ui
             # make_result filters them - a mismatch.
             errors_only = TestResultFilter(output_result, filter_skip=True)
-            return MultiTestResult(list_result, output_result), summary_result
+            return testtools.CopyStreamResult(
+                [list_result, output_result]), summary_result
 
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
@@ -75,7 +76,7 @@ class failing(Command):
             return self._show_subunit(run)
         case = run.get_test()
         failed = False
-        list_result = TestResult()
+        list_result = testtools.StreamSummary()
         result, summary = self._make_result(repo, list_result)
         result.startTestRun()
         try:
