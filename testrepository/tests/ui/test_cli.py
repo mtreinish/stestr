@@ -320,12 +320,16 @@ class TestCLITestResult(TestCase):
         except ZeroDivisionError:
             return sys.exc_info()
 
-    def make_result(self, stream=None):
+    def make_result(self, stream=None, argv=None):
         if stream is None:
             stream = BytesIO()
-        argv = []
+        argv = argv or []
         ui = cli.UI(argv, None, stream, None)
         cmd = commands.Command(ui)
+        cmd.options = [
+            optparse.Option("--subunit", action="store_true",
+                default=False, help="Display results in subunit format."),
+            ]
         ui.set_command(cmd)
         return ui.make_result(lambda: None, StubTestCommand())
 
@@ -393,3 +397,11 @@ class TestCLITestResult(TestCase):
         self.assertThat(
             stream.getvalue().decode('utf8'),
             DocTestMatches(pattern, doctest.ELLIPSIS))
+
+    def test_subunit_output(self):
+        bytestream = BytesIO()
+        stream = TextIOWrapper(bytestream, 'utf8', line_buffering=True)
+        result = self.make_result(stream, argv=['--subunit'])[0]
+        result.startTestRun()
+        result.stopTestRun()
+        self.assertEqual(b'', bytestream.getvalue())
