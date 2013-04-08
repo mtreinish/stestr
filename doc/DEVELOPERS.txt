@@ -50,5 +50,5 @@ the environment. This can be very useful for diagnosing problems.
 Releasing
 ---------
 
-Update testrepository/__init__.py version numbers. Release to pypi. Pivot the
-next milestone on LP to version, and make a new next milestone.
+Update NEWS and testrepository/__init__.py version numbers. Release to pypi.
+Pivot the next milestone on LP to version, and make a new next milestone.

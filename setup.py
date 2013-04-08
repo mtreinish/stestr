@@ -96,7 +96,7 @@ setup(name='testrepository',
       install_requires=[
         'fixtures',
         'python-subunit >= 0.0.10',
-        'testtools >= 0.9.29',
+        'testtools >= 0.9.30',
         ],
       extras_require = dict(
         test=[
