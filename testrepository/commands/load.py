@@ -88,10 +88,16 @@ class load(Command):
                 else:
                     # Calls TestResult API.
                     case = subunit.ProtocolTestCase(stream)
+                    def wrap_result(result):
+                        # Wrap in a router to mask out startTestRun/stopTestRun from the
+                        # ExtendedToStreamDecorator.
+                        result = testtools.StreamResultRouter(
+                            result, do_start_stop_run=False)
+                        # Wrap that in ExtendedToStreamDecorator to convert v1 calls to
+                        # StreamResult.
+                        return testtools.ExtendedToStreamDecorator(result)
                     # Now calls StreamResult API :).
-                    case = testtools.DecorateTestCaseResult(
-                        case,
-                        testtools.ExtendedToStreamDecorator,
+                    case = testtools.DecorateTestCaseResult(case, wrap_result,
                         methodcaller('startTestRun'),
                         methodcaller('stopTestRun'))
                 case = testtools.DecorateTestCaseResult(case,
