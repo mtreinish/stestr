@@ -94,19 +94,6 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual(1, len(result.failures))
         self.assertEqual(2, result.testsRun)
 
-    def test_grabs_TestCommand_result(self):
-        ui, cmd = self.get_test_ui_and_cmd()
-        cmd.repository_factory = memory.RepositoryFactory()
-        repo = cmd.repository_factory.initialise(ui.here)
-        inserter = repo.get_inserter()
-        inserter.startTestRun()
-        inserter.stopTestRun()
-        cmd.command_factory = StubTestCommand()
-        cmd.execute()
-        self.assertEqual(
-            [('startTestRun',), ('stopTestRun',)],
-            cmd.command_factory.results[0]._events)
-
     def test_shows_subunit_stream(self):
         ui, cmd = self.get_test_ui_and_cmd(options=[('subunit', True)])
         cmd.repository_factory = memory.RepositoryFactory()

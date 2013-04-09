@@ -134,14 +134,3 @@ class TestCommand(ResourcedTestCase):
         cmd.repository_factory.initialise(ui.here)
         self.assertEqual(1, cmd.execute())
         self.assertEqual([True], calls)
-
-    def test_grabs_TestCommand_result(self):
-        ui, cmd = self.get_test_ui_and_cmd()
-        cmd.repository_factory = memory.RepositoryFactory()
-        calls = []
-        cmd.repository_factory.initialise(ui.here)
-        cmd.command_factory = StubTestCommand()
-        cmd.execute()
-        self.assertEqual(
-            [('startTestRun',), ('stopTestRun',)],
-            cmd.command_factory.results[0]._events)

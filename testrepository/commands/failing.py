@@ -58,7 +58,7 @@ class failing(Command):
         testcommand = self.command_factory(self.ui, repo)
         if self.ui.options.list:
             list_result = testtools.StreamSummary()
-            return testcommand.make_result(list_result), list_result
+            return list_result, list_result
         else:
             return self.ui.make_result(repo.latest_id, testcommand)
 

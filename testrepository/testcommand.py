@@ -567,39 +567,6 @@ class TestCommand(Fixture):
         self._allocated_instances.add(result)
         return result
 
-    def make_result(self, receiver):
-        """Create a TestResult that will perform any global filtering etc.
-
-        :param receiver: The result to forward the result of global filtering.
-        :return: A TestResult.
-        """
-        filter_tags = self.get_filter_tags()
-        if filter_tags:
-            try:
-                from subunit.test_results import make_tag_filter
-            except ImportError:
-                raise ValueError(
-                    "Subunit not installed or does not have tag filtering support")
-            # predicates return False to filter something out. We want to
-            # filter out tagged tests *unless* they fail/error. So we want
-            # tag_p:False + outcome_p:False -> False
-            # tag_p:False + outcome_p:True -> True
-            # tag_p:True + * -> True
-            def error_or_fail(t, outcome, e, d, tags):
-                return outcome in ('error', 'failure')
-            def or_predicates(predicates):
-                def fn(*args, **kwargs):
-                    for predicate in predicates:
-                        if predicate(*args, **kwargs):
-                            return True
-                    return False
-                return fn
-            predicates = [make_tag_filter(None, filter_tags), error_or_fail]
-            predicate = or_predicates(predicates)
-            return TestResultFilter(
-                receiver, filter_success=False, filter_predicate=predicate)
-        return receiver
-
     def release_instance(self, instance_id):
         """Return instance_ids to the pool for reuse."""
         self._allocated_instances.remove(instance_id)

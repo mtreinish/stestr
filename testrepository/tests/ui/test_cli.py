@@ -320,7 +320,7 @@ class TestCLITestResult(TestCase):
         except ZeroDivisionError:
             return sys.exc_info()
 
-    def make_result(self, stream=None, argv=None):
+    def make_result(self, stream=None, argv=None, filter_tags=None):
         if stream is None:
             stream = BytesIO()
         argv = argv or []
@@ -331,7 +331,8 @@ class TestCLITestResult(TestCase):
                 default=False, help="Display results in subunit format."),
             ]
         ui.set_command(cmd)
-        return ui.make_result(lambda: None, StubTestCommand())
+        return ui.make_result(
+            lambda: None, StubTestCommand(filter_tags=filter_tags))
 
     def test_initial_stream(self):
         # CLITestResult.__init__ does not do anything to the stream it is
@@ -342,7 +343,7 @@ class TestCLITestResult(TestCase):
 
     def _unwrap(self, result):
         """Unwrap result to get to the CLI result object."""
-        return result.targets[0].decorated.decorated._results[1].decorated
+        return result.targets[0].decorated.decorated
 
     def test_format_error(self):
         # CLITestResult formats errors by giving them a big fat line, a title
@@ -405,3 +406,33 @@ class TestCLITestResult(TestCase):
         result.startTestRun()
         result.stopTestRun()
         self.assertEqual(b'', bytestream.getvalue())
+
+    def test_make_result_tag_filter(self):
+        stream = StringIO()
+        result, summary = self.make_result(
+            stream, filter_tags=set(['worker-0']))
+        # Generate a bunch of results with tags in the same events that
+        # testtools generates them.
+        tags = set(['worker-0'])
+        result.startTestRun()
+        result.status(test_id='pass', test_status='inprogress')
+        result.status(test_id='pass', test_status='success', test_tags=tags)
+        result.status(test_id='fail', test_status='inprogress')
+        result.status(test_id='fail', test_status='fail', test_tags=tags)
+        result.status(test_id='xfail', test_status='inprogress')
+        result.status(test_id='xfail', test_status='xfail', test_tags=tags)
+        result.status(test_id='uxsuccess', test_status='inprogress')
+        result.status(
+            test_id='uxsuccess', test_status='uxsuccess', test_tags=tags)
+        result.status(test_id='skip', test_status='inprogress')
+        result.status(test_id='skip', test_status='skip', test_tags=tags)
+        result.stopTestRun()
+        self.assertEqual("""\
+======================================================================
+FAIL: fail
+tags: worker-0
+----------------------------------------------------------------------
+Ran 1 tests
+FAILED (id=None, failures=1)
+""", stream.getvalue())
+

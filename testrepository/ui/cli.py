@@ -34,12 +34,19 @@ from testrepository.results import TestResultFilter
 class CLITestResult(ui.BaseUITestResult):
     """A TestResult for the CLI."""
 
-    def __init__(self, ui, get_id, stream, previous_run=None):
-        """Construct a CLITestResult writing to stream."""
+    def __init__(self, ui, get_id, stream, previous_run=None, filter_tags=None):
+        """Construct a CLITestResult writing to stream.
+        
+        :param filter_tags: Tags that should be used to filter tests out. When
+            a tag in this set is present on a test outcome, the test is not
+            counted towards the test run count. If the test errors, then it is
+            still counted and the error is still shown.
+        """
         super(CLITestResult, self).__init__(ui, get_id, previous_run)
         self.stream = unicode_output_stream(stream)
         self.sep1 = _u('=' * 70 + '\n')
         self.sep2 = _u('-' * 70 + '\n')
+        self.filter_tags = filter_tags or frozenset()
 
     def _format_error(self, label, test, error_text):
         tags = _u(' ').join(self.current_tags)
@@ -60,6 +67,31 @@ class CLITestResult(ui.BaseUITestResult):
     def addFailure(self, test, err=None, details=None):
         super(CLITestResult, self).addFailure(test, err=err, details=details)
         self.stream.write(self._format_error(_u('FAIL'), *(self.failures[-1])))
+
+    def addSuccess(self, test, details=None):
+        if self.current_tags.intersection(self.filter_tags):
+            self.testsRun -= 1
+            return
+        super(CLITestResult, self).addSuccess(test, details=details)
+
+    def addUnexpectedSuccess(self, test, details=None):
+        if self.current_tags.intersection(self.filter_tags):
+            self.testsRun -= 1
+            return
+        super(CLITestResult, self).addUnexpectedSuccess(test, details=details)
+
+    def addExpectedFailure(self, test, err=None, details=None):
+        if self.current_tags.intersection(self.filter_tags):
+            self.testsRun -= 1
+            return
+        super(CLITestResult, self).addExpectedFailure(
+            test, err=err, details=details)
+
+    def addSkip(self, test, reason=None, details=None):
+        if self.current_tags.intersection(self.filter_tags):
+            self.testsRun -= 1
+            return
+        super(CLITestResult, self).addSkip(test, reason=reason, details=details)
 
 
 class UI(ui.AbstractUI):
@@ -96,9 +128,11 @@ class UI(ui.AbstractUI):
             summary.stopTestRun()
             return result, summary
         else:
-            output = CLITestResult(self, get_id, self._stdout, previous_run)
+            filter_tags = test_command.get_filter_tags()
+            output = CLITestResult(self, get_id, self._stdout, previous_run,
+                filter_tags=filter_tags)
             # Apply user defined transforms.
-            result = ExtendedToStreamDecorator(StreamToExtendedDecorator(test_command.make_result(output)))
+            result = ExtendedToStreamDecorator(StreamToExtendedDecorator(output))
         return result, result
 
     def output_error(self, error_tuple):

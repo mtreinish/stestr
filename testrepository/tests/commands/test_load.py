@@ -313,15 +313,3 @@ class TestCommandLoad(ResourcedTestCase):
             [('summary', False, 2, 1, 6.0, -3.0,
               [('id', 1, None), ('failures', 2, 1)])],
             ui.outputs[1:])
-
-    def test_grabs_TestCommand_result(self):
-        ui = UI([('subunit', _b(''))])
-        cmd = load.load(ui)
-        ui.set_command(cmd)
-        cmd.repository_factory = memory.RepositoryFactory()
-        cmd.repository_factory.initialise(ui.here)
-        cmd.command_factory = StubTestCommand()
-        cmd.execute()
-        self.assertEqual(
-            [('startTestRun',), ('stopTestRun',)],
-            cmd.command_factory.results[0]._events)

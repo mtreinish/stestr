@@ -158,8 +158,7 @@ class UI(ui.AbstractUI):
     def make_result(self, get_id, test_command, previous_run=None):
         result = testtools.ExtendedToStreamDecorator(
             testtools.StreamToExtendedDecorator(
-            test_command.make_result(
-            TestResultModel(self, get_id, previous_run))))
+            TestResultModel(self, get_id, previous_run)))
         return result, result
 
     def output_error(self, error_tuple):

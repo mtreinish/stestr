@@ -19,8 +19,6 @@ import unittest
 import testresources
 from testscenarios import generate_scenarios
 from testtools import TestCase
-from testtools.testresult.doubles import ExtendedTestResult
-from testtools.testresult.real import MultiTestResult
 
 
 class ResourcedTestCase(TestCase, testresources.ResourcedTestCase):
@@ -45,16 +43,15 @@ Wildcard = _Wildcard()
 
 class StubTestCommand:
 
-    def __init__(self):
+    def __init__(self, filter_tags=None):
         self.results = []
+        self.filter_tags = filter_tags or set()
 
     def __call__(self, ui, repo):
         return self
 
-    def make_result(self, receiver):
-        result = ExtendedTestResult()
-        self.results.append(result)
-        return MultiTestResult(result, receiver)
+    def get_filter_tags(self):
+        return self.filter_tags
 
 
 def test_suite():
