@@ -27,7 +27,6 @@ import tempfile
 from textwrap import dedent
 
 from fixtures import Fixture
-from testtools.compat import _b
 
 from testrepository.results import TestResultFilter
 from testrepository.testlist import (

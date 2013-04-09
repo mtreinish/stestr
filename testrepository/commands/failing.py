@@ -54,20 +54,13 @@ class failing(Command):
         self.ui.output_stream(stream)
         return 0
 
-    def _make_result(self, repo, list_result):
+    def _make_result(self, repo):
         testcommand = self.command_factory(self.ui, repo)
         if self.ui.options.list:
-            result = testcommand.make_result(list_result)
-            return result, result
+            list_result = testtools.StreamSummary()
+            return testcommand.make_result(list_result), list_result
         else:
-            output_result, summary_result = self.ui.make_result(
-                repo.latest_id, testcommand)
-            # This probably wants to be removed or pushed into the CLIResult
-            # responsibilities, it attempts to preserve skips, but the ui
-            # make_result filters them - a mismatch.
-            errors_only = TestResultFilter(output_result, filter_skip=True)
-            return testtools.CopyStreamResult(
-                [list_result, output_result]), summary_result
+            return self.ui.make_result(repo.latest_id, testcommand)
 
     def run(self):
         repo = self.repository_factory.open(self.ui.here)
@@ -76,8 +69,7 @@ class failing(Command):
             return self._show_subunit(run)
         case = run.get_test()
         failed = False
-        list_result = testtools.StreamSummary()
-        result, summary = self._make_result(repo, list_result)
+        result, summary = self._make_result(repo)
         result.startTestRun()
         try:
             case.run(result)
@@ -90,6 +82,6 @@ class failing(Command):
             result = 0
         if self.ui.options.list:
             failing_tests = [
-                test for test, _ in list_result.errors + list_result.failures]
+                test for test, _ in summary.errors + summary.failures]
             self.ui.output_tests(failing_tests)
         return result
