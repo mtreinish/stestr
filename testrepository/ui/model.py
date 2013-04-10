@@ -156,10 +156,9 @@ class UI(ui.AbstractUI):
                 yield BytesIO(stream_value)
 
     def make_result(self, get_id, test_command, previous_run=None):
-        result = testtools.ExtendedToStreamDecorator(
-            testtools.StreamToExtendedDecorator(
-            TestResultModel(self, get_id, previous_run)))
-        return result, result
+        summary = TestResultModel(self, get_id, previous_run)
+        result = testtools.StreamToExtendedDecorator(summary)
+        return result, summary
 
     def output_error(self, error_tuple):
         self.outputs.append(('error', error_tuple))

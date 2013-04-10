@@ -343,7 +343,7 @@ class TestCLITestResult(TestCase):
 
     def _unwrap(self, result):
         """Unwrap result to get to the CLI result object."""
-        return result.targets[0].decorated.decorated
+        return result.decorated.decorated
 
     def test_format_error(self):
         # CLITestResult formats errors by giving them a big fat line, a title

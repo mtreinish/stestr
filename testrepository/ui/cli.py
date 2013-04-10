@@ -120,9 +120,9 @@ class UI(ui.AbstractUI):
             else:
                 serializer = StreamToExtendedDecorator(
                     subunit.TestProtocolClient(self._stdout))
-            # By pass user transforms - just forward it all and interpret
-            # everything as success.
-            result = ExtendedToStreamDecorator(serializer)
+            # By pass user transforms - just forward it all,
+            result = serializer
+            # and interpret everything as success.
             summary = testtools.StreamSummary()
             summary.startTestRun()
             summary.stopTestRun()
@@ -132,8 +132,8 @@ class UI(ui.AbstractUI):
             output = CLITestResult(self, get_id, self._stdout, previous_run,
                 filter_tags=filter_tags)
             # Apply user defined transforms.
-            result = ExtendedToStreamDecorator(StreamToExtendedDecorator(output))
-        return result, result
+            result = StreamToExtendedDecorator(output)
+        return result, output
 
     def output_error(self, error_tuple):
         if 'TESTR_PDB' in os.environ:
