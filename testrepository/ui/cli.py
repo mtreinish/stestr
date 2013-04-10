@@ -28,7 +28,6 @@ from testtools.compat import unicode_output_stream, _u
 
 from testrepository import ui
 from testrepository.commands import get_command_parser
-from testrepository.results import TestResultFilter
 
 
 class CLITestResult(ui.BaseUITestResult):

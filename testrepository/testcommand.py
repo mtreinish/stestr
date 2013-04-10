@@ -28,7 +28,6 @@ from textwrap import dedent
 
 from fixtures import Fixture
 
-from testrepository.results import TestResultFilter
 from testrepository.testlist import (
     parse_enumeration,
     write_list,

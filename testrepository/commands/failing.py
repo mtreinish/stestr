@@ -20,7 +20,6 @@ import testtools
 from testtools import ExtendedToStreamDecorator, MultiTestResult
 
 from testrepository.commands import Command
-from testrepository.results import TestResultFilter
 from testrepository.testcommand import TestCommand
 
 
