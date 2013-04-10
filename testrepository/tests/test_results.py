@@ -17,19 +17,10 @@ from datetime import (
     timedelta,
     )
 import sys
-from threading import Semaphore
 
-from testtools import (
-    TestCase,
-    TestResult,
-    ThreadsafeForwardingResult,
-    )
+from testtools import TestCase
 
-from testrepository.results import (
-    SummarizingResult,
-    )
-from testrepository.ui import BaseUITestResult
-from testrepository.ui.model import UI
+from testrepository.results import SummarizingResult
 
 
 class TestSummarizingResult(TestCase):
