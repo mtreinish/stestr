@@ -54,13 +54,13 @@ class TestCommand(ResourcedTestCase):
              [('id', id, None), ('failures', 1, None)])],
             ui.outputs)
         suite = ui.outputs[0][1]
-        result = testtools.TestResult()
+        result = testtools.StreamSummary()
         result.startTestRun()
         try:
             suite.run(result)
         finally:
             result.stopTestRun()
-        self.assertEqual(1, len(result.failures))
+        self.assertEqual(1, len(result.errors))
         self.assertEqual(2, result.testsRun)
 
     def _add_run(self, repo):
@@ -85,13 +85,13 @@ class TestCommand(ResourcedTestCase):
              [('id', id, None), ('failures', 1, 0)])],
             ui.outputs)
         suite = ui.outputs[0][1]
-        result = testtools.TestResult()
+        result = testtools.StreamSummary()
         result.startTestRun()
         try:
             suite.run(result)
         finally:
             result.stopTestRun()
-        self.assertEqual(1, len(result.failures))
+        self.assertEqual(1, len(result.errors))
         self.assertEqual(2, result.testsRun)
 
     def test_shows_subunit_stream(self):

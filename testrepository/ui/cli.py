@@ -46,9 +46,11 @@ class CLITestResult(ui.BaseUITestResult):
         self.sep1 = _u('=' * 70 + '\n')
         self.sep2 = _u('-' * 70 + '\n')
         self.filter_tags = filter_tags or frozenset()
+        self.filterable_states = set(['success', 'uxsuccess', 'xfail', 'skip'])
 
-    def _format_error(self, label, test, error_text):
-        tags = _u(' ').join(self.current_tags)
+    def _format_error(self, label, test, error_text, test_tags=None):
+        test_tags = test_tags or ()
+        tags = _u(' ').join(test_tags)
         if tags:
             tags = _u('tags: %s\n') % tags
         return _u('').join([
@@ -59,38 +61,21 @@ class CLITestResult(ui.BaseUITestResult):
             error_text,
             ])
 
-    def addError(self, test, err=None, details=None):
-        super(CLITestResult, self).addError(test, err=err, details=details)
-        self.stream.write(self._format_error(_u('ERROR'), *(self.errors[-1])))
-
-    def addFailure(self, test, err=None, details=None):
-        super(CLITestResult, self).addFailure(test, err=err, details=details)
-        self.stream.write(self._format_error(_u('FAIL'), *(self.failures[-1])))
-
-    def addSuccess(self, test, details=None):
-        if self.current_tags.intersection(self.filter_tags):
-            self.testsRun -= 1
+    def status(self, test_id=None, test_status=None, test_tags=None,
+        runnable=True, file_name=None, file_bytes=None, eof=False,
+        mime_type=None, route_code=None, timestamp=None):
+        super(CLITestResult, self).status(test_id=test_id,
+            test_status=test_status, test_tags=test_tags, runnable=runnable,
+            file_name=file_name, file_bytes=file_bytes, eof=eof,
+            mime_type=mime_type, route_code=route_code, timestamp=timestamp)
+        if test_status == 'fail':
+            self.stream.write(
+                self._format_error(_u('FAIL'), *(self._summary.errors[-1]),
+                test_tags=test_tags))
+        if test_status not in self.filterable_states:
             return
-        super(CLITestResult, self).addSuccess(test, details=details)
-
-    def addUnexpectedSuccess(self, test, details=None):
-        if self.current_tags.intersection(self.filter_tags):
-            self.testsRun -= 1
-            return
-        super(CLITestResult, self).addUnexpectedSuccess(test, details=details)
-
-    def addExpectedFailure(self, test, err=None, details=None):
-        if self.current_tags.intersection(self.filter_tags):
-            self.testsRun -= 1
-            return
-        super(CLITestResult, self).addExpectedFailure(
-            test, err=err, details=details)
-
-    def addSkip(self, test, reason=None, details=None):
-        if self.current_tags.intersection(self.filter_tags):
-            self.testsRun -= 1
-            return
-        super(CLITestResult, self).addSkip(test, reason=reason, details=details)
+        if test_tags and test_tags.intersection(self.filter_tags):
+            self._summary.testsRun -= 1
 
 
 class UI(ui.AbstractUI):
@@ -127,12 +112,12 @@ class UI(ui.AbstractUI):
             summary.stopTestRun()
             return result, summary
         else:
+            # Apply user defined transforms.
             filter_tags = test_command.get_filter_tags()
             output = CLITestResult(self, get_id, self._stdout, previous_run,
                 filter_tags=filter_tags)
-            # Apply user defined transforms.
-            result = StreamToExtendedDecorator(output)
-        return result, output
+            summary = output._summary
+        return output, summary
 
     def output_error(self, error_tuple):
         if 'TESTR_PDB' in os.environ:

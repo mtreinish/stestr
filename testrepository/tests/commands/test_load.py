@@ -173,14 +173,14 @@ class TestCommandLoad(ResourcedTestCase):
             ('summary', False, 1, None, Wildcard, None,
              [('id', 0, None), ('failures', 1, None)])],
             ui.outputs)
-        result = testtools.TestResult()
+        result = testtools.StreamSummary()
         result.startTestRun()
         try:
             suite.run(result)
         finally:
             result.stopTestRun()
         self.assertEqual(1, result.testsRun)
-        self.assertEqual(1, len(result.failures))
+        self.assertEqual(1, len(result.errors))
 
     def test_load_new_shows_test_skips(self):
         if v2_avail:

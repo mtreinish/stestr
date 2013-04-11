@@ -58,25 +58,14 @@ class TestResultModel(ui.BaseUITestResult):
         super(TestResultModel, self).__init__(ui, get_id, previous_run)
         self._suite = TestSuiteModel()
 
-    def startTest(self, test):
-        super(TestResultModel, self).startTest(test)
-        self._suite.recordResult('startTest', test)
-
-    def stopTest(self, test):
-        self._suite.recordResult('stopTest', test)
-
     def status(self, test_id=None, test_status=None, test_tags=None,
         runnable=True, file_name=None, file_bytes=None, eof=False,
         mime_type=None, route_code=None, timestamp=None):
+        super(TestResultModel, self).status(test_id=test_id,
+            test_status=test_status, test_tags=test_tags, runnable=runnable,
+            file_name=file_name, file_bytes=file_bytes, eof=eof,
+            mime_type=mime_type, route_code=route_code, timestamp=timestamp)
         self._suite.recordResult('status', test_id, test_status)
-
-    def addError(self, test, *args):
-        super(TestResultModel, self).addError(test, *args)
-        self._suite.recordResult('addError', test, *args)
-
-    def addFailure(self, test, *args):
-        super(TestResultModel, self).addFailure(test, *args)
-        self._suite.recordResult('addFailure', test, *args)
 
     def stopTestRun(self):
         if self.ui.options.quiet:
@@ -156,9 +145,8 @@ class UI(ui.AbstractUI):
                 yield BytesIO(stream_value)
 
     def make_result(self, get_id, test_command, previous_run=None):
-        summary = TestResultModel(self, get_id, previous_run)
-        result = testtools.StreamToExtendedDecorator(summary)
-        return result, summary
+        result = TestResultModel(self, get_id, previous_run)
+        return result, result._summary
 
     def output_error(self, error_tuple):
         self.outputs.append(('error', error_tuple))

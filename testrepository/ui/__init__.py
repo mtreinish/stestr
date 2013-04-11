@@ -22,7 +22,7 @@ See AbstractUI for details on what UI classes should do and are responsible
 for.
 """
 
-from testtools import TestResult
+from testtools import StreamResult
 
 from testrepository.results import SummarizingResult
 from testrepository.utils import timedelta_to_seconds
@@ -189,7 +189,7 @@ class AbstractUI(object):
         raise NotImplementedError(self.subprocess_Popen)
 
 
-class BaseUITestResult(TestResult):
+class BaseUITestResult(StreamResult):
     """An abstract test result used with the UI.
 
     AbstractUI.make_result probably wants to return an object like this.
@@ -205,7 +205,7 @@ class BaseUITestResult(TestResult):
         self.ui = ui
         self.get_id = get_id
         self._previous_run = previous_run
-        self._first_time = None
+        self._summary = SummarizingResult()
 
     def _get_previous_summary(self):
         if self._previous_run is None:
@@ -224,49 +224,39 @@ class BaseUITestResult(TestResult):
         """
         if self.ui.options.quiet:
             return
-        time = self.get_time_taken()
+        time = self._summary.get_time_taken()
         time_delta = None
         num_tests_run_delta = None
         num_failures_delta = None
         values = [('id', run_id, None)]
-        failures = self.get_num_failures()
+        failures = self._summary.get_num_failures()
         previous_summary = self._get_previous_summary()
         if failures:
             if previous_summary:
                 num_failures_delta = failures - previous_summary.get_num_failures()
             values.append(('failures', failures, num_failures_delta))
         if previous_summary:
-            num_tests_run_delta = self.testsRun - previous_summary.testsRun
+            num_tests_run_delta = self._summary.testsRun - previous_summary.testsRun
             if time:
                 previous_time_taken = previous_summary.get_time_taken()
                 if previous_time_taken:
                     time_delta = time - previous_time_taken
-        skips = sum(map(len, self.skip_reasons.values()))
+        skips = len(self._summary.skipped)
         if skips:
             values.append(('skips', skips, None))
         self.ui.output_summary(
-            not bool(failures), self.testsRun, num_tests_run_delta,
+            not bool(failures), self._summary.testsRun, num_tests_run_delta,
             time, time_delta, values)
 
     def startTestRun(self):
         super(BaseUITestResult, self).startTestRun()
-        self._first_time = None
+        self._summary.startTestRun()
 
     def stopTestRun(self):
         super(BaseUITestResult, self).stopTestRun()
         run_id = self.get_id()
+        self._summary.stopTestRun()
         self._output_summary(run_id)
 
-    def get_num_failures(self):
-        return len(self.failures) + len(self.errors)
-
-    def time(self, a_time):
-        if self._first_time is None:
-            self._first_time = a_time
-        super(BaseUITestResult, self).time(a_time)
-
-    def get_time_taken(self):
-        now = self._now()
-        if None in (self._first_time, now):
-            return None
-        return timedelta_to_seconds(now - self._first_time)
+    def status(self, *args, **kwargs):
+        self._summary.status(*args, **kwargs)

@@ -341,29 +341,19 @@ class TestCLITestResult(TestCase):
         cli.CLITestResult(cli.UI(None, None, None, None), stream, lambda: None)
         self.assertEqual('', stream.getvalue())
 
-    def _unwrap(self, result):
-        """Unwrap result to get to the CLI result object."""
-        return result.decorated.decorated
-
     def test_format_error(self):
         # CLITestResult formats errors by giving them a big fat line, a title
         # made up of their 'label' and the name of the test, another different
         # big fat line, and then the actual error itself.
-        result = self._unwrap(self.make_result()[0])
+        result = self.make_result()[0]
         error = result._format_error('label', self, 'error text')
         expected = '%s%s: %s\n%s%s' % (
             result.sep1, 'label', self.id(), result.sep2, 'error text')
         self.assertThat(error, DocTestMatches(expected))
 
     def test_format_error_includes_tags(self):
-        result1 = self.make_result()
-        result = self._unwrap(result1[0])
-        #result1.startTestRun()
-        #result1.status(test_id=self.id(), test_status='fail', eof=True,
-        #    test_tags=set(['foo']), file_name='traceback',
-        #    mime_type='test/plain;charset=utf8', file_bytes=b'error text')
-        result.tags(set(['foo']), set())
-        error = result._format_error('label', self, 'error text')
+        result = self.make_result()[0]
+        error = result._format_error('label', self, 'error text', set(['foo']))
         expected = '%s%s: %s\ntags: foo\n%s%s' % (
             result.sep1, 'label', self.id(), result.sep2, 'error text')
         self.assertThat(error, DocTestMatches(expected))
@@ -379,10 +369,9 @@ class TestCLITestResult(TestCase):
         result.status(test_id=self.id(), test_status='fail', eof=True,
             file_name='traceback', mime_type='text/plain;charset=utf8',
             file_bytes=error_text.encode('utf8'))
-        result1 = self._unwrap(result)
         self.assertThat(
             stream.getvalue(),
-            DocTestMatches(result1._format_error('FAIL', self, error_text)))
+            DocTestMatches(result._format_error('FAIL', self, error_text)))
 
     def test_addFailure_handles_string_encoding(self):
         # CLITestResult.addFailure outputs the given error handling non-ascii
@@ -433,6 +422,6 @@ FAIL: fail
 tags: worker-0
 ----------------------------------------------------------------------
 Ran 1 tests
-FAILED (id=None, failures=1)
+FAILED (id=None, failures=1, skips=1)
 """, stream.getvalue())
 

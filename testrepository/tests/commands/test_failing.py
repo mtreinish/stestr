@@ -57,14 +57,14 @@ class TestCommand(ResourcedTestCase):
             ('summary', False, 1, None, Wildcard, None, [('id', 0, None), ('failures', 1, None)])],
             ui.outputs)
         suite = ui.outputs[0][1]
-        result = testtools.TestResult()
+        result = testtools.StreamSummary()
         result.startTestRun()
         try:
             suite.run(result)
         finally:
             result.stopTestRun()
         self.assertEqual(1, result.testsRun)
-        self.assertEqual(1, len(result.failures))
+        self.assertEqual(1, len(result.errors))
 
     def test_with_subunit_shows_subunit_stream(self):
         ui, cmd = self.get_test_ui_and_cmd(options=[('subunit', True)])
