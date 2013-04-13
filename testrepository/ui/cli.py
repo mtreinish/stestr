@@ -95,6 +95,13 @@ class UI(ui.AbstractUI):
         self._stderr = stderr
 
     def _iter_streams(self, stream_type):
+        # Only the first stream declared in a command can be accepted at the
+        # moment - as there is only one stdin and alternate streams are not yet
+        # configurable in the CLI.
+        first_stream_type = self.cmd.input_streams[0]
+        if (stream_type != first_stream_type
+            and stream_type != first_stream_type[:-1]):
+            return
         yield subunit.make_stream_binary(self._stdin)
 
     def make_result(self, get_id, test_command, previous_run=None):

@@ -5,6 +5,14 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+CHANGES
+-------
+
+* The cli UI now has primitive differentiation between multiple stream types.
+  This is not yet exposed to the end user, but is sufficient to enable the
+  load command to take interactive input without it reading from the raw
+  subunit stream on stdin. (Robert Collins)
+
 0.0.15
 ++++++
 

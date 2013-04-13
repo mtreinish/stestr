@@ -72,7 +72,8 @@ class load(Command):
         # back to it. Needs to be a callable - its a head fake for
         # testsuite.add.
         # XXX: Be nice if we could declare that the argument, which is a path,
-        # is to be an input stream.
+        # is to be an input stream - and thus push this conditional down into
+        # the UI object.
         if self.ui.arguments.get('streams'):
             opener = partial(open, mode='rb')
             streams = map(opener, self.ui.arguments['streams'])

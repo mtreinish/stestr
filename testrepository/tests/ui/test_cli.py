@@ -79,6 +79,21 @@ class TestCLIUI(ResourcedTestCase):
             results.append(stream.read())
         self.assertEqual([_b('foo\n')], results)
 
+    def test_stream_type_honoured(self):
+        # The CLI UI has only one stdin, so when a command asks for a stream
+        # type it didn't declare, no streams are found.
+        stdout = BytesIO()
+        stdin = BytesIO(_b('foo\n'))
+        stderr = BytesIO()
+        ui = cli.UI([], stdin, stdout, stderr)
+        cmd = commands.Command(ui)
+        cmd.input_streams = ['subunit+', 'interactive?']
+        ui.set_command(cmd)
+        results = []
+        for stream in ui.iter_streams('interactive'):
+            results.append(stream.read())
+        self.assertEqual([], results)
+
     def test_dash_d_sets_here_option(self):
         stdout = BytesIO()
         stdin = BytesIO(_b('foo\n'))
