@@ -75,11 +75,10 @@ class load(Command):
         # is to be an input stream.
         if self.ui.arguments.get('streams'):
             opener = partial(open, mode='rb')
-            cases = lambda:map(opener, self.ui.arguments['streams'])
+            streams = map(opener, self.ui.arguments['streams'])
         else:
-            cases = lambda:self.ui.iter_streams('subunit')
-        def make_tests(suite):
-            streams = list(suite)
+            streams = self.ui.iter_streams('subunit')
+        def make_tests():
             for pos, stream in enumerate(streams):
                 if v2_avail:
                     # Calls StreamResult API.
@@ -104,7 +103,7 @@ class load(Command):
                     lambda result:testtools.StreamTagger(
                         [result], add=['worker-%d' % pos]))
                 yield (case, str(pos))
-        case = testtools.ConcurrentStreamTestSuite(lambda: list(make_tests(cases())))
+        case = testtools.ConcurrentStreamTestSuite(make_tests)
         # One unmodified copy of the stream to repository storage
         inserter = repo.get_inserter(partial=self.ui.options.partial)
         # One copy of the stream to the UI layer after performing global
