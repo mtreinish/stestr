@@ -24,6 +24,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import multiprocessing
 from textwrap import dedent
 
 from fixtures import Fixture
@@ -404,14 +405,11 @@ class TestListingFixture(Fixture):
         return int(out.strip())
 
     def local_concurrency(self):
-        if sys.platform == 'linux2':
-            concurrency = None
-            for line in open('/proc/cpuinfo', 'rt'):
-                if line.startswith('processor'):
-                    concurrency = int(line[line.find(':')+1:]) + 1
-            return concurrency
-        # No concurrency logic known.
-        return None
+        try:
+            return multiprocessing.cpu_count()
+        except NotImplementedError:
+            # No concurrency logic known.
+            return None
 
 
 class TestCommand(Fixture):
