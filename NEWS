@@ -8,6 +8,9 @@ NEXT (In development)
 CHANGES
 -------
 
+* Switch to using multiprocessing to determine CPU counts.
+ (Chris Jones, #1092276)
+
 * The cli UI now has primitive differentiation between multiple stream types.
   This is not yet exposed to the end user, but is sufficient to enable the
   load command to take interactive input without it reading from the raw
