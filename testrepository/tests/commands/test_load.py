@@ -224,6 +224,19 @@ class TestCommandLoad(ResourcedTestCase):
         self.assertEqual(0, cmd.execute())
         self.assertEqual([], ui.outputs)
 
+    def test_load_abort_over_interactive_stream(self):
+        ui = UI([('subunit', b''), ('interactive', b'a\n')])
+        cmd = load.load(ui)
+        ui.set_command(cmd)
+        cmd.repository_factory = memory.RepositoryFactory()
+        cmd.repository_factory.initialise(ui.here)
+        self.assertEqual(1, cmd.execute())
+        self.assertEqual(
+            [('results', Wildcard),
+             ('summary', False, 1, None, None, None,
+                [('id', 0, None), ('failures', 1, None)])],
+            ui.outputs)
+
     def test_partial_passed_to_repo(self):
         ui = UI([('subunit', _b(''))], [('quiet', True), ('partial', True)])
         cmd = load.load(ui)

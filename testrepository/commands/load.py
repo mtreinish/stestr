@@ -17,6 +17,7 @@
 from functools import partial
 from operator import methodcaller
 import optparse
+import threading
 
 from extras import try_import
 v2_avail = try_import('subunit.ByteStreamToStreamResult')
@@ -29,6 +30,26 @@ from testrepository.commands import Command
 from testrepository.repository import RepositoryNotFound
 from testrepository.testcommand import TestCommand
 
+class InputToStreamResult(object):
+    """Generate Stream events from stdin.
+
+    Really a UI responsibility?
+    """
+
+    def __init__(self, stream):
+        self.source = stream
+        self.stop = False
+
+    def run(self, result):
+        while True:
+            if self.stop:
+                return
+            char = self.source.read(1)
+            if not char:
+                return
+            if char == 'a':
+                result.status(test_id='stdin', test_status='fail')
+
 
 class load(Command):
     """Load a subunit stream into a repository.
@@ -39,7 +60,7 @@ class load(Command):
     Unless the stream is a partial stream, any existing failures are discarded.
     """
 
-    input_streams = ['subunit+']
+    input_streams = ['subunit+', 'interactive?']
 
     args = [ExistingPathArgument('streams', min=0, max=None)]
     options = [
@@ -116,11 +137,23 @@ class load(Command):
         output_result, summary_result = self.ui.make_result(
             inserter.get_id, testcommand, previous_run=previous_run)
         result = testtools.CopyStreamResult([inserter, output_result])
+        runner_thread = None
         result.startTestRun()
         try:
+            # Convert user input into a stdin event stream
+            interactive_streams = list(self.ui.iter_streams('interactive'))
+            if interactive_streams:
+                case = InputToStreamResult(interactive_streams[0])
+                runner_thread = threading.Thread(
+                    target=case.run, args=(result,))
+                runner_thread.daemon = True
+                runner_thread.start()
             case.run(result)
         finally:
             result.stopTestRun()
+            if interactive_streams and runner_thread:
+                runner_thread.stop = True
+                runner_thread.join(10)
         if not summary_result.wasSuccessful():
             return 1
         else:
