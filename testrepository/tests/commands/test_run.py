@@ -366,7 +366,6 @@ class TestCommand(ResourcedTestCase):
     def test_regex_test_filter_with_explicit_ids(self):
         ui, cmd = self.get_test_ui_and_cmd(
             args=('g1', '--', 'bar', 'quux'),options=[('failing', True)])
-        ui.proc_outputs = ['ab-cd\nefgh\n']
         cmd.repository_factory = memory.RepositoryFactory()
         self.setup_repo(cmd, ui)
         self.set_config(
