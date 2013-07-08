@@ -362,6 +362,37 @@ class TestTestCommand(ResourcedTestCase):
         self.assertEqual(1, len(partitions[0]))
         self.assertEqual(1, len(partitions[1]))
 
+    def test_partition_tests_with_group_regex(self):
+        repo = memory.RepositoryFactory().initialise('memory:')
+        result = repo.get_inserter()
+        result.startTestRun()
+        run_timed("TestCase1.slow", 3, result)
+        run_timed("TestCase2.fast1", 1, result)
+        run_timed("TestCase2.fast2", 1, result)
+        result.stopTestRun()
+        ui, command = self.get_test_ui_and_cmd(repository=repo)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST $LISTOPT\n'
+            'test_list_option=--list\n')
+        fixture = self.useFixture(command.get_run_command())
+        test_ids = frozenset(['TestCase1.slow', 'TestCase1.fast',
+                              'TestCase1.fast2', 'TestCase2.fast1',
+                              'TestCase3.test1', 'TestCase3.test2',
+                              'TestCase2.fast2', 'TestCase4.test',
+                              'testdir.testfile.TestCase5.test'])
+        regex = 'TestCase[0-5]'
+        group_tags = fixture.filter_test_groups(test_ids, regex)
+        partitions = fixture.partition_tests(test_ids, 2, group_tags)
+        self.assertTrue('TestCase1.slow' in partitions[1])
+        self.assertTrue('TestCase1.fast' in partitions[1])
+        self.assertTrue('TestCase1.fast2' in partitions[1])
+        self.assertTrue('TestCase3.test2' in partitions[1])
+        self.assertTrue('TestCase3.test1' in partitions[1])
+        self.assertTrue('TestCase4.test' in partitions[1])
+        self.assertTrue('testdir.testfile.TestCase5.test' in partitions[0])
+        self.assertTrue('TestCase2.fast1' in partitions[0])
+        self.assertTrue('TestCase2.fast2' in partitions[0])
+
     def test_run_tests_with_instances(self):
         # when there are instances and no instance_execute, run_tests acts as
         # normal.

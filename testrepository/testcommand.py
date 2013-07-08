@@ -134,7 +134,7 @@ class TestListingFixture(Fixture):
 
     def __init__(self, test_ids, cmd_template, listopt, idoption, ui,
         repository, parallel=True, listpath=None, parser=None,
-        test_filters=None, instance_source=None):
+        test_filters=None, instance_source=None, group_regex=None):
         """Create a TestListingFixture.
 
         :param test_ids: The test_ids to use. May be None indicating that
@@ -167,6 +167,8 @@ class TestListingFixture(Fixture):
         :param instance_source: A source of test run instances. Must support
             obtain_instance(max_concurrency) -> id and release_instance(id)
             calls.
+        :param group_regex: An optional regular expression string which is used
+            to provide a grouping hint to the test partitioner
         """
         self.test_ids = test_ids
         self.template = cmd_template
@@ -179,6 +181,7 @@ class TestListingFixture(Fixture):
         self._parser = parser
         self.test_filters = test_filters
         self._instance_source = instance_source
+        self.group_regex = group_regex
 
     def setUp(self):
         super(TestListingFixture, self).setUp()
@@ -327,6 +330,7 @@ class TestListingFixture(Fixture):
         :return: A list of spawned processes.
         """
         result = []
+        group_tags = None
         test_ids = self.test_ids
         if self.concurrency == 1 and (test_ids is None or test_ids):
             # Have to customise cmd here, as instances are allocated
@@ -343,8 +347,11 @@ class TestListingFixture(Fixture):
                 return [CallWhenProcFinishes(run_proc,
                     lambda:self._instance_source.release_instance(instance))]
             else:
-                return [run_proc]
-        test_id_groups = self.partition_tests(test_ids, self.concurrency)
+                return [run_proc] 
+        if self.group_regex:
+            group_tags = self.filter_test_groups(test_ids, self.group_regex)
+        test_id_groups = self.partition_tests(test_ids, self.concurrency,
+                                              group_tags)
         for test_ids in test_id_groups:
             if not test_ids:
                 # No tests in this partition
@@ -356,7 +363,28 @@ class TestListingFixture(Fixture):
             result.extend(fixture.run_tests())
         return result
 
-    def partition_tests(self, test_ids, concurrency):
+    def filter_test_groups(self, test_ids, group_regex):
+        """Add a group tag based on the regex provided
+
+        :return A dict with the group tags as keys and a list of
+            test ids that are a member of the group tag as the value
+        """
+
+        group_dict = {}
+        expr = re.compile(group_regex)
+        for test_id in test_ids:
+            match = expr.match(test_id)
+            if match:
+                group_id = match.group(0)
+            else:
+                group_id = None
+            if group_dict.get(group_id):
+                group_dict[group_id].append(test_id)
+            else:
+                group_dict[group_id] = [test_id]
+        return group_dict
+
+    def partition_tests(self, test_ids, concurrency, group_tags=None):
         """Parition test_ids by concurrency.
 
         Test durations from the repository are used to get partitions which
@@ -367,26 +395,63 @@ class TestListingFixture(Fixture):
         :return: A list where each element is a distinct subset of test_ids,
             and the union of all the elements is equal to set(test_ids).
         """
+
         partitions = [list() for i in range(concurrency)]
         timed_partitions = [[0.0, partition] for partition in partitions]
         time_data = self.repository.get_test_times(test_ids)
         timed = time_data['known']
         unknown = time_data['unknown']
+        # Schedule test groups by the sum of execute time for each test that is
+        # a member of the group
+        if group_tags:
+            group_timed = {}
+            group_unknown = []
+            for group_tag in group_tags.keys():
+                time = 0.0
+                for test_id in group_tags[group_tag]:
+                    # If a test_id is not timed remove the whole group from the
+                    # timed groups dict and
+                    if test_id in unknown:
+                        if group_tag in group_timed.keys():
+                            group_timed.pop(group_tag, None)
+                        group_unknown.append(group_tag)
+                        break
+                    time = time + timed[test_id]
+                group_timed[group_tag] = (group_tags[group_tag], time)
+
+            queue = sorted(group_timed.items(),
+                           key=operator.itemgetter(1),
+                           reverse=True)
+
+            # Sort the tests by runtime
+            for group_tag, test_tuple in queue:
+                test_ids = test_tuple[0]
+                duration = test_tuple[1]
+                timed_partitions[0][0] = timed_partitions[0][0] + duration
+                # Handle groups larger than a single entry
+                timed_partitions[0][1].extend(test_ids)
+                timed_partitions.sort(key=lambda item: (item[0], len(item[1])))
+            for partition, group_id in zip(itertools.cycle(partitions),
+                                           group_unknown):
+                partition = partition + group_tags[group_id]
+            return partitions
+
         # Scheduling is NP complete in general, so we avoid aiming for
         # perfection. A quick approximation that is sufficient for our general
         # needs:
         # sort the tests by time
         # allocate to partitions by putting each test in to the partition with
         # the current (lowest time, shortest length)
-        queue = sorted(timed.items(), key=operator.itemgetter(1), reverse=True)
-        for test_id, duration in queue:
-            timed_partitions[0][0] = timed_partitions[0][0] + duration
-            timed_partitions[0][1].append(test_id)
-            timed_partitions.sort(key=lambda item:(item[0], len(item[1])))
-        # Assign tests with unknown times in round robin fashion to the partitions.
-        for partition, test_id in zip(itertools.cycle(partitions), unknown):
-            partition.append(test_id)
-        return partitions
+        else:
+            queue = sorted(timed.items(), key=operator.itemgetter(1), reverse=True)
+            for test_id, duration in queue:
+                timed_partitions[0][0] = timed_partitions[0][0] + duration
+                timed_partitions[0][1].append(test_id)
+                timed_partitions.sort(key=lambda item:(item[0], len(item[1])))
+           # Assign tests with unknown times in round robin fashion to the partitions. 
+            for partition, test_id in zip(itertools.cycle(partitions), unknown):
+                partition.append(test_id)
+            return partitions
 
     def callout_concurrency(self):
         """Callout for user defined concurrency."""
