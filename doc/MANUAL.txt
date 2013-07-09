@@ -205,6 +205,30 @@ And then find tests with that tag::
 
   $ testr last --subunit | subunit-filter -s --xfail --with-tag=worker-3 | subunit-ls > slave-3.list
 
+Test Grouping
+~~~~~~~~~~~~~
+
+In certain scenarios you may want to group tests of a certain type together
+so that they will run together. The group_regex option allows you do this by
+passing in a regex string in as an option in .testr.conf. The test scheduler
+will group the tests based on the result of matching the regex to the test id.
+Then when the scheduler is partitioning the tests these groups will be
+scheduled as a single unit. In other words each group will be run on the same
+partition.
+
+The group_regex to use can be set in .testr.conf with the group_regex option.
+If it is necessary to have the regex string for use elsewhere in .testr.conf
+then it can be accessed using the $GROUP_REGEX variable.
+
+For example, extending the python sample .testr.conf from the configuration
+section with a group regex that will group python tests cases together::
+
+  [DEFAULT]
+  test_command=foo $IDOPTION
+  test_id_option=--bar $IDFILE
+  group_regex=([^\.]*\.)*
+
+
 Remote or isolated test environments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

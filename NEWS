@@ -16,6 +16,9 @@ CHANGES
   load command to take interactive input without it reading from the raw
   subunit stream on stdin. (Robert Collins)
 
+* Add a new testr.conf option, group_regex, that can be used for grouping
+  test_ids with a regular expression. (Matthew Treinish)
+
 0.0.15
 ++++++
 

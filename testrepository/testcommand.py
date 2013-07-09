@@ -72,6 +72,8 @@ testrconf_help = dedent("""
       be adjusted if the paths are synched with different names.
     * instance_dispose -- dispose of one or more test running environments.
       Accepts $INSTANCE_IDS.
+    * group_regex -- The optional variable to set a regex string to be used
+      for grouping test ids.
     * $IDOPTION -- the variable to use to trigger running some specific tests.
     * $IDFILE -- A file created before the test command is run and deleted
       afterwards which contains a list of test ids, one per line. This can
@@ -79,6 +81,8 @@ testrconf_help = dedent("""
     * $IDLIST -- A list of the test ids to run, separated by spaces. IDLIST
       defaults to an empty string when no test ids are known and no explicit
       default is provided. This will not handle test ids with spaces.
+    * $GROUP_REGEX -- The variable for the regex string used for grouping
+      tests.
 
     See the testrepository manual for example .testr.conf files in different
     programming languages.
@@ -185,9 +189,11 @@ class TestListingFixture(Fixture):
 
     def setUp(self):
         super(TestListingFixture, self).setUp()
-        variable_regex = '\$(IDOPTION|IDFILE|IDLIST|LISTOPT)'
+        variable_regex = '\$(IDOPTION|IDFILE|IDLIST|LISTOPT|GROUP_REGEX)'
         variables = {}
         list_variables = {'LISTOPT': self.listopt}
+        if self.group_regex:
+            variables['GROUP_REGEX'] = self.group_regex
         cmd = self.template
         try:
             default_idstr = self._parser.get('DEFAULT', 'test_id_list_default')
@@ -577,15 +583,21 @@ class TestCommand(Fixture):
                 if e.message != "No option 'test_list_option' in section: 'DEFAULT'":
                     raise
                 raise ValueError("No test_list_option option present in .testr.conf")
+        try:
+            group_regex = parser.get('DEFAULT', 'group_regex')
+        except ConfigParser.NoOptionError:
+            group_regex = None
         if self.oldschool:
             listpath = os.path.join(self.ui.here, 'failing.list')
             result = self.run_factory(test_ids, cmd, listopt, idoption,
                 self.ui, self.repository, listpath=listpath, parser=parser,
-                test_filters=test_filters, instance_source=self)
+                test_filters=test_filters, instance_source=self,
+                group_regex=group_regex)
         else:
             result = self.run_factory(test_ids, cmd, listopt, idoption,
                 self.ui, self.repository, parser=parser,
-                test_filters=test_filters, instance_source=self)
+                test_filters=test_filters, instance_source=self,
+                group_regex=group_regex)
         return result
 
     def get_filter_tags(self):
