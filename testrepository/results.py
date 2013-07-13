@@ -29,7 +29,7 @@ class SummarizingResult(StreamSummary):
         self._last_time = None
 
     def status(self, *args, **kwargs):
-        if 'timestamp' in kwargs:
+        if kwargs.get('timestamp') is not None:
             timestamp = kwargs['timestamp']
             if self._last_time is None:
                 self._first_time = timestamp
