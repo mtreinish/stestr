@@ -47,7 +47,7 @@ class InputToStreamResult(object):
             char = self.source.read(1)
             if not char:
                 return
-            if char == 'a':
+            if char == b'a':
                 result.status(test_id='stdin', test_status='fail')
 
 

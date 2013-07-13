@@ -230,12 +230,13 @@ class TestCommandLoad(ResourcedTestCase):
         ui.set_command(cmd)
         cmd.repository_factory = memory.RepositoryFactory()
         cmd.repository_factory.initialise(ui.here)
-        self.assertEqual(1, cmd.execute())
+        ret = cmd.execute()
         self.assertEqual(
             [('results', Wildcard),
              ('summary', False, 1, None, None, None,
                 [('id', 0, None), ('failures', 1, None)])],
             ui.outputs)
+        self.assertEqual(1, ret)
 
     def test_partial_passed_to_repo(self):
         ui = UI([('subunit', _b(''))], [('quiet', True), ('partial', True)])
