@@ -14,6 +14,7 @@
 
 """In memory storage of test results."""
 
+from collections import OrderedDict
 from io import BytesIO
 from operator import methodcaller
 
@@ -55,7 +56,7 @@ class Repository(AbstractRepository):
     def __init__(self):
         # Test runs:
         self._runs = []
-        self._failing = {} # id -> test
+        self._failing = OrderedDict() # id -> test
         self._times = {} # id -> duration
 
     def count(self):
@@ -157,7 +158,7 @@ class _Inserter(AbstractTestRun):
         self._repository._runs.append(self)
         self._run_id = len(self._repository._runs) - 1
         if not self._partial:
-            self._repository._failing = {}
+            self._repository._failing = OrderedDict()
         for test_dict in self._tests:
             test_id = test_dict['id']
             if test_dict['status'] == 'fail':
