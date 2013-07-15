@@ -362,6 +362,46 @@ class TestTestCommand(ResourcedTestCase):
         self.assertEqual(1, len(partitions[0]))
         self.assertEqual(1, len(partitions[1]))
 
+    def test_partition_tests_with_grouping(self):
+        repo = memory.RepositoryFactory().initialise('memory:')
+        result = repo.get_inserter()
+        result.startTestRun()
+        run_timed("TestCase1.slow", 3, result)
+        run_timed("TestCase2.fast1", 1, result)
+        run_timed("TestCase2.fast2", 1, result)
+        result.stopTestRun()
+        ui, command = self.get_test_ui_and_cmd(repository=repo)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST $LISTOPT\n'
+            'test_list_option=--list\n')
+        fixture = self.useFixture(command.get_run_command())
+        test_ids = frozenset(['TestCase1.slow', 'TestCase1.fast',
+                              'TestCase1.fast2', 'TestCase2.fast1',
+                              'TestCase3.test1', 'TestCase3.test2',
+                              'TestCase2.fast2', 'TestCase4.test',
+                              'testdir.testfile.TestCase5.test'])
+        regex = 'TestCase[0-5]'
+        def group_id(test_id, regex=re.compile('TestCase[0-5]')):
+            match = regex.match(test_id)
+            if match:
+                return match.group(0)
+        # There isn't a public way to define a group callback [as yet].
+        fixture._group_callback = group_id
+        partitions = fixture.partition_tests(test_ids, 2)
+        # Timed groups are deterministic:
+        self.assertTrue('TestCase2.fast1' in partitions[0])
+        self.assertTrue('TestCase2.fast2' in partitions[0])
+        self.assertTrue('TestCase1.slow' in partitions[1])
+        self.assertTrue('TestCase1.fast' in partitions[1])
+        self.assertTrue('TestCase1.fast2' in partitions[1])
+        # Untimed groups just need to be kept together:
+        if 'TestCase3.test1' in partitions[0]:
+            self.assertTrue('TestCase3.test2' in partitions[0])
+        if 'TestCase4.test' not in partitions[0]:
+            self.assertTrue('TestCase4.test' in partitions[1])
+        if 'testdir.testfile.TestCase5.test' not in partitions[0]:
+            self.assertTrue('testdir.testfile.TestCase5.test' in partitions[1])
+
     def test_run_tests_with_instances(self):
         # when there are instances and no instance_execute, run_tests acts as
         # normal.

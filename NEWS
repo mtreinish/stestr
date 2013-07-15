@@ -19,6 +19,11 @@ CHANGES
   load command to take interactive input without it reading from the raw
   subunit stream on stdin. (Robert Collins)
 
+* The scheduler can now groups tests together permitting co-dependent tests to
+  always be scheduled onto the same backend. Note that this does not force
+  co-dependent tests to be executed, so partial test runs (e.g. --failing)
+  may still fail.  (Matthew Treinish, Robert Collins)
+
 0.0.15
 ++++++
 
