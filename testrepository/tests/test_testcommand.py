@@ -221,6 +221,16 @@ class TestTestCommand(ResourcedTestCase):
         expected_cmd = 'foo '
         self.assertEqual(expected_cmd, fixture.cmd)
 
+    def test_group_regex_option(self):
+        ui, command = self.get_test_ui_and_cmd()
+        self.set_config(
+                '[DEFAULT]\ntest_command=foo $IDOPTION\n'
+                'test_id_option=--load-list $IDFILE\n'
+                'group_regex=([^\\.]+\\.)+\n')
+        fixture = self.useFixture(command.get_run_command())
+        self.assertEqual(
+            'pkg.class.', fixture._group_callback('pkg.class.test_method'))
+
     def test_extra_args_passed_in(self):
         ui, command = self.get_test_ui_and_cmd()
         self.set_config(

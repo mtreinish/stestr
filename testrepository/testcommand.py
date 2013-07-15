@@ -73,6 +73,7 @@ testrconf_help = dedent("""
       be adjusted if the paths are synched with different names.
     * instance_dispose -- dispose of one or more test running environments.
       Accepts $INSTANCE_IDS.
+    * group_regex -- If set group tests by the matched section of the test id.
     * $IDOPTION -- the variable to use to trigger running some specific tests.
     * $IDFILE -- A file created before the test command is run and deleted
       afterwards which contains a list of test ids, one per line. This can
@@ -551,15 +552,28 @@ class TestCommand(Fixture):
                 if e.message != "No option 'test_list_option' in section: 'DEFAULT'":
                     raise
                 raise ValueError("No test_list_option option present in .testr.conf")
+        try:
+            group_regex = parser.get('DEFAULT', 'group_regex')
+        except ConfigParser.NoOptionError:
+            group_regex = None
+        if group_regex:
+            def group_callback(test_id, regex=re.compile(group_regex)):
+                match = regex.match(test_id)
+                if match:
+                    return match.group(0)
+        else:
+            group_callback = None
         if self.oldschool:
             listpath = os.path.join(self.ui.here, 'failing.list')
             result = self.run_factory(test_ids, cmd, listopt, idoption,
                 self.ui, self.repository, listpath=listpath, parser=parser,
-                test_filters=test_filters, instance_source=self)
+                test_filters=test_filters, instance_source=self,
+                group_callback=group_callback)
         else:
             result = self.run_factory(test_ids, cmd, listopt, idoption,
                 self.ui, self.repository, parser=parser,
-                test_filters=test_filters, instance_source=self)
+                test_filters=test_filters, instance_source=self,
+                group_callback=group_callback)
         return result
 
     def get_filter_tags(self):

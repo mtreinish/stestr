@@ -8,6 +8,9 @@ NEXT (In development)
 CHANGES
 -------
 
+* A new testr.conf option ``group_regex`` can be used for grouping
+  tests so that they get run in the same backend runner. (Matthew Treinish)
+
 * Fix Python 3.* support for entrypoints; the initial code was Python3
   incompatible. (Robert Collins, Clark Boylan, #1187192)
 
