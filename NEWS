@@ -5,6 +5,15 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+0.0.17
+++++++
+
+CHANGES
+-------
+
+* Restore the ability to import testrepository.repository.memory on Python 2.6.
+  (Robert Collins)
+
 0.0.16
 ++++++
 
