@@ -27,6 +27,10 @@ CHANGES
   co-dependent tests to be executed, so partial test runs (e.g. --failing)
   may still fail.  (Matthew Treinish, Robert Collins)
 
+* When test listing fails, testr will now report an error rather than
+  incorrectly trying to run zero tests. A test listing failure is detected by
+  the returncode of the test listing process. (Robert Collins, #1185231)
+
 0.0.15
 ++++++
 

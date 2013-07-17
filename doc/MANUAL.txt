@@ -137,8 +137,10 @@ All the normal rules for invoking test program commands apply: extra parameters
 will be passed through, if a test list is being supplied test_option can be
 used via $IDOPTION.
 
-The output of the test command when this option is supplied should be a series
-of test ids, in any order, ``\n`` separated on stdout.
+The output of the test command when this option is supplied should be a subunit
+test enumeration. For subunit v1 that is a series of test ids, in any order,
+``\n`` separated on stdout. For v2 use the subunit protocol and emit one event
+per test with each test having status 'exists'.
 
 To test whether this is working the `testr list-tests` command can be useful.
 

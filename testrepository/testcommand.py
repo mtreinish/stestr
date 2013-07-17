@@ -293,7 +293,10 @@ class TestListingFixture(Fixture):
             run_proc = self.ui.subprocess_Popen(list_cmd, shell=True,
                 stdout=subprocess.PIPE, stdin=subprocess.PIPE)
             out, err = run_proc.communicate()
-            # Should we raise on non-zero exit?
+            if run_proc.returncode != 0:
+                raise ValueError(
+                    "Non-zero exit code (%d) from test listing."
+                    " stdout=%r, stderr=%r" % (run_proc.returncode, out, err))
             ids = parse_enumeration(out)
             return ids
         finally:

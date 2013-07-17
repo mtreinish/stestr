@@ -321,6 +321,15 @@ class TestTestCommand(ResourcedTestCase):
         fixture = self.useFixture(command.get_run_command())
         self.assertEqual(set(['returned', 'ids']), set(fixture.list_tests()))
 
+    def test_list_tests_nonzero_exit(self):
+        ui, command = self.get_test_ui_and_cmd()
+        ui.proc_results = [1]
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $LISTOPT $IDLIST\ntest_id_list_default=whoo yea\n'
+            'test_list_option=--list\n')
+        fixture = self.useFixture(command.get_run_command())
+        self.assertThat(lambda:fixture.list_tests(), raises(ValueError))
+
     def test_partition_tests_smoke(self):
         repo = memory.RepositoryFactory().initialise('memory:')
         # Seed with 1 slow and 2 tests making up 2/3 the time.
