@@ -31,6 +31,7 @@ from testscenarios.scenarios import multiply_scenarios
 from testtools.compat import _b
 from testtools.matchers import (
     Equals,
+    HasLength,
     MatchesException,
     MatchesListwise,
     )
@@ -186,15 +187,14 @@ class TestCommand(ResourcedTestCase):
             ('summary', True, 0, -3, None, None, [('id', 1, None)]),
             ], ui.outputs)
 
-    def capture_ids(self):
+    def capture_ids(self, list_result=None):
         params = []
         def capture_ids(self, ids, args, test_filters=None):
-            params.append(self)
-            params.append(ids)
-            params.append(args)
-            params.append(test_filters)
+            params.append([self, ids, args, test_filters])
             result = Fixture()
             result.run_tests = lambda:[]
+            if list_result is not None:
+                result.list_tests = lambda:list(list_result)
             return result
         return params, capture_ids
 
@@ -222,7 +222,7 @@ class TestCommand(ResourcedTestCase):
             ('summary', True, 0, -3, None, None, [('id', 1, None)])
             ], ui.outputs)
         self.assertEqual(0, cmd_result)
-        self.assertEqual([Wildcard, expected_ids, [], None], params)
+        self.assertEqual([[Wildcard, expected_ids, [], None]], params)
 
     def test_load_list_passes_ids(self):
         list_file = tempfile.NamedTemporaryFile()
@@ -246,7 +246,7 @@ class TestCommand(ResourcedTestCase):
             ('summary', True, 0, -3, None, None, [('id', 1, None)])
             ], ui.outputs)
         self.assertEqual(0, cmd_result)
-        self.assertEqual([Wildcard, expected_ids, [], None], params)
+        self.assertEqual([[Wildcard, expected_ids, [], None]], params)
 
     def test_extra_options_passed_in(self):
         ui, cmd = self.get_test_ui_and_cmd(args=('--', 'bar', 'quux'))
@@ -341,7 +341,6 @@ class TestCommand(ResourcedTestCase):
 
     def test_regex_test_filter(self):
         ui, cmd = self.get_test_ui_and_cmd(args=('ab.*cd', '--', 'bar', 'quux'))
-        ui.proc_outputs = [_b('ab-cd\nefgh\n')]
         cmd.repository_factory = memory.RepositoryFactory()
         self.setup_repo(cmd, ui)
         self.set_config(
@@ -358,10 +357,11 @@ class TestCommand(ResourcedTestCase):
             ('summary', True, 0, -3, None, None, [('id', 1, None)])
             ], ui.outputs)
         self.assertEqual(0, cmd_result)
-        self.assertThat(params[1], Equals(None))
+        self.assertThat(params[0][1], Equals(None))
         self.assertThat(
-            params[2], MatchesListwise([Equals('bar'), Equals('quux')]))
-        self.assertThat(params[3], MatchesListwise([Equals('ab.*cd')]))
+            params[0][2], MatchesListwise([Equals('bar'), Equals('quux')]))
+        self.assertThat(params[0][3], MatchesListwise([Equals('ab.*cd')]))
+        self.assertThat(params, HasLength(1))
 
     def test_regex_test_filter_with_explicit_ids(self):
         ui, cmd = self.get_test_ui_and_cmd(
@@ -382,10 +382,11 @@ class TestCommand(ResourcedTestCase):
             ('summary', True, 0, -3, None, None, [('id', 1, None)])
             ], ui.outputs)
         self.assertEqual(0, cmd_result)
-        self.assertThat(params[1], Equals(['failing1', 'failing2']))
+        self.assertThat(params[0][1], Equals(['failing1', 'failing2']))
         self.assertThat(
-            params[2], MatchesListwise([Equals('bar'), Equals('quux')]))
-        self.assertThat(params[3], MatchesListwise([Equals('g1')]))
+            params[0][2], MatchesListwise([Equals('bar'), Equals('quux')]))
+        self.assertThat(params[0][3], MatchesListwise([Equals('g1')]))
+        self.assertThat(params, HasLength(1))
 
     def test_until_failure(self):
         ui, cmd = self.get_test_ui_and_cmd(options=[('until_failure', True)])

@@ -5,6 +5,12 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+INTERNALS
+---------
+
+* ``capture_ids`` in test_run now returns a list of captures, permitting tests
+  that need to test multiple runs to do so. (Robert Collins)
+
 0.0.17
 ++++++
 
