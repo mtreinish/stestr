@@ -143,6 +143,9 @@ class run(Command):
         optparse.Option("--analyze-isolation", action="store_true",
             default=False,
             help="Search the last test run for 2-test test isolation interactions."),
+        optparse.Option("--isolated", action="store_true",
+            default=False,
+            help="Run each test id in a separate test runner."),
         ]
     args = [StringArgument('testfilters', 0, None), DoubledashArgument(),
         StringArgument('testargs', 0, None)]
@@ -192,7 +195,22 @@ class run(Command):
             if not self.ui.options.analyze_isolation:
                 cmd = testcommand.get_run_command(ids, self.ui.arguments['testargs'],
                     test_filters = filters)
-                return self._run_tests(cmd)
+                if self.ui.options.isolated:
+                    result = 0
+                    cmd.setUp()
+                    try:
+                        ids = cmd.list_tests()
+                    finally:
+                        cmd.cleanUp()
+                    for test_id in ids:
+                        cmd = testcommand.get_run_command([test_id],
+                            self.ui.arguments['testargs'], test_filters=filters)
+                        run_result = self._run_tests(cmd)
+                        if run_result > result:
+                            result = run_result
+                    return result
+                else:
+                    return self._run_tests(cmd)
             else:
                 # Where do we source data about the cause of conflicts.
                 # XXX: Should instead capture the run id in with the failing test
@@ -329,7 +347,8 @@ class run(Command):
             def run_tests():
                 run_procs = [('subunit', ReturnCodeToSubunit(proc)) for proc in cmd.run_tests()]
                 options = {}
-                if self.ui.options.failing or self.ui.options.analyze_isolation:
+                if (self.ui.options.failing or self.ui.options.analyze_isolation
+                    or self.ui.options.isolated):
                     options['partial'] = True
                 load_ui = decorator.UI(input_streams=run_procs, options=options,
                     decorated=self.ui)

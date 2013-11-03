@@ -446,6 +446,35 @@ class TestCommand(ResourcedTestCase):
             ], ui.outputs)
         self.assertEqual(0, result)
 
+    def test_isolated_runs_multiple_processes(self):
+        ui, cmd = self.get_test_ui_and_cmd(options=[('isolated', True)])
+        cmd.repository_factory = memory.RepositoryFactory()
+        self.setup_repo(cmd, ui)
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $IDLIST $LISTOPT\n'
+            'test_id_option=--load-list $IDFILE\n'
+            'test_list_option=--list\n')
+        params, capture_ids = self.capture_ids(list_result=['ab', 'cd', 'ef'])
+        self.useFixture(MonkeyPatch(
+            'testrepository.testcommand.TestCommand.get_run_command',
+            capture_ids))
+        cmd_result = cmd.execute()
+        self.assertEqual([
+            ('results', Wildcard),
+            ('summary', True, 0, -3, None, None, [('id', 1, None)]),
+            ('results', Wildcard),
+            ('summary', True, 0, 0, None, None, [('id', 2, None)]),
+            ('results', Wildcard),
+            ('summary', True, 0, 0, None, None, [('id', 3, None)]),
+            ], ui.outputs)
+        self.assertEqual(0, cmd_result)
+        # once to list, then 3 each executing one test.
+        self.assertThat(params, HasLength(4)) 
+        self.assertThat(params[0][1], Equals(None))
+        self.assertThat(params[1][1], Equals(['ab']))
+        self.assertThat(params[2][1], Equals(['cd']))
+        self.assertThat(params[3][1], Equals(['ef']))
+
 
 def read_all(stream):
     return stream.read()

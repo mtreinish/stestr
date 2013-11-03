@@ -5,6 +5,14 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+CHANGES
+-------
+
+* ``run`` now accepts ``--isolated`` as a parameter, which will cause each
+  selected test to be run independently. This can be useful to both workaround
+  isolation bugs and detect tests that can not be run independently.
+  (Robert Collins)
+
 INTERNALS
 ---------
 
