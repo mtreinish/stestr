@@ -5,6 +5,12 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+CHANGES
+-------
+
+* ``run`` was outputting bad MIME types - test/plain, not text/plain.
+  (Robert Collins)
+
 0.0.18
 ++++++
 

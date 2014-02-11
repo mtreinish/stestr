@@ -79,7 +79,7 @@ class ReturnCodeToSubunit(object):
             if v2_avail:
                 stream = subunit.StreamResultToBytes(self.source)
                 stream.status(test_id='process-returncode', test_status='fail',
-                    file_name='traceback', mime_type='test/plain;charset=utf8',
+                    file_name='traceback', mime_type='text/plain;charset=utf8',
                     file_bytes=('returncode %d' % returncode).encode('utf8'))
             else:
                 self.source.write(_b('test: process-returncode\n'

@@ -532,7 +532,7 @@ class TestReturnCodeToSubunit(ResourcedTestCase):
             buffer.write(b'foo\nbar\n')
             stream = subunit.StreamResultToBytes(buffer)
             stream.status(test_id='process-returncode', test_status='fail',
-                file_name='traceback', mime_type='test/plain;charset=utf8',
+                file_name='traceback', mime_type='text/plain;charset=utf8',
                 file_bytes=b'returncode 1')
             expected_content = buffer.getvalue()
         else:
