@@ -14,10 +14,14 @@
 
 """The test command that test repository knows how to run."""
 
-from extras import try_imports
+from extras import (
+    try_import,
+    try_imports,
+    )
 
 from collections import defaultdict
 ConfigParser = try_imports(['ConfigParser', 'configparser'])
+import io
 import itertools
 import operator
 import os.path
@@ -29,7 +33,9 @@ import multiprocessing
 from textwrap import dedent
 
 from fixtures import Fixture
+v2 = try_import('subunit.v2')
 
+from testrepository import results
 from testrepository.testlist import (
     parse_enumeration,
     write_list,
@@ -294,6 +300,11 @@ class TestListingFixture(Fixture):
                 stdout=subprocess.PIPE, stdin=subprocess.PIPE)
             out, err = run_proc.communicate()
             if run_proc.returncode != 0:
+                if v2 is not None:
+                    new_out = io.BytesIO()
+                    v2.ByteStreamToStreamResult(io.BytesIO(out), 'stdout').run(
+                        results.CatFiles(new_out))
+                    out = new_out.getvalue()
                 raise ValueError(
                     "Non-zero exit code (%d) from test listing."
                     " stdout=%r, stderr=%r" % (run_proc.returncode, out, err))

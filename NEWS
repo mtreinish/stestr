@@ -11,6 +11,9 @@ CHANGES
 * ``run`` was outputting bad MIME types - test/plain, not text/plain.
   (Robert Collins)
 
+* When list-tests encounters an error, a much clearer response will
+  now be shown. (Robert Collins, #1271133)
+
 0.0.18
 ++++++
 
