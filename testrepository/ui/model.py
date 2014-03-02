@@ -33,7 +33,7 @@ class ProcessModel(object):
 
     def communicate(self):
         self.ui.outputs.append(('communicate',))
-        return self.stdout.getvalue(), ''
+        return self.stdout.getvalue(), b''
 
     def wait(self):
         return self.returncode

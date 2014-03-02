@@ -305,9 +305,11 @@ class TestListingFixture(Fixture):
                     v2.ByteStreamToStreamResult(io.BytesIO(out), 'stdout').run(
                         results.CatFiles(new_out))
                     out = new_out.getvalue()
+                self.ui.output_stream(io.BytesIO(out))
+                self.ui.output_stream(io.BytesIO(err))
                 raise ValueError(
                     "Non-zero exit code (%d) from test listing."
-                    " stdout=%r, stderr=%r" % (run_proc.returncode, out, err))
+                    % (run_proc.returncode))
             ids = parse_enumeration(out)
             return ids
         finally:
@@ -454,8 +456,8 @@ class TestListingFixture(Fixture):
         out, err = run_proc.communicate()
         if run_proc.returncode:
             raise ValueError(
-                "test_run_concurrency failed: exit code %d, stderr=%r" % (
-                run_proc.returncode, err))
+                "test_run_concurrency failed: exit code %d, stderr='%s'" % (
+                run_proc.returncode, err.decode('utf8', 'replace')))
         return int(out.strip())
 
     def local_concurrency(self):
