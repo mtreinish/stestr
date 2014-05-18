@@ -279,7 +279,7 @@ class TestListingFixture(Fixture):
         """
         if self.test_filters is None:
             return test_ids
-        filters = map(re.compile, self.test_filters)
+        filters = list(map(re.compile, self.test_filters))
         def include(test_id):
             for pred in filters:
                 if pred.search(test_id):

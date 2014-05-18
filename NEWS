@@ -11,6 +11,9 @@ CHANGES
 * ``run`` was outputting bad MIME types - test/plain, not text/plain.
   (Robert Collins)
 
+* Test filtering was failing under python3 and would only apply the
+  filters to the first test listed by discover. (Clark Boylan, #1317607)
+
 * When list-tests encounters an error, a much clearer response will
   now be shown. (Robert Collins, #1271133)
 

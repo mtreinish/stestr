@@ -575,3 +575,14 @@ class TestTestCommand(ResourcedTestCase):
         fixture = self.useFixture(command.get_run_command(
             test_ids=['return', 'of', 'the', 'king'], test_filters=filters))
         self.assertEqual(['return'], fixture.test_ids)
+
+    def test_filter_tests_by_regex_supplied_ids_multi_match(self):
+        ui, command = self.get_test_ui_and_cmd()
+        ui.proc_outputs = [_b('returned\nids\n')]
+        self.set_config(
+            '[DEFAULT]\ntest_command=foo $LISTOPT $IDLIST\ntest_id_list_default=whoo yea\n'
+            'test_list_option=--list\n')
+        filters = ['return']
+        fixture = self.useFixture(command.get_run_command(
+            test_ids=['return', 'of', 'the', 'king', 'thereisnoreturn'], test_filters=filters))
+        self.assertEqual(['return', 'thereisnoreturn'], fixture.test_ids)
