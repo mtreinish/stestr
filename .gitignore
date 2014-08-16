@@ -3,4 +3,5 @@
 /.testrepository
 /testrepository.egg-info
 __pycache__
+*.pyc
 *~
