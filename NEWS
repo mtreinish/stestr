@@ -8,6 +8,10 @@ NEXT (In development)
 CHANGES
 -------
 
+* Passing --subunit to all testr commands will now consistently output subunit
+  v2. Previously it would output v1 for stored streams and v2 for live
+  streams. (Robert Collins)
+
 * ``run`` was outputting bad MIME types - test/plain, not text/plain.
   (Robert Collins)
 
@@ -19,6 +23,10 @@ CHANGES
 
 INTERNALS
 ---------
+
+* The ``get_subunit_stream`` methods now return subunit v2 streams rather
+  than v1 streams, preparing the way for storage of native v2 streams in
+  the repository. (Robert Collins)
 
 * ``UI.output_stream`` is now tested for handling of non-utf8 bytestreams.
   (Robert Collins)

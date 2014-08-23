@@ -20,7 +20,10 @@ from datetime import (
     )
 import doctest
 
-from subunit import iso8601
+from subunit import (
+    iso8601,
+    v2,
+    )
 
 from testresources import TestResource
 from testtools import (
@@ -29,7 +32,10 @@ from testtools import (
     )
 import testtools
 from testtools.compat import _b
-from testtools.testresult.doubles import ExtendedTestResult
+from testtools.testresult.doubles import (
+    ExtendedTestResult,
+    StreamResult,
+    )
 from testtools.matchers import DocTestMatches, raises
 
 from testrepository import repository
@@ -374,6 +380,61 @@ class TestRepositoryContract(ResourcedTestCase):
         run = repo.get_failing()
         self.assertEqual(None, run.get_id())
 
+    def test_get_failing_get_subunit_stream(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        legacy_result = testtools.ExtendedToStreamDecorator(result)
+        legacy_result.startTestRun()
+        make_test('testrepository.tests.test_repository.Case.method', False).run(legacy_result)
+        legacy_result.stopTestRun()
+        run = repo.get_failing()
+        as_subunit = run.get_subunit_stream()
+        stream = v2.ByteStreamToStreamResult(as_subunit)
+        log = StreamResult()
+        log.startTestRun()
+        try:
+            stream.run(log)
+        finally:
+            log.stopTestRun()
+        self.assertEqual(
+            log._events, [
+            ('startTestRun',),
+            ('status',
+             'testrepository.tests.test_repository.Case.method',
+             'inprogress',
+             None,
+             True,
+             None,
+             None,
+             False,
+             None,
+             None,
+             Wildcard),
+            ('status',
+             'testrepository.tests.test_repository.Case.method',
+             None,
+             None,
+             True,
+             'traceback',
+             Wildcard,
+             True,
+             Wildcard,
+             None,
+             Wildcard),
+            ('status',
+             'testrepository.tests.test_repository.Case.method',
+             'fail',
+             None,
+             True,
+             None,
+             None,
+             False,
+             None,
+             None,
+             Wildcard),
+            ('stopTestRun',)
+            ])
+
     def test_get_subunit_from_test_run(self):
         repo = self.repo_impl.initialise(self.sample_url)
         result = repo.get_inserter()
@@ -384,10 +445,41 @@ class TestRepositoryContract(ResourcedTestCase):
         inserted = result.get_id()
         run = repo.get_test_run(inserted)
         as_subunit = run.get_subunit_stream()
-        self.assertThat(as_subunit.read().decode('utf8'),
-            DocTestMatches("""...test: testrepository.tests.test_repository.Case.method...
-successful: testrepository.tests.test_repository.Case.method...
-""", doctest.ELLIPSIS))
+        stream = v2.ByteStreamToStreamResult(as_subunit)
+        log = StreamResult()
+        log.startTestRun()
+        try:
+            stream.run(log)
+        finally:
+            log.stopTestRun()
+        self.assertEqual(
+            log._events,
+            [
+            ('startTestRun',),
+            ('status',
+             'testrepository.tests.test_repository.Case.method',
+             'inprogress',
+             None,
+             True,
+             None,
+             None,
+             False,
+             None,
+             None,
+             Wildcard),
+            ('status',
+             'testrepository.tests.test_repository.Case.method',
+             'success',
+             None,
+             True,
+             None,
+             None,
+             False,
+             None,
+             None,
+             Wildcard),
+            ('stopTestRun',)
+            ])
 
     def test_get_test_from_test_run(self):
         repo = self.repo_impl.initialise(self.sample_url)

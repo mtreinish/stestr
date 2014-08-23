@@ -25,7 +25,7 @@ import os.path
 import sys
 import tempfile
 
-import subunit
+import subunit.v2
 from subunit import TestProtocolClient
 import testtools
 from testtools.compat import _b
@@ -188,10 +188,23 @@ class _DiskRun(AbstractTestRun):
         return self._run_id
 
     def get_subunit_stream(self):
-        return BytesIO(self._content)
+        # Transcode - we want V2.
+        v1_stream = BytesIO(self._content)
+        v1_case = subunit.ProtocolTestCase(v1_stream)
+        output = BytesIO()
+        output_stream = subunit.v2.StreamResultToBytes(output)
+        output_stream = testtools.ExtendedToStreamDecorator(output_stream)
+        output_stream.startTestRun()
+        try:
+            v1_case.run(output_stream)
+        finally:
+            output_stream.stopTestRun()
+        output.seek(0)
+        return output
 
     def get_test(self):
-        case = subunit.ProtocolTestCase(self.get_subunit_stream())
+        #case = subunit.ProtocolTestCase(self.get_subunit_stream())
+        case = subunit.ProtocolTestCase(BytesIO(self._content))
         def wrap_result(result):
             # Wrap in a router to mask out startTestRun/stopTestRun from the
             # ExtendedToStreamDecorator.

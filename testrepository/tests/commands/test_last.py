@@ -14,9 +14,12 @@
 
 """Tests for the last command."""
 
+from io import BytesIO
+
+from subunit.v2 import ByteStreamToStreamResult
 import testtools
-from testtools.compat import _b
 from testtools.matchers import Equals
+from testtools.testresult.doubles import StreamResult
 
 from testrepository.commands import last
 from testrepository.ui.model import UI
@@ -104,11 +107,20 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual([
             ('stream', Wildcard),
             ], ui.outputs)
-        self.assertThat(ui.outputs[0][1], Equals(_b("""\
-test: failing
-failure: failing [ multipart
-]
-test: ok
-successful: ok [ multipart
-]
-""")))
+        as_subunit = BytesIO(ui.outputs[0][1])
+        stream = ByteStreamToStreamResult(as_subunit)
+        log = StreamResult()
+        log.startTestRun()
+        try:
+            stream.run(log)
+        finally:
+            log.stopTestRun()
+        self.assertEqual(
+            log._events, [
+            ('startTestRun',),
+            ('status', 'failing', 'fail', None, True, None, None, False,
+             None, None, None),
+            ('status', 'ok', 'success', None, True, None, None, False, None,
+             None, None),
+            ('stopTestRun',)
+            ])

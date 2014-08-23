@@ -15,13 +15,16 @@
 """Tests for the failing command."""
 
 import doctest
+from io import BytesIO
 
+from subunit.v2 import ByteStreamToStreamResult
 import testtools
 from testtools.compat import _b
 from testtools.matchers import (
     DocTestMatches,
     Equals,
     )
+from testtools.testresult.doubles import StreamResult
 
 from testrepository.commands import failing
 from testrepository.ui.model import UI
@@ -78,9 +81,23 @@ class TestCommand(ResourcedTestCase):
         self.assertEqual(0, cmd.execute())
         self.assertEqual(1, len(ui.outputs))
         self.assertEqual('stream', ui.outputs[0][0])
-        self.assertThat(ui.outputs[0][1].decode('utf8'),
-            DocTestMatches("""...test: ...failing
-...failure: ...failing...""", doctest.ELLIPSIS))
+        as_subunit = BytesIO(ui.outputs[0][1])
+        stream = ByteStreamToStreamResult(as_subunit)
+        log = StreamResult()
+        log.startTestRun()
+        try:
+            stream.run(log)
+        finally:
+            log.stopTestRun()
+        self.assertEqual(
+            log._events, [
+            ('startTestRun',),
+            ('status', 'failing', 'inprogress', None, True, None, None, False,
+             None, None, Wildcard),
+            ('status', 'failing', 'fail', None, True, None, None, False, None,
+             None, Wildcard),
+            ('stopTestRun',)
+            ])
 
     def test_with_subunit_no_failures_exit_0(self):
         ui, cmd = self.get_test_ui_and_cmd(options=[('subunit', True)])

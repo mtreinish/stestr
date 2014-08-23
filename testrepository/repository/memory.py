@@ -102,8 +102,13 @@ class _Failures(AbstractTestRun):
 
     def get_subunit_stream(self):
         result = BytesIO()
-        serialiser = subunit.TestProtocolClient(result)
-        self.run(serialiser)
+        serialiser = subunit.v2.StreamResultToBytes(result)
+        serialiser = testtools.ExtendedToStreamDecorator(serialiser)
+        serialiser.startTestRun()
+        try:
+            self.run(serialiser)
+        finally:
+            serialiser.stopTestRun()
         result.seek(0)
         return result
 
@@ -120,7 +125,7 @@ class _Failures(AbstractTestRun):
             methodcaller('stopTestRun'))
 
     def run(self, result):
-        # Speaks original.
+        # Speaks original V1 protocol.
         for case in self._repository._failing.values():
             case.run(result)
 
@@ -132,13 +137,12 @@ class _Inserter(AbstractTestRun):
         self._repository = repository
         self._partial = partial
         self._tests = []
-        # Subunit V1 stream for get_subunit_stream
+        # Subunit V2 stream for get_subunit_stream
         self._subunit = None
 
     def startTestRun(self):
         self._subunit = BytesIO()
-        serialiser = subunit.TestProtocolClient(self._subunit)
-        serialiser = testtools.StreamToExtendedDecorator(serialiser)
+        serialiser = subunit.v2.StreamResultToBytes(self._subunit)
         self._hook = testtools.CopyStreamResult([
             testtools.StreamToDict(self._handle_test),
             serialiser])
