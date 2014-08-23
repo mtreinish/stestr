@@ -93,6 +93,7 @@ class UI(ui.AbstractUI):
         self._stdin = stdin
         self._stdout = stdout
         self._stderr = stderr
+        self._binary_stdout = None
 
     def _iter_streams(self, stream_type):
         # Only the first stream declared in a command can be accepted at the
@@ -155,13 +156,17 @@ class UI(ui.AbstractUI):
             self._stdout.write(_u('\n'))
 
     def output_stream(self, stream):
+        if not self._binary_stdout:
+            self._binary_stdout = subunit.make_stream_binary(self._stdout)
         contents = stream.read(65536)
         assert type(contents) is bytes, \
             "Bad stream contents %r" % type(contents)
-        # Outputs bytes, treat them as utf8. Probably needs fixing.
+        # If there are unflushed bytes in the text wrapper, we need to sync..
+        self._stdout.flush()
         while contents:
-            self._stdout.write(contents.decode('utf8'))
+            self._binary_stdout.write(contents)
             contents = stream.read(65536)
+        self._binary_stdout.flush()
 
     def output_table(self, table):
         # stringify

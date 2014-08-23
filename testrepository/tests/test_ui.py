@@ -119,6 +119,11 @@ class TestUIContract(ResourcedTestCase):
         ui = self.get_test_ui()
         ui.output_stream(BytesIO())
 
+    def test_output_stream_non_utf8(self):
+        # When the stream has non-utf8 bytes it still outputs correctly.
+        ui = self.get_test_ui()
+        ui.output_stream(BytesIO(_b('\xfa')))
+
     def test_output_table(self):
         # output_table shows a table.
         ui = self.get_test_ui()

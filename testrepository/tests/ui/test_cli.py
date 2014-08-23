@@ -109,7 +109,8 @@ class TestCLIUI(ResourcedTestCase):
         except Exception:
             err_tuple = sys.exc_info()
         expected = str(err_tuple[1]) + '\n'
-        stdout = StringIO()
+        bytestream = BytesIO()
+        stdout = TextIOWrapper(bytestream, 'utf8', line_buffering=True)
         stdin = StringIO()
         stderr = StringIO()
         ui = cli.UI([], stdin, stdout, stderr)
@@ -128,6 +129,9 @@ class TestCLIUI(ResourcedTestCase):
             <BLANKLINE>
             fooo
             """)
+        # This should be a BytesIO + Textwrapper, but pdb on 2.7 writes bytes
+        # - this code is the most pragmatic to test on 2.6 and up, and 3.2 and
+        # up.
         stdout = StringIO()
         stdin = StringIO(_u('c\n'))
         stderr = StringIO()
@@ -196,7 +200,8 @@ AssertionError: quux...
             ui._stdout.buffer.getvalue())
 
     def test_parse_error_goes_to_stderr(self):
-        stdout = StringIO()
+        bytestream = BytesIO()
+        stdout = TextIOWrapper(bytestream, 'utf8', line_buffering=True)
         stdin = StringIO()
         stderr = StringIO()
         ui = cli.UI(['one'], stdin, stdout, stderr)
@@ -206,7 +211,8 @@ AssertionError: quux...
         self.assertEqual("Could not find command 'one'.\n", stderr.getvalue())
 
     def test_parse_excess_goes_to_stderr(self):
-        stdout = StringIO()
+        bytestream = BytesIO()
+        stdout = TextIOWrapper(bytestream, 'utf8', line_buffering=True)
         stdin = StringIO()
         stderr = StringIO()
         ui = cli.UI(['one'], stdin, stdout, stderr)
@@ -248,7 +254,8 @@ AssertionError: quux...
         self.assertEqual(True, ui.options.subunit)
 
     def test_dash_dash_help_shows_help(self):
-        stdout = StringIO()
+        bytestream = BytesIO()
+        stdout = TextIOWrapper(bytestream, 'utf8', line_buffering=True)
         stdin = StringIO()
         stderr = StringIO()
         ui = cli.UI(['--help'], stdin, stdout, stderr)
@@ -263,7 +270,7 @@ AssertionError: quux...
             self.assertThat(exc_info, MatchesException(SystemExit(0)))
         else:
             self.fail('ui.set_command did not raise')
-        self.assertThat(stdout.getvalue(),
+        self.assertThat(bytestream.getvalue().decode('utf8'),
             DocTestMatches("""Usage: run.py bar [options] foo
 ...
 A command that can be run...
@@ -352,9 +359,11 @@ class TestCLITestResult(TestCase):
     def test_initial_stream(self):
         # CLITestResult.__init__ does not do anything to the stream it is
         # given.
-        stream = StringIO()
-        cli.CLITestResult(cli.UI(None, None, None, None), stream, lambda: None)
-        self.assertEqual('', stream.getvalue())
+        bytestream = BytesIO()
+        stream = TextIOWrapper(bytestream, 'utf8', line_buffering=True)
+        ui = cli.UI(None, None, None, None)
+        cli.CLITestResult(ui, stream, lambda: None)
+        self.assertEqual(_b(''), bytestream.getvalue())
 
     def test_format_error(self):
         # CLITestResult formats errors by giving them a big fat line, a title
@@ -376,7 +385,8 @@ class TestCLITestResult(TestCase):
     def test_addFail_outputs_error(self):
         # CLITestResult.status test_status='fail' outputs the given error
         # immediately to the stream.
-        stream = StringIO()
+        bytestream = BytesIO()
+        stream = TextIOWrapper(bytestream, 'utf8', line_buffering=True)
         result = self.make_result(stream)[0]
         error = self.make_exc_info()
         error_text = 'foo\nbar\n'
@@ -385,7 +395,7 @@ class TestCLITestResult(TestCase):
             file_name='traceback', mime_type='text/plain;charset=utf8',
             file_bytes=error_text.encode('utf8'))
         self.assertThat(
-            stream.getvalue(),
+            bytestream.getvalue().decode('utf8'),
             DocTestMatches(result._format_error('FAIL', self, error_text)))
 
     def test_addFailure_handles_string_encoding(self):
@@ -412,7 +422,8 @@ class TestCLITestResult(TestCase):
         self.assertEqual(b'', bytestream.getvalue())
 
     def test_make_result_tag_filter(self):
-        stream = StringIO()
+        bytestream = BytesIO()
+        stream = TextIOWrapper(bytestream, 'utf8', line_buffering=True)
         result, summary = self.make_result(
             stream, filter_tags=set(['worker-0']))
         # Generate a bunch of results with tags in the same events that
@@ -438,5 +449,5 @@ tags: worker-0
 ----------------------------------------------------------------------
 Ran 1 tests
 FAILED (id=None, failures=1, skips=1)
-""", stream.getvalue())
+""", bytestream.getvalue().decode('utf8'))
 

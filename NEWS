@@ -17,6 +17,12 @@ CHANGES
 * When list-tests encounters an error, a much clearer response will
   now be shown. (Robert Collins, #1271133)
 
+INTERNALS
+---------
+
+* ``UI.output_stream`` is now tested for handling of non-utf8 bytestreams.
+  (Robert Collins)
+
 0.0.18
 ++++++
 

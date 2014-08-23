@@ -35,7 +35,7 @@ class TestCanSetup(TestCase):
         proc = subprocess.Popen([sys.executable, path, 'bdist'],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT, universal_newlines=True)
-        output, _ = proc.communicate()
+        output, err = proc.communicate()
         self.assertThat(output, MatchesAny(
             # win32
             DocTestMatches("""...
@@ -48,4 +48,5 @@ adding '...testr'
 ...bin/testr ...
 """, doctest.ELLIPSIS)
             ))
-        self.assertEqual(0, proc.returncode)
+        self.assertEqual(0, proc.returncode,
+            "Setup failed out=%r err=%r" % (output, err))
