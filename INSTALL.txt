@@ -6,7 +6,7 @@ Run time dependencies
 
 * Python2.4 or newer.
 
-* subunit
+* subunit (0.0.18 or newer).
 
 * fixtures (https://launchpad.net/python-fixtures, or
    http://pypi.python.org/pypi/fixtures/).
