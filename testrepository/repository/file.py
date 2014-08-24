@@ -240,7 +240,7 @@ class _SafeInserter(object):
 
     def _handle_test(self, test_dict):
         start, stop = test_dict['timestamps']
-        if None in (start, stop):
+        if test_dict['status'] == 'exists' or None in (start, stop):
             return
         self._times[test_dict['id']] = str(timedelta_to_seconds(stop - start))
 

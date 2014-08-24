@@ -18,6 +18,11 @@ CHANGES
 * Test filtering was failing under python3 and would only apply the
   filters to the first test listed by discover. (Clark Boylan, #1317607)
 
+* Tests that are enumerated but not executed will no longer reset the test
+  timing data. Enumeration was incorrectly recording a 0 timestamp for
+  enumerated tests. This leads to poor scheduling after an interrupted test
+  run. (Robert Collins, #1322763)
+
 * Version 0.0.18 of subunit is now a hard dependency - the v2 protocol solves
   key issues in concurrency and stream handling. Users that cannot use subunit
   v2 can run an older testrepository, or contact upstream to work through

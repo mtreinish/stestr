@@ -119,12 +119,18 @@ def make_test(id, should_pass):
     return clone_test_with_new_id(case, id)
 
 
-def run_timed(id, duration, result):
-    """Make and run a test taking duration seconds."""
+def run_timed(id, duration, result, enumeration=False):
+    """Make and run a test taking duration seconds.
+    
+    :param enumeration: If True, don't run, just enumerate.
+    """
     start = datetime.now(tz=iso8601.Utc())
-    result.status(test_id=id, test_status='inprogress', timestamp=start)
-    result.status(test_id=id, test_status='success',
-        timestamp=start + timedelta(seconds=duration))
+    if enumeration:
+        result.status(test_id=id, test_status='exists', timestamp=start)
+    else:
+        result.status(test_id=id, test_status='inprogress', timestamp=start)
+        result.status(test_id=id, test_status='success',
+            timestamp=start + timedelta(seconds=duration))
 
 
 class TestRepositoryErrors(ResourcedTestCase):
@@ -512,6 +518,22 @@ class TestRepositoryContract(ResourcedTestCase):
         test_name = 'testrepository.tests.test_repository.Case.method'
         run_timed(test_name, 0.1, legacy_result)
         legacy_result.stopTestRun()
+        self.assertEqual({test_name: 0.1},
+            repo.get_test_times([test_name])['known'])
+
+    def test_inserted_exists_no_impact_on_test_times(self):
+        repo = self.repo_impl.initialise(self.sample_url)
+        result = repo.get_inserter()
+        legacy_result = testtools.ExtendedToStreamDecorator(result)
+        legacy_result.startTestRun()
+        test_name = 'testrepository.tests.test_repository.Case.method'
+        run_timed(test_name, 0.1, legacy_result)
+        legacy_result.stopTestRun()
+        result = repo.get_inserter()
+        result.startTestRun()
+        test_name = 'testrepository.tests.test_repository.Case.method'
+        run_timed(test_name, 0.2, result, True)
+        result.stopTestRun()
         self.assertEqual({test_name: 0.1},
             repo.get_test_times([test_name])['known'])
 

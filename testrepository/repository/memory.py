@@ -151,7 +151,7 @@ class _Inserter(AbstractTestRun):
     def _handle_test(self, test_dict):
         self._tests.append(test_dict)
         start, stop = test_dict['timestamps']
-        if None in (start, stop):
+        if test_dict['status'] == 'exists' or None in (start, stop):
             return
         duration_delta = stop - start
         duration_seconds = ((duration_delta.microseconds +
