@@ -52,3 +52,4 @@ Releasing
 
 Update NEWS and testrepository/__init__.py version numbers. Release to pypi.
 Pivot the next milestone on LP to version, and make a new next milestone.
+Make a new tag and push that to github.
