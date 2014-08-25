@@ -5,6 +5,15 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+IMPROVEMENTS
+-------
+
+* Tests will be reliably tagged with worker-%d. The previous tagging logic
+  had an implicit race - the tag id was looked up via a closure which gets
+  the state of the pos variable at the position the overall loop has advanced
+  too, not the position when the closure was created.
+  (Robert Collins, #1316858)
+
 0.0.19
 ++++++
 

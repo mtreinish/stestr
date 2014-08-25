@@ -100,6 +100,8 @@ class load(Command):
             streams = map(opener, self.ui.arguments['streams'])
         else:
             streams = self.ui.iter_streams('subunit')
+        mktagger = lambda pos, result:testtools.StreamTagger(
+            [result], add=['worker-%d' % pos])
         def make_tests():
             for pos, stream in enumerate(streams):
                 if v2_avail:
@@ -121,9 +123,8 @@ class load(Command):
                     case = testtools.DecorateTestCaseResult(case, wrap_result,
                         methodcaller('startTestRun'),
                         methodcaller('stopTestRun'))
-                case = testtools.DecorateTestCaseResult(case,
-                    lambda result:testtools.StreamTagger(
-                        [result], add=['worker-%d' % pos]))
+                decorate = partial(mktagger, pos)
+                case = testtools.DecorateTestCaseResult(case, decorate)
                 yield (case, str(pos))
         case = testtools.ConcurrentStreamTestSuite(make_tests)
         # One unmodified copy of the stream to repository storage
