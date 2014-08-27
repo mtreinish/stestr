@@ -5,8 +5,11 @@ testrepository release notes
 NEXT (In development)
 +++++++++++++++++++++
 
+0.0.20
+++++++
+
 IMPROVEMENTS
--------
+------------
 
 * Tests will be reliably tagged with worker-%d. The previous tagging logic
   had an implicit race - the tag id was looked up via a closure which gets
