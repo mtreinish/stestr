@@ -23,7 +23,7 @@ from operator import methodcaller
 import subunit
 import testtools
 
-from testrepository.repository import (
+from stestr.repository import (
     AbstractRepository,
     AbstractRepositoryFactory,
     AbstractTestRun,

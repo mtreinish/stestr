@@ -16,8 +16,8 @@
 
 import os.path
 
-from testrepository.tests import ResourcedTestCase
-from testrepository.tests.stubpackage import (
+from stestr.tests import ResourcedTestCase
+from stestr.tests.stubpackage import (
     StubPackageResource,
     TempDirResource,
     )

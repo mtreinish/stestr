@@ -14,8 +14,8 @@
 
 """An Argument that looks up a command object."""
 
-from testrepository.arguments import AbstractArgument
-from testrepository import commands
+from stestr.arguments import AbstractArgument
+from stestr import commands
 
 
 class CustomError(ValueError):

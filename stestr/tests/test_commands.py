@@ -25,14 +25,14 @@ from testtools.matchers import (
     raises,
     )
 
-from testrepository import commands
-from testrepository.repository import file
-from testrepository.tests import ResourcedTestCase
-from testrepository.tests.monkeypatch import monkeypatch
-from testrepository.tests.stubpackage import (
+from stestr import commands
+from stestr.repository import file
+from stestr.tests import ResourcedTestCase
+from stestr.tests.monkeypatch import monkeypatch
+from stestr.tests.stubpackage import (
     StubPackageResource,
     )
-from testrepository.ui import cli, model
+from stestr.ui import cli, model
 
 
 class TemporaryCommand(object):
@@ -47,7 +47,7 @@ class TemporaryCommandResource(TestResource):
         self.resources.append(('pkg',
             StubPackageResource('commands',
             [('%s.py' % cmd_name,
-             """from testrepository.commands import Command
+             """from stestr.commands import Command
 class %s(Command):
     def run(self):
         pass
@@ -63,7 +63,7 @@ class %s(Command):
 
     def clean(self, resource):
         commands.__path__.remove(resource.path)
-        name = 'testrepository.commands.%s' % self.cmd_name
+        name = 'stestr.commands.%s' % self.cmd_name
         if name in sys.modules:
             del sys.modules[name]
 
@@ -119,7 +119,7 @@ class TestRunArgv(ResourcedTestCase):
 
     def stub__find_command(self, cmd_run):
         self.calls = []
-        self.addCleanup(monkeypatch('testrepository.commands._find_command',
+        self.addCleanup(monkeypatch('stestr.commands._find_command',
             self._find_command))
         self.cmd_run = cmd_run
 

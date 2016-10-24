@@ -20,7 +20,7 @@ import sys
 
 from testtools import TestCase
 
-from testrepository.results import SummarizingResult
+from stestr.results import SummarizingResult
 
 
 class TestSummarizingResult(TestCase):

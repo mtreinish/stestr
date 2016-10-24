@@ -14,8 +14,8 @@
 
 """Tests for the doubledash argument type."""
 
-from testrepository.arguments import doubledash
-from testrepository.tests import ResourcedTestCase
+from stestr.arguments import doubledash
+from stestr.tests import ResourcedTestCase
 
 
 class TestArgument(ResourcedTestCase):

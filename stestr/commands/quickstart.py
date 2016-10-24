@@ -12,12 +12,12 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Get a quickstart on testrepository."""
+"""Get a quickstart on stestr."""
 
-from testrepository.commands import Command
+from stestr.commands import Command
 
 class quickstart(Command):
-    """Introductory documentation for testrepository."""
+    """Introductory documentation for stestr."""
 
     def run(self):
         # This gets written to README.txt by Makefile.
@@ -39,10 +39,10 @@ Test results are inserted using subunit (and thus anything that can output
 subunit or be converted into a subunit stream can be accepted).
 
 A mailing list for discussion, usage and development is at
-https://launchpad.net/~testrepository-dev - all are welcome to join. Some folk
-hang out on #testrepository on irc.freenode.net.
+https://launchpad.net/~stestr-dev - all are welcome to join. Some folk
+hang out on #stestr on irc.freenode.net.
 
-CI for the project is at http://build.robertcollins.net/job/testrepository-default/.
+CI for the project is at http://build.robertcollins.net/job/stestr-default/.
 
 Licensing
 ~~~~~~~~~
@@ -67,14 +67,14 @@ Query the repository::
   $ testr failing
 
 Delete a repository::
-  $ rm -rf .testrepository
+  $ rm -rf .stestr
 
 Documentation
 ~~~~~~~~~~~~~
 
 More detailed documentation including design and implementation details, a
 user manual, and guidelines for development of Test Repository itself can be
-found at https://testrepository.readthedocs.org/en/latest, or in the source
+found at https://stestr.readthedocs.org/en/latest, or in the source
 tree at doc/ (run make -C doc html).
 """
         self.ui.output_rest(help)

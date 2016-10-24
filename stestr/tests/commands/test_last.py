@@ -21,10 +21,10 @@ import testtools
 from testtools.matchers import Equals
 from testtools.testresult.doubles import StreamResult
 
-from testrepository.commands import last
-from testrepository.ui.model import UI
-from testrepository.repository import memory
-from testrepository.tests import (
+from stestr.commands import last
+from stestr.ui.model import UI
+from stestr.repository import memory
+from stestr.tests import (
     ResourcedTestCase,
     StubTestCommand,
     Wildcard,

@@ -21,8 +21,8 @@ import tempfile
 from fixtures import TempDir
 from testtools.matchers import raises
 
-from testrepository.arguments import path
-from testrepository.tests import ResourcedTestCase
+from stestr.arguments import path
+from stestr.tests import ResourcedTestCase
 
 
 class TestArgument(ResourcedTestCase):

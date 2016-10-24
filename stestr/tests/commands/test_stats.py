@@ -14,10 +14,10 @@
 
 """Tests for the stats command."""
 
-from testrepository.commands import stats
-from testrepository.ui.model import UI
-from testrepository.repository import memory
-from testrepository.tests import ResourcedTestCase
+from stestr.commands import stats
+from stestr.ui.model import UI
+from stestr.repository import memory
+from stestr.tests import ResourcedTestCase
 
 
 class TestCommand(ResourcedTestCase):

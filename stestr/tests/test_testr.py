@@ -24,12 +24,12 @@ from testtools.matchers import (
     DocTestMatches,
     )
 
-from testrepository.tests import ResourcedTestCase
-from testrepository.tests.stubpackage import StubPackageResource
+from stestr.tests import ResourcedTestCase
+from stestr.tests.stubpackage import StubPackageResource
 
 
 class StubbedTestr(object):
-    """Testr executable with replaced testrepository package for testing."""
+    """Testr executable with replaced stestr package for testing."""
 
     def __init__(self, testrpath):
         self.execpath = testrpath
@@ -46,7 +46,7 @@ class StubbedTestr(object):
 
 class StubbedTestrResource(TestResource):
 
-    resources = [("stubpackage", StubPackageResource('testrepository',
+    resources = [("stubpackage", StubPackageResource('stestr',
         [('commands.py', r"""import sys
 def run_argv(argv, stdin, stdout, stderr):
     sys.stdout.write("%s %s %s\n" % (sys.stdin is stdin, sys.stdout is stdout,

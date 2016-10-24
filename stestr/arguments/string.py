@@ -14,7 +14,7 @@
 
 """An Argument that simply stores a string."""
 
-from testrepository.arguments import AbstractArgument
+from stestr.arguments import AbstractArgument
 
 
 class StringArgument(AbstractArgument):

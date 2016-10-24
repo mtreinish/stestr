@@ -18,9 +18,9 @@ from inspect import getdoc
 
 from testtools.matchers import Contains
 
-from testrepository.commands import help, load
-from testrepository.ui.model import UI
-from testrepository.tests import ResourcedTestCase
+from stestr.commands import help, load
+from stestr.ui.model import UI
+from stestr.tests import ResourcedTestCase
 
 
 class TestCommand(ResourcedTestCase):

@@ -14,7 +14,7 @@
 
 """An Argument that checks for '--'."""
 
-from testrepository.arguments import AbstractArgument
+from stestr.arguments import AbstractArgument
 
 
 class DoubledashArgument(AbstractArgument):

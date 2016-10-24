@@ -30,13 +30,12 @@ from subunit import TestProtocolClient
 import testtools
 from testtools.compat import _b
 
-from testrepository.repository import (
+from stestr.repository import (
     AbstractRepository,
     AbstractRepositoryFactory,
     AbstractTestRun,
     RepositoryNotFound,
     )
-from testrepository.utils import timedelta_to_seconds
 
 
 def atomicish_rename(source, target):
@@ -49,7 +48,7 @@ class RepositoryFactory(AbstractRepositoryFactory):
 
     def initialise(klass, url):
         """Create a repository at url/path."""
-        base = os.path.join(os.path.expanduser(url), '.testrepository')
+        base = os.path.join(os.path.expanduser(url), '.stestr')
         os.mkdir(base)
         stream = open(os.path.join(base, 'format'), 'wt')
         try:
@@ -62,7 +61,7 @@ class RepositoryFactory(AbstractRepositoryFactory):
 
     def open(self, url):
         path = os.path.expanduser(url)
-        base = os.path.join(path, '.testrepository')
+        base = os.path.join(path, '.stestr')
         try:
             stream = open(os.path.join(base, 'format'), 'rt')
         except (IOError, OSError) as e:
@@ -242,7 +241,7 @@ class _SafeInserter(object):
         start, stop = test_dict['timestamps']
         if test_dict['status'] == 'exists' or None in (start, stop):
             return
-        self._times[test_dict['id']] = str(timedelta_to_seconds(stop - start))
+        self._times[test_dict['id']] = str((stop - start).total_seconds())
 
     def startTestRun(self):
         self.hook.startTestRun()
@@ -304,7 +303,7 @@ class _Inserter(_SafeInserter):
         # use memory repo to aggregate. a bit awkward on layering ;).
         # Should just pull the failing items aside as they happen perhaps.
         # Or use a router and avoid using a memory object at all.
-        from testrepository.repository import memory
+        from stestr.repository import memory
         repo = memory.Repository()
         if self.partial:
             # Seed with current failing

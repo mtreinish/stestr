@@ -21,9 +21,9 @@ import tempfile
 from fixtures import Fixture
 from testtools.matchers import Raises, MatchesException
 
-from testrepository.repository import file
-from testrepository.tests import ResourcedTestCase
-from testrepository.tests.stubpackage import TempDirResource
+from stestr.repository import file
+from stestr.tests import ResourcedTestCase
+from stestr.tests.stubpackage import TempDirResource
 
 
 class FileRepositoryFixture(Fixture):
@@ -55,7 +55,7 @@ class TestFileRepository(ResourcedTestCase):
 
     def test_initialise(self):
         self.useFixture(FileRepositoryFixture(self))
-        base = os.path.join(self.tempdir, '.testrepository')
+        base = os.path.join(self.tempdir, '.stestr')
         stream = open(os.path.join(base, 'format'), 'rt')
         try:
             contents = stream.read()

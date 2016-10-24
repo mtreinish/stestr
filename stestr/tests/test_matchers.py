@@ -12,7 +12,7 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""Tests for matchers used by or for testing testrepository."""
+"""Tests for matchers used by or for testing stestr."""
 
 import sys
 from testtools import TestCase
@@ -21,14 +21,14 @@ from testtools import TestCase
 class TestWildcard(TestCase):
 
     def test_wildcard_equals_everything(self):
-        from testrepository.tests import Wildcard
+        from stestr.tests import Wildcard
         self.assertTrue(Wildcard == 5)
         self.assertTrue(Wildcard == 'orange')
         self.assertTrue('orange' == Wildcard)
         self.assertTrue(5 == Wildcard)
 
     def test_wildcard_not_equals_nothing(self):
-        from testrepository.tests import Wildcard
+        from stestr.tests import Wildcard
         self.assertFalse(Wildcard != 5)
         self.assertFalse(Wildcard != 'orange')
 

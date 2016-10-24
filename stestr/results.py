@@ -19,7 +19,6 @@ from testtools import (
     StreamResult,
     )
 
-from testrepository.utils import timedelta_to_seconds
 
 
 class SummarizingResult(StreamSummary):
@@ -50,10 +49,9 @@ class SummarizingResult(StreamSummary):
     def get_time_taken(self):
         if None in (self._last_time, self._first_time):
             return None
-        return timedelta_to_seconds(self._last_time - self._first_time)
+        return (self._last_time - self._first_time).total_seconds()
 
 
-#XXX: Should be in testtools.
 class CatFiles(StreamResult):
     """Cat file attachments received to a stream."""
         

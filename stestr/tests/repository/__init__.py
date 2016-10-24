@@ -20,7 +20,7 @@ def test_suite():
     names = [
         'file',
         ]
-    module_names = ['testrepository.tests.repository.test_' + name for name in
+    module_names = ['stestr.tests.repository.test_' + name for name in
         names]
     loader = unittest.TestLoader()
     return loader.loadTestsFromNames(module_names)

@@ -14,9 +14,9 @@
 
 """Tests for the commands command."""
 
-from testrepository.commands import commands
-from testrepository.ui.model import UI
-from testrepository.tests import ResourcedTestCase
+from stestr.commands import commands
+from stestr.ui.model import UI
+from stestr.tests import ResourcedTestCase
 
 
 class TestCommandCommands(ResourcedTestCase):

@@ -36,14 +36,14 @@ from testtools.matchers import (
     MatchesListwise,
     )
 
-from testrepository.commands import run
-from testrepository.ui.model import UI, ProcessModel
-from testrepository.repository import memory
-from testrepository.testlist import write_list
-from testrepository.tests import ResourcedTestCase, Wildcard
-from testrepository.tests.stubpackage import TempDirResource
-from testrepository.tests.test_testcommand import FakeTestCommand
-from testrepository.tests.test_repository import make_test
+from stestr.commands import run
+from stestr.ui.model import UI, ProcessModel
+from stestr.repository import memory
+from stestr.testlist import write_list
+from stestr.tests import ResourcedTestCase, Wildcard
+from stestr.tests.stubpackage import TempDirResource
+from stestr.tests.test_testcommand import FakeTestCommand
+from stestr.tests.test_repository import make_test
 
 
 class TestCommand(ResourcedTestCase):
@@ -214,7 +214,7 @@ class TestCommand(ResourcedTestCase):
             '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
         params, capture_ids = self.capture_ids()
         self.useFixture(MonkeyPatch(
-            'testrepository.testcommand.TestCommand.get_run_command',
+            'stestr.testcommand.TestCommand.get_run_command',
             capture_ids))
         cmd_result = cmd.execute()
         self.assertEqual([
@@ -238,7 +238,7 @@ class TestCommand(ResourcedTestCase):
             '[DEFAULT]\ntest_command=foo $IDOPTION\ntest_id_option=--load-list $IDFILE\n')
         params, capture_ids = self.capture_ids()
         self.useFixture(MonkeyPatch(
-            'testrepository.testcommand.TestCommand.get_run_command',
+            'stestr.testcommand.TestCommand.get_run_command',
             capture_ids))
         cmd_result = cmd.execute()
         self.assertEqual([
@@ -349,7 +349,7 @@ class TestCommand(ResourcedTestCase):
             'test_list_option=--list\n')
         params, capture_ids = self.capture_ids()
         self.useFixture(MonkeyPatch(
-            'testrepository.testcommand.TestCommand.get_run_command',
+            'stestr.testcommand.TestCommand.get_run_command',
             capture_ids))
         cmd_result = cmd.execute()
         self.assertEqual([
@@ -374,7 +374,7 @@ class TestCommand(ResourcedTestCase):
             'test_list_option=--list\n')
         params, capture_ids = self.capture_ids()
         self.useFixture(MonkeyPatch(
-            'testrepository.testcommand.TestCommand.get_run_command',
+            'stestr.testcommand.TestCommand.get_run_command',
             capture_ids))
         cmd_result = cmd.execute()
         self.assertEqual([
@@ -456,7 +456,7 @@ class TestCommand(ResourcedTestCase):
             'test_list_option=--list\n')
         params, capture_ids = self.capture_ids(list_result=['ab', 'cd', 'ef'])
         self.useFixture(MonkeyPatch(
-            'testrepository.testcommand.TestCommand.get_run_command',
+            'stestr.testcommand.TestCommand.get_run_command',
             capture_ids))
         cmd_result = cmd.execute()
         self.assertEqual([

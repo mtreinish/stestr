@@ -14,8 +14,8 @@
 
 """Tests for the monkeypatch helper."""
 
-from testrepository.tests import ResourcedTestCase
-from testrepository.tests.monkeypatch import monkeypatch
+from stestr.tests import ResourcedTestCase
+from stestr.tests.monkeypatch import monkeypatch
 
 reference = 23
 
@@ -23,7 +23,7 @@ class TestMonkeyPatch(ResourcedTestCase):
 
     def test_patch_and_restore(self):
         cleanup = monkeypatch(
-            'testrepository.tests.test_monkeypatch.reference', 45)
+            'stestr.tests.test_monkeypatch.reference', 45)
         self.assertEqual(45, reference)
         cleanup()
         self.assertEqual(23, reference)

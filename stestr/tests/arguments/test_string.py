@@ -16,8 +16,8 @@
 
 from testtools.matchers import raises
 
-from testrepository.arguments import string
-from testrepository.tests import ResourcedTestCase
+from stestr.arguments import string
+from stestr.tests import ResourcedTestCase
 
 
 class TestArgument(ResourcedTestCase):

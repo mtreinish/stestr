@@ -15,17 +15,17 @@
 """'Arguments' for testr.
 
 This is a small typed arguments concept - which is perhaps obsoleted by
-argparse in Python 2.7, but for testrepository is an extension used with
+argparse in Python 2.7, but for stestr is an extension used with
 optparse.
 
 The code in this module contains the AbstractArgument base class. Individual
-argument types are present in e.g. testrepository.arguments.string.
+argument types are present in e.g. stestr.arguments.string.
 
-See testrepository.commands.Command for usage of Arguments.
+See stestr.commands.Command for usage of Arguments.
 
 Plugins and extensions wanting to add argument types should either define them
-internally or install into testrepository.arguments as somename (perhaps by
-extending the testrepository.arguments __path__ to include a directory
+internally or install into stestr.arguments as somename (perhaps by
+extending the stestr.arguments __path__ to include a directory
 containing their argument types - no __init__ is needed in that directory.)
 """
 

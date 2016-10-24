@@ -14,13 +14,13 @@
 
 """List available commands."""
 
-import testrepository.commands
+import stestr.commands
 
-class commands(testrepository.commands.Command):
+class commands(stestr.commands.Command):
     """List available commands."""
 
     def run(self):
         table = [('command', 'description')]
-        for command in testrepository.commands.iter_commands():
+        for command in stestr.commands.iter_commands():
             table.append((command.name, command.get_summary()))
         self.ui.output_table(table)

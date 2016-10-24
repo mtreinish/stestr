@@ -14,11 +14,11 @@
 
 """Tests for the init command."""
 
-from testrepository.commands import init
-from testrepository.ui.model import UI
-from testrepository.tests import ResourcedTestCase
-from testrepository.tests.test_repository import RecordingRepositoryFactory
-from testrepository.repository import memory
+from stestr.commands import init
+from stestr.ui.model import UI
+from stestr.tests import ResourcedTestCase
+from stestr.tests.test_repository import RecordingRepositoryFactory
+from stestr.repository import memory
 
 
 class TestCommandInit(ResourcedTestCase):

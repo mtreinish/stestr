@@ -16,7 +16,7 @@
 
 import os.path
 
-from testrepository.arguments import AbstractArgument
+from stestr.arguments import AbstractArgument
 
 
 class ExistingPathArgument(AbstractArgument):

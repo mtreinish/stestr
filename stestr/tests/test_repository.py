@@ -38,13 +38,13 @@ from testtools.testresult.doubles import (
     )
 from testtools.matchers import DocTestMatches, raises
 
-from testrepository import repository
-from testrepository.repository import file, memory
-from testrepository.tests import (
+from stestr import repository
+from stestr.repository import file, memory
+from stestr.tests import (
     ResourcedTestCase,
     Wildcard,
     )
-from testrepository.tests.stubpackage import (
+from stestr.tests.stubpackage import (
     TempDirResource,
     )
 
@@ -391,7 +391,7 @@ class TestRepositoryContract(ResourcedTestCase):
         result = repo.get_inserter()
         legacy_result = testtools.ExtendedToStreamDecorator(result)
         legacy_result.startTestRun()
-        make_test('testrepository.tests.test_repository.Case.method', False).run(legacy_result)
+        make_test('stestr.tests.test_repository.Case.method', False).run(legacy_result)
         legacy_result.stopTestRun()
         run = repo.get_failing()
         as_subunit = run.get_subunit_stream()
@@ -406,7 +406,7 @@ class TestRepositoryContract(ResourcedTestCase):
             log._events, [
             ('startTestRun',),
             ('status',
-             'testrepository.tests.test_repository.Case.method',
+             'stestr.tests.test_repository.Case.method',
              'inprogress',
              None,
              True,
@@ -417,7 +417,7 @@ class TestRepositoryContract(ResourcedTestCase):
              None,
              Wildcard),
             ('status',
-             'testrepository.tests.test_repository.Case.method',
+             'stestr.tests.test_repository.Case.method',
              None,
              None,
              True,
@@ -428,7 +428,7 @@ class TestRepositoryContract(ResourcedTestCase):
              None,
              Wildcard),
             ('status',
-             'testrepository.tests.test_repository.Case.method',
+             'stestr.tests.test_repository.Case.method',
              'fail',
              None,
              True,
@@ -446,7 +446,7 @@ class TestRepositoryContract(ResourcedTestCase):
         result = repo.get_inserter()
         legacy_result = testtools.ExtendedToStreamDecorator(result)
         legacy_result.startTestRun()
-        make_test('testrepository.tests.test_repository.Case.method', True).run(legacy_result)
+        make_test('stestr.tests.test_repository.Case.method', True).run(legacy_result)
         legacy_result.stopTestRun()
         inserted = result.get_id()
         run = repo.get_test_run(inserted)
@@ -463,7 +463,7 @@ class TestRepositoryContract(ResourcedTestCase):
             [
             ('startTestRun',),
             ('status',
-             'testrepository.tests.test_repository.Case.method',
+             'stestr.tests.test_repository.Case.method',
              'inprogress',
              None,
              True,
@@ -474,7 +474,7 @@ class TestRepositoryContract(ResourcedTestCase):
              None,
              Wildcard),
             ('status',
-             'testrepository.tests.test_repository.Case.method',
+             'stestr.tests.test_repository.Case.method',
              'success',
              None,
              True,
@@ -492,7 +492,7 @@ class TestRepositoryContract(ResourcedTestCase):
         result = repo.get_inserter()
         legacy_result = testtools.ExtendedToStreamDecorator(result)
         legacy_result.startTestRun()
-        make_test('testrepository.tests.test_repository.Case.method', True).run(legacy_result)
+        make_test('stestr.tests.test_repository.Case.method', True).run(legacy_result)
         legacy_result.stopTestRun()
         inserted = result.get_id()
         run = repo.get_test_run(inserted)
@@ -515,7 +515,7 @@ class TestRepositoryContract(ResourcedTestCase):
         result = repo.get_inserter()
         legacy_result = testtools.ExtendedToStreamDecorator(result)
         legacy_result.startTestRun()
-        test_name = 'testrepository.tests.test_repository.Case.method'
+        test_name = 'stestr.tests.test_repository.Case.method'
         run_timed(test_name, 0.1, legacy_result)
         legacy_result.stopTestRun()
         self.assertEqual({test_name: 0.1},
@@ -526,12 +526,12 @@ class TestRepositoryContract(ResourcedTestCase):
         result = repo.get_inserter()
         legacy_result = testtools.ExtendedToStreamDecorator(result)
         legacy_result.startTestRun()
-        test_name = 'testrepository.tests.test_repository.Case.method'
+        test_name = 'stestr.tests.test_repository.Case.method'
         run_timed(test_name, 0.1, legacy_result)
         legacy_result.stopTestRun()
         result = repo.get_inserter()
         result.startTestRun()
-        test_name = 'testrepository.tests.test_repository.Case.method'
+        test_name = 'stestr.tests.test_repository.Case.method'
         run_timed(test_name, 0.2, result, True)
         result.stopTestRun()
         self.assertEqual({test_name: 0.1},

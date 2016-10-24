@@ -31,13 +31,13 @@ from testtools.matchers import (
     )
 from testtools.testresult.doubles import ExtendedTestResult
 
-from testrepository.commands import run
-from testrepository.ui.model import UI
-from testrepository.repository import memory
-from testrepository.testcommand import TestCommand
-from testrepository.tests import ResourcedTestCase, Wildcard
-from testrepository.tests.stubpackage import TempDirResource
-from testrepository.tests.test_repository import run_timed
+from stestr.commands import run
+from stestr.ui.model import UI
+from stestr.repository import memory
+from stestr.testcommand import TestCommand
+from stestr.tests import ResourcedTestCase, Wildcard
+from stestr.tests.stubpackage import TempDirResource
+from stestr.tests.test_repository import run_timed
 
 
 class FakeTestCommand(TestCommand):

@@ -32,11 +32,12 @@ import tempfile
 import multiprocessing
 from textwrap import dedent
 
-from fixtures import Fixture
+import fixtures
 v2 = try_import('subunit.v2')
 
-from testrepository import results
-from testrepository.testlist import (
+from stestr.fixtures import test_listing
+from stestr import results
+from stestr.testlist import (
     parse_enumeration,
     write_list,
     )
@@ -88,7 +89,7 @@ testrconf_help = dedent("""
       defaults to an empty string when no test ids are known and no explicit
       default is provided. This will not handle test ids with spaces.
 
-    See the testrepository manual for example .testr.conf files in different
+    See the stestr manual for example .testr.conf files in different
     programming languages.
 
     """)
@@ -137,338 +138,8 @@ class CallWhenProcFinishes(object):
 
 compiled_re_type = type(re.compile(''))
 
-class TestListingFixture(Fixture):
-    """Write a temporary file to disk with test ids in it."""
 
-    def __init__(self, test_ids, cmd_template, listopt, idoption, ui,
-        repository, parallel=True, listpath=None, parser=None,
-        test_filters=None, instance_source=None, group_callback=None):
-        """Create a TestListingFixture.
-
-        :param test_ids: The test_ids to use. May be None indicating that
-            no ids are known and they should be discovered by listing or
-            configuration if they must be known to run tests. Test ids are
-            needed to run tests when filtering or partitioning is needed: if
-            the run concurrency is > 1 partitioning is needed, and filtering is
-            needed if the user has passed in filters.
-        :param cmd_template: string to be filled out with
-            IDFILE.
-        :param listopt: Option to substitute into LISTOPT to cause test listing
-            to take place.
-        :param idoption: Option to substitutde into cmd when supplying any test
-            ids.
-        :param ui: The UI in use.
-        :param repository: The repository to query for test times, if needed.
-        :param parallel: If not True, prohibit parallel use : used to implement
-            --parallel run recursively.
-        :param listpath: The file listing path to use. If None, a unique path
-            is created.
-        :param parser: An options parser for reading options from.
-        :param test_filters: An optional list of test filters to apply. Each
-            filter should be a string suitable for passing to re.compile.
-            filters are applied using search() rather than match(), so if
-            anchoring is needed it should be included in the regex.
-            The test ids used for executing are the union of all the individual
-            filters: to take the intersection instead, craft a single regex that
-            matches all your criteria. Filters are automatically applied by
-            run_tests(), or can be applied by calling filter_tests(test_ids).
-        :param instance_source: A source of test run instances. Must support
-            obtain_instance(max_concurrency) -> id and release_instance(id)
-            calls.
-        :param group_callback: If supplied, should be a function that accepts a
-            test id and returns a group id. A group id is an arbitrary value
-            used as a dictionary key in the scheduler. All test ids with the
-            same group id are scheduled onto the same backend test process.
-        """
-        self.test_ids = test_ids
-        self.template = cmd_template
-        self.listopt = listopt
-        self.idoption = idoption
-        self.ui = ui
-        self.repository = repository
-        self.parallel = parallel
-        self._listpath = listpath
-        self._parser = parser
-        self.test_filters = test_filters
-        self._group_callback = group_callback
-        self._instance_source = instance_source
-
-    def setUp(self):
-        super(TestListingFixture, self).setUp()
-        variable_regex = '\$(IDOPTION|IDFILE|IDLIST|LISTOPT)'
-        variables = {}
-        list_variables = {'LISTOPT': self.listopt}
-        cmd = self.template
-        try:
-            default_idstr = self._parser.get('DEFAULT', 'test_id_list_default')
-            list_variables['IDLIST'] = default_idstr
-            # In theory we should also support casting this into IDFILE etc -
-            # needs this horrible class refactored.
-        except ConfigParser.NoOptionError as e:
-            if e.message != "No option 'test_id_list_default' in section: 'DEFAULT'":
-                raise
-            default_idstr = None
-        def list_subst(match):
-            return list_variables.get(match.groups(1)[0], '')
-        self.list_cmd = re.sub(variable_regex, list_subst, cmd)
-        nonparallel = (not self.parallel or not
-            getattr(self.ui, 'options', None) or not
-            getattr(self.ui.options, 'parallel', None))
-        if nonparallel:
-            self.concurrency = 1
-        else:
-            self.concurrency = self.ui.options.concurrency
-            if not self.concurrency:
-                self.concurrency = self.callout_concurrency()
-            if not self.concurrency:
-                self.concurrency = self.local_concurrency()
-            if not self.concurrency:
-                self.concurrency = 1
-        if self.test_ids is None:
-            if self.concurrency == 1:
-                if default_idstr:
-                    self.test_ids = default_idstr.split()
-            if self.concurrency != 1 or self.test_filters is not None:
-                # Have to be able to tell each worker what to run / filter
-                # tests.
-                self.test_ids = self.list_tests()
-        if self.test_ids is None:
-            # No test ids to supply to the program.
-            self.list_file_name = None
-            name = ''
-            idlist = ''
-        else:
-            self.test_ids = self.filter_tests(self.test_ids)
-            name = self.make_listfile()
-            variables['IDFILE'] = name
-            idlist = ' '.join(self.test_ids)
-        variables['IDLIST'] = idlist
-        def subst(match):
-            return variables.get(match.groups(1)[0], '')
-        if self.test_ids is None:
-            # No test ids, no id option.
-            idoption = ''
-        else:
-            idoption = re.sub(variable_regex, subst, self.idoption)
-            variables['IDOPTION'] = idoption
-        self.cmd = re.sub(variable_regex, subst, cmd)
-
-    def make_listfile(self):
-        name = None
-        try:
-            if self._listpath:
-                name = self._listpath
-                stream = open(name, 'wb')
-            else:
-                fd, name = tempfile.mkstemp()
-                stream = os.fdopen(fd, 'wb')
-            self.list_file_name = name
-            write_list(stream, self.test_ids)
-            stream.close()
-        except:
-            if name:
-                os.unlink(name)
-            raise
-        self.addCleanup(os.unlink, name)
-        return name
-
-    def filter_tests(self, test_ids):
-        """Filter test_ids by the test_filters.
-        
-        :return: A list of test ids.
-        """
-        if self.test_filters is None:
-            return test_ids
-        filters = list(map(re.compile, self.test_filters))
-        def include(test_id):
-            for pred in filters:
-                if pred.search(test_id):
-                    return True
-        return list(filter(include, test_ids))
-
-    def list_tests(self):
-        """List the tests returned by list_cmd.
-
-        :return: A list of test ids.
-        """
-        if '$LISTOPT' not in self.template:
-            raise ValueError("LISTOPT not configured in .testr.conf")
-        instance, list_cmd = self._per_instance_command(self.list_cmd)
-        try:
-            self.ui.output_values([('running', list_cmd)])
-            run_proc = self.ui.subprocess_Popen(list_cmd, shell=True,
-                stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-            out, err = run_proc.communicate()
-            if run_proc.returncode != 0:
-                if v2 is not None:
-                    new_out = io.BytesIO()
-                    v2.ByteStreamToStreamResult(io.BytesIO(out), 'stdout').run(
-                        results.CatFiles(new_out))
-                    out = new_out.getvalue()
-                self.ui.output_stream(io.BytesIO(out))
-                self.ui.output_stream(io.BytesIO(err))
-                raise ValueError(
-                    "Non-zero exit code (%d) from test listing."
-                    % (run_proc.returncode))
-            ids = parse_enumeration(out)
-            return ids
-        finally:
-            if instance:
-                self._instance_source.release_instance(instance)
-
-    def _per_instance_command(self, cmd):
-        """Customise cmd to with an instance-id.
-        
-        :param concurrency: The number of instances to ask for (used to avoid
-            death-by-1000 cuts of latency.
-        """
-        if self._instance_source is None:
-            return None, cmd
-        instance = self._instance_source.obtain_instance(self.concurrency)
-        if instance is not None:
-            try:
-                instance_prefix = self._parser.get(
-                    'DEFAULT', 'instance_execute')
-                variables = {
-                    'INSTANCE_ID': instance.decode('utf8'),
-                    'COMMAND': cmd,
-                    # --list-tests cannot use FILES, so handle it being unset.
-                    'FILES': getattr(self, 'list_file_name', None) or '',
-                }
-                variable_regex = '\$(INSTANCE_ID|COMMAND|FILES)'
-                def subst(match):
-                    return variables.get(match.groups(1)[0], '')
-                cmd = re.sub(variable_regex, subst, instance_prefix)
-            except ConfigParser.NoOptionError:
-                # Per-instance execution environment not configured.
-                pass
-        return instance, cmd
-
-    def run_tests(self):
-        """Run the tests defined by the command and ui.
-
-        :return: A list of spawned processes.
-        """
-        result = []
-        test_ids = self.test_ids
-        if self.concurrency == 1 and (test_ids is None or test_ids):
-            # Have to customise cmd here, as instances are allocated
-            # just-in-time. XXX: Indicates this whole region needs refactoring.
-            instance, cmd = self._per_instance_command(self.cmd)
-            self.ui.output_values([('running', cmd)])
-            run_proc = self.ui.subprocess_Popen(cmd, shell=True,
-                stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-            # Prevent processes stalling if they read from stdin; we could
-            # pass this through in future, but there is no point doing that
-            # until we have a working can-run-debugger-inline story.
-            run_proc.stdin.close()
-            if instance:
-                return [CallWhenProcFinishes(run_proc,
-                    lambda:self._instance_source.release_instance(instance))]
-            else:
-                return [run_proc]
-        test_id_groups = self.partition_tests(test_ids, self.concurrency)
-        for test_ids in test_id_groups:
-            if not test_ids:
-                # No tests in this partition
-                continue
-            fixture = self.useFixture(TestListingFixture(test_ids,
-                self.template, self.listopt, self.idoption, self.ui,
-                self.repository, parallel=False, parser=self._parser,
-                instance_source=self._instance_source))
-            result.extend(fixture.run_tests())
-        return result
-
-    def partition_tests(self, test_ids, concurrency):
-        """Parition test_ids by concurrency.
-
-        Test durations from the repository are used to get partitions which
-        have roughly the same expected runtime. New tests - those with no
-        recorded duration - are allocated in round-robin fashion to the 
-        partitions created using test durations.
-
-        :return: A list where each element is a distinct subset of test_ids,
-            and the union of all the elements is equal to set(test_ids).
-        """
-        partitions = [list() for i in range(concurrency)]
-        timed_partitions = [[0.0, partition] for partition in partitions]
-        time_data = self.repository.get_test_times(test_ids)
-        timed_tests = time_data['known']
-        unknown_tests = time_data['unknown']
-        # Group tests: generate group_id -> test_ids.
-        group_ids = defaultdict(list)
-        if self._group_callback is None:
-            group_callback = lambda _:None
-        else:
-            group_callback = self._group_callback
-        for test_id in test_ids:
-            group_id = group_callback(test_id) or test_id
-            group_ids[group_id].append(test_id)
-        # Time groups: generate three sets of groups:
-        # - fully timed dict(group_id -> time),
-        # - partially timed dict(group_id -> time) and
-        # - unknown (set of group_id)
-        # We may in future treat partially timed different for scheduling, but
-        # at least today we just schedule them after the fully timed groups.
-        timed = {}
-        partial = {}
-        unknown = []
-        for group_id, group_tests in group_ids.items():
-            untimed_ids = unknown_tests.intersection(group_tests)
-            group_time = sum([timed_tests[test_id]
-                for test_id in untimed_ids.symmetric_difference(group_tests)])
-            if not untimed_ids:
-                timed[group_id] = group_time
-            elif group_time:
-                partial[group_id] = group_time
-            else:
-                unknown.append(group_id)
-        # Scheduling is NP complete in general, so we avoid aiming for
-        # perfection. A quick approximation that is sufficient for our general
-        # needs:
-        # sort the groups by time
-        # allocate to partitions by putting each group in to the partition with
-        # the current (lowest time, shortest length[in tests])
-        def consume_queue(groups):
-            queue = sorted(
-                groups.items(), key=operator.itemgetter(1), reverse=True)
-            for group_id, duration in queue:
-                timed_partitions[0][0] = timed_partitions[0][0] + duration
-                timed_partitions[0][1].extend(group_ids[group_id])
-                timed_partitions.sort(key=lambda item:(item[0], len(item[1])))
-        consume_queue(timed)
-        consume_queue(partial)
-        # Assign groups with entirely unknown times in round robin fashion to
-        # the partitions. 
-        for partition, group_id in zip(itertools.cycle(partitions), unknown):
-            partition.extend(group_ids[group_id])
-        return partitions
-
-    def callout_concurrency(self):
-        """Callout for user defined concurrency."""
-        try:
-            concurrency_cmd = self._parser.get(
-                'DEFAULT', 'test_run_concurrency')
-        except ConfigParser.NoOptionError:
-            return None
-        run_proc = self.ui.subprocess_Popen(concurrency_cmd, shell=True,
-            stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-        out, err = run_proc.communicate()
-        if run_proc.returncode:
-            raise ValueError(
-                "test_run_concurrency failed: exit code %d, stderr='%s'" % (
-                run_proc.returncode, err.decode('utf8', 'replace')))
-        return int(out.strip())
-
-    def local_concurrency(self):
-        try:
-            return multiprocessing.cpu_count()
-        except NotImplementedError:
-            # No concurrency logic known.
-            return None
-
-
-class TestCommand(Fixture):
+class TestCommand(fixtures.Fixture):
     """Represents the test command defined in .testr.conf.
     
     :ivar run_factory: The fixture to use to execute a command.
@@ -481,15 +152,15 @@ class TestCommand(Fixture):
     other things) uses multiple get_run_command configurations.
     """
     
-    run_factory = TestListingFixture
+    run_factory = test_listing.TestListingFixture
     oldschool = False
 
     def __init__(self, ui, repository):
         """Create a TestCommand.
 
-        :param ui: A testrepository.ui.UI object which is used to obtain the
+        :param ui: A stestr.ui.UI object which is used to obtain the
             location of the .testr.conf.
-        :param repository: A testrepository.repository.Repository used for
+        :param repository: A stestr.repository.Repository used for
             determining test times when partitioning tests.
         """
         super(TestCommand, self).__init__()

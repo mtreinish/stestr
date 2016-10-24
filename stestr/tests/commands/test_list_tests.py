@@ -24,13 +24,13 @@ v2_avail = try_import('subunit.ByteStreamToStreamResult')
 from testtools.compat import _b
 from testtools.matchers import MatchesException
 
-from testrepository.commands import list_tests
-from testrepository.ui.model import UI
-from testrepository.repository import memory
-from testrepository.tests import ResourcedTestCase, Wildcard
-from testrepository.tests.stubpackage import TempDirResource
-from testrepository.tests.test_repository import make_test
-from testrepository.tests.test_testcommand import FakeTestCommand
+from stestr.commands import list_tests
+from stestr.ui.model import UI
+from stestr.repository import memory
+from stestr.tests import ResourcedTestCase, Wildcard
+from stestr.tests.stubpackage import TempDirResource
+from stestr.tests.test_repository import make_test
+from stestr.tests.test_testcommand import FakeTestCommand
 
 
 class TestCommand(ResourcedTestCase):

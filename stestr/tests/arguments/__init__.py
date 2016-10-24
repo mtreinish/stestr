@@ -23,7 +23,7 @@ def test_suite():
         'path',
         'string',
         ]
-    module_names = ['testrepository.tests.arguments.test_' + name for name in
+    module_names = ['stestr.tests.arguments.test_' + name for name in
         names]
     loader = unittest.TestLoader()
     return loader.loadTestsFromNames(module_names)

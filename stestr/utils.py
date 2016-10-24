@@ -1,7 +1,106 @@
+import sys
 
-def timedelta_to_seconds(delta):
-    """Return the number of seconds that make up the duration of a timedelta.
+import six
+import subunit
+
+
+class CallWhenProcFinishes(object):
+    """Convert a process object to trigger a callback when returncode is set.
+
+    This just wraps the entire object and when the returncode attribute access
+    finds a set value, calls the callback.
     """
-    return (
-        (delta.microseconds + (delta.seconds + delta.days * 24 * 3600) * 10**6)
-        / float(10**6))
+
+    def __init__(self, process, callback):
+        """Adapt process
+
+        :param process: A subprocess.Popen object.
+        :param callback: The process to call when the process completes.
+        """
+        self._proc = process
+        self._callback = callback
+        self._done = False
+
+    @property
+    def stdin(self):
+        return self._proc.stdin
+
+    @property
+    def stdout(self):
+        return self._proc.stdout
+
+    @property
+    def stderr(self):
+        return self._proc.stderr
+
+    @property
+    def returncode(self):
+        result = self._proc.returncode
+        if not self._done and result is not None:
+            self._done = True
+            self._callback()
+        return result
+
+    def wait(self):
+        return self._proc.wait()
+
+
+def _iter_streams(input_streams, stream_type, stdin=sys.stdin):
+        # Only the first stream declared in a command can be accepted at the
+        # moment - as there is only one stdin and alternate streams are not yet
+        # configurable in the CLI.
+        print("NOT INTERNAL!!!: %s" % stream_type)
+        first_stream_type = input_streams[0]
+        if (stream_type != first_stream_type
+            and stream_type != first_stream_type[:-1]):
+            return
+        yield subunit.make_stream_binary(stdin)
+
+
+def _iter_internal_streams(input_streams, stream_type):
+    print("InternAL!!!: %s" % stream_type)
+    for in_stream in input_streams:
+        if in_stream[0] == input_streams:
+            streams = in_stream[1]
+            break
+    else:
+        streams = []
+    print(streams)
+    for stream_value in streams:
+        print(getattr(stream_value, 'read', None))
+        if getattr(stream_value, 'read', None):
+            yield stream_value
+        else:
+            yield six.BytesIO(stream_value)
+
+
+def iter_streams(input_streams, stream_type, internal=False):
+    """Iterate over all the streams of type stream_type.
+
+    Implementors of UI should implement _iter_streams which is called after
+    argument checking is performed.
+
+    :param stream_type: A simple string such as 'subunit' which matches
+        one of the stream types defined for the cmd object this UI is
+        being used with.
+    :return: A generator of stream objects. stream objects have a read
+        method and a close method which behave as for file objects.
+    """
+    print("Internal %s" % internal)
+    print(input_streams)
+    print("stream_type: %s" % stream_type)
+    for stream_spec in input_streams:
+        print('stream spec: %s' % type(stream_spec))
+        if internal:
+            _stream_spec = stream_spec[0]
+        else:
+            _stream_spec = stream_spec
+        if '*' in _stream_spec or '?' in _stream_spec or '+' in _stream_spec:
+            found = stream_type == _stream_spec[:-1]
+        else:
+            found = stream_type == _stream_spec
+        if found:
+            if internal:
+                return _iter_internal_streams(input_streams, stream_type)
+            return _iter_streams(input_streams, stream_type)
+    raise KeyError(stream_type)

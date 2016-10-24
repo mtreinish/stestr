@@ -12,7 +12,7 @@
 # license you chose for the specific language governing permissions and
 # limitations under that license.
 
-"""The testrepository tests and test only code."""
+"""The stestr tests and test only code."""
 
 import unittest
 
@@ -22,7 +22,7 @@ from testtools import TestCase
 
 
 class ResourcedTestCase(TestCase, testresources.ResourcedTestCase):
-    """Make all testrepository tests have resource support."""
+    """Make all stestr tests have resource support."""
 
 
 class _Wildcard(object):
@@ -74,13 +74,13 @@ def test_suite():
         'testr',
         'ui',
         ]
-    module_names = ['testrepository.tests.test_' + name for name in names]
+    module_names = ['stestr.tests.test_' + name for name in names]
     loader = unittest.TestLoader()
     suite = loader.loadTestsFromNames(module_names)
     result = testresources.OptimisingTestSuite()
     result.addTests(generate_scenarios(suite))
     for pkgname in packages:
-        pkg = __import__('testrepository.tests.' + pkgname, globals(),
+        pkg = __import__('stestr.tests.' + pkgname, globals(),
             locals(), ['test_suite'])
         result.addTests(generate_scenarios(pkg.test_suite()))
     return result

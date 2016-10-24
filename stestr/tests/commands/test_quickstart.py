@@ -14,9 +14,9 @@
 
 """Tests for the quickstart command."""
 
-from testrepository.commands import quickstart
-from testrepository.ui.model import UI
-from testrepository.tests import ResourcedTestCase
+from stestr.commands import quickstart
+from stestr.ui.model import UI
+from stestr.tests import ResourcedTestCase
 
 
 class TestCommand(ResourcedTestCase):

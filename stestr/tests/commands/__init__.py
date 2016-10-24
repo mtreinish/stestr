@@ -30,7 +30,7 @@ def test_suite():
         'slowest',
         'stats',
         ]
-    module_names = ['testrepository.tests.commands.test_' + name for name in
+    module_names = ['stestr.tests.commands.test_' + name for name in
         names]
     loader = unittest.TestLoader()
     return loader.loadTestsFromNames(module_names)
