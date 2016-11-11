@@ -14,14 +14,10 @@
 
 
 import subunit
-from testtools import (
-    StreamSummary,
-    StreamResult,
-    )
+import testtools
 
 
-
-class SummarizingResult(StreamSummary):
+class SummarizingResult(testtools.StreamSummary):
 
     def __init__(self):
         super(SummarizingResult, self).__init__()
@@ -52,16 +48,16 @@ class SummarizingResult(StreamSummary):
         return (self._last_time - self._first_time).total_seconds()
 
 
-class CatFiles(StreamResult):
+class CatFiles(testtools.StreamResult):
     """Cat file attachments received to a stream."""
-        
+
     def __init__(self, byte_stream):
         self.stream = subunit.make_stream_binary(byte_stream)
         self.last_file = None
 
     def status(self, test_id=None, test_status=None, test_tags=None,
-        runnable=True, file_name=None, file_bytes=None, eof=False,
-        mime_type=None, route_code=None, timestamp=None):
+               runnable=True, file_name=None, file_bytes=None, eof=False,
+               mime_type=None, route_code=None, timestamp=None):
         if file_name is None:
             return
         if self.last_file != file_name:

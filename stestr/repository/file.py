@@ -1,11 +1,11 @@
 #
 # Copyright (c) 2009, 2010 Testrepository Contributors
-# 
+#
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
 # project source as Apache-2.0 and BSD. You may not use this file except in
 # compliance with one of these two licences.
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -25,17 +25,12 @@ import os.path
 import sys
 import tempfile
 
-import subunit.v2
 from subunit import TestProtocolClient
+import subunit.v2
 import testtools
 from testtools.compat import _b
 
-from stestr.repository import (
-    AbstractRepository,
-    AbstractRepositoryFactory,
-    AbstractTestRun,
-    RepositoryNotFound,
-    )
+from stestr import repository
 
 
 def atomicish_rename(source, target):
@@ -44,7 +39,7 @@ def atomicish_rename(source, target):
     os.rename(source, target)
 
 
-class RepositoryFactory(AbstractRepositoryFactory):
+class RepositoryFactory(repository.AbstractRepositoryFactory):
 
     def initialise(klass, url):
         """Create a repository at url/path."""
@@ -66,19 +61,19 @@ class RepositoryFactory(AbstractRepositoryFactory):
             stream = open(os.path.join(base, 'format'), 'rt')
         except (IOError, OSError) as e:
             if e.errno == errno.ENOENT:
-                raise RepositoryNotFound(url)
+                raise repository.RepositoryNotFound(url)
             raise
         if '1\n' != stream.read():
             raise ValueError(url)
         return Repository(base)
 
 
-class Repository(AbstractRepository):
+class Repository(repository.AbstractRepository):
     """Disk based storage of test results.
-    
+
     This repository stores each stream it receives as a file in a directory.
     Indices are then built on top of this basic store.
-    
+
     This particular disk layout is subject to change at any time, as its
     primarily a bootstrapping exercise at this point. Any changes made are
     likely to have an automatic upgrade process.
@@ -90,7 +85,7 @@ class Repository(AbstractRepository):
         :param base: The path to the repository.
         """
         self.base = base
-    
+
     def _allocate(self):
         # XXX: lock the file. K?!
         value = self.count()
@@ -98,7 +93,8 @@ class Repository(AbstractRepository):
         return value
 
     def _next_stream(self):
-        next_content = open(os.path.join(self.base, 'next-stream'), 'rt').read()
+        next_content = open(os.path.join(self.base,
+                                         'next-stream'), 'rt').read()
         try:
             return int(next_content)
         except ValueError:
@@ -112,7 +108,7 @@ class Repository(AbstractRepository):
         if result < 0:
             raise KeyError("No tests in repository")
         return result
- 
+
     def get_failing(self):
         try:
             run_subunit_content = open(
@@ -161,7 +157,7 @@ class Repository(AbstractRepository):
         return os.path.join(self.base, suffix)
 
     def _write_next_stream(self, value):
-        # Note that this is unlocked and not threadsafe : for now, shrug - single
+        # Note that this is unlocked and not threadsafe : single
         # user, repo-per-working-tree model makes this acceptable in the short
         # term. Likewise we don't fsync - this data isn't valuable enough to
         # force disk IO.
@@ -174,7 +170,7 @@ class Repository(AbstractRepository):
         atomicish_rename(prefix + '.new', prefix)
 
 
-class _DiskRun(AbstractTestRun):
+class _DiskRun(repository.AbstractTestRun):
     """A test run that was inserted into the repository."""
 
     def __init__(self, run_id, subunit_content):
@@ -202,12 +198,14 @@ class _DiskRun(AbstractTestRun):
         return output
 
     def get_test(self):
-        #case = subunit.ProtocolTestCase(self.get_subunit_stream())
+        # case = subunit.ProtocolTestCase(self.get_subunit_stream())
         case = subunit.ProtocolTestCase(BytesIO(self._content))
+
         def wrap_result(result):
             # Wrap in a router to mask out startTestRun/stopTestRun from the
             # ExtendedToStreamDecorator.
-            result = testtools.StreamResultRouter(result, do_start_stop_run=False)
+            result = testtools.StreamResultRouter(
+                result, do_start_stop_run=False)
             # Wrap that in ExtendedToStreamDecorator to convert v1 calls to
             # StreamResult.
             return testtools.ExtendedToStreamDecorator(result)
@@ -312,7 +310,8 @@ class _Inserter(_SafeInserter):
             failing = self._repository.get_failing()
             failing.get_test().run(inserter)
             inserter.stopTestRun()
-        inserter= testtools.ExtendedToStreamDecorator(repo.get_inserter(partial=True))
+        inserter = testtools.ExtendedToStreamDecorator(
+            repo.get_inserter(partial=True))
         inserter.startTestRun()
         run = self._repository.get_test_run(self.get_id())
         run.get_test().run(inserter)
@@ -323,7 +322,7 @@ class _Inserter(_SafeInserter):
         _inserter.startTestRun()
         try:
             repo.get_failing().get_test().run(_inserter)
-        except:
+        except Exception:
             inserter._cancel()
             raise
         else:

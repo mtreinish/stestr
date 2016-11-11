@@ -1,11 +1,11 @@
 #
 # Copyright (c) 2010 Testrepository Contributors
-# 
+#
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
 # project source as Apache-2.0 and BSD. You may not use this file except in
 # compliance with one of these two licences.
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -14,33 +14,18 @@
 
 """The test command that test repository knows how to run."""
 
-from extras import (
-    try_import,
-    try_imports,
-    )
+import extras
 
-from collections import defaultdict
-ConfigParser = try_imports(['ConfigParser', 'configparser'])
-import io
-import itertools
-import operator
+ConfigParser = extras.try_imports(['ConfigParser', 'configparser'])
 import os.path
 import re
 import subprocess
-import sys
-import tempfile
-import multiprocessing
 from textwrap import dedent
 
 import fixtures
-v2 = try_import('subunit.v2')
+v2 = extras.try_import('subunit.v2')
 
 from stestr.fixtures import test_listing
-from stestr import results
-from stestr.testlist import (
-    parse_enumeration,
-    write_list,
-    )
 
 testrconf_help = dedent("""
     Configuring via .testr.conf:
@@ -97,7 +82,7 @@ testrconf_help = dedent("""
 
 class CallWhenProcFinishes(object):
     """Convert a process object to trigger a callback when returncode is set.
-    
+
     This just wraps the entire object and when the returncode attribute access
     finds a set value, calls the callback.
     """
@@ -141,7 +126,7 @@ compiled_re_type = type(re.compile(''))
 
 class TestCommand(fixtures.Fixture):
     """Represents the test command defined in .testr.conf.
-    
+
     :ivar run_factory: The fixture to use to execute a command.
     :ivar oldschool: Use failing.list rather than a unique file path.
 
@@ -151,7 +136,7 @@ class TestCommand(fixtures.Fixture):
     happens. This is not done per-run-command, because test bisection (amongst
     other things) uses multiple get_run_command configurations.
     """
-    
+
     run_factory = test_listing.TestListingFixture
     oldschool = False
 
@@ -186,13 +171,16 @@ class TestCommand(fixtures.Fixture):
         except (ValueError, ConfigParser.NoOptionError):
             return
         variable_regex = '\$INSTANCE_IDS'
-        dispose_cmd = re.sub(variable_regex, ' '.join(sorted(instance.decode('utf') for instance in instances)),
-            dispose_cmd)
+        dispose_cmd = re.sub(variable_regex,
+                             ' '.join(sorted(instance.decode(
+                                 'utf') for instance in instances)),
+                             dispose_cmd)
         self.ui.output_values([('running', dispose_cmd)])
         run_proc = self.ui.subprocess_Popen(dispose_cmd, shell=True)
         run_proc.communicate()
         if run_proc.returncode:
-            raise ValueError('Disposing of instances failed, return %d' %
+            raise ValueError(
+                'Disposing of instances failed, return %d' %
                 run_proc.returncode)
 
     def get_parser(self):
@@ -207,7 +195,7 @@ class TestCommand(fixtures.Fixture):
 
     def get_run_command(self, test_ids=None, testargs=(), test_filters=None):
         """Get the command that would be run to run tests.
-        
+
         See TestListingFixture for the definition of test_ids and test_filters.
         """
         if self._instances is None:
@@ -224,21 +212,19 @@ class TestCommand(fixtures.Fixture):
         idoption = ''
         if '$IDOPTION' in command:
             # IDOPTION is used, we must have it configured.
-            try:
+            if parser.has_option('DEFAULT', 'test_id_option'):
                 idoption = parser.get('DEFAULT', 'test_id_option')
-            except ConfigParser.NoOptionError as e:
-                if e.message != "No option 'test_id_option' in section: 'DEFAULT'":
-                    raise
-                raise ValueError("No test_id_option option present in .testr.conf")
+            else:
+                raise ValueError(
+                    "No test_id_option option present in .testr.conf")
         listopt = ''
         if '$LISTOPT' in command:
             # LISTOPT is used, test_list_option must be configured.
-            try:
+            if parser.has_option('DEFAULT', 'test_list_option'):
                 listopt = parser.get('DEFAULT', 'test_list_option')
-            except ConfigParser.NoOptionError as e:
-                if e.message != "No option 'test_list_option' in section: 'DEFAULT'":
-                    raise
-                raise ValueError("No test_list_option option present in .testr.conf")
+            else:
+                raise ValueError(
+                    "No test_list_option option present in .testr.conf")
         try:
             group_regex = parser.get('DEFAULT', 'group_regex')
         except ConfigParser.NoOptionError:
@@ -253,14 +239,17 @@ class TestCommand(fixtures.Fixture):
         if self.oldschool:
             listpath = os.path.join(self.ui.here, 'failing.list')
             result = self.run_factory(test_ids, cmd, listopt, idoption,
-                self.ui, self.repository, listpath=listpath, parser=parser,
-                test_filters=test_filters, instance_source=self,
-                group_callback=group_callback)
+                                      self.ui, self.repository,
+                                      listpath=listpath, parser=parser,
+                                      test_filters=test_filters,
+                                      instance_source=self,
+                                      group_callback=group_callback)
         else:
             result = self.run_factory(test_ids, cmd, listopt, idoption,
-                self.ui, self.repository, parser=parser,
-                test_filters=test_filters, instance_source=self,
-                group_callback=group_callback)
+                                      self.ui, self.repository, parser=parser,
+                                      test_filters=test_filters,
+                                      instance_source=self,
+                                      group_callback=group_callback)
         return result
 
     def get_filter_tags(self):
@@ -275,7 +264,7 @@ class TestCommand(fixtures.Fixture):
 
     def obtain_instance(self, concurrency):
         """If possible, get one or more test run environment instance ids.
-        
+
         Note this is not threadsafe: calling it from multiple threads would
         likely result in shared results.
         """
@@ -287,13 +276,14 @@ class TestCommand(fixtures.Fixture):
                 return None
             variable_regex = '\$INSTANCE_COUNT'
             cmd = re.sub(variable_regex,
-                str(concurrency - len(self._instances)), cmd)
+                         str(concurrency - len(self._instances)), cmd)
             self.ui.output_values([('running', cmd)])
             proc = self.ui.subprocess_Popen(
                 cmd, shell=True, stdout=subprocess.PIPE)
             out, _ = proc.communicate()
             if proc.returncode:
-                raise ValueError('Provisioning instances failed, return %d' %
+                raise ValueError(
+                    'Provisioning instances failed, return %d' %
                     proc.returncode)
             new_instances = set([item.strip() for item in out.split()])
             self._instances.update(new_instances)

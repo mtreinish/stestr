@@ -1,11 +1,11 @@
 #
 # Copyright (c) 2009 Testrepository Contributors
-# 
+#
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
 # project source as Apache-2.0 and BSD. You may not use this file except in
 # compliance with one of these two licences.
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -16,7 +16,7 @@
 
 A Repository provides storage and indexing of results.
 
-The AbstractRepository class defines the contract to which any Repository 
+The AbstractRepository class defines the contract to which any Repository
 implementation must adhere.
 
 The file submodule is the usual repository that code will use for local
@@ -27,14 +27,14 @@ Repositories are identified by their URL, and new ones are made by calling
 the initialize function in the appropriate repository module.
 """
 
-from testtools import StreamToDict, TestResult
+from testtools import StreamToDict
 
 
 class AbstractRepositoryFactory(object):
     """Interface for making or opening repositories."""
 
     def initialise(self, url):
-        """Create a repository at URL. 
+        """Create a repository at URL.
 
         Call on the class of the repository you wish to create.
         """
@@ -56,7 +56,7 @@ class AbstractRepository(object):
 
     def count(self):
         """Return the number of test runs this repository has stored.
-        
+
         :return count: The count of test runs stored in the repositor.
         """
         raise NotImplementedError(self.count)
@@ -83,10 +83,10 @@ class AbstractRepository(object):
             stopTestRun methods in particular must be called.
         """
         return self._get_inserter(partial)
-    
+
     def _get_inserter(self):
         """Get an inserter for get_inserter.
-        
+
         The result is decorated with an AutoTimingTestResultDecorator.
         """
         raise NotImplementedError(self._get_inserter)
@@ -143,8 +143,10 @@ class AbstractRepository(object):
         """
         run = self.get_test_run(run_id)
         ids = []
+
         def gather(test_dict):
             ids.append(test_dict['id'])
+
         result = StreamToDict(gather)
         result.startTestRun()
         try:
@@ -156,7 +158,7 @@ class AbstractRepository(object):
 
 class AbstractTestRun(object):
     """A test run that has been stored in a repository.
-    
+
     Should implement the StreamResult protocol as well
     as the stestr specific methods documented here.
     """

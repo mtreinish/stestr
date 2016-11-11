@@ -1,11 +1,11 @@
 #
 # Copyright (c) 2009, 2010 Testrepository Contributors
-# 
+#
 # Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 # license at the users choice. A copy of both licenses are available in the
 # project source as Apache-2.0 and BSD. You may not use this file except in
 # compliance with one of these two licences.
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -23,15 +23,10 @@ from operator import methodcaller
 import subunit
 import testtools
 
-from stestr.repository import (
-    AbstractRepository,
-    AbstractRepositoryFactory,
-    AbstractTestRun,
-    RepositoryNotFound,
-    )
+from stestr import repository
 
 
-class RepositoryFactory(AbstractRepositoryFactory):
+class RepositoryFactory(repository.AbstractRepositoryFactory):
     """A factory that can initialise and open memory repositories.
 
     This is used for testing where a repository may be created and later
@@ -49,17 +44,17 @@ class RepositoryFactory(AbstractRepositoryFactory):
         try:
             return self.repos[url]
         except KeyError:
-            raise RepositoryNotFound(url)
+            raise repository.RepositoryNotFound(url)
 
 
-class Repository(AbstractRepository):
+class Repository(repository.AbstractRepository):
     """In memory storage of test results."""
 
     def __init__(self):
         # Test runs:
         self._runs = []
-        self._failing = OrderedDict() # id -> test
-        self._times = {} # id -> duration
+        self._failing = OrderedDict()  # id -> test
+        self._times = {}  # id -> duration
 
     def count(self):
         return len(self._runs)
@@ -91,7 +86,7 @@ class Repository(AbstractRepository):
 
 
 # XXX: Too much duplication between this and _Inserter
-class _Failures(AbstractTestRun):
+class _Failures(repository.AbstractTestRun):
     """Report on failures from a memory repository."""
 
     def __init__(self, repository):
@@ -116,7 +111,8 @@ class _Failures(AbstractTestRun):
         def wrap_result(result):
             # Wrap in a router to mask out startTestRun/stopTestRun from the
             # ExtendedToStreamDecorator.
-            result = testtools.StreamResultRouter(result, do_start_stop_run=False)
+            result = testtools.StreamResultRouter(result,
+                                                  do_start_stop_run=False)
             # Wrap that in ExtendedToStreamDecorator to convert v1 calls to
             # StreamResult.
             return testtools.ExtendedToStreamDecorator(result)
@@ -130,8 +126,8 @@ class _Failures(AbstractTestRun):
             case.run(result)
 
 
-class _Inserter(AbstractTestRun):
-    """Insert test results into a memory repository, and describe them later."""
+class _Inserter(repository.AbstractTestRun):
+    """Insert test results into a memory repository."""
 
     def __init__(self, repository, partial):
         self._repository = repository
@@ -154,9 +150,10 @@ class _Inserter(AbstractTestRun):
         if test_dict['status'] == 'exists' or None in (start, stop):
             return
         duration_delta = stop - start
-        duration_seconds = ((duration_delta.microseconds +
-            (duration_delta.seconds + duration_delta.days * 24 * 3600)
-            * 10**6) / 10.0**6)
+        duration_seconds = (
+            (duration_delta.microseconds + (
+                duration_delta.seconds + duration_delta.days
+                * 24 * 3600) * 10 ** 6) / 10.0 ** 6)
         self._repository._times[test_dict['id']] = duration_seconds
 
     def stopTestRun(self):
@@ -188,7 +185,8 @@ class _Inserter(AbstractTestRun):
         def wrap_result(result):
             # Wrap in a router to mask out startTestRun/stopTestRun from the
             # ExtendedToStreamDecorator.
-            result = testtools.StreamResultRouter(result, do_start_stop_run=False)
+            result = testtools.StreamResultRouter(result,
+                                                  do_start_stop_run=False)
             # Wrap that in ExtendedToStreamDecorator to convert v1 calls to
             # StreamResult.
             return testtools.ExtendedToStreamDecorator(result)
