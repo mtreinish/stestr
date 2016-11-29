@@ -1,15 +1,18 @@
-Test Repository users manual
-++++++++++++++++++++++++++++
+stestr user manual
+==================
 
 Overview
-~~~~~~~~
+--------
 
-Test repository is a small application for tracking test results. Any test run
+stestr is an application for running and tracking test results. Any test run
 that can be represented as a subunit stream can be inserted into a repository.
+However, the test running mechanism assumes python is being used. It is
+orignally forked from the testrepository project and should be mostly be
+backwards compatible with it. (but this is not a hard contract)
 
 Typical workflow is to have a repository into which test runs are inserted, and
 then to query the repository to find out about issues that need addressing.
-testr can fully automate this, but lets start with the low level facilities,
+stestr can fully automate this, but lets start with the low level facilities,
 using the sample subunit stream included with testr::
 
   # Note that there is a .testr.conf already:
@@ -17,57 +20,32 @@ using the sample subunit stream included with testr::
   # Create a store to manage test results in.
   $ testr init
   # add a test result (shows failures)
-  $ testr load < doc/example-failing-subunit-stream
+  $ testr load < subunit-stream
   # see the tracked failing tests again
   $ testr failing
   # fix things
-  $ testr load < doc/example-passing-subunit-stream
+  $ testr load < subunit-stream
   # Now there are no tracked failing tests
   $ testr failing
 
 Most commands in testr have comprehensive online help, and the commands::
 
-  $ testr help [command]
-  $ testr commands
+  $ testr --help
+  $ testr [command] --help
 
 Will be useful to explore the system.
 
 Configuration
-~~~~~~~~~~~~~
+-------------
 
 testr is configured via the '.testr.conf' file which needs to be in the same
 directory that testr is run from. testr includes online help for all the
 options that can be set within it::
 
-  $ testr help run
-
-Python
-------
-
-If your test suite is written in Python, the simplest - and usually correct
-configuration is::
-
-    [DEFAULT]
-    test_command=python -m subunit.run discover . $LISTOPT $IDOPTION
-    test_id_option=--load-list $IDFILE
-    test_list_option=--list
+  $ testr run --help
 
 Running tests
-~~~~~~~~~~~~~
-
-testr is taught how to run your tests by interepreting your .testr.conf file.
-For instance::
-
-  [DEFAULT]
-  test_command=foo $IDOPTION
-  test_id_option=--bar $IDFILE
-
-will cause 'testr run' to run 'foo' and process it as 'testr load' would.
-Likewise 'testr run --failing' will automatically create a list file listing
-just the failing tests, and then run 'foo --bar failing.list' and process it as
-'testr load' would. failing.list will be a newline separated list of the
-test ids that your test runner outputs. If there are no failing tests, no test
-execution will happen at all.
+-------------
 
 Arguments passed to 'testr run' are used to filter test ids that will be run -
 testr will query the runner for test ids and then apply each argument as a
@@ -121,7 +99,7 @@ again stopping only when interrupted or a failure occurs. This is useful
 for repeating timing-related test failures.
 
 Listing tests
-~~~~~~~~~~~~~
+-------------
 
 It is useful to be able to query the test program to see what tests will be
 run - this permits partitioning the tests and running multiple instances with
@@ -151,7 +129,7 @@ used to regex filter the tests of the test runner, and arguments after a '--'
 are passed to the test runner.
 
 Parallel testing
-~~~~~~~~~~~~~~~~
+----------------
 
 If both test listing and filtering (via either IDLIST or IDFILE) are configured
 then testr is able to run your tests in parallel::
@@ -208,7 +186,7 @@ And then find tests with that tag::
   $ testr last --subunit | subunit-filter -s --xfail --with-tag=worker-3 | subunit-ls > slave-3.list
 
 Grouping Tests
-~~~~~~~~~~~~~~
+--------------
 
 In certain scenarios you may want to group tests of a certain type together
 so that they will be run by the same backend. The group_regex option in
@@ -225,106 +203,8 @@ class (the last . splits the class and test method)::
     test_list_option=--list
     group_regex=([^\.]+\.)+
 
-
-Remote or isolated test environments
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A common problem with parallel test running is test runners that use global
-resources such as well known ports, well known database names or predictable
-directories on disk. 
-
-One way to solve this is to setup isolated environments such as chroots,
-containers or even separate machines. Such environments typically require
-some coordination when being used to run tests, so testr provides an explicit
-model for working with them.
-
-The model testr has is intended to support both developers working
-incrementally on a change and CI systems running tests in a one-off setup,
-for both statically and dynamically provisioned environments.
-
-The process testr follows is:
-
-1. The user should perform any one-time or once-per-session setup. For instance,
-   checking out source code, creating a template container, sourcing your cloud
-   credentials.
-2. Execute testr run.
-3. testr queries for concurrency.
-4. testr will make a callout request to provision that many instances.
-   The provisioning callout needs to synchronise source code and do any other
-   per-instance setup at this stage.
-5. testr will make callouts to execute tests, supplying files that should be
-   copied into the execution environment. Note that instances may be used for
-   more than one command execution.
-6. testr will callout to dispose of the instances after the test run completes.
-
-Instances may be expensive to create and dispose of. testr does not perform
-any caching, but the callout pattern is intended to facilitate external
-caching - the provisioning callout can be used to pull environments out of
-a cache, and the dispose to just return it to the cache.
-
-Configuring environment support
--------------------------------
-
-There are three callouts that testrepository depends on - configured in
-.testr.conf as usual. For instance::
-
-  instance_provision=foo -c $INSTANCE_COUNT
-  instance_dispose=bar $INSTANCE_IDS
-  instance_execute=quux $INSTANCE_ID $FILES -- $COMMAND
-
-These should operate as follows:
-
-* instance_provision should start up the number of instances provided in the
-  $INSTANCE_COUNT parameter. It should print out on stdout the instance ids
-  that testr should supply to the dispose and execute commands. There should
-  be no other output on stdout (stderr is entirely up for grabs). An exit code
-  of non-zero will cause testr to consider the command to have failed. A
-  provisioned instance should be able to execute the list tests command and
-  execute tests commands that testr will run via the instance_execute callout.
-  Its possible to lazy-provision things if you desire - testr doesn't care -
-  but to reduce latency we suggest performing any rsync or other code
-  synchronisation steps during the provision step, as testr may make multiple
-  calls to one environment, and re-doing costly operations on each command
-  execution would impair performance.
-
-* instance_dispose should take a list of instance ids and get rid of them
-  this might mean putting them back in a pool of instances, or powering them
-  off, or terminating them - whatever makes sense for your project.
-
-* instance_execute should accept an instance id, a list of files that need to 
-  be copied into the instance and a command to run within the instance. It
-  needs to copy those files into the instance (it may adjust their paths if
-  desired). If the paths are adjusted, the same paths within $COMMAND should be
-  adjusted to match. Execution that takes place with a shared filesystem can
-  obviously skip file copying or adjusting (and the $FILES parameter). When the
-  instance_execute terminates, it should use the exit code that the command
-  used within the instance. Stdout and stderr from instance_execute are
-  presumed to be that of $COMMAND. In particular, stdout is where the subunit
-  test output, and subunit test listing output, are expected, and putting other
-  output into stdout can lead to surprising results - such as corrupting the
-  subunit stream.
-  instance_execute is invoked for both test listing and test executing
-  callouts.
-
-Hiding tests
-~~~~~~~~~~~~
-
-Some test runners (for instance, zope.testrunner) report pseudo tests having to
-do with bringing up the test environment rather than being actual tests that
-can be executed. These are only relevant to a test run when they fail - the
-rest of the time they tend to be confusing. For instance, the same 'test' may
-show up on multiple parallel test runs, which will inflate the 'executed tests'
-count depending on the number of worker threads that were used. Scheduling such
-'tests' to run is also a bit pointless, as they are only ever executed
-implicitly when preparing (or finishing with) a test environment to run other
-tests in.
-
-testr can ignore such tests if they are tagged, using the filter_tags
-configuration option. Tests tagged with any tag in that (space separated) list
-will only be included in counts and reports if the test failed (or errored).
-
 Automated test isolation bisection
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 As mentioned above, its possible to manually analyze test isolation issues by
 interrogating the repository for which tests ran on which worker, and then 
@@ -367,7 +247,7 @@ will perform that analysis for you. (This requires that your test runner is
    isolation issue. Neither of those cases are automated today.
 
 Forcing isolation
-~~~~~~~~~~~~~~~~~
+-----------------
 
 Sometimes it is useful to force a separate test runner instance for each test
 executed. The ``--isolated`` flag will cause testr to execute a separate runner
@@ -382,7 +262,7 @@ is disabled in this mode. ``--analyze-isolation`` supercedes ``--isolated`` if
 they are both supplied.
 
 Repositories
-~~~~~~~~~~~~
+------------
 
 A testr repository is a very simple disk structure. It contains the following
 files (for a format 1 repository - the only current format):
@@ -402,21 +282,3 @@ files (for a format 1 repository - the only current format):
 * repo.conf: This file contains user configuration settings for the repository.
   ``testr repo-config`` will dump a repo configration and
   ``test help repo-config`` has online help for all the repository settings.
-
-setuptools integration
-~~~~~~~~~~~~~~~~~~~~~~
-
-testrepository provides a setuptools commands for ease of integration with
-setuptools-based workflows:
-
-* testr:
-  ``python setup.py testr`` will run testr in parallel mode
-  Options that would normally be passed to testr run can be added to the
-  testr-options argument.
-  ``python setup.py testr --testr-options="--failing"`` will append --failing
-  to the test run.
-* testr --coverage:
-  ``python setup.py testr --coverage`` will run testr in code coverage mode. This
-  assumes the installation of the python coverage module.
-* ``python testr --coverage --omit=ModuleThatSucks.py`` will append
-  --omit=ModuleThatSucks.py to the coverage report command.
