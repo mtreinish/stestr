@@ -18,14 +18,13 @@
 import functools
 import os
 import sys
-import threading
 
-import subunit.test_results
 import testtools
 
 from stestr import output
 from stestr import repository
 from stestr.repository import file as file_repo
+from stestr import results
 from stestr import utils
 
 
@@ -80,7 +79,7 @@ def run(arguments):
     load(arguments)
 
 
-def load(arguments, in_streams=None, partial=False):
+def load(arguments, in_streams=None, partial=False, subunit=False):
     args = arguments[0]
     streams = arguments[1]
     try:
@@ -93,9 +92,6 @@ def load(arguments, in_streams=None, partial=False):
     # Not a full implementation of TestCase, but we only need to iterate
     # back to it. Needs to be a callable - its a head fake for
     # testsuite.add.
-    # XXX: Be nice if we could declare that the argument, which is a path,
-    # is to be an input stream - and thus push this conditional down into
-    # the UI object.
     if in_streams:
         streams = utils.iter_streams(in_streams, 'subunit', internal=True)
     elif streams:
@@ -112,7 +108,7 @@ def load(arguments, in_streams=None, partial=False):
             # Calls StreamResult API.
             case = subunit.ByteStreamToStreamResult(
                 stream, non_subunit_name='stdout')
-            decorate = partial(mktagger, pos)
+            decorate = functools.partial(mktagger, pos)
             case = testtools.DecorateTestCaseResult(case, decorate)
             yield (case, str(pos))
 
@@ -121,27 +117,29 @@ def load(arguments, in_streams=None, partial=False):
     _partial = False
     if args:
         _partial = getattr(args, 'partial')
+    # Set partial_stream if it comes in via the CLI or the kwarg
     partial_stream = _partial or partial
+    _subunit = False
+    if args:
+        _subunit = getattr(args, 'subunit')
+    subunit_out = _subunit or subunit
     inserter = repo.get_inserter(partial=partial_stream)
-    output_result, summary_result = output.make_result(inserter.get_id)
+    if subunit_out:
+        output_result, summary_result = output.make_result(inserter.get_id)
+    else:
+        try:
+            previous_run = repo.get_latest_run()
+        except KeyError:
+            previous_run = None
+        output_result = results.CLITestResult(
+            inserter.get_id, sys.stdout, previous_run)
+        summary_result = output_result.get_summary()
     result = testtools.CopyStreamResult([inserter, output_result])
-    runner_thread = None
     result.startTestRun()
     try:
-        # Convert user input into a stdin event stream
-        interactive_streams = utils.iter_streams(streams, 'interactive')
-        if interactive_streams:
-            case = InputToStreamResult(interactive_streams[0])
-            runner_thread = threading.Thread(
-                target=case.run, args=(result,))
-            runner_thread.daemon = True
-            runner_thread.start()
         case.run(result)
     finally:
         result.stopTestRun()
-        if interactive_streams and runner_thread:
-            runner_thread.stop = True
-            runner_thread.join(10)
     if not summary_result.wasSuccessful():
         return 1
     else:
