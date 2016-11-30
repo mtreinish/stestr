@@ -85,6 +85,40 @@ def output_values(values, output=sys.stdout):
     output.write(six.text_type('%s\n' % ', '.join(outputs)))
 
 
+def output_summary(successful, tests, tests_delta, time, time_delta, values,
+                   output=sys.stdout):
+    summary = []
+    a = summary.append
+    if tests:
+        a("Ran %s" % (tests,))
+        if tests_delta:
+            a(" (%+d)" % (tests_delta,))
+        a(" tests")
+    if time:
+        if not summary:
+            a("Ran tests")
+        a(" in %0.3fs" % (time,))
+        if time_delta:
+            a(" (%+0.3fs)" % (time_delta,))
+    if summary:
+        a("\n")
+    if successful:
+        a('PASSED')
+    else:
+        a('FAILED')
+    if values:
+        a(' (')
+        values_strings = []
+        for name, value, delta in values:
+            value_str = '%s=%s' % (name, value)
+            if delta:
+                value_str += ' (%+d)' % (delta,)
+            values_strings.append(value_str)
+        a(', '.join(values_strings))
+        a(')')
+    output.write(six.text_type(''.join(summary)) + six.text_type('\n'))
+
+
 class ReturnCodeToSubunit(object):
     """Converts a process return code to a subunit error on the process stdout.
 
