@@ -49,7 +49,6 @@ def _iter_streams(input_streams, stream_type, stdin=sys.stdin):
         # Only the first stream declared in a command can be accepted at the
         # moment - as there is only one stdin and alternate streams are not yet
         # configurable in the CLI.
-        print("NOT INTERNAL!!!: %s" % stream_type)
         first_stream_type = input_streams[0]
         if (stream_type != first_stream_type and
             stream_type != first_stream_type[:-1]):
@@ -58,16 +57,13 @@ def _iter_streams(input_streams, stream_type, stdin=sys.stdin):
 
 
 def _iter_internal_streams(input_streams, stream_type):
-    print("InternAL!!!: %s" % stream_type)
     for in_stream in input_streams:
         if in_stream[0] == input_streams:
             streams = in_stream[1]
             break
     else:
         streams = []
-    print(streams)
     for stream_value in streams:
-        print(getattr(stream_value, 'read', None))
         if getattr(stream_value, 'read', None):
             yield stream_value
         else:
@@ -83,11 +79,7 @@ def iter_streams(input_streams, stream_type, internal=False):
     :return: A generator of stream objects. stream objects have a read
         method and a close method which behave as for file objects.
     """
-    print("Internal %s" % internal)
-    print(input_streams)
-    print("stream_type: %s" % stream_type)
     for stream_spec in input_streams:
-        print('stream spec: %s' % type(stream_spec))
         if internal:
             _stream_spec = stream_spec[0]
         else:
