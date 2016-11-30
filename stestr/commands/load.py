@@ -76,8 +76,8 @@ class InputToStreamResult(object):
                 result.status(test_id='stdin', test_status='fail')
 
 
-def run(self):
-    load()
+def run(arguments):
+    load(arguments)
 
 
 def load(arguments, in_streams=None, partial=False):
@@ -98,14 +98,14 @@ def load(arguments, in_streams=None, partial=False):
     # the UI object.
     if in_streams:
         streams = utils.iter_streams(in_streams, 'subunit', internal=True)
-    elif not streams:
+    elif streams:
         opener = functools.partial(open, mode='rb')
         streams = map(opener, streams)
     else:
         streams = utils.iter_streams(sys.stdin, 'subunit')
 
-    mktagger = lambda pos, result: testtools.StreamTagger(
-        [result], add=['worker-%d' % pos])
+    def mktagger(pos, result):
+        return testtools.StreamTagger([result], add=['worker-%d' % pos])
 
     def make_tests():
         for pos, stream in enumerate(streams):

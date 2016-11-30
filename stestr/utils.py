@@ -51,8 +51,8 @@ def _iter_streams(input_streams, stream_type, stdin=sys.stdin):
         # configurable in the CLI.
         print("NOT INTERNAL!!!: %s" % stream_type)
         first_stream_type = input_streams[0]
-        if (stream_type != first_stream_type
-            and stream_type != first_stream_type[:-1]):
+        if (stream_type != first_stream_type and
+            stream_type != first_stream_type[:-1]):
             return
         yield subunit.make_stream_binary(stdin)
 
@@ -76,9 +76,6 @@ def _iter_internal_streams(input_streams, stream_type):
 
 def iter_streams(input_streams, stream_type, internal=False):
     """Iterate over all the streams of type stream_type.
-
-    Implementors of UI should implement _iter_streams which is called after
-    argument checking is performed.
 
     :param stream_type: A simple string such as 'subunit' which matches
         one of the stream types defined for the cmd object this UI is
