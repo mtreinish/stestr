@@ -23,6 +23,7 @@ from testtools.compat import _b
 from stestr.commands import load
 from stestr import config_file
 from stestr import output
+from stestr import repository
 from stestr.repository import file as file_repo
 from stestr import testcommand
 from stestr.testlist import parse_list
@@ -87,7 +88,13 @@ def _find_failing(repo):
 def run(arguments):
     args = arguments[0]
     filters = arguments[1] or None
-    repo = file_repo.RepositoryFactory().open(os.getcwd())
+    try:
+        repo = file_repo.RepositoryFactory().open(os.getcwd())
+    # If a repo is not found, and there a testr config exists just create it
+    except repository.RepositoryNotFound:
+        if not os.path.isfile(args.config):
+            raise
+        repo = file_repo.RepositoryFactory().initialise(os.getcwd())
     if args.failing or args.analyze_isolation:
         ids = _find_failing(repo)
     else:
