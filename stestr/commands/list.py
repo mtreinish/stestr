@@ -15,10 +15,10 @@
 """List the tests from a project and show them."""
 
 from io import BytesIO
-import sys
 
 
 from stestr import config_file
+from stestr import output
 from stestr import testcommand
 
 
@@ -51,7 +51,7 @@ def run(args):
         for id in ids:
             stream.write(('%s\n' % id).encode('utf8'))
         stream.seek(0)
-        sys.stdout(stream)
+        output.output_stream(stream)
         return 0
     finally:
         cmd.cleanUp()

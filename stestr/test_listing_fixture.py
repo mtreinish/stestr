@@ -11,6 +11,7 @@
 
 import os
 import re
+import signal
 import subprocess
 import sys
 import tempfile
@@ -18,7 +19,6 @@ import tempfile
 import fixtures
 import six
 from subunit import v2
-import testtools
 
 
 from stestr import output
@@ -44,18 +44,16 @@ class TestListingFixture(fixtures.Fixture):
             needed to run tests when filtering or partitioning is needed: if
             the run concurrency is > 1 partitioning is needed, and filtering is
             needed if the user has passed in filters.
-        :param cmd_template: string to be filled out with
-            IDFILE.
+        :param cmd_template: string to be filled out with IDFILE
         :param listopt: Option to substitute into LISTOPT to cause test listing
-            to take place.
+                        to take place.
         :param idoption: Option to substitutde into cmd when supplying any test
-            ids.
-        :param ui: The UI in use.
+                         ids.
         :param repository: The repository to query for test times, if needed.
         :param parallel: If not True, prohibit parallel use : used to implement
-            --parallel run recursively.
+                         --parallel run recursively.
         :param listpath: The file listing path to use. If None, a unique path
-            is created.
+                         is created.
         :param parser: An options parser for reading options from.
         :param test_filters: An optional list of test filters to apply. Each
             filter should be a string suitable for passing to re.compile.
@@ -159,6 +157,10 @@ class TestListingFixture(fixtures.Fixture):
         self.addCleanup(os.unlink, name)
         return name
 
+    def _clear_SIGPIPE(self):
+        """Clear SIGPIPE : child processes expect the default handler."""
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
     def list_tests(self):
         """List the tests returned by list_cmd.
 
@@ -171,15 +173,15 @@ class TestListingFixture(fixtures.Fixture):
             output.output_values([('running', list_cmd)])
             run_proc = subprocess.Popen(list_cmd, shell=True,
                                         stdout=subprocess.PIPE,
-                                        stdin=subprocess.PIPE)
+                                        stdin=subprocess.PIPE,
+                                        preexec_fn=self._clear_SIGPIPE)
             out, err = run_proc.communicate()
             if run_proc.returncode != 0:
-                if v2 is not None:
-                    new_out = six.BytesIO()
-                    v2.ByteStreamToStreamResult(
-                        six.BytesIO(out), 'stdout').run(
-                            results.CatFiles(new_out))
-                    out = new_out.getvalue()
+                new_out = six.BytesIO()
+                v2.ByteStreamToStreamResult(
+                    six.BytesIO(out), 'stdout').run(
+                        results.CatFiles(new_out))
+                out = new_out.getvalue()
                 sys.stdout.write(six.text_type(out))
                 sys.stderr.write(six.text_type(err))
                 raise ValueError(
@@ -216,7 +218,8 @@ class TestListingFixture(fixtures.Fixture):
             output.output_values([('running', cmd)])
             run_proc = subprocess.Popen(
                 cmd, shell=True,
-                stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+                stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                preexec_fn=self._clear_SIGPIPE)
             # Prevent processes stalling if they read from stdin; we could
             # pass this through in future, but there is no point doing that
             # until we have a working can-run-debugger-inline story.

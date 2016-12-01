@@ -119,6 +119,19 @@ def output_summary(successful, tests, tests_delta, time, time_delta, values,
     output.write(six.text_type(''.join(summary)) + six.text_type('\n'))
 
 
+def output_stream(stream, output=sys.stdout):
+        _binary_stdout = subunit.make_stream_binary(output)
+        contents = stream.read(65536)
+        assert type(contents) is bytes, \
+            "Bad stream contents %r" % type(contents)
+        # If there are unflushed bytes in the text wrapper, we need to sync..
+        output.flush()
+        while contents:
+            _binary_stdout.write(contents)
+            contents = stream.read(65536)
+        _binary_stdout.flush()
+
+
 class ReturnCodeToSubunit(object):
     """Converts a process return code to a subunit error on the process stdout.
 
