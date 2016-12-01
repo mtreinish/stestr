@@ -13,8 +13,8 @@ import os
 
 from six.moves import configparser
 
-from stestr.fixtures import test_listing
 from stestr.repository import file as file_repo
+from stestr import test_listing_fixture
 
 
 class TestrConf(object):
@@ -52,9 +52,9 @@ class TestrConf(object):
         # Handle the results repository
         # TODO(mtreinish): Add a CLI opt to handle different repo types
         repository = file_repo.RepositoryFactory().open(os.getcwd())
-        return test_listing.TestListingFixture(test_ids, options, command,
-                                               listopt, idoption, repository,
-                                               group_regex)
+        return test_listing_fixture.TestListingFixture(
+            test_ids, options, command, listopt, idoption, repository,
+            group_regex)
 
     def get_filter_tags(self):
         if self.parser.has_option('DEFAULT', 'filter_tags'):

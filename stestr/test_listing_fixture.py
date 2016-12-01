@@ -12,12 +12,14 @@
 import os
 import re
 import subprocess
+import sys
 import tempfile
 
 import fixtures
 import six
 from subunit import v2
-import sys
+import testtools
+
 
 from stestr import output
 from stestr import results
@@ -178,8 +180,8 @@ class TestListingFixture(fixtures.Fixture):
                         six.BytesIO(out), 'stdout').run(
                             results.CatFiles(new_out))
                     out = new_out.getvalue()
-                sys.stdout.write(six.BytesIO(out))
-                sys.stderr.write(six.BytesIO(err))
+                sys.stdout.write(six.text_type(out))
+                sys.stderr.write(six.text_type(err))
                 raise ValueError(
                     "Non-zero exit code (%d) from test listing."
                     % (run_proc.returncode))
