@@ -10,6 +10,7 @@
 # limitations under that license.
 
 import os
+import re
 
 from six.moves import configparser
 
@@ -49,12 +50,20 @@ class TestrConf(object):
         group_regex = None
         if self.parser.has_option('DEFAULT', 'group_regex'):
             group_regex = self.parser.get('DEFAULT', 'group_regex')
+            if group_regex:
+                def group_callback(test_id, regex=re.compile(group_regex)):
+                    match = regex.match(test_id)
+                    if match:
+                        return match.group(0)
+        else:
+            group_callback = None
+
         # Handle the results repository
         # TODO(mtreinish): Add a CLI opt to handle different repo types
         repository = file_repo.RepositoryFactory().open(os.getcwd())
         return test_listing_fixture.TestListingFixture(
             test_ids, options, command, listopt, idoption, repository,
-            group_regex)
+            test_filters=regexes, group_callback=group_callback)
 
     def get_filter_tags(self):
         if self.parser.has_option('DEFAULT', 'filter_tags'):
