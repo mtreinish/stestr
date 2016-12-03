@@ -28,7 +28,8 @@ def write_list(stream, test_ids):
     :param test_ids: An iterable of test ids.
     """
     # May need utf8 explicitly?
-    stream.write(six.binary_type('\n'.join(list(test_ids) + [''])))
+    stream.write(six.binary_type((
+        '\n'.join(list(test_ids) + [''])).encode('utf8')))
 
 
 def parse_list(list_bytes):

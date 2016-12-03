@@ -12,7 +12,7 @@
 import re
 
 
-def filter_tests(self, filters, test_ids):
+def filter_tests(filters, test_ids):
     """Filter test_ids by the test_filters.
 
     :return: A list of test ids.
