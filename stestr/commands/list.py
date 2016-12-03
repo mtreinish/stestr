@@ -36,6 +36,7 @@ def run(args):
     _args = args[0]
     ids = None
     filters = None
+    print(args[1])
     if args[1]:
         filters = args[1]
     conf = config_file.TestrConf(_args.config)
