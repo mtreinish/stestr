@@ -91,16 +91,16 @@ class CLITestResult(testtools.StreamResult):
 
     def _format_error(self, label, test, error_text, test_tags=None):
         test_tags = test_tags or ()
-        tags = six.binary_type(' ').join(test_tags)
+        tags = ' '.join(test_tags)
         if tags:
-            tags = six.binary_type('tags: %s\n') % tags
-        return six.binary_type('').join([
+            tags = six.text_type(('tags: %s\n' % tags))
+        return six.text_type(''.join([
             self.sep1,
-            six.binary_type('%s: %s\n') % (label, test.id()),
+            six.text_type('%s: %s\n' % (label, test.id())),
             tags,
             self.sep2,
             error_text,
-            ])
+            ]))
 
     def status(self, **kwargs):
         super(CLITestResult, self).status(**kwargs)
@@ -109,7 +109,7 @@ class CLITestResult(testtools.StreamResult):
         test_tags = kwargs.get('test_tags')
         if test_status == 'fail':
             self.stream.write(
-                self._format_error(six.binary_type('FAIL'),
+                self._format_error(six.text_type('FAIL'),
                                    *(self._summary.errors[-1]),
                                    test_tags=test_tags))
         if test_status not in self.filterable_states:

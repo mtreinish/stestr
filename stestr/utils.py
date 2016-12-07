@@ -84,6 +84,7 @@ def iter_streams(input_streams, stream_type, internal=False):
             _stream_spec = stream_spec[0]
         else:
             _stream_spec = stream_spec
+
         if '*' in _stream_spec or '?' in _stream_spec or '+' in _stream_spec:
             found = stream_type == _stream_spec[:-1]
         else:

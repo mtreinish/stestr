@@ -19,6 +19,7 @@ import functools
 import os
 import sys
 
+import subunit
 import testtools
 
 from stestr import output
@@ -79,7 +80,7 @@ def run(arguments):
     load(arguments)
 
 
-def load(arguments, in_streams=None, partial=False, subunit=False):
+def load(arguments, in_streams=None, partial=False, subunit_out=False):
     args = arguments[0]
     streams = arguments[1]
     try:
@@ -98,7 +99,7 @@ def load(arguments, in_streams=None, partial=False, subunit=False):
         opener = functools.partial(open, mode='rb')
         streams = map(opener, streams)
     else:
-        streams = utils.iter_streams(sys.stdin, 'subunit')
+        streams = [sys.stdin.buffer]
 
     def mktagger(pos, result):
         return testtools.StreamTagger([result], add=['worker-%d' % pos])
@@ -122,9 +123,9 @@ def load(arguments, in_streams=None, partial=False, subunit=False):
     _subunit = False
     if args:
         _subunit = getattr(args, 'subunit')
-    subunit_out = _subunit or subunit
+    _subunit_out = _subunit or subunit_out
     inserter = repo.get_inserter(partial=partial_stream)
-    if subunit_out:
+    if _subunit_out:
         output_result, summary_result = output.make_result(inserter.get_id)
     else:
         try:
