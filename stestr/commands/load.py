@@ -106,8 +106,6 @@ def load(arguments, in_streams=None, partial=False, subunit_out=False):
 
     def make_tests():
         for pos, stream in enumerate(streams):
-            print(pos)
-            print(stream)
             # Calls StreamResult API.
             case = subunit.ByteStreamToStreamResult(
                 stream, non_subunit_name='stdout')
