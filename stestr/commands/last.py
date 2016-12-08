@@ -15,8 +15,11 @@
 """Show the last run loaded into a repository."""
 
 import os
+import sys
 
+from stestr import output
 from stestr.repository import file as file_repo
+from stestr import results
 
 
 def get_cli_help():
@@ -38,14 +41,14 @@ def set_cli_opts(parser):
         default=False, help="Show output as a subunit stream."),
 
 
-def run(self):
+def run(arguments):
+    args = arguments[0]
     # TODO(mtreinish): Add a CLI opt to set repository type
-    repo = file_repo.RepositoryFactory.open(os.getcwd())
-    testcommand = self.command_factory(self.ui, repo)
+    repo = file_repo.RepositoryFactory().open(os.getcwd())
     latest_run = repo.get_latest_run()
-    if self.ui.options.subunit:
+    if args.subunit:
         stream = latest_run.get_subunit_stream()
-        self.ui.output_stream(stream)
+        output.output_stream(stream)
         # Exits 0 if we successfully wrote the stream.
         return 0
     case = latest_run.get_test()
@@ -54,13 +57,14 @@ def run(self):
     except KeyError:
         previous_run = None
     failed = False
-    result, summary = self.ui.make_result(
-        latest_run.get_id, testcommand, previous_run=previous_run)
-    result.startTestRun()
+    output_result = results.CLITestResult(latest_run.get_id, sys.stdout,
+                                          previous_run)
+    summary = output_result.get_summary()
+    output_result.startTestRun()
     try:
-        case.run(result)
+        case.run(output_result)
     finally:
-        result.stopTestRun()
+        output_result.stopTestRun()
     failed = not summary.wasSuccessful()
     if failed:
         return 1
