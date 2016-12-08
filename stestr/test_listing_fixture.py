@@ -77,7 +77,7 @@ class TestListingFixture(fixtures.Fixture):
         self.listopt = listopt
         self.idoption = idoption
         self.repository = repository
-        self.parallel = getattr(options, 'parallel', False)
+        self.parallel = parallel
         self._listpath = listpath
         self._parser = parser
         self.test_filters = test_filters
@@ -101,7 +101,7 @@ class TestListingFixture(fixtures.Fixture):
         if nonparallel:
             self.concurrency = 1
         else:
-            self.concurrency = self.options['concurrency']
+            self.concurrency = self.options.concurrency
             if not self.concurrency:
                 self.concurrency = scheduler.local_concurrency()
             if not self.concurrency:
@@ -238,9 +238,9 @@ class TestListingFixture(fixtures.Fixture):
                 # No tests in this partition
                 continue
             fixture = self.useFixture(
-                TestListingFixture(test_ids,
+                TestListingFixture(test_ids, self.options,
                                    self.template, self.listopt, self.idoption,
-                                   self.ui, self.repository, parallel=False,
+                                   self.repository, parallel=False,
                                    parser=self._parser,
                                    instance_source=self._instance_source))
             result.extend(fixture.run_tests())

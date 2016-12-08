@@ -15,7 +15,7 @@ import multiprocessing
 import operator
 
 
-def partition_tests(self, test_ids, concurrency, repository, group_callback):
+def partition_tests(test_ids, concurrency, repository, group_callback):
         """Parition test_ids by concurrency.
 
         Test durations from the repository are used to get partitions which
@@ -86,7 +86,7 @@ def partition_tests(self, test_ids, concurrency, repository, group_callback):
         return partitions
 
 
-def local_concurrency(self):
+def local_concurrency():
     try:
         return multiprocessing.cpu_count()
     except NotImplementedError:
