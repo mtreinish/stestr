@@ -101,7 +101,9 @@ class TestListingFixture(fixtures.Fixture):
         if nonparallel:
             self.concurrency = 1
         else:
-            self.concurrency = self.options.concurrency
+            self.concurrency = None
+            if hasattr(self.options, 'concurrency'):
+                self.concurrency = self.options.concurrency
             if not self.concurrency:
                 self.concurrency = scheduler.local_concurrency()
             if not self.concurrency:
