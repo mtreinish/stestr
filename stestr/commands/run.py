@@ -20,12 +20,12 @@ import os
 import testtools
 from testtools.compat import _b
 
+from stestr import cli
 from stestr.commands import load
 from stestr import config_file
 from stestr import output
 from stestr import repository
 from stestr.repository import file as file_repo
-from stestr import testcommand
 from stestr.testlist import parse_list
 
 
@@ -63,7 +63,7 @@ def set_cli_opts(parser):
 
 def get_cli_help():
     help_str = "Run the tests for a project and load them into stestr."
-    help_str = help_str + testcommand.testrconf_help
+    help_str = help_str + cli.testrconf_help
     return help_str
 
 
