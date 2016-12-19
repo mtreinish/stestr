@@ -57,15 +57,15 @@ def _iter_streams(input_streams, stream_type, stdin=sys.stdin):
 
 
 def _iter_internal_streams(input_streams, stream_type):
+    streams = []
     for in_stream in input_streams:
-        if in_stream[0] == input_streams:
-            streams = in_stream[1]
-            break
-    else:
-        streams = []
+        if in_stream[0] == stream_type:
+            streams.append(in_stream[1])
     for stream_value in streams:
         if getattr(stream_value, 'read', None):
-            yield stream_value
+            # NOTE(mtreinish): This is wrong it breaks real streaming. but right
+            # now this is needed to workaround the lack of buffers
+            yield six.BytesIO(stream_value.read())
         else:
             yield six.BytesIO(stream_value)
 

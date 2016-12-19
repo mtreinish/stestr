@@ -213,6 +213,8 @@ class TestListingFixture(fixtures.Fixture):
         """
         result = []
         test_ids = self.test_ids
+        # Handle the single worker case (this is also run recursivly per worker
+        # Un the parallel case
         if self.concurrency == 1 and (test_ids is None or test_ids):
             # Have to customise cmd here, as instances are allocated
             # just-in-time. XXX: Indicates this whole region needs refactoring.

@@ -128,7 +128,8 @@ def run(arguments):
                 run_result = _run_tests(cmd, args.failing,
                                         args.analyze_isolation,
                                         args.isolated,
-                                        args.until_failure)
+                                        args.until_failure,
+                                        args.subunit)
                 if run_result > result:
                     result = run_result
             return result
@@ -268,11 +269,11 @@ def _prior_tests(self, run, failing_id):
     return prior_tests
 
 
-def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure):
+def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
+               subunit_out=False):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
-
         def run_tests():
             run_procs = [('subunit',
                           output.ReturnCodeToSubunit(
@@ -280,7 +281,8 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure):
             partial = False
             if (failing or analyze_isolation or isolated):
                 partial = True
-            return load.load((None, None), run_procs, partial)
+            return load.load((None, None), in_streams=run_procs,
+                             partial=partial, subunit_out=subunit_out)
 
         if not until_failure:
             return run_tests()
