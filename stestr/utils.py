@@ -63,8 +63,8 @@ def _iter_internal_streams(input_streams, stream_type):
             streams.append(in_stream[1])
     for stream_value in streams:
         if getattr(stream_value, 'read', None):
-            # NOTE(mtreinish): This is wrong it breaks real streaming. but right
-            # now this is needed to workaround the lack of buffers
+            # NOTE(mtreinish): This is wrong it breaks real streaming. but
+            # right now this is needed to workaround the lack of buffers
             yield six.BytesIO(stream_value.read())
         else:
             yield six.BytesIO(stream_value)
