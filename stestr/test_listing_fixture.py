@@ -103,7 +103,7 @@ class TestListingFixture(fixtures.Fixture):
         else:
             self.concurrency = None
             if hasattr(self.options, 'concurrency'):
-                self.concurrency = self.options.concurrency
+                self.concurrency = int(self.options.concurrency)
             if not self.concurrency:
                 self.concurrency = scheduler.local_concurrency()
             if not self.concurrency:
