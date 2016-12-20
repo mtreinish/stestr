@@ -39,7 +39,7 @@ Configuration
 -------------
 
 stestr is configured via the '.testr.conf' file which needs to be in the same
-directory that testr is run from. stestr includes online help for all the
+directory that stestr is run from. stestr includes online help for all the
 options that can be set within it::
 
   $ stestr run --help
@@ -89,7 +89,7 @@ you don't have access to the .stestr) you may be able to use a list
 file. If you can get a file that contains one test id per line, you can run
 the named tests like this:
 
-  $ testr run --load-list FILENAME
+  $ stestr run --load-list FILENAME
 
 This can also be useful when dealing with sporadically failing tests, or tests
 that only fail in combination with some other test - you can bisect the tests
@@ -109,7 +109,7 @@ separate partitions at once. Set 'test_list_option' in .testr.conf like so::
 
   test_list_option=--list-tests
 
-You also need to use the $LISTOPT option to tell testr where to expand things:
+You also need to use the $LISTOPT option to tell stestr where to expand things:
 
   test_command=foo $LISTOPT $IDOPTION
 
@@ -158,7 +158,7 @@ A more granular interface is available too - if you insert into .testr.conf::
 
   test_run_concurrency=foo bar
 
-Then when testr needs to determine concurrency, it will run that command and
+Then when stestr needs to determine concurrency, it will run that command and
 read the first line from stdout, cast that to an int, and use that as the
 number of partitions to create. A count of 0 is interpreted to mean one
 partition per test. For instance in .test.conf::
@@ -185,7 +185,7 @@ its test error::
 
 And then find tests with that tag::
 
-  $ testr last --subunit | subunit-filter -s --xfail --with-tag=worker-3 | subunit-ls > slave-3.list
+  $ stestr last --subunit | subunit-filter -s --xfail --with-tag=worker-3 | subunit-ls > slave-3.list
 
 Grouping Tests
 --------------
@@ -209,13 +209,13 @@ Automated test isolation bisection
 ----------------------------------
 
 As mentioned above, its possible to manually analyze test isolation issues by
-interrogating the repository for which tests ran on which worker, and then 
+interrogating the repository for which tests ran on which worker, and then
 creating a list file with those tests, re-running only half of them, checking
 the error still happens, rinse and repeat.
 
 However that is tedious. stestr can perform this analysis for you::
 
-  $ stestr run --analyze-isolation 
+  $ stestr run --analyze-isolation
 
 will perform that analysis for you. (This requires that your test runner is
 (mostly) deterministic on test ordering). The process is:
@@ -283,4 +283,4 @@ files (for a format 1 repository - the only current format):
 
 * repo.conf: This file contains user configuration settings for the repository.
   ``stestr repo-config`` will dump a repo configration and
-  ``stest help repo-config`` has online help for all the repository settings.
+  ``stestr help repo-config`` has online help for all the repository settings.
