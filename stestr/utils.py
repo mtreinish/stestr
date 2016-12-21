@@ -65,7 +65,10 @@ def _iter_internal_streams(input_streams, stream_type):
             streams.append(in_stream[1])
     for stream_value in streams:
         if isinstance(stream_value, output.ReturnCodeToSubunit):
-            yield stream_value.source.detach()
+            if getattr(stream_value.source, 'detach', None):
+                yield stream_value.source.detach()
+            else:
+                yield stream_value.source
         elif getattr(stream_value, 'read', None):
             yield stream_value
         else:
