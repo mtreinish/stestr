@@ -15,8 +15,3 @@ testr to work with any subunit emitting runner are gone. stestr hard codes
 python-subunit-isms into how it works.
 
 .. _testrepository: https://testrepository.readthedocs.org/en/latest
-
-Licensing
----------
-
-stestr is under BSD / Apache 2.0 licences. See the file COPYING in the source for details.

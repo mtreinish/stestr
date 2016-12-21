@@ -7,16 +7,6 @@ Coding style
 PEP-8 is used for changes. We enforce running flake8 prior to landing any
 commits.
 
-Copyrights and licensing
-------------------------
-
-Code committed to stestr must be licensed under the BSD + Apache-2.0
-licences that stestr offers its users. Copyright assignment is not
-required. Please see COPYING for details about how to make a license grant in
-a given source file. Lastly, all copyright holders need to add their name
-to the master list in COPYING the first time they make a change in a given
-calendar year.
-
 Testing and QA
 --------------
 
