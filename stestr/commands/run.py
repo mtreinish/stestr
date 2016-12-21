@@ -112,7 +112,7 @@ def run(arguments):
 
     conf = config_file.TestrConf(args.config)
     if not args.analyze_isolation:
-        cmd = conf.get_run_command(args, ids)
+        cmd = conf.get_run_command(args, ids, filters)
         if args.isolated:
             result = 0
             cmd.setUp()
