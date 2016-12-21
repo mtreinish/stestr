@@ -129,13 +129,14 @@ def run(arguments):
                                         args.analyze_isolation,
                                         args.isolated,
                                         args.until_failure,
-                                        args.subunit)
+                                        subunit_out=args.subunit)
                 if run_result > result:
                     result = run_result
             return result
         else:
             return _run_tests(cmd, args.failing, args.analyze_isolation,
-                              args.isolated, args.until_failure)
+                              args.isolated, args.until_failure,
+                              subunit_out=args.subunit)
     else:
         # Where do we source data about the cause of conflicts.
         # XXX: Should instead capture the run id in with the failing test
