@@ -28,7 +28,7 @@ import subunit.v2
 import testtools
 from testtools.compat import _b
 
-from stestr import repository
+from stestr.repository import abstract as repository
 
 
 def atomicish_rename(source, target):

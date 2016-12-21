@@ -21,7 +21,7 @@ from operator import methodcaller
 import subunit
 import testtools
 
-from stestr import repository
+from stestr.repository import abstract as repository
 
 
 class RepositoryFactory(repository.AbstractRepositoryFactory):

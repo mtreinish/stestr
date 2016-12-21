@@ -21,7 +21,7 @@ import subunit
 import testtools
 
 from stestr import output
-from stestr import repository
+from stestr.repository import abstract as repository
 from stestr.repository import file as file_repo
 from stestr import results
 from stestr import utils

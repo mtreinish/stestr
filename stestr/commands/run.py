@@ -22,7 +22,7 @@ from stestr import cli
 from stestr.commands import load
 from stestr import config_file
 from stestr import output
-from stestr import repository
+from stestr.repository import abstract as repository
 from stestr.repository import file as file_repo
 from stestr.testlist import parse_list
 
