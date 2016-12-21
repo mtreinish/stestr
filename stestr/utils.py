@@ -3,6 +3,8 @@ import sys
 import six
 import subunit
 
+from stestr import output
+
 
 class CallWhenProcFinishes(object):
     """Convert a process object to trigger a callback when returncode is set.
@@ -62,10 +64,10 @@ def _iter_internal_streams(input_streams, stream_type):
         if in_stream[0] == stream_type:
             streams.append(in_stream[1])
     for stream_value in streams:
-        if getattr(stream_value, 'read', None):
-            # NOTE(mtreinish): This is wrong it breaks real streaming. but
-            # right now this is needed to workaround the lack of buffers
-            yield six.BytesIO(stream_value.read())
+        if isinstance(stream_value, output.ReturnCodeToSubunit):
+            yield stream_value.source.detach()
+        elif getattr(stream_value, 'read', None):
+            yield stream_value
         else:
             yield six.BytesIO(stream_value)
 
