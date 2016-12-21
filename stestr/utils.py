@@ -10,10 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import sys
-
 import six
-import subunit
 
 from stestr import output
 
@@ -59,17 +56,6 @@ class CallWhenProcFinishes(object):
         return self._proc.wait()
 
 
-def _iter_streams(input_streams, stream_type, stdin=sys.stdin):
-        # Only the first stream declared in a command can be accepted at the
-        # moment - as there is only one stdin and alternate streams are not yet
-        # configurable in the CLI.
-        first_stream_type = input_streams[0]
-        if (stream_type != first_stream_type and
-            stream_type != first_stream_type[:-1]):
-            return
-        yield subunit.make_stream_binary(stdin)
-
-
 def _iter_internal_streams(input_streams, stream_type):
     streams = []
     for in_stream in input_streams:
@@ -87,7 +73,7 @@ def _iter_internal_streams(input_streams, stream_type):
             yield six.BytesIO(stream_value)
 
 
-def iter_streams(input_streams, stream_type, internal=False):
+def iter_streams(input_streams, stream_type):
     """Iterate over all the streams of type stream_type.
 
     :param stream_type: A simple string such as 'subunit' which matches
@@ -97,17 +83,11 @@ def iter_streams(input_streams, stream_type, internal=False):
         method and a close method which behave as for file objects.
     """
     for stream_spec in input_streams:
-        if internal:
-            _stream_spec = stream_spec[0]
-        else:
-            _stream_spec = stream_spec
-
+        _stream_spec = stream_spec[0]
         if '*' in _stream_spec or '?' in _stream_spec or '+' in _stream_spec:
             found = stream_type == _stream_spec[:-1]
         else:
             found = stream_type == _stream_spec
         if found:
-            if internal:
-                return _iter_internal_streams(input_streams, stream_type)
-            return _iter_streams(input_streams, stream_type)
+            return _iter_internal_streams(input_streams, stream_type)
     raise KeyError(stream_type)

@@ -92,7 +92,7 @@ def load(arguments, in_streams=None, partial=False, subunit_out=False):
     # back to it. Needs to be a callable - its a head fake for
     # testsuite.add.
     if in_streams:
-        streams = utils.iter_streams(in_streams, 'subunit', internal=True)
+        streams = utils.iter_streams(in_streams, 'subunit')
     elif streams:
         opener = functools.partial(open, mode='rb')
         streams = map(opener, streams)
