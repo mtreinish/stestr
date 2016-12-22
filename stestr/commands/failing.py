@@ -15,10 +15,12 @@
 import os
 import sys
 
+import six
 import testtools
 
 from stestr import output
 from stestr.repository import file as file_repo
+from stestr import results
 
 
 def get_cli_help():
@@ -36,7 +38,10 @@ def set_cli_opts(parser):
 
 def _show_subunit(run):
     stream = run.get_subunit_stream()
-    sys.stdout.write(stream.read())
+    if getattr(sys.stdout, 'buffer', False):
+        sys.stdout.buffer.write(stream.read())
+    else:
+        sys.stdout.write(stream.read())
     return 0
 
 
@@ -45,18 +50,25 @@ def _make_result(repo, list_tests=False):
         list_result = testtools.StreamSummary()
         return list_result, list_result
     else:
-        return output.make_result(repo.latest_id)
+        def _get_id():
+            return repo.get_latest_run().get_id()
+
+        output_result = results.CLITestResult(_get_id,
+                                              sys.stdout, None)
+        summary_result = output_result.get_summary()
+        return output_result, summary_result
 
 
-def run(args):
+def run(arguments):
+    args = arguments[0]
     # TODO(mtreinish): Add a CLI opt to set different repo types
     repo = file_repo.RepositoryFactory().open(os.getcwd())
     run = repo.get_failing()
-    if args[0].subunit:
+    if args.subunit:
         return _show_subunit(run)
     case = run.get_test()
     failed = False
-    result, summary = _make_result(repo)
+    result, summary = _make_result(repo, list_tests=args.list)
     result.startTestRun()
     try:
         case.run(result)
@@ -67,7 +79,7 @@ def run(args):
         result = 1
     else:
         result = 0
-    if args[0].list:
+    if args.list:
         failing_tests = [
             test for test, _ in summary.errors + summary.failures]
         output.output_tests(failing_tests)
