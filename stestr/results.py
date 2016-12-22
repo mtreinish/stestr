@@ -74,6 +74,9 @@ class CLITestResult(testtools.StreamResult):
         """Construct a CLITestResult writing to stream.
 
         :param get_id: A nullary callable that returns the id of the test run.
+                       This expects a callable instead of the actual value
+                       because in some repository backends the run_id is only
+                       generated after stopTestRun() is called.
         :param stream: The stream to use for result
         :param previous_run: The CLITestResult for the previous run
         """
