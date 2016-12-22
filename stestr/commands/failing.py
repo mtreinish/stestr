@@ -15,7 +15,6 @@
 import os
 import sys
 
-import six
 import testtools
 
 from stestr import output
