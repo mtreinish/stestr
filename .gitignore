@@ -2,7 +2,6 @@ AUTHORS
 ChangeLog
 /build
 /dist
-/.testrepository
 /.stestr
 /testrepository.egg-info
 __pycache__
