@@ -32,7 +32,7 @@ class TestReturnCodes(base.TestCase):
         self.test_dir = os.path.join(self.directory, 'tests')
         os.mkdir(self.test_dir)
         # Setup Test files
-        self.testr_conf_file = os.path.join(self.directory, '.testr.conf')
+        self.testr_conf_file = os.path.join(self.directory, '.stestr.conf')
         self.setup_cfg_file = os.path.join(self.directory, 'setup.cfg')
         self.passing_file = os.path.join(self.test_dir, 'test_passing.py')
         self.failing_file = os.path.join(self.test_dir, 'test_failing.py')

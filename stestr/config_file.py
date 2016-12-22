@@ -26,27 +26,16 @@ class TestrConf(object):
         self.parser.read(config_file)
 
     def get_run_command(self, options, test_ids=None, regexes=None):
-        if self.parser.has_option('DEFAULT', 'test_command'):
-            command = self.parser.get('DEFAULT', 'test_command')
-        else:
-            raise ValueError("No test_command option present in the stestr "
-                             "config file")
+        if self.parser.has_option('DEFAULT', 'test_path'):
+            test_path = self.parser.get('DEFAULT', 'test_path')
+        top_dir = './'
+        if self.parser.has_option('DEFAULT', 'top_dir'):
+            top_dir = self.parser.get('DEFAULT', 'top_dir')
+        command = "${PYTHON:-python} -m subunit.run discover -t" \
+                  " %s %s $LISTOPT $IDOPTION" % (top_dir, test_path)
+        listopt = "--list"
+        idoption = "--load-list $IDFILE"
         # If the command contains $IDOPTION read that command from config
-        idoption = ''
-        if '$IDOPTION' in command:
-            if self.parser.has_option('DEFAULT', 'test_id_option'):
-                idoption = self.parser.get('DEFAULT', 'test_id_option')
-            else:
-                raise ValueError("No test_id_option option present in the "
-                                 "stestr config file")
-        # If the command contains #LISTOPT read that command from config
-        listopt = ''
-        if '$LISTOPT' in command:
-            if self.parser.has_option('DEFAULT', 'test_list_option'):
-                listopt = self.parser.get('DEFAULT', 'test_list_option')
-            else:
-                raise ValueError("No test_list_option option present in the "
-                                 " stestr config file")
         # Use a group regex if one is defined
         group_regex = None
         if self.parser.has_option('DEFAULT', 'group_regex'):
@@ -65,10 +54,3 @@ class TestrConf(object):
         return test_listing_fixture.TestListingFixture(
             test_ids, options, command, listopt, idoption, repository,
             test_filters=regexes, group_callback=group_callback)
-
-    def get_filter_tags(self):
-        if self.parser.has_option('DEFAULT', 'filter_tags'):
-            tags = self.parser.get('DEFAULT', 'filter_tags')
-        else:
-            return set()
-        return set([tag.strip() for tag in tags.split()])
