@@ -24,6 +24,17 @@ def partition_tests(test_ids, concurrency, repository, group_callback):
         recorded duration - are allocated in round-robin fashion to the
         partitions created using test durations.
 
+        :param list test_ids: The list of test_ids to be partitioned
+        :param int concurrency: The concurrency that will be used for running
+            the tests. This is the number of patitions that test_ids will be
+            split into.
+        :param repository: A repository object that
+        :param group_callback: A callback function that is used as a scheduler
+            hint to group test_ids together and treat them as a single unit for
+            scheduling. This function expects a single test_id parameter and it
+            will return a group identifier. Tests_ids that have the same group
+            identifier will be kept on the same worker.
+
         :return: A list where each element is a distinct subset of test_ids,
             and the union of all the elements is equal to set(test_ids).
         """
@@ -88,6 +99,11 @@ def partition_tests(test_ids, concurrency, repository, group_callback):
 
 
 def local_concurrency():
+    """Get the number of available CPUs on the system.
+
+    :return: An int for the number of cpus. Or None if it couldn't be found
+    """
+
     try:
         return multiprocessing.cpu_count()
     except NotImplementedError:

@@ -28,3 +28,4 @@ Internal APIs
 
    api/config_file
    api/selection
+   api/scheduler
