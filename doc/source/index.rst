@@ -13,7 +13,8 @@ Contents:
 
    README
    MANUAL
-   developers
+   developer_guidelines
+   internal_arch
    api
 
 
