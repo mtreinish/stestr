@@ -16,6 +16,11 @@ import re
 def filter_tests(filters, test_ids):
     """Filter test_ids by the test_filters.
 
+    :param list filters: A list of regex filters to apply to the test_ids. The
+        output will contain any test_ids which have a re.search() match for any
+        of the regexes in this list. If this is None all test_ids will be
+        returned
+    :param list test_ids: A list of test_ids that will be filtered
     :return: A list of test ids.
     """
     if filters is None:

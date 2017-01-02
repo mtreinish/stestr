@@ -27,3 +27,4 @@ Internal APIs
    :maxdepth: 2
 
    api/config_file
+   api/selection
