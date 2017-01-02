@@ -20,12 +20,33 @@ from stestr import test_listing_fixture
 
 
 class TestrConf(object):
+    """Create a TestrConf object to represent a specified config file
+
+    This class is used to represent an stestr config file. It
+
+    :param str config_file: The path to the config file to use
+    """
 
     def __init__(self, config_file):
         self.parser = configparser.ConfigParser()
         self.parser.read(config_file)
 
     def get_run_command(self, options, test_ids=None, regexes=None):
+        """Get a test_listing_fixture.TestListingFixture for this config file
+
+        :param options: A argparse Namespace object of the cli options that
+            were used in the invocation of the original CLI command that
+            needs a TestListingFixture
+        :param list test_ids: an optional list of test_ids to use when running
+            tests
+        :param list regexes: an optional list of regex strings to use for
+            filtering the tests to run. See the test_filters parameter in
+            TestListingFixture to see how this is used.
+        :returns: a TestListingFixture object for the specified config file and
+            any arguments passed into this function
+        :rtype: test_listing_fixture.TestListingFixture
+        """
+
         if self.parser.has_option('DEFAULT', 'test_path'):
             test_path = self.parser.get('DEFAULT', 'test_path')
         top_dir = './'

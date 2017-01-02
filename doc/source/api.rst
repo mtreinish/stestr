@@ -16,3 +16,14 @@ Repository
    api/repository/abstract
    api/repository/file
    api/repository/memory
+
+Commands
+--------
+
+Internal APIs
+-------------
+
+.. toctree::
+   :maxdepth: 2
+
+   api/config_file
