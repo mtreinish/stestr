@@ -23,6 +23,11 @@ Commands
 Internal APIs
 -------------
 
+The modules in this list do not necessarily have any external api contract,
+they are intended for internal use inside of stestr. If anything in these
+provides a stable contract and is intended for usage outside of stestr it
+will be noted in the api doc.
+
 .. toctree::
    :maxdepth: 2
 
