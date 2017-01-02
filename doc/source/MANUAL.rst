@@ -1,3 +1,5 @@
+.. _manual:
+
 stestr user manual
 ==================
 
