@@ -22,17 +22,14 @@ from stestr.tests import base
 
 class TestScheduler(base.TestCase):
 
-    def _add_timed_test(self, id, duration, result, enumeration=False):
+    def _add_timed_test(self, id, duration, result):
         start = datetime.datetime.now()
         start = start.replace(tzinfo=iso8601.UTC)
-        if enumeration:
-            result.status(test_id=id, test_status='exists', timestamp=start)
-        else:
-            result.status(test_id=id, test_status='inprogress',
-                          timestamp=start)
-            timestamp = start + datetime.timedelta(seconds=duration)
-            result.status(test_id=id, test_status='success',
-                          timestamp=timestamp)
+        result.status(test_id=id, test_status='inprogress',
+                      timestamp=start)
+        timestamp = start + datetime.timedelta(seconds=duration)
+        result.status(test_id=id, test_status='success',
+                      timestamp=timestamp)
 
     def test_partition_tests(self):
         repo = memory.RepositoryFactory().initialise('memory:')
@@ -93,7 +90,7 @@ class TestScheduler(base.TestCase):
         self.assertTrue('TestCase1.slow' in partitions[1])
         self.assertTrue('TestCase1.fast' in partitions[1])
         self.assertTrue('TestCase1.fast2' in partitions[1])
-        # Untimed groups just need to be kept together:
+        # Untimed groups just need to be in the same partition:
         if 'TestCase3.test1' in partitions[0]:
             self.assertTrue('TestCase3.test2' in partitions[0])
         if 'TestCase4.test' not in partitions[0]:
