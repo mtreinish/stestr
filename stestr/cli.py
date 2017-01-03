@@ -16,10 +16,9 @@ import os
 import sys
 import textwrap
 
-import pbr.version
+from stestr import version
 
-
-__version__ = pbr.version.VersionInfo('stestr').version_string()
+__version__ = version.version_info.version_string()
 
 testrconf_help = textwrap.dedent("""
     Configuring via .testr.conf:
