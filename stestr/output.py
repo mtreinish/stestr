@@ -18,6 +18,13 @@ import testtools
 
 
 def output_table(table, output=sys.stdout):
+    """Display a table of information.
+
+    :param table: A list of sets representing each row in the table. Each
+        element in the set represents a column in the table.
+    :param output: The output file object to write the table to. By default
+        this is sys.stdout
+    """
     # stringify
     contents = []
     for row in table:
@@ -59,6 +66,13 @@ def output_table(table, output=sys.stdout):
 
 
 def output_tests(tests, output=sys.stdout):
+    """Display a list of tests.
+
+    :param tests: A list of test objects to output
+    :param output: The output file object to write the list to. By default
+        this is sys.stdout
+    """
+
     for test in tests:
         # On Python 2.6 id() returns bytes.
         id_str = test.id()
@@ -80,6 +94,13 @@ def make_result(get_id, output=sys.stdout):
 
 
 def output_values(values, output=sys.stdout):
+    """Display key value pairs.
+
+    :param values: A list of tuples for key value pairs. Each tuple in the list
+        is of the form (key, value).
+    :param output: The output file object to write the list to. By default this
+        is sys.stdout
+    """
     outputs = []
     for label, value in values:
         outputs.append('%s=%s' % (label, value))
@@ -88,6 +109,20 @@ def output_values(values, output=sys.stdout):
 
 def output_summary(successful, tests, tests_delta, time, time_delta, values,
                    output=sys.stdout):
+    """Display a summary view for the test run.
+
+    :param bool successful: Was the test run successful
+    :param int tests: The number of tests that ran
+    :param int tests_delta: The change in the number of tests that ran since
+        the last run
+    :param float time: The number of seconds that it took for the run to
+        exectute
+    :param float time_delta: The change in run time since the last run
+    :param values: A list of sets that are used for a breakdown of statuses
+        other than success. Each set is in the format:
+        (status, number of tests, change in number of tests).
+    :param output: The output file object to use. This defaults to stdout
+    """
     summary = []
     a = summary.append
     if tests:
@@ -142,16 +177,12 @@ class ReturnCodeToSubunit(object):
     subunit stream consumers. If the process closes its stdout and then does
     not terminate, reading from the ReturnCodeToSubunit stream will hang.
 
-    This class will be deleted at some point, allowing parsing to read from the
-    actual fd and benefit from select for aggregating non-subunit output.
+    :param process: A subprocess.Popen object that is
+        generating subunit.
     """
 
     def __init__(self, process):
-        """Adapt a process to a readable stream.
-
-        :param process: A subprocess.Popen object that is
-            generating subunit.
-        """
+        """Adapt a process to a readable stream."""
         self.proc = process
         self.done = False
         self.source = self.proc.stdout

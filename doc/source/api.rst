@@ -34,3 +34,4 @@ will be noted in the api doc.
    api/config_file
    api/selection
    api/scheduler
+   api/output
