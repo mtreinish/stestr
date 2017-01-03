@@ -17,9 +17,10 @@ A Repository provides storage and indexing of results.
 The AbstractRepository class defines the contract to which any Repository
 implementation must adhere.
 
-The file submodule is the usual repository that code will use for local
-access, and the memory submodule provides a memory only repository useful for
-testing.
+The stestr.repository.file module (see: :ref:`api_repository_file` is the usual
+repository that will be used. The stestr.repostiory.memory module (see:
+:ref:`api_repository_memory`) provides a memory only repository useful for
+internal testing.
 
 Repositories are identified by their URL, and new ones are made by calling
 the initialize function in the appropriate repository module.
