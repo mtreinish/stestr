@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Test Repository documentation build configuration file, created by
-# sphinx-quickstart on Mon Dec  3 23:24:00 2012.
+# stestr documentation build configuration file
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -47,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'stestr'
-copyright = u'2012, Testrepository Contributors & 2016, Matthew Treinish'
+copyright = u'2016, Matthew Treinish'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

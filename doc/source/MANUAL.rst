@@ -9,26 +9,14 @@ Overview
 stestr is an application for running and tracking test results. Any test run
 that can be represented as a subunit stream can be inserted into a repository.
 However, the test running mechanism assumes python is being used. It is
-orignally forked from the testrepository project and should be mostly be
-backwards compatible with it. (but this is not a hard contract)
+orignally forked from the testrepository project so the usage is similar.
 
-Typical workflow is to have a repository into which test runs are inserted, and
-then to query the repository to find out about issues that need addressing.
-stestr can fully automate this, but lets start with the low level facilities,
-using the sample subunit stream included with testr::
+A typical basic example workflow is::
 
-  # Note that there is a .testr.conf already:
-  ls .testr.conf
   # Create a store to manage test results in.
   $ stestr init
-  # add a test result (shows failures)
-  $ stestr load < subunit-stream
-  # see the tracked failing tests again
-  $ stestr failing
-  # fix things
-  $ stestr load < subunit-stream
-  # Now there are no tracked failing tests
-  $ stestr failing
+  # Do a test run
+  $ stestr run
 
 Most commands in testr have comprehensive online help, and the commands::
 
@@ -40,39 +28,67 @@ Will be useful to explore the system.
 Configuration
 -------------
 
-stestr is configured via the '.testr.conf' file which needs to be in the same
-directory that stestr is run from. stestr includes online help for all the
-options that can be set within it::
+stestr is configured with a config file that tells stestr some basic information
+about how to run tests. By default the config file needs to be ``.stestr.conf``
+in the same directory that stestr is run from. However, the ``--config``/``-c``
+CLI argument can specify an alternate path for it. stestr also includes an
+online help for all the options that can be set in the config file. It is in the
+top of the output of::
 
   $ stestr run --help
+
+However, the 2 most important options in the stestr config file are
+``test_path`` and ``top_dir``. These 2 options are used to set the `unittest
+discovery`_ options for stestr. (test_path is the same as --start-directory and
+top_dir is the same as --top-level-directory in the doc) Only test_path is a
+required field in the config file, if top_dir is not specified it defaults to
+'./'. It's also worth noting that shell variables for these 2 config options
+(and only these 2 options) are expanded on platforms that have a shell. This
+enables you to have conditional discovery paths based on your environment.
+
+.. _unittest discovery: https://docs.python.org/2/library/unittest.html#test-discovery
+
+For example, having a config file like::
+
+    [DEFAULT]
+    test_path=${TEST_PATH:-./foo/tests}
+
+will let you override the discovery start path using the TEST_PATH environment
+variable.
 
 Running tests
 -------------
 
-Arguments passed to 'stestr run' are used to filter test ids that will be run -
-stestr will query the runner for test ids and then apply each argument as a
-regex filter. Tests that match any of the given filters will be run. Arguments
-passed to run after a ``--`` are passed through to your test runner command
-line. For instance, using the above config example ``stestr run quux -- bar
---no-plugins`` would query for test ids, filter for those that match 'quux' and
-then run ``foo bar --load-list tempfile.list --no-plugins``. Shell variables
-are expanded in these commands on platforms that have a shell.
+To run tests the ``stestr run`` command is used. By default this will run all
+tests discovered using the discovery parameters in the stestr config file.
 
-Having setup a .testr.conf, a common workflow then becomes::
+Arguments passed to ``stestr run`` are used to filter test ids that will be run.
+stestr will perform unittest discovery to get a list of all test ids and then
+apply each argument as a regex filter. Tests that match any of the given filters
+will be run. For example, if you called ``stestr run foo bar`` this will only
+run the tests that have a regex match with foo **or** a regex match with bar.
 
+Running previously failed tests
+'''''''''''''''''''''''''''''''
+
+``stestr run`` also enables you to run just the tests that failed in the
+previous run. To do this you can use the ``---failing`` argument.
+
+A common workflow using this is::
+
+  # Run tests (and some fail)
+  $ stestr run
   # Fix currently broken tests - repeat until there are no failures.
   $ stestr run --failing
   # Do a full run to find anything that regressed during the reduction process.
   $ stestr run
-  # And either commit or loop around this again depending on whether errors
-  # were found.
 
-The --failing option turns on ``--partial`` automatically (so that if the
+The ``--failing`` option turns on ``--partial`` automatically (so that if the
 partial test run were to be interrupted, the failing tests that aren't run are
 not lost).
 
 Another common use case is repeating a failure that occured on a remote
-machine (e.g. during a jenkins test run). There are two common ways to do
+machine (e.g. during a jenkins test run). There are a few common ways to do
 approach this.
 
 Firstly, if you have a subunit stream from the run you can just load it::
@@ -86,10 +102,17 @@ id - e.g. .stestr/0 is the first stream. Note for right now these files are
 stored in subunit v1, but all of stestr commands (including load) expect a
 subunit v2 stream.
 
-If you do not have a stream (because the test runner didn't output subunit or
-you don't have access to the .stestr) you may be able to use a list
-file. If you can get a file that contains one test id per line, you can run
-the named tests like this:
+If you have access to the remote machine you can also get the subunit stream
+by running::
+
+  $ stestr last --subunit > failing-stream
+
+This is often a bit easier than trying to manually pull the stream file out
+of the .stestr directory. (also it will be in subunit v2)
+
+If you do not have a stream or access to the machine you may be able to use a
+list file. If you can get a file that contains one test id per line, you can
+run the named tests like this::
 
   $ stestr run --load-list FILENAME
 
@@ -105,38 +128,18 @@ for repeating timing-related test failures.
 Listing tests
 -------------
 
-It is useful to be able to query the test program to see what tests will be
-run - this permits partitioning the tests and running multiple instances with
-separate partitions at once. Set 'test_list_option' in .testr.conf like so::
-
-  test_list_option=--list-tests
-
-You also need to use the $LISTOPT option to tell stestr where to expand things:
-
-  test_command=foo $LISTOPT $IDOPTION
-
-All the normal rules for invoking test program commands apply: extra parameters
-will be passed through, if a test list is being supplied test_option can be
-used via $IDOPTION.
-
-The output of the test command when this option is supplied should be a subunit
-test enumeration. For subunit v1 that is a series of test ids, in any order,
-``\n`` separated on stdout. For v2 use the subunit protocol and emit one event
-per test with each test having status 'exists'.
-
-To test whether this is working the `stestr list-tests` command can be useful.
+To see a list of tests found by stestr you can use the ``stestr list`` command.
+This will list all tests found by discovery.
 
 You can also use this to see what tests will be run by a given stestr run
 command. For instance, the tests that ``stestr run myfilter`` will run are shown
-by ``stestr list-tests myfilter``. As with 'run', arguments to 'list-tests' are
-used to regex filter the tests of the test runner, and arguments after a '--'
-are passed to the test runner.
+by ``stestr list myfilter``. As with the run command, arguments to list are used
+to regex filter the tests.
 
 Parallel testing
 ----------------
 
-If both test listing and filtering (via either IDLIST or IDFILE) are configured
-then stestr is able to run your tests in parallel::
+stestr lets you run tests in parallel. It actually does this by def::
 
   $ stestr run --parallel
 
@@ -144,35 +147,19 @@ This will first list the tests, partition the tests into one partition per CPU
 on the machine, and then invoke multiple test runners at the same time, with
 each test runner getting one partition. Currently the partitioning algorithm
 is simple round-robin for tests that stestr has not seen run before, and
-equal-time buckets for tests that stestr has seen run. NB: This uses the anydbm
-Python module to store the duration of each test. On some platforms (to date
-only OSX) there is no bulk-update API and performance may be impacted if you
-have many (10's of thousands) of tests.
+equal-time buckets for tests that stestr has seen run.
 
 To determine how many CPUs are present in the machine, stestr will
-use the multiprocessing Python module (present since 2.6). On operating systems
-where this is not implemented, or if you need to control the number of workers
-that are used, the --concurrency option will let you do so::
+use the multiprocessing Python module On operating systems where this is not
+implemented, or if you need to control the number of workers that are used,
+the --concurrency option will let you do so::
 
   $ stestr run --parallel --concurrency=2
 
-A more granular interface is available too - if you insert into .testr.conf::
-
-  test_run_concurrency=foo bar
-
-Then when stestr needs to determine concurrency, it will run that command and
-read the first line from stdout, cast that to an int, and use that as the
-number of partitions to create. A count of 0 is interpreted to mean one
-partition per test. For instance in .test.conf::
-
-  test_run_concurrency=echo 2
-
-Would tell stestr to use concurrency of 2.
-
-When running tests in parallel, stestr tags each test with a tag for
-the worker that executed the test. The tags are of the form ``worker-%d``
-and are usually used to reproduce test isolation failures, where knowing
-exactly what test ran on a given backend is important. The %d that is
+When running tests in parallel, stestr adds a tag for each test to the subunit
+stream to show which worker executed that test. The tags are of the form
+``worker-%d`` and are usually used to reproduce test isolation failures, where
+knowing exactly what test ran on a given worker is important. The %d that is
 substituted in is the partition number of tests from the test run - all tests
 in a single run with the same worker-N ran in the same test runner instance.
 
@@ -193,18 +180,13 @@ Grouping Tests
 --------------
 
 In certain scenarios you may want to group tests of a certain type together
-so that they will be run by the same backend. The group_regex option in
-.testr.conf permits this. When set, tests are grouped by the group(0) of any
-regex match. Tests with no match are not grouped.
+so that they will be run by the same worker process. The group_regex option in
+the stestr config file permits this. When set, tests are grouped by the group(0)
+of any regex match. Tests with no match are not grouped.
 
-For example, extending the python sample .testr.conf from the configuration
-section with a group regex that will group python tests cases together by
-class (the last . splits the class and test method)::
+For example, setting the following option in the stestr config file will group
+tests in the same class together (the last . splits the class and test method)::
 
-    [DEFAULT]
-    test_command=python -m subunit.run discover . $LISTOPT $IDOPTION
-    test_id_option=--load-list $IDFILE
-    test_list_option=--list
     group_regex=([^\.]+\.)+
 
 Automated test isolation bisection
@@ -219,8 +201,7 @@ However that is tedious. stestr can perform this analysis for you::
 
   $ stestr run --analyze-isolation
 
-will perform that analysis for you. (This requires that your test runner is
-(mostly) deterministic on test ordering). The process is:
+will perform that analysis for you. The process is:
 
 1. The last run in the repository is used as a basis for analysing against -
    tests are only cross checked against tests run in the same worker in that
@@ -268,8 +249,8 @@ they are both supplied.
 Repositories
 ------------
 
-A stestr repository is a very simple disk structure. It contains the following
-files (for a format 1 repository - the only current format):
+The default (and currently only) stestr repository type has a very simple disk
+structure. It contains the following files:
 
 * format: This file identifies the precise layout of the repository, in case
   future changes are needed.
@@ -282,7 +263,3 @@ files (for a format 1 repository - the only current format):
   references known failing tests.
 
 * #N - all the streams inserted in the repository are given a serial number.
-
-* repo.conf: This file contains user configuration settings for the repository.
-  ``stestr repo-config`` will dump a repo configration and
-  ``stestr help repo-config`` has online help for all the repository settings.
