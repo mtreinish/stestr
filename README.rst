@@ -20,6 +20,21 @@ compatible with testrepository. At a high level the basic concepts of operation
 are shared between the 2 projects but the actual usage between the 2 is not
 exactly the same.
 
+Installing stestr
+-----------------
+
+stestr is available via pypi, so all you need to do is run::
+
+  pip install -U stestr
+
+to get stestr on your system. If you need to use a development version of
+stestr you can clone the repo and install it locally with::
+
+  git clone https://github.com/mtreinish/stestr.git && pip install -e stestr
+
+which will install stestr in your python environment in editable mode for local
+development
+
 Using stestr
 ------------
 
