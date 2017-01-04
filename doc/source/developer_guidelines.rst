@@ -1,3 +1,5 @@
+.. _dev_guidelines:
+
 Development Guidelines for stestr
 =================================
 
