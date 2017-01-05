@@ -40,6 +40,8 @@ class RepositoryFactory(repository.AbstractRepositoryFactory):
 
     def initialise(klass, url):
         """Create a repository at url/path."""
+        print("WARNING: The SQL repository type is still experimental. You "
+              "might encounter issues while using it.")
         result = Repository(url)
         # TODO(mtreinish): Figure out the python api to run the migrations for
         # setting up the schema.
