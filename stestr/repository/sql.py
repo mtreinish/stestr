@@ -94,7 +94,7 @@ class Repository(repository.AbstractRepository):
         failed_test_runs = db_api.get_test_runs_by_status_for_run_ids(
             'fail', [latest_run.id], session=session)
         session.close()
-        return _Subunit2SqlRun(self.base, None, failed_test_runs)
+        return _Subunit2SqlRun(self.base, None, test_runs=failed_test_runs)
 
     def get_test_run(self, run_id):
         return _Subunit2SqlRun(self.base, run_id)
@@ -134,7 +134,7 @@ class _Subunit2SqlRun(repository.AbstractTestRun):
             test_runs = db_api.get_tests_run_dicts_from_run_id(self._run_id,
                                                                session)
             session.close()
-        elif self._test_runs:
+        else:
             test_runs = self._test_runs
         output = subunit.v2.StreamResultToBytes(stream)
         output.startTestRun()
