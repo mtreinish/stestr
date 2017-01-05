@@ -18,8 +18,10 @@ def _get_default_repo_url(repo_type):
     if repo_type == 'sql':
         repo_file = os.path.join(os.getcwd(), '.stestr.sqlite')
         repo_url = 'sqlite:///' + repo_file
-    else:
+    elif repo_type == 'file':
         repo_url = os.getcwd()
+    else:
+        raise TypeError('Unrecognized repository type %s' % repo_type)
     return repo_url
 
 
