@@ -16,10 +16,7 @@ import os
 
 def _get_default_repo_url(repo_type):
     if repo_type == 'sql':
-        local_dir = os.path.join(os.getcwd(), '.stestr')
-        if not os.path.isdir(local_dir):
-            os.mkdir(local_dir)
-        repo_file = os.path.join(local_dir, 'repo.sqlite')
+        repo_file = os.path.join(os.getcwd(), '.stestr.sqlite')
         repo_url = 'sqlite:///' + repo_file
     else:
         repo_url = os.getcwd()
