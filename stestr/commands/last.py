@@ -12,11 +12,10 @@
 
 """Show the last run loaded into a repository."""
 
-import os
 import sys
 
 from stestr import output
-from stestr.repository import file as file_repo
+from stestr.repository import util
 from stestr import results
 
 
@@ -41,8 +40,7 @@ def set_cli_opts(parser):
 
 def run(arguments):
     args = arguments[0]
-    # TODO(mtreinish): Add a CLI opt to set repository type
-    repo = file_repo.RepositoryFactory().open(os.getcwd())
+    repo = util.get_repo_open(args.repo_type, args.repo_url)
     latest_run = repo.get_latest_run()
     if args.subunit:
         stream = latest_run.get_subunit_stream()

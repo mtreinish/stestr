@@ -12,13 +12,11 @@
 
 """Initialise a new repository."""
 
-import os
-
-from stestr.repository import file as file_repo
+from stestr.repository import util
 
 
 def run(args):
-    file_repo.RepositoryFactory().initialise(os.getcwd())
+    util.get_repo_initialise(args[0].repo_type, args[0].repo_url)
 
 
 def set_cli_opts(parser):
