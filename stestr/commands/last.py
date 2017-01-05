@@ -49,7 +49,12 @@ def run(arguments):
         return 0
     case = latest_run.get_test()
     try:
-        previous_run = repo.get_test_run(repo.latest_id() - 1)
+        if args.repo_type == 'file':
+            previous_run = repo.get_test_run(repo.latest_id() - 1)
+        # TODO(mtreinish): add a repository api to get the previous_run to
+        # unify this logic
+        else:
+            previous_run = None
     except KeyError:
         previous_run = None
     failed = False
