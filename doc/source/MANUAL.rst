@@ -250,8 +250,29 @@ they are both supplied.
 Repositories
 ------------
 
-The default (and currently only) stestr repository type has a very simple disk
-structure. It contains the following files:
+stestr uses a data repository to keep track of test previous test runs. There
+are different backend types that each offer different advantages. There are
+currently 2 repository types to choose from, **file** and **sql**.
+
+You can choose which repository type you want with the ``--repo-type``/``-r``
+cli flag. **file** is the current default.
+
+You can also specify an alternative repository with the ``--repo-url``/``-u``
+cli flags. The default value for a **file** repository type is to use the
+directory: ``$CWD/.stestr``. For a **sql** repository type is to use a sqlite
+database located at: ``$CWD/.stestr.sqlite``.
+
+.. note:: Make sure you put these flags before the cli subcommand
+
+.. note:: Different repository types that use local storage will conflict with
+    each other in the same directory. If you initialize one repository type
+    and then try to use another in the same directory, it will not
+    work.
+
+File
+''''
+The default stestr repository type has a very simple disk structure. It
+contains the following files:
 
 * format: This file identifies the precise layout of the repository, in case
   future changes are needed.
@@ -264,3 +285,12 @@ structure. It contains the following files:
   references known failing tests.
 
 * #N - all the streams inserted in the repository are given a serial number.
+
+SQL
+'''
+This is an experimental repository backend, that is based on the `subunit2sql`_
+library. It's currently still under development and should be considered
+experimental for the time being. Eventually it'll replace the File repository
+type
+
+.. _subunit2sql:

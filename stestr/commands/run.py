@@ -22,7 +22,7 @@ from stestr.commands import load
 from stestr import config_file
 from stestr import output
 from stestr.repository import abstract as repository
-from stestr.repository import file as file_repo
+from stestr.repository import util
 from stestr.testlist import parse_list
 
 
@@ -83,12 +83,12 @@ def run(arguments):
     args = arguments[0]
     filters = arguments[1] or None
     try:
-        repo = file_repo.RepositoryFactory().open(os.getcwd())
+        repo = util.get_repo_open(args.repo_type, args.repo_url)
     # If a repo is not found, and there a testr config exists just create it
     except repository.RepositoryNotFound:
         if not os.path.isfile(args.config):
             raise
-        repo = file_repo.RepositoryFactory().initialise(os.getcwd())
+        repo = util.get_repo_initialise(args.repo_type, args.repo_url)
     if args.failing or args.analyze_isolation:
         ids = _find_failing(repo)
     else:
@@ -277,7 +277,9 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
             if (failing or analyze_isolation or isolated):
                 partial = True
             return load.load((None, None), in_streams=run_procs,
-                             partial=partial, subunit_out=subunit_out)
+                             partial=partial, subunit_out=subunit_out,
+                             repo_type=cmd.options.repo_type,
+                             repo_url=cmd.options.repo_url)
 
         if not until_failure:
             return run_tests()

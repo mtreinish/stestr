@@ -10,12 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import os
 import re
 
 from six.moves import configparser
 
-from stestr.repository import file as file_repo
+from stestr.repository import util
 from stestr import test_listing_fixture
 
 
@@ -70,8 +69,7 @@ class TestrConf(object):
             group_callback = None
 
         # Handle the results repository
-        # TODO(mtreinish): Add a CLI opt to handle different repo types
-        repository = file_repo.RepositoryFactory().open(os.getcwd())
+        repository = util.get_repo_open(options.repo_type, options.repo_url)
         return test_listing_fixture.TestListingFixture(
             test_ids, options, command, listopt, idoption, repository,
             test_filters=regexes, group_callback=group_callback)
