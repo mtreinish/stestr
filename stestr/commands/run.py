@@ -34,9 +34,9 @@ def set_cli_opts(parser):
     parser.add_argument("--failing", action="store_true",
                         default=False,
                         help="Run only tests known to be failing.")
-    parser.add_argument("--parallel", action="store_true",
+    parser.add_argument("--serial", action="store_true",
                         default=False,
-                        help="Run tests in parallel processes.")
+                        help="Run tests in a serial processe.")
     parser.add_argument("--concurrency", action="store", default=0,
                         help="How many processes to use. The default (0) "
                              "autodetects your CPU count.")

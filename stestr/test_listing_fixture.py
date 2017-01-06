@@ -79,6 +79,8 @@ class TestListingFixture(fixtures.Fixture):
         self.idoption = idoption
         self.repository = repository
         self.parallel = parallel
+        if hasattr(options, 'serial') and options.serial:
+            self.parallel = False
         self._listpath = listpath
         self._parser = parser
         self.test_filters = test_filters
