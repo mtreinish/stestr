@@ -16,7 +16,6 @@ from math import ceil
 import os
 
 import testtools
-from testtools.compat import _b
 
 from stestr import cli
 from stestr.commands import load
@@ -25,9 +24,6 @@ from stestr import output
 from stestr.repository import abstract as repository
 from stestr.repository import util
 from stestr.testlist import parse_list
-
-
-LINEFEED = _b('\n')[0]
 
 
 def set_cli_opts(parser):
