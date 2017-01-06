@@ -26,6 +26,7 @@ class TestUtil(base.TestCase):
         self.addCleanup(shutil.rmtree, self.temp_dir)
         cwd = os.getcwd()
         os.chdir(self.temp_dir)
+        self.temp_dir = os.getcwd()
         self.addCleanup(os.chdir, cwd)
 
     def test_get_default_url_sql(self):
