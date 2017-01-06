@@ -14,7 +14,6 @@
 
 
 import io
-from operator import methodcaller
 import os.path
 import subprocess
 
@@ -25,7 +24,6 @@ from subunit2sql.db import api as db_api
 from subunit2sql import read_subunit
 from subunit2sql import shell
 from subunit2sql import write_subunit
-import testtools
 
 from stestr.repository import abstract as repository
 
@@ -151,19 +149,9 @@ class _Subunit2SqlRun(repository.AbstractTestRun):
         return stream
 
     def get_test(self):
-        case = subunit.ProtocolTestCase(self.get_subunit_stream())
-
-        def wrap_result(result):
-            # Wrap in a router to mask out startTestRun/stopTestRun from the
-            # ExtendedToStreamDecorator.
-            result = testtools.StreamResultRouter(
-                result, do_start_stop_run=False)
-            # Wrap that in ExtendedToStreamDecorator to convert v1 calls to
-            # StreamResult.
-            return testtools.ExtendedToStreamDecorator(result)
-        return testtools.DecorateTestCaseResult(
-            case, wrap_result, methodcaller('startTestRun'),
-            methodcaller('stopTestRun'))
+        stream = self.get_subunit_stream()
+        case = subunit.ByteStreamToStreamResult(stream)
+        return case
 
 
 class _SqlInserter(repository.AbstractTestRun):
