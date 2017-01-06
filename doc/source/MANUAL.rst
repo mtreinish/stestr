@@ -139,9 +139,10 @@ to regex filter the tests.
 Parallel testing
 ----------------
 
-stestr lets you run tests in parallel. It actually does this by def::
+stestr lets you run tests in parallel by default. So, it actually does this by
+def::
 
-  $ stestr run --parallel
+  $ stestr run
 
 This will first list the tests, partition the tests into one partition per CPU
 on the machine, and then invoke multiple test runners at the same time, with
@@ -154,7 +155,7 @@ use the multiprocessing Python module On operating systems where this is not
 implemented, or if you need to control the number of workers that are used,
 the --concurrency option will let you do so::
 
-  $ stestr run --parallel --concurrency=2
+  $ stestr run --concurrency=2
 
 When running tests in parallel, stestr adds a tag for each test to the subunit
 stream to show which worker executed that test. The tags are of the form
