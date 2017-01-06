@@ -21,58 +21,57 @@ import fixtures
 import six
 from subunit import v2
 
-
 from stestr import output
 from stestr import results
 from stestr import scheduler
 from stestr import selection
 from stestr import testlist
-from stestr import utils
 
 
 class TestListingFixture(fixtures.Fixture):
-    """Write a temporary file to disk with test ids in it."""
+    """Write a temporary file to disk with test ids in it.
+
+    The TestListingFixture is used to handle the lifecycle of running
+    the subunit.run commands. A fixture is used for this class to handle
+    the temporary list files creation.
+
+    :param test_ids: The test_ids to use. May be None indicating that
+        no ids are known and they should be discovered by listing or
+        configuration if they must be known to run tests. Test ids are
+        needed to run tests when filtering or partitioning is needed: if
+        the run concurrency is > 1 partitioning is needed, and filtering is
+        needed if the user has passed in filters.
+    :param cmd_template: string to be used for the command that will be
+        filled out with the IDFILE when it is created.
+    :param listopt: Option to substitute into LISTOPT to cause test listing
+                    to take place.
+    :param idoption: Option to substitutde into cmd when supplying any test
+                     ids.
+    :param repository: The repository to query for test times, if needed.
+    :param parallel: If not True, prohibit parallel use : used to implement
+                     --parallel run recursively.
+    :param listpath: The file listing path to use. If None, a unique path
+                     is created.
+    :param test_filters: An optional list of test filters to apply. Each
+        filter should be a string suitable for passing to re.compile.
+        filters are applied using search() rather than match(), so if
+        anchoring is needed it should be included in the regex.
+        The test ids used for executing are the union of all the
+        individual filters: to take the intersection instead, craft a
+        single regex that matches all your criteria. Filters are
+        automatically applied by run_tests(), or can be applied by calling
+        filter_tests(test_ids).
+    :param group_callback: If supplied, should be a function that accepts a
+        test id and returns a group id. A group id is an arbitrary value
+        used as a dictionary key in the scheduler. All test ids with the
+        same group id are scheduled onto the same backend test process.
+    """
 
     def __init__(self, test_ids, options, cmd_template, listopt, idoption,
                  repository, parallel=True, listpath=None,
-                 parser=None, test_filters=None, instance_source=None,
-                 group_callback=None):
-        """Create a TestListingFixture.
+                 test_filters=None, group_callback=None):
+        """Create a TestListingFixture."""
 
-        :param test_ids: The test_ids to use. May be None indicating that
-            no ids are known and they should be discovered by listing or
-            configuration if they must be known to run tests. Test ids are
-            needed to run tests when filtering or partitioning is needed: if
-            the run concurrency is > 1 partitioning is needed, and filtering is
-            needed if the user has passed in filters.
-        :param cmd_template: string to be filled out with IDFILE
-        :param listopt: Option to substitute into LISTOPT to cause test listing
-                        to take place.
-        :param idoption: Option to substitutde into cmd when supplying any test
-                         ids.
-        :param repository: The repository to query for test times, if needed.
-        :param parallel: If not True, prohibit parallel use : used to implement
-                         --parallel run recursively.
-        :param listpath: The file listing path to use. If None, a unique path
-                         is created.
-        :param parser: An options parser for reading options from.
-        :param test_filters: An optional list of test filters to apply. Each
-            filter should be a string suitable for passing to re.compile.
-            filters are applied using search() rather than match(), so if
-            anchoring is needed it should be included in the regex.
-            The test ids used for executing are the union of all the
-            individual filters: to take the intersection instead, craft a
-            single regex that matches all your criteria. Filters are
-            automatically applied by run_tests(), or can be applied by calling
-            filter_tests(test_ids).
-        :param instance_source: A source of test run instances. Must support
-            obtain_instance(max_concurrency) -> id and release_instance(id)
-            calls.
-        :param group_callback: If supplied, should be a function that accepts a
-            test id and returns a group id. A group id is an arbitrary value
-            used as a dictionary key in the scheduler. All test ids with the
-            same group id are scheduled onto the same backend test process.
-        """
         self.test_ids = test_ids
         self.template = cmd_template
         self.listopt = listopt
@@ -82,10 +81,8 @@ class TestListingFixture(fixtures.Fixture):
         if hasattr(options, 'serial') and options.serial:
             self.parallel = False
         self._listpath = listpath
-        self._parser = parser
         self.test_filters = test_filters
         self._group_callback = group_callback
-        self._instance_source = instance_source
         self.options = options
 
     def setUp(self):
@@ -173,70 +170,48 @@ class TestListingFixture(fixtures.Fixture):
         """
         if '$LISTOPT' not in self.template:
             raise ValueError("LISTOPT not configured in .testr.conf")
-        instance, list_cmd = self._per_instance_command(self.list_cmd)
-        try:
-            output.output_values([('running', list_cmd)])
-            run_proc = subprocess.Popen(list_cmd, shell=True,
-                                        stdout=subprocess.PIPE,
-                                        stdin=subprocess.PIPE,
-                                        preexec_fn=self._clear_SIGPIPE)
-            out, err = run_proc.communicate()
-            if run_proc.returncode != 0:
-                new_out = six.BytesIO()
-                v2.ByteStreamToStreamResult(
-                    six.BytesIO(out), 'stdout').run(
-                        results.CatFiles(new_out))
-                out = new_out.getvalue()
-                sys.stdout.write(six.text_type(out))
-                sys.stderr.write(six.text_type(err))
-                raise ValueError(
-                    "Non-zero exit code (%d) from test listing."
-                    % (run_proc.returncode))
-            ids = testlist.parse_enumeration(out)
-            return ids
-        finally:
-            if instance:
-                self._instance_source.release_instance(instance)
-
-    def _per_instance_command(self, cmd):
-        """Customise cmd to with an instance-id.
-
-        :param concurrency: The number of instances to ask for (used to avoid
-            death-by-1000 cuts of latency.
-        """
-        if self._instance_source is None:
-            return None, cmd
-        instance = self._instance_source.obtain_instance(self.concurrency)
-        return instance, cmd
+        output.output_values([('running', self.list_cmd)])
+        run_proc = subprocess.Popen(self.list_cmd, shell=True,
+                                    stdout=subprocess.PIPE,
+                                    stdin=subprocess.PIPE,
+                                    preexec_fn=self._clear_SIGPIPE)
+        out, err = run_proc.communicate()
+        if run_proc.returncode != 0:
+            new_out = six.BytesIO()
+            v2.ByteStreamToStreamResult(
+                six.BytesIO(out), 'stdout').run(
+                    results.CatFiles(new_out))
+            out = new_out.getvalue()
+            sys.stdout.write(six.text_type(out))
+            sys.stderr.write(six.text_type(err))
+            raise ValueError(
+                "Non-zero exit code (%d) from test listing."
+                % (run_proc.returncode))
+        ids = testlist.parse_enumeration(out)
+        return ids
 
     def run_tests(self):
-        """Run the tests defined by the command and ui.
+        """Run the tests defined by the command
 
         :return: A list of spawned processes.
         """
         result = []
         test_ids = self.test_ids
         # Handle the single worker case (this is also run recursivly per worker
-        # Un the parallel case
+        # in the parallel case)
         if self.concurrency == 1 and (test_ids is None or test_ids):
-            # Have to customise cmd here, as instances are allocated
-            # just-in-time. XXX: Indicates this whole region needs refactoring.
-            instance, cmd = self._per_instance_command(self.cmd)
-            output.output_values([('running', cmd)])
+            output.output_values([('running', self.cmd)])
             run_proc = subprocess.Popen(
-                cmd, shell=True,
+                self.cmd, shell=True,
                 stdout=subprocess.PIPE, stdin=subprocess.PIPE,
                 preexec_fn=self._clear_SIGPIPE)
             # Prevent processes stalling if they read from stdin; we could
             # pass this through in future, but there is no point doing that
             # until we have a working can-run-debugger-inline story.
             run_proc.stdin.close()
-            if instance:
-                return [utils.CallWhenProcFinishes(run_proc,
-                        lambda:self._instance_source.release_instance(
-                            instance))]
-            else:
-                return [run_proc]
+            return [run_proc]
+        # If we have multiple workers partition the tests and recursively
+        # create single worker TestListingFixtures for each worker
         test_id_groups = scheduler.partition_tests(test_ids, self.concurrency,
                                                    self.repository,
                                                    self._group_callback)
@@ -247,8 +222,6 @@ class TestListingFixture(fixtures.Fixture):
             fixture = self.useFixture(
                 TestListingFixture(test_ids, self.options,
                                    self.template, self.listopt, self.idoption,
-                                   self.repository, parallel=False,
-                                   parser=self._parser,
-                                   instance_source=self._instance_source))
+                                   self.repository, parallel=False))
             result.extend(fixture.run_tests())
         return result
