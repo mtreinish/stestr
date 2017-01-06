@@ -68,23 +68,23 @@ class TestReturnCodes(base.TestCase):
                              "return code of: %s" % (expected, p.returncode))
 
     def test_parallel_passing(self):
-        self.assertRunExit('stestr run --parallel passing', 0)
-
-    def test_parallel_fails(self):
-        self.assertRunExit('stestr run --parallel', 1)
-
-    def test_serial_passing(self):
         self.assertRunExit('stestr run passing', 0)
 
-    def test_serial_fails(self):
+    def test_parallel_fails(self):
         self.assertRunExit('stestr run', 1)
+
+    def test_serial_passing(self):
+        self.assertRunExit('stestr run --serial passing', 0)
+
+    def test_serial_fails(self):
+        self.assertRunExit('stestr run --serial', 1)
 
     def test_serial_subunit_passing(self):
         self.assertRunExit('stestr run --subunit passing', 0,
                            subunit=True)
 
     def test_parallel_subunit_passing(self):
-        self.assertRunExit('stestr run --parallel --subunit passing', 0,
+        self.assertRunExit('stestr run --subunit passing', 0,
                            subunit=True)
 
     def test_list(self):
