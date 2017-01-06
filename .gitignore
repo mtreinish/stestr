@@ -12,3 +12,4 @@ __pycache__
 *egg*
 doc/build/
 releasenotes/build/
+.stestr.sqlite
