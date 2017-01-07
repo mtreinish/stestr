@@ -48,9 +48,16 @@ class RepositoryFactory(repository.AbstractRepositoryFactory):
         return result
 
     def open(self, url):
-        # TODO(mtreinish): Figure out a method to verify the DB exists and
-        # raise RepositoryNotFound if it doesn't
         repo = Repository(url)
+        # To test the repository's existence call get_ids_for_all_tests()
+        # if it raises an OperationalError that means the DB doesn't exist or
+        # it couldn't connect, either way the repository was not found.
+        try:
+            session = repo.session_factory()
+            db_api.get_ids_for_all_tests(session=session)
+            session.close()
+        except sqlalchemy.exc.OperationalError:
+            raise repository.RepositoryNotFound(url)
         return repo
 
 
