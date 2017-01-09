@@ -91,3 +91,32 @@ def iter_streams(input_streams, stream_type):
         if found:
             return _iter_internal_streams(input_streams, stream_type)
     raise KeyError(stream_type)
+
+
+def cleanup_test_name(name, strip_tags=True, strip_scenarios=False):
+    """Clean up the test name for display.
+
+    By default we strip out the tags in the test because they don't help us
+    in identifying the test that is run to it's result.
+
+    Make it possible to strip out the testscenarios information (not to
+    be confused with tempest scenarios) however that's often needed to
+    indentify generated negative tests.
+    """
+    if strip_tags:
+        tags_start = name.find('[')
+        tags_end = name.find(']')
+        if tags_start > 0 and tags_end > tags_start:
+            newname = name[:tags_start]
+            newname += name[tags_end + 1:]
+            name = newname
+
+    if strip_scenarios:
+        tags_start = name.find('(')
+        tags_end = name.find(')')
+        if tags_start > 0 and tags_end > tags_start:
+            newname = name[:tags_start]
+            newname += name[tags_end + 1:]
+            name = newname
+
+    return name
