@@ -91,6 +91,10 @@ def main():
     args = cli.parser.parse_known_args()
     if args[0].here:
         os.chdir(args[0].here)
+    # NOTE(mtreinish): Make sure any subprocesses launch the same version of
+    # python being run here
+    if 'PYTHON' not in os.environ:
+        os.environ['PYTHON'] = sys.executable
     sys.exit(args[0].func(args))
 
 
