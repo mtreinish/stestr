@@ -84,6 +84,9 @@ class TestListingFixture(fixtures.Fixture):
         self.test_filters = test_filters
         self._group_callback = group_callback
         self.options = options
+        self.worker_path = None
+        if hasattr(options, 'worker_path') and options.worker_path:
+            self.worker_path = options.worker_path
 
     def setUp(self):
         super(TestListingFixture, self).setUp()
@@ -112,7 +115,8 @@ class TestListingFixture(fixtures.Fixture):
             if self.concurrency == 1:
                 if default_idstr:
                     self.test_ids = default_idstr.split()
-            if self.concurrency != 1 or self.test_filters is not None:
+            if self.concurrency != 1 or self.test_filters is not None \
+                    or self.worker_path:
                 # Have to be able to tell each worker what to run / filter
                 # tests.
                 self.test_ids = self.list_tests()
@@ -210,11 +214,17 @@ class TestListingFixture(fixtures.Fixture):
             # until we have a working can-run-debugger-inline story.
             run_proc.stdin.close()
             return [run_proc]
+        # If there is a worker path, use that to get worker groups
+        elif self.worker_path:
+            test_id_groups = scheduler.generate_worker_partitions(
+                test_ids, self.worker_path)
         # If we have multiple workers partition the tests and recursively
         # create single worker TestListingFixtures for each worker
-        test_id_groups = scheduler.partition_tests(test_ids, self.concurrency,
-                                                   self.repository,
-                                                   self._group_callback)
+        else:
+            test_id_groups = scheduler.partition_tests(test_ids,
+                                                       self.concurrency,
+                                                       self.repository,
+                                                       self._group_callback)
         for test_ids in test_id_groups:
             if not test_ids:
                 # No tests in this partition

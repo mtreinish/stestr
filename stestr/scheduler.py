@@ -15,6 +15,10 @@ import itertools
 import multiprocessing
 import operator
 
+import yaml
+
+from stestr import selection
+
 
 def partition_tests(test_ids, concurrency, repository, group_callback):
         """Parition test_ids by concurrency.
@@ -109,3 +113,28 @@ def local_concurrency():
     except NotImplementedError:
         # No concurrency logic known.
         return None
+
+
+def generate_worker_partitions(ids, worker_path):
+    """Parse a worker yaml file and generate test groups
+
+    :param list ids: A list of test ids too be partitioned
+    :param path worker_path: The path to a worker file
+    :returns: A list where each element is a distinct subset of test_ids.
+    """
+    with open(worker_path, 'r') as worker_file:
+        workers_desc = yaml.load(worker_file.read())
+    worker_groups = []
+    for worker in workers_desc:
+        if isinstance(worker, dict) and 'worker' in worker.keys():
+            if isinstance(worker['worker'], list):
+                local_worker_list = selection.filter_tests(
+                    worker['worker'], ids)
+                # If a worker partition is empty don't add it to the output
+                if local_worker_list:
+                    worker_groups.append(local_worker_list)
+            else:
+                raise TypeError('The input yaml is the incorrect format')
+        else:
+            raise TypeError('The input yaml is the incorrect format')
+    return worker_groups
