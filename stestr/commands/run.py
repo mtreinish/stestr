@@ -53,6 +53,10 @@ def set_cli_opts(parser):
     parser.add_argument("--isolated", action="store_true",
                         default=False,
                         help="Run each test id in a separate test runner.")
+    parser.add_argument("--worker-file", action="store", default=None,
+                        dest='worker_path',
+                        help="Optional path of a manual worker grouping file "
+                             "to use for the run")
 
 
 def get_cli_help():

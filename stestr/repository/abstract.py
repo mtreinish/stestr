@@ -190,5 +190,5 @@ class RepositoryNotFound(Exception):
 
     def __init__(self, url):
         self.url = url
-        msg = 'No repository found in %s. Create one by running "testr init".'
+        msg = 'No repository found in %s. Create one by running "stestr init".'
         Exception.__init__(self, msg % url)

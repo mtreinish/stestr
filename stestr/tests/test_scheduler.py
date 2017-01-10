@@ -13,6 +13,7 @@
 import datetime
 import re
 
+import mock
 from subunit import iso8601
 
 from stestr.repository import memory
@@ -97,3 +98,56 @@ class TestScheduler(base.TestCase):
             self.assertTrue('TestCase4.test' in partitions[1])
         if 'testdir.testfile.TestCase5.test' not in partitions[0]:
             self.assertTrue('testdir.testfile.TestCase5.test' in partitions[1])
+
+    @mock.patch('six.moves.builtins.open', mock.mock_open(), create=True)
+    def test_generate_worker_partitions(self):
+        test_ids = ['test_a', 'test_b', 'your_test']
+        fake_worker_yaml = [
+            {'worker': ['test_']},
+            {'worker': ['test']},
+        ]
+        with mock.patch('yaml.load', return_value=fake_worker_yaml):
+            groups = scheduler.generate_worker_partitions(test_ids, 'fakepath')
+        expected_grouping = [
+            ['test_a', 'test_b'],
+            ['test_a', 'test_b', 'your_test'],
+        ]
+        self.assertEqual(expected_grouping, groups)
+
+    @mock.patch('six.moves.builtins.open', mock.mock_open(), create=True)
+    def test_generate_worker_partitions_group_without_list(self):
+        test_ids = ['test_a', 'test_b', 'your_test']
+        fake_worker_yaml = [
+            {'worker': ['test_']},
+            {'worker': 'test'},
+        ]
+        with mock.patch('yaml.load', return_value=fake_worker_yaml):
+            self.assertRaises(TypeError, scheduler.generate_worker_partitions,
+                              test_ids, 'fakepath')
+
+    @mock.patch('six.moves.builtins.open', mock.mock_open(), create=True)
+    def test_generate_worker_partitions_no_worker_tag(self):
+        test_ids = ['test_a', 'test_b', 'your_test']
+        fake_worker_yaml = [
+            {'worker-foo': ['test_']},
+            {'worker': ['test']},
+        ]
+        with mock.patch('yaml.load', return_value=fake_worker_yaml):
+            self.assertRaises(TypeError, scheduler.generate_worker_partitions,
+                              test_ids, 'fakepath')
+
+    @mock.patch('six.moves.builtins.open', mock.mock_open(), create=True)
+    def test_generate_worker_partitions_group_without_match(self):
+        test_ids = ['test_a', 'test_b', 'your_test']
+        fake_worker_yaml = [
+            {'worker': ['test_']},
+            {'worker': ['test']},
+            {'worker': ['foo']}
+        ]
+        with mock.patch('yaml.load', return_value=fake_worker_yaml):
+            groups = scheduler.generate_worker_partitions(test_ids, 'fakepath')
+        expected_grouping = [
+            ['test_a', 'test_b'],
+            ['test_a', 'test_b', 'your_test'],
+        ]
+        self.assertEqual(expected_grouping, groups)

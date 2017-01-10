@@ -190,6 +190,32 @@ tests in the same class together (the last . splits the class and test method)::
 
     group_regex=([^\.]+\.)+
 
+Test Scheduling
+---------------
+By default stestr schedules the tests by first checking if there is any
+historical timing data on any tests. It then sorts the tests by that timing
+data loops over the tests in order and adds one to each worker that it will
+laucnh. For tests without timing data, the same is done, except the tests are
+in alphabetical order instead of based on timing data. If a group regex is used
+the same algorithm is used with groups instead of individual tests.
+
+However there are options to adjust how stestr will schedule tests. The primary
+option to do this is to manually schedule all the tests run. To do this use the
+``--worker-file`` option for stestr run. This takes a path to a yaml file that
+instructs stestr how to run tests. It is formatted as a list of dicts with a
+single element each with a list describing the tests to run on each worker. For
+example::
+
+    - worker:
+      - regex 1
+
+    - worker:
+      - regex 2
+      - regex 3
+
+would create 2 workers. The first would run all tests that match regex 1, and
+the second would run all tests that match regex 2 or regex 3.
+
 Automated test isolation bisection
 ----------------------------------
 

@@ -1,0 +1,4 @@
+---
+features:
+  - Add a support to stestr run to manually schedule the tests run using a
+    yaml file and --worker-path to specify using it.

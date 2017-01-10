@@ -29,6 +29,7 @@ import testtools
 from testtools.compat import _b
 
 from stestr.repository import abstract as repository
+from stestr import utils
 
 
 def atomicish_rename(source, target):
@@ -142,6 +143,7 @@ class Repository(repository.AbstractRepository):
             for test_id in test_ids:
                 if type(test_id) != str:
                     test_id = test_id.encode('utf8')
+                test_id = utils.cleanup_test_name(test_id)
                 # gdbm does not support get().
                 try:
                     duration = db[test_id]
@@ -239,7 +241,8 @@ class _SafeInserter(object):
         start, stop = test_dict['timestamps']
         if test_dict['status'] == 'exists' or None in (start, stop):
             return
-        self._times[test_dict['id']] = str((stop - start).total_seconds())
+        test_id = utils.cleanup_test_name(test_dict['id'])
+        self._times[test_id] = str((stop - start).total_seconds())
 
     def startTestRun(self):
         self.hook.startTestRun()
