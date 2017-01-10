@@ -26,6 +26,7 @@ from subunit2sql import shell
 from subunit2sql import write_subunit
 
 from stestr.repository import abstract as repository
+from stestr import utils
 
 
 def atomicish_rename(source, target):
@@ -113,8 +114,13 @@ class Repository(repository.AbstractRepository):
         # multiple tests by test_id at once remove the for loop
         session = self.session_factory()
         for test_id in test_ids:
-            test = db_api.get_test_by_test_id(test_id, session=session)
+            stripped_test_id = utils.cleanup_test_name(test_id)
+            test = db_api.get_test_by_test_id(stripped_test_id,
+                                              session=session)
             if test:
+                # NOTE(mtreinish): We need to make sure the test_id with attrs
+                # is used in the output dict, otherwise the scheduler won't
+                # see it
                 result[test_id] = test.run_time
         session.close()
         return result
