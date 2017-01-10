@@ -143,10 +143,10 @@ class Repository(repository.AbstractRepository):
             for test_id in test_ids:
                 if type(test_id) != str:
                     test_id = test_id.encode('utf8')
-                test_id = utils.cleanup_test_name(test_id)
+                stripped_test_id = utils.cleanup_test_name(test_id)
                 # gdbm does not support get().
                 try:
-                    duration = db[test_id]
+                    duration = db[stripped_test_id]
                 except KeyError:
                     duration = None
                 if duration is not None:
