@@ -13,8 +13,10 @@
 """Persistent storage of test results."""
 
 
+import datetime
 import io
 import os.path
+import re
 import subprocess
 
 import sqlalchemy
@@ -24,6 +26,7 @@ from subunit2sql.db import api as db_api
 from subunit2sql import read_subunit
 from subunit2sql import shell
 from subunit2sql import write_subunit
+import testtools
 
 from stestr.repository import abstract as repository
 from stestr import utils
@@ -76,8 +79,7 @@ class Repository(repository.AbstractRepository):
         """
         self.base = url
         self.engine = sqlalchemy.create_engine(url)
-        self.session_factory = orm.sessionmaker(bind=self.engine,
-                                                autocommit=True)
+        self.session_factory = orm.sessionmaker(bind=self.engine)
 
     # TODO(mtreinish): We need to add a subunit2sql api to get the count
     def count(self):
@@ -174,70 +176,113 @@ class _SqlInserter(repository.AbstractTestRun):
         self._repository = repository
         self.partial = partial
         self._subunit = None
+        self._run_id = None
+        # Create a new session factory
+        self.engine = sqlalchemy.create_engine(self._repository.base)
+        self.session_factory = orm.sessionmaker(bind=self.engine,
+                                                autocommit=True)
 
-    # TODO(mtreinish): Right now the entire stream is stored in memory and
-    # then processed by subunit2sql.read_subunit when it is finished. It
-    # would probably be better to write to the db as a _handle_test hook in
-    # realtime
     def startTestRun(self):
         self._subunit = io.BytesIO()
-        self.hook = subunit.v2.StreamResultToBytes(self._subunit)
+        self.subunit_stream = subunit.v2.StreamResultToBytes(self._subunit)
+        self.hook = testtools.CopyStreamResult([
+            testtools.StreamToDict(self._handle_test),
+            self.subunit_stream])
         self.hook.startTestRun()
-        self._run_id = None
+        self.start_time = datetime.datetime.utcnow()
+        session = self.session_factory()
+        self.run = db_api.create_run(session=session)
+        self._run_id = self.run.uuid
+        session.close()
+        self.totals = {}
+
+    def _update_test(self, test_dict, session, start_time, stop_time):
+        test_id = utils.cleanup_test_name(test_dict['id'])
+        db_test = db_api.get_test_by_test_id(test_id, session)
+        if not db_test:
+            if test_dict['status'] == 'success':
+                success = 1
+                fails = 0
+            elif test_dict['status'] == 'fail':
+                fails = 1
+                success = 0
+            else:
+                fails = 0
+                success = 0
+            run_time = read_subunit.get_duration(start_time, stop_time)
+            db_test = db_api.create_test(test_id, (success + fails), success,
+                                         fails, run_time,
+                                         session)
+        else:
+            test_dict['start_time'] = start_time
+            test_dict['end_time'] = stop_time
+            test_values = shell.increment_counts(db_test, test_dict)
+            # If skipped nothing to update
+            if test_values:
+                db_api.update_test(test_values, db_test.id, session)
+        return db_test
+
+    def _get_attrs(self, test_id):
+        attr_regex = re.compile('\[(.*)\]')
+        matches = attr_regex.search(test_id)
+        attrs = None
+        if matches:
+            attrs = matches.group(1)
+        return attrs
+
+    def _handle_test(self, test_dict):
+        start, end = test_dict.pop('timestamps')
+        if test_dict['status'] == 'exists' or None in (start, end):
+            return
+        elif test_dict['id'] == 'process-returncode':
+            return
+        session = self.session_factory()
+        try:
+            # Update the run counts
+            if test_dict['status'] not in self.totals:
+                self.totals[test_dict['status']] = 1
+            else:
+                self.totals[test_dict['status']] += 1
+            values = {}
+            if test_dict['status'] == 'success' or 'xfail':
+                values['passes'] = self.totals['success']
+            elif test_dict['status'] == 'fail' or 'uxsuccess':
+                values['fails'] = self.totals['fail']
+            elif test_dict['status'] == 'skip':
+                values['skips'] = self.totals['skip']
+            db_api.update_run(values, self.run.id, session=session)
+            # Update the test totals
+            db_test = self._update_test(test_dict, session, start,
+                                        end)
+            # Add the test run
+            test_run = db_api.create_test_run(db_test.id, self.run.id,
+                                              test_dict['status'],
+                                              start, end,
+                                              session)
+            metadata = {}
+            attrs = self._get_attrs(test_dict['id'])
+            if attrs:
+                metadata['attrs'] = attrs
+            if test_dict.get('tags', None):
+                metadata['tags'] = ",".join(test_dict['tags'])
+            if metadata:
+                db_api.add_test_run_metadata(
+                    metadata, test_run.id, session)
+            # TODO(mtreinish): Add attachments support to the DB.
+            session.close()
+        except Exception:
+            session.rollback()
+            raise
 
     def stopTestRun(self):
         self.hook.stopTestRun()
+        stop_time = datetime.datetime.utcnow()
         self._subunit.seek(0)
-        # Create a new session factory
-        engine = sqlalchemy.create_engine(self._repository.base)
-        session_factory = orm.sessionmaker(bind=engine, autocommit=True)
-        # TODO(mtreinish): Enable attachments
-        results = read_subunit.ReadSubunit(self._subunit, attachments=False,
-                                           use_wall_time=True).get_results()
-
-        run_time = results.pop('run_time')
-        totals = shell.get_run_totals(results)
-        session = session_factory()
-        db_run = db_api.create_run(totals['skips'], totals['fails'],
-                                   totals['success'], run_time, artifacts=None,
-                                   id=None, run_at=None,
-                                   session=session)
-        self._run_id = db_run.uuid
-        for test in results:
-            db_test = db_api.get_test_by_test_id(test, session)
-            if not db_test:
-                if results[test]['status'] == 'success':
-                    success = 1
-                    fails = 0
-                elif results[test]['status'] == 'fail':
-                    fails = 1
-                    success = 0
-                else:
-                    fails = 0
-                    success = 0
-                run_time = read_subunit.get_duration(
-                    results[test]['start_time'],
-                    results[test]['end_time'])
-                db_test = db_api.create_test(test, (success + fails), success,
-                                             fails, run_time,
-                                             session)
-            else:
-                test_values = shell.increment_counts(db_test, results[test])
-                # If skipped nothing to update
-                if test_values:
-                    db_api.update_test(test_values, db_test.id, session)
-            test_run = db_api.create_test_run(db_test.id, db_run.id,
-                                              results[test]['status'],
-                                              results[test]['start_time'],
-                                              results[test]['end_time'],
-                                              session)
-            if results[test]['metadata']:
-                db_api.add_test_run_metadata(
-                    results[test]['metadata'], test_run.id,
-                    session)
-            if results[test]['attachments']:
-                db_api.add_test_run_attachments(results[test]['attachments'],
-                                                test_run.id, session)
+        values = {}
+        values['run_time'] = read_subunit.get_duration(self.start_time,
+                                                       stop_time)
+        session = self.session_factory()
+        db_api.update_run(values, self.run.id, session=session)
         session.close()
 
     def status(self, *args, **kwargs):
