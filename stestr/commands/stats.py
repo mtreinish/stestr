@@ -12,10 +12,9 @@
 
 """Report stats about a repository. Current vestigial."""
 
-import os
 import sys
 
-from stestr.repository import file as file_repo
+from stestr.repository import util
 
 
 def get_cli_help():
@@ -26,8 +25,7 @@ def set_cli_opts(parser):
     pass
 
 
-def run(self):
-    # TODO(mtreinish): Add a CLI opt to set repo type
-    repo = file_repo.RepositoryFactory().open(os.getcwd())
+def run(args):
+    repo = util.get_repo_open(args[0].repo_type, args[0].repo_url)
     sys.stdout.write('%s=%s' % ('runs', repo.count()))
     return 0

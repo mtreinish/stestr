@@ -12,13 +12,12 @@
 
 """Show the current failures in the repository."""
 
-import os
 import sys
 
 import testtools
 
 from stestr import output
-from stestr.repository import file as file_repo
+from stestr.repository import util
 from stestr import results
 
 
@@ -60,8 +59,7 @@ def _make_result(repo, list_tests=False):
 
 def run(arguments):
     args = arguments[0]
-    # TODO(mtreinish): Add a CLI opt to set different repo types
-    repo = file_repo.RepositoryFactory().open(os.getcwd())
+    repo = util.get_repo_open(args.repo_type, args.repo_url)
     run = repo.get_failing()
     if args.subunit:
         return _show_subunit(run)

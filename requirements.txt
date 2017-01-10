@@ -6,4 +6,5 @@ python-subunit>=0.18.0
 fixtures>=3.0.0
 six>=1.10.0
 testtools>=2.2.0
+subunit2sql>=1.8.0
 PyYAML>=3.1.0

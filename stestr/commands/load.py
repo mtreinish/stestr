@@ -14,7 +14,6 @@
 
 
 import functools
-import os
 import sys
 
 import subunit
@@ -22,7 +21,7 @@ import testtools
 
 from stestr import output
 from stestr.repository import abstract as repository
-from stestr.repository import file as file_repo
+from stestr.repository import util
 from stestr import results
 from stestr import utils
 
@@ -78,14 +77,18 @@ def run(arguments):
     load(arguments)
 
 
-def load(arguments, in_streams=None, partial=False, subunit_out=False):
+def load(arguments, in_streams=None, partial=False, subunit_out=False,
+         repo_type=None, repo_url=None):
     args = arguments[0]
     streams = arguments[1]
+    if args:
+        repo_type = args.repo_type
+        repo_url = args.repo_url
     try:
-        repo = file_repo.RepositoryFactory().open(os.getcwd())
+        repo = util.get_repo_open(repo_type, repo_url)
     except repository.RepositoryNotFound:
         if args.force_init:
-            repo = file_repo.RepositoryFactory().initialise(os.getcwd())
+            repo = util.get_repo_initialise(repo_type, repo_url)
         else:
             raise
     # Not a full implementation of TestCase, but we only need to iterate

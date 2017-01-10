@@ -14,10 +14,9 @@
 
 import math
 from operator import itemgetter
-import os
 
 from stestr import output
-from stestr.repository import file as file_repo
+from stestr.repository import util
 
 
 def get_cli_help():
@@ -52,8 +51,7 @@ def format_times(times):
 
 
 def run(args):
-    # TODO(mtreinish): Add CLI opt to handle setting repo type
-    repo = file_repo.RepositoryFactory().open(os.getcwd())
+    repo = util.get_repo_open(args[0].repo_type, args[0].repo_url)
     try:
         latest_id = repo.latest_id()
     except KeyError:
