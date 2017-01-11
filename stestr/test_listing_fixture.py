@@ -126,8 +126,11 @@ class TestListingFixture(fixtures.Fixture):
             name = ''
             idlist = ''
         else:
-            self.test_ids = selection.filter_tests(self.test_filters,
-                                                   self.test_ids)
+            self.test_ids = selection.construct_list(
+                self.test_ids, blacklist_file=self.options.blacklist_file,
+                whitelist_file=self.options.whitelist_file,
+                regexes=self.test_filters,
+                black_regex=self.options.black_regex)
             name = self.make_listfile()
             variables['IDFILE'] = name
             idlist = ' '.join(self.test_ids)

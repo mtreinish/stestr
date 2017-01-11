@@ -1,0 +1,5 @@
+---
+features:
+  - The test selection logic for stestr run and stestr list are improved with
+    the addition of the ``-black-regex``, ``--blacklist-file``, and
+    ``whitelist-file`` CLI options.

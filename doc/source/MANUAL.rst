@@ -62,11 +62,70 @@ Running tests
 To run tests the ``stestr run`` command is used. By default this will run all
 tests discovered using the discovery parameters in the stestr config file.
 
+Test Selection
+--------------
+
 Arguments passed to ``stestr run`` are used to filter test ids that will be run.
 stestr will perform unittest discovery to get a list of all test ids and then
 apply each argument as a regex filter. Tests that match any of the given filters
 will be run. For example, if you called ``stestr run foo bar`` this will only
 run the tests that have a regex match with foo **or** a regex match with bar.
+
+stestr allows you do to do simple test exclusion via passing a rejection/black
+regexp::
+
+    $ stestr --back-regex 'slow_tests|bad_tests'
+
+stestr also allow you to combine these argumants::
+
+    $ stestr --back-regexp 'slow_tests|bad_tests' ui\.interface
+
+Here first we selected all tests which matches to ``ui\.interface``, then we are
+dropping all test which matches ``slow_tests|bad_tests`` from the final list.
+
+stestr also allows you to specify a blacklist file to define a set of regexes
+to exclude. You can specify a blacklist file with the
+``--blacklist-file``/``-b`` option, for example::
+
+    $ stestr --blacklist_file $path_to_file
+
+The format for the file is line separated regex, with '#' used to signify the
+start of a comment on a line. For example::
+
+    # Blacklist File
+    ^regex1 # Excludes these tests
+    .*regex2 # exclude those tests
+
+The regexp used in the blacklist file or passed as argument, will be used to
+drop tests from the initial selection list. It will generate a list which will
+exclude any tests matching '^regex1' or '.*regex2'. If a blacklist file is used
+in conjunction with the normal filters then the regex filters passed in as an
+argument regex will be used for the intial test selection, and the exclusion
+regexes from the blacklist file on top of that.
+
+The dual of the blacklist file is the whitelist file which will include any
+tests matching the regexes in the file. You can specify the path to the file
+with ``--whitelist_file``/``-w``, for example::
+
+    $ stestr --whitelist_file $path_to_file
+
+The format for the file is more or less identical to the blacklist file::
+
+    # Whitelist File
+    ^regex1 # Include these tests
+    .*regex2 # include those tests
+
+However, instead of excluding the matches it will include them.
+
+It's also worth noting that you can use the test list option to dry run any
+selection arguments you are using. You just need to use --list/-l with your
+selection options to do this, for example::
+
+    $ stestr list 'regex3.*' --blacklist_file blacklist.txt
+
+This will list all the tests which will be run by stestr using that combination
+of arguments.
+
 
 Running previously failed tests
 '''''''''''''''''''''''''''''''
