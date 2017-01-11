@@ -25,6 +25,11 @@ class TestSelection(base.TestCase):
         result = selection.filter_tests(None, test_list)
         self.assertEqual(test_list, result)
 
+    def test_filter_tests(self):
+        test_list = ['a', 'b', 'c']
+        result = selection.filter_tests(['a'], test_list)
+        self.assertEqual(['a'], result)
+
 
 class TestBlackReader(base.TestCase):
     def test_black_reader(self):
