@@ -22,7 +22,7 @@ from stestr import results
 
 
 def get_cli_help():
-    pass
+    return "Show the current failures known by the repository"
 
 
 def set_cli_opts(parser):

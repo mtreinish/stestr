@@ -40,8 +40,7 @@ def set_cli_opts(parser):
 
 
 def get_cli_help():
-    help_str = """
-        Load a subunit stream into a repository.
+    help_str = """Load a subunit stream into a repository.
 
         Failing tests are shown on the console and a summary of the stream is
         printed at the end.

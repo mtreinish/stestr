@@ -18,7 +18,7 @@ from stestr.repository import util
 
 
 def get_cli_help():
-    pass
+    return "Report the stats about a repository"
 
 
 def set_cli_opts(parser):

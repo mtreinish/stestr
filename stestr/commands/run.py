@@ -17,7 +17,6 @@ import os
 
 import testtools
 
-from stestr import cli
 from stestr.commands import load
 from stestr import config_file
 from stestr import output
@@ -60,8 +59,7 @@ def set_cli_opts(parser):
 
 
 def get_cli_help():
-    help_str = "Run the tests for a project and load them into stestr."
-    help_str = help_str + cli.testrconf_help
+    help_str = "Run the tests for a project and load them into a repository."
     return help_str
 
 

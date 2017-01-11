@@ -14,32 +14,10 @@ import argparse
 import importlib
 import os
 import sys
-import textwrap
 
 from stestr import version
 
 __version__ = version.version_info.version_string()
-
-testrconf_help = textwrap.dedent("""
-    Configuring via .testr.conf:
-    ---
-    [DEFAULT]
-    test_path=./foo/tests
-    ---
-    will cause 'testr run' to run 'foo' to execute tests, and
-    'testr run --failing' will cause 'foo --bar failing.list ' to be run to
-    execute tests. Shell variables are expanded in these commands on platforms
-    that have a shell.
-
-    The full list of options and variables for .testr.conf:
-    * test_path -- the path to use for discovery of the tests
-    * top_dir -- optional path to use for the top directory in discovery.
-      Defaults to ./ if one is not specified
-    * group_regex -- If set group tests by the matched section of the test id.
-
-    See the stestr manual for example .stestr.conf files in different
-    programming languages.
-    """)
 
 
 class StestrCLI(object):

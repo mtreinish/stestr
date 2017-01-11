@@ -14,7 +14,6 @@
 
 from io import BytesIO
 
-from stestr import cli
 from stestr import config_file
 from stestr import output
 
@@ -22,7 +21,7 @@ from stestr import output
 def get_cli_help():
     help_str = ("List the tests for a project. You can use a filter just like"
                 "with the run command to see exactly what tests match")
-    return help_str + cli.testrconf_help
+    return help_str
 
 
 def set_cli_opts(parser):
