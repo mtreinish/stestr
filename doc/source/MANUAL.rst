@@ -56,6 +56,11 @@ For example, having a config file like::
 will let you override the discovery start path using the TEST_PATH environment
 variable.
 
+There is also an option to specify all the options in the config file via the
+CLI. This way you can run stestr directly without having to write a config file
+and manually specify the test_path like above with the ``--test-path``/``-t``
+CLI argument.
+
 Running tests
 -------------
 

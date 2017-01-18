@@ -1,0 +1,11 @@
+---
+features:
+  - Add a new CLI argument ``--test-path``/``-t`` to specify the test path
+    for unittest discovery. This CLI option will take precedence over the
+    config file option if one is specified
+  - Add a new CLI argument ``--top-dir`` to specify the top dir for unittest
+    discovery. This CLI option will take precedence over the config file
+    option if one is specified.
+  - Add a new CLI argument ``--group-regex``/``-g`` to specify the top dir for
+    unittest discovery. The CLI option takes precedence over the config file
+    option if one is specified.

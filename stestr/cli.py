@@ -70,6 +70,24 @@ class StestrCLI(object):
                             help="Set the repo url to use. An acceptable value"
                                  " for this depends on the repository type "
                                  "used.")
+        parser.add_argument('--test-path', '-t', dest='test_path',
+                            default=None,
+                            help="Set the test path to use for unittest "
+                                 "discovery. If both this and the "
+                                 "corresponding config file option are set, "
+                                 "this value will be used.")
+        parser.add_argument('--top-dir', dest='top_dir',
+                            default=None,
+                            help="Set the top dir to use for unittest "
+                                 "discovery. If both this and the "
+                                 "corresponding config file option are set, "
+                                 "this value will be used.")
+        parser.add_argument('--group_regex', '-g', dest='group_regex',
+                            default=None,
+                            help="Set a group regex to use for grouping tests"
+                                 " together in the stestr scheduler. If "
+                                 "both this and the corresponding config file "
+                                 "option are set this value will be used.")
 
 
 def main():

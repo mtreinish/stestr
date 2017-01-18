@@ -46,10 +46,14 @@ class TestrConf(object):
         :rtype: test_listing_fixture.TestListingFixture
         """
 
-        if self.parser.has_option('DEFAULT', 'test_path'):
+        if options.test_path:
+            test_path = options.test_path
+        elif self.parser.has_option('DEFAULT', 'test_path'):
             test_path = self.parser.get('DEFAULT', 'test_path')
         top_dir = './'
-        if self.parser.has_option('DEFAULT', 'top_dir'):
+        if options.top_dir:
+            top_dir = options.top_dir
+        elif self.parser.has_option('DEFAULT', 'top_dir'):
             top_dir = self.parser.get('DEFAULT', 'top_dir')
         command = "${PYTHON:-python} -m subunit.run discover -t" \
                   " %s %s $LISTOPT $IDOPTION" % (top_dir, test_path)
@@ -58,13 +62,15 @@ class TestrConf(object):
         # If the command contains $IDOPTION read that command from config
         # Use a group regex if one is defined
         group_regex = None
-        if self.parser.has_option('DEFAULT', 'group_regex'):
+        if options.group_regex:
+            group_regex = options.group_regex
+        elif self.parser.has_option('DEFAULT', 'group_regex'):
             group_regex = self.parser.get('DEFAULT', 'group_regex')
-            if group_regex:
-                def group_callback(test_id, regex=re.compile(group_regex)):
-                    match = regex.match(test_id)
-                    if match:
-                        return match.group(0)
+        if group_regex:
+            def group_callback(test_id, regex=re.compile(group_regex)):
+                match = regex.match(test_id)
+                if match:
+                    return match.group(0)
         else:
             group_callback = None
 
