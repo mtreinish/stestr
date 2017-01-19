@@ -67,3 +67,15 @@ exist) Then to run tests just use::
 it will then execute all the tests found by test discovery. For all the details
 on these commands and more thorough explanation of options see the
 :ref:`manual`.
+
+Migrating from testrepository
+-----------------------------
+
+If you have a project that is already using testrepository stestr's source repo contains a helper script for migrating your repo to use stestr. This script just
+creates a .stestr.conf file from a .testr.conf file. (assuming it uses a
+standard subunit.run test command format) To run this from your project repo
+just call::
+
+    $STESTR_SOURCE_DIR/tools/testr_to_stestr.py
+
+and you'll have a .stestr.conf created.
