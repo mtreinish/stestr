@@ -41,7 +41,7 @@ Using stestr
 After you install stestr to use it to run tests is pretty straightforward. The
 first thing you'll need to do is create a .stestr.conf file for your project.
 This file is used to tell stestr where to find tests and basic information
-about how tests are run. A basic minimal example of the contesnts of this is::
+about how tests are run. A basic minimal example of the contents of this is::
 
   [DEFAULT]
   test_path=./project_source_dir/tests
@@ -71,8 +71,9 @@ on these commands and more thorough explanation of options see the
 Migrating from testrepository
 -----------------------------
 
-If you have a project that is already using testrepository stestr's source repo contains a helper script for migrating your repo to use stestr. This script just
-creates a .stestr.conf file from a .testr.conf file. (assuming it uses a
+If you have a project that is already using testrepository stestr's source repo
+contains a helper script for migrating your repo to use stestr. This script
+just creates a .stestr.conf file from a .testr.conf file. (assuming it uses a
 standard subunit.run test command format) To run this from your project repo
 just call::
 
