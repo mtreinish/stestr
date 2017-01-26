@@ -14,7 +14,7 @@ Testing and QA
 
 For stestr please add tests where possible. There is no requirement
 for one test per change (because somethings are much harder to automatically
-test than the benfit from such tests). But, if unit testing is reasonable it
+test than the benefit from such tests). But, if unit testing is reasonable it
 will be expected to be present before it can merge.
 
 Running the tests

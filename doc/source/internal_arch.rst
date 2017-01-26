@@ -4,7 +4,7 @@ Internal Architecture
 This document is an attempt to explain at a high level how stestr is
 constructed. It'll likely go stale quickly as the code changes, but hopefully
 it'll be a useful starting point for new developers to understand how the
-stestr is built. Full API documentation can be found at :ref:`api`. It's also 
+stestr is built. Full API documentation can be found at :ref:`api`. It's also
 worth noting that any explanation of workflow or internal operation is not necessarily an exact call path, but instead just a high level explanation of
 how the components operate.
 
@@ -82,9 +82,9 @@ If there is any timing data available in the repository from previous runs this
 is used by the scheduler to try balancing the test load between the workers. For
 the full details on how the partitioning is performed see: :ref:`api_scheduler`.
 
-With a the tests split into multiple groups for eacher worker process we're
+With the tests split into multiple groups for each worker process we're
 ready to start executing the tests. Each group of tests is used to launch a
-subunit.run worker subproccess. As the name implies this is a test runner that
+subunit.run worker subprocess. As the name implies this is a test runner that
 emits a subunit stream to stdout. These stdout streams are combined in real
 time and stored in the repository at the end of the run (using the load
 command). The combined stream is also used for the CLI output either in a

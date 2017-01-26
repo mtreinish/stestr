@@ -9,7 +9,7 @@ Overview
 stestr is an application for running and tracking test results. Any test run
 that can be represented as a subunit stream can be inserted into a repository.
 However, the test running mechanism assumes python is being used. It is
-orignally forked from the testrepository project so the usage is similar.
+originally forked from the testrepository project so the usage is similar.
 
 A typical basic example workflow is::
 
@@ -81,7 +81,7 @@ regexp::
 
     $ stestr --back-regex 'slow_tests|bad_tests'
 
-stestr also allow you to combine these argumants::
+stestr also allow you to combine these arguments::
 
     $ stestr --back-regexp 'slow_tests|bad_tests' ui\.interface
 
@@ -105,7 +105,7 @@ The regexp used in the blacklist file or passed as argument, will be used to
 drop tests from the initial selection list. It will generate a list which will
 exclude any tests matching '^regex1' or '.*regex2'. If a blacklist file is used
 in conjunction with the normal filters then the regex filters passed in as an
-argument regex will be used for the intial test selection, and the exclusion
+argument regex will be used for the initial test selection, and the exclusion
 regexes from the blacklist file on top of that.
 
 The dual of the blacklist file is the whitelist file which will include any
@@ -151,7 +151,7 @@ The ``--failing`` option turns on ``--partial`` automatically (so that if the
 partial test run were to be interrupted, the failing tests that aren't run are
 not lost).
 
-Another common use case is repeating a failure that occured on a remote
+Another common use case is repeating a failure that occurred on a remote
 machine (e.g. during a jenkins test run). There are a few common ways to do
 approach this.
 
@@ -259,7 +259,7 @@ Test Scheduling
 By default stestr schedules the tests by first checking if there is any
 historical timing data on any tests. It then sorts the tests by that timing
 data loops over the tests in order and adds one to each worker that it will
-laucnh. For tests without timing data, the same is done, except the tests are
+launch. For tests without timing data, the same is done, except the tests are
 in alphabetical order instead of based on timing data. If a group regex is used
 the same algorithm is used with groups instead of individual tests.
 
@@ -334,7 +334,7 @@ per test::
 In this mode stestr first determines tests to run (either automatically listed,
 using the failing set, or a user supplied load-list), and then spawns one test
 runner per test it runs. To avoid cross-test-runner interactions concurrency
-is disabled in this mode. ``--analyze-isolation`` supercedes ``--isolated`` if
+is disabled in this mode. ``--analyze-isolation`` supersedes ``--isolated`` if
 they are both supplied.
 
 Repositories
