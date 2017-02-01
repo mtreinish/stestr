@@ -14,6 +14,7 @@
 
 from math import ceil
 import os
+import subprocess
 
 import testtools
 
@@ -74,6 +75,10 @@ def set_cli_opts(parser):
                         ' black regexp list, but you do need to edit a file. '
                         'The black filtering happens after the initial '
                         ' white selection, which by default is everything.')
+    parser.add_argument('--no-discover', '-n', default=None, metavar='TEST_ID',
+                        help="Takes in a single test to bypasses test discover"
+                             " and just execute the test specified. A file "
+                             "name may be used in place of a test name.")
 
 
 def get_cli_help():
@@ -109,6 +114,20 @@ def run(arguments):
         if not os.path.isfile(args.config):
             raise
         repo = util.get_repo_initialise(args.repo_type, args.repo_url)
+    if args.no_discover:
+        ids = args.no_discover
+        if ids.find('/') != -1:
+            root, _ = os.path.splitext(ids)
+            ids = root.replace('/', '.')
+        run_cmd = 'python -m subunit.run ' + ids
+        run_proc = [('subunit', output.ReturnCodeToSubunit(
+            subprocess.Popen(run_cmd, shell=True,
+                             stdout=subprocess.PIPE)))]
+        return load.load((None, None), in_streams=run_proc,
+                         partial=args.partial, subunit_out=args.subunit,
+                         repo_type=args.repo_type,
+                         repo_url=args.repo_url)
+
     if args.failing or args.analyze_isolation:
         ids = _find_failing(repo)
     else:

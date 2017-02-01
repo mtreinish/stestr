@@ -64,9 +64,12 @@ exist) Then to run tests just use::
 
     stestr run
 
-it will then execute all the tests found by test discovery. For all the details
-on these commands and more thorough explanation of options see the
-:ref:`manual`.
+it will then execute all the tests found by test discovery. If you're just
+running a single test (or module) and want to avoid the overhead of doing test
+discovery you can use the ``--no-discover``/``-n`` option.
+
+For all the details on these commands and more thorough explanation of options
+see the :ref:`manual`.
 
 Migrating from testrepository
 -----------------------------

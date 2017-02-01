@@ -67,6 +67,21 @@ Running tests
 To run tests the ``stestr run`` command is used. By default this will run all
 tests discovered using the discovery parameters in the stestr config file.
 
+If you'd like to avoid the overhead of test discovery and just manually execute
+a single test (test class, or module) you can do this using the
+``--no-discover``/``-n`` option. For example::
+
+    stestr run --no-discover project.tests.test_foo.TestFoo
+
+you can also give it a file path and stestr will convert that to the proper
+python path under the covers. (assuming your project don't manually mess with
+import paths) For example::
+
+    stestr run --no-discover project/tests/test_foo.py
+
+will also bypass discovery and directly call subunit.run on the module
+specified.
+
 Test Selection
 --------------
 
