@@ -30,7 +30,7 @@ def set_cli_opts(parser):
     parser.add_argument("--partial", action="store_true",
                         default=False,
                         help="The stream being loaded was a partial run.")
-    parser.add_argument("---force-init", action="store_true",
+    parser.add_argument("--force-init", action="store_true",
                         default=False,
                         help="Initialise the repository if it does not exist "
                              "already")
