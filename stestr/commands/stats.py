@@ -27,5 +27,5 @@ def set_cli_opts(parser):
 
 def run(args):
     repo = util.get_repo_open(args[0].repo_type, args[0].repo_url)
-    sys.stdout.write('%s=%s' % ('runs', repo.count()))
+    sys.stdout.write('%s=%s\n' % ('runs', repo.count()))
     return 0
