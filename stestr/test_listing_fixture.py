@@ -219,8 +219,11 @@ class TestListingFixture(fixtures.Fixture):
             return [run_proc]
         # If there is a worker path, use that to get worker groups
         elif self.worker_path:
+            randomize = False
+            if hasattr(self.options, 'randomize'):
+                randomize = self.options.randomize
             test_id_groups = scheduler.generate_worker_partitions(
-                test_ids, self.worker_path)
+                test_ids, self.worker_path, randomize)
         # If we have multiple workers partition the tests and recursively
         # create single worker TestListingFixtures for each worker
         else:
