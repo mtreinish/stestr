@@ -13,16 +13,13 @@
 """Persistent storage of test results."""
 
 from io import BytesIO
-try:
-    import anydbm as dbm
-except ImportError:
-    import dbm
 import errno
 from operator import methodcaller
 import os.path
 import sys
 import tempfile
 
+from six.moves import dbm_gnu as dbm
 from subunit import TestProtocolClient
 import subunit.v2
 import testtools
