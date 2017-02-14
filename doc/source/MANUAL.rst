@@ -295,6 +295,10 @@ example::
 would create 2 workers. The first would run all tests that match regex 1, and
 the second would run all tests that match regex 2 or regex 3.
 
+There is also an option on ``stestr run``, ``--random``/``-r`` to randomize the
+order of tests as they are passed to the workers. This is useful in certain
+use cases, especially when you want to test isolation between test cases.
+
 Automated test isolation bisection
 ----------------------------------
 

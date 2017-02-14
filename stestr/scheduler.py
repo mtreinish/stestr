@@ -14,13 +14,15 @@ import collections
 import itertools
 import multiprocessing
 import operator
+import random
 
 import yaml
 
 from stestr import selection
 
 
-def partition_tests(test_ids, concurrency, repository, group_callback):
+def partition_tests(test_ids, concurrency, repository, group_callback,
+                    randomize=False):
         """Parition test_ids by concurrency.
 
         Test durations from the repository are used to get partitions which
@@ -38,6 +40,8 @@ def partition_tests(test_ids, concurrency, repository, group_callback):
             scheduling. This function expects a single test_id parameter and it
             will return a group identifier. Tests_ids that have the same group
             identifier will be kept on the same worker.
+        :param bool randomize: If true each partion's test order will be
+                            randomized
 
         :return: A list where each element is a distinct subset of test_ids,
             and the union of all the elements is equal to set(test_ids).
@@ -99,7 +103,15 @@ def partition_tests(test_ids, concurrency, repository, group_callback):
         # the partitions.
         for partition, group_id in zip(itertools.cycle(partitions), unknown):
             partition.extend(group_ids[group_id])
-        return partitions
+        if randomize:
+            out_parts = []
+            for partition in partitions:
+                temp_part = list(partition)
+                random.shuffle(temp_part)
+                out_parts.append(set(temp_part))
+            return out_parts
+        else:
+            return partitions
 
 
 def local_concurrency():

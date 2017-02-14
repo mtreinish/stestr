@@ -79,6 +79,9 @@ def set_cli_opts(parser):
                         help="Takes in a single test to bypasses test discover"
                              " and just execute the test specified. A file "
                              "name may be used in place of a test name.")
+    parser.add_argument('--random', '-r', action="store_true", default=False,
+                        help="Randomize the test order after they are "
+                             "partioned into separate workers")
 
 
 def get_cli_help():
