@@ -12,10 +12,10 @@
 
 """Persistent storage of test results."""
 
-from io import BytesIO
 import errno
+from io import BytesIO
 from operator import methodcaller
-import os.path
+import os
 import sys
 import tempfile
 
@@ -134,7 +134,11 @@ class Repository(repository.AbstractRepository):
     def _get_test_times(self, test_ids):
         # May be too slow, but build and iterate.
         # 'c' because an existing repo may be missing a file.
-        db = dbm.open(self._path('times.dbm'), 'c')
+        try:
+            db = dbm.open(self._path('times.dbm'), 'c')
+        except dbm.error:
+            os.remove(self._path('times.dbm'))
+            db = dbm.open(self._path('times.dbm'), 'c')
         try:
             result = {}
             for test_id in test_ids:
