@@ -108,7 +108,7 @@ def partition_tests(test_ids, concurrency, repository, group_callback,
             for partition in partitions:
                 temp_part = list(partition)
                 random.shuffle(temp_part)
-                out_parts.append(set(temp_part))
+                out_parts.append(list(temp_part))
             return out_parts
         else:
             return partitions
