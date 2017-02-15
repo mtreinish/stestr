@@ -123,13 +123,23 @@ def run(arguments):
             root, _ = os.path.splitext(ids)
             ids = root.replace('/', '.')
         run_cmd = 'python -m subunit.run ' + ids
-        run_proc = [('subunit', output.ReturnCodeToSubunit(
-            subprocess.Popen(run_cmd, shell=True,
-                             stdout=subprocess.PIPE)))]
-        return load.load((None, None), in_streams=run_proc,
-                         partial=args.partial, subunit_out=args.subunit,
-                         repo_type=args.repo_type,
-                         repo_url=args.repo_url)
+
+        def run_tests():
+            run_proc = [('subunit', output.ReturnCodeToSubunit(
+                subprocess.Popen(run_cmd, shell=True,
+                                 stdout=subprocess.PIPE)))]
+            return load.load((None, None), in_streams=run_proc,
+                             partial=args.partial, subunit_out=args.subunit,
+                             repo_type=args.repo_type,
+                             repo_url=args.repo_url)
+
+        if not args.until_failure:
+            return run_tests()
+        else:
+            result = run_tests()
+            while not result:
+                result = run_tests()
+            return result
 
     if args.failing or args.analyze_isolation:
         ids = _find_failing(repo)
