@@ -55,13 +55,20 @@ class TestScheduler(base.TestCase):
     def test_random_partitions(self):
         repo = memory.RepositoryFactory().initialise('memory:')
         test_ids = frozenset(['a_test', 'b_test', 'c_test', 'd_test'])
-        sorted_parts = scheduler.partition_tests(test_ids, 2, repo, None)
         random_parts = scheduler.partition_tests(test_ids, 2, repo, None,
                                                  randomize=True)
-        self.assertNotEqual(sorted_parts, random_parts,
-                            "The sorted list %s is the same order as the "
-                            "shuffled list %s which is incorrect" % (
-                                sorted_parts, random_parts))
+        # NOTE(masayukig): We can't test this randomness. So just checking
+        # what we should get here.
+        self.assertEqual(2, len(random_parts))
+        self.assertTrue(isinstance(random_parts, list))
+        self.assertTrue(isinstance(random_parts[0], list))
+        self.assertTrue(isinstance(random_parts[1], list))
+        flatten_random_parts = []
+        for i, j in random_parts:
+            flatten_random_parts.append(i)
+            flatten_random_parts.append(j)
+        for i in test_ids:
+            self.assertIn(i, flatten_random_parts)
 
     def test_partition_tests_with_zero_duration(self):
         repo = memory.RepositoryFactory().initialise('memory:')
