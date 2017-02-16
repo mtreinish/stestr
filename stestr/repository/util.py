@@ -12,6 +12,7 @@
 
 import importlib
 import os
+import sys
 
 
 def _get_default_repo_url(repo_type):
@@ -32,7 +33,16 @@ def get_repo_open(repo_type, repo_url=None):
     :param str repo_url: An optional repo url, if one is not specified the
         default $CWD/.stestr will be used.
     """
-    repo_module = importlib.import_module('stestr.repository.' + repo_type)
+    try:
+        repo_module = importlib.import_module('stestr.repository.' + repo_type)
+    except ImportError:
+        if repo_type == 'sql':
+            print("sql repository type requirements aren't installed. To use "
+                  "the sql repository ensure you installed the extra "
+                  "requirements with `pip install 'stestr[sql]'`")
+            sys.exit(1)
+        else:
+            raise
     if not repo_url:
         repo_url = _get_default_repo_url(repo_type)
     return repo_module.RepositoryFactory().open(repo_url)
@@ -45,7 +55,16 @@ def get_repo_initialise(repo_type, repo_url=None):
     :param str repo_url: An optional repo url, if one is not specified the
         default $CWD/.stestr will be used.
     """
-    repo_module = importlib.import_module('stestr.repository.' + repo_type)
+    try:
+        repo_module = importlib.import_module('stestr.repository.' + repo_type)
+    except ImportError:
+        if repo_type == 'sql':
+            print("sql repository type requirements aren't installed. To use "
+                  "the sql repository ensure you installed the extra "
+                  "requirements with `pip install 'stestr[sql]'`")
+            sys.exit(1)
+        else:
+            raise
     if not repo_url:
         repo_url = _get_default_repo_url(repo_type)
     return repo_module.RepositoryFactory().initialise(repo_url)

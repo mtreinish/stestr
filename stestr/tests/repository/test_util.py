@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
 import os
 import shutil
 import tempfile
@@ -42,3 +43,19 @@ class TestUtil(base.TestCase):
     def test_get_default_url_invalid_type(self):
         self.assertRaises(TypeError, util._get_default_repo_url,
                           'invalid_type')
+
+    @mock.patch('importlib.import_module', side_effect=ImportError)
+    def test_sql_get_repo_init_no_deps(self, import_mock):
+        self.assertRaises(SystemExit, util.get_repo_initialise, 'sql')
+
+    @mock.patch('importlib.import_module', side_effect=ImportError)
+    def test_non_sql_get_repo_init_no_deps_import_error(self, import_mock):
+        self.assertRaises(ImportError, util.get_repo_initialise, 'file')
+
+    @mock.patch('importlib.import_module', side_effect=ImportError)
+    def test_sql_get_repo_open_no_deps(self, import_mock):
+        self.assertRaises(SystemExit, util.get_repo_open, 'sql')
+
+    @mock.patch('importlib.import_module', side_effect=ImportError)
+    def test_non_sql_get_repo_open_no_deps_import_error(self, import_mock):
+        self.assertRaises(ImportError, util.get_repo_open, 'file')
