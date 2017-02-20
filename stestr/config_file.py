@@ -11,6 +11,7 @@
 # under the License.
 
 import re
+import sys
 
 from six.moves import configparser
 
@@ -29,6 +30,7 @@ class TestrConf(object):
     def __init__(self, config_file):
         self.parser = configparser.ConfigParser()
         self.parser.read(config_file)
+        self.config_file = config_file
 
     def get_run_command(self, options, test_ids=None, regexes=None):
         """Get a test_listing_fixture.TestListingFixture for this config file
@@ -50,6 +52,11 @@ class TestrConf(object):
             test_path = options.test_path
         elif self.parser.has_option('DEFAULT', 'test_path'):
             test_path = self.parser.get('DEFAULT', 'test_path')
+        else:
+            print("no test_path can be found in either the command line "
+                  "options nor in config file {0}.  Are you running stestr "
+                  "from an unexpected location?".format(self.config_file))
+            sys.exit(1)
         top_dir = './'
         if options.top_dir:
             top_dir = options.top_dir
