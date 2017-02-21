@@ -19,7 +19,8 @@ import os
 import sys
 import tempfile
 
-from six.moves import dbm_gnu as dbm
+from future.moves import dbm
+from future.moves.dbm import ndbm as dbm
 from subunit import TestProtocolClient
 import subunit.v2
 import testtools
