@@ -19,7 +19,7 @@ import os
 import sys
 import tempfile
 
-from six.moves import dbm_gnu as dbm
+from future.moves.dbm import dumb as my_dbm
 from subunit import TestProtocolClient
 import subunit.v2
 import testtools
@@ -135,10 +135,10 @@ class Repository(repository.AbstractRepository):
         # May be too slow, but build and iterate.
         # 'c' because an existing repo may be missing a file.
         try:
-            db = dbm.open(self._path('times.dbm'), 'c')
-        except dbm.error:
+            db = my_dbm.open(self._path('times.dbm'), 'c')
+        except my_dbm.error:
             os.remove(self._path('times.dbm'))
-            db = dbm.open(self._path('times.dbm'), 'c')
+            db = my_dbm.open(self._path('times.dbm'), 'c')
         try:
             result = {}
             for test_id in test_ids:
@@ -257,7 +257,7 @@ class _SafeInserter(object):
         final_path = os.path.join(self._repository.base, str(run_id))
         atomicish_rename(self.fname, final_path)
         # May be too slow, but build and iterate.
-        db = dbm.open(self._repository._path('times.dbm'), 'c')
+        db = my_dbm.open(self._repository._path('times.dbm'), 'c')
         try:
             db_times = {}
             for key, value in self._times.items():
