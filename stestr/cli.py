@@ -99,7 +99,10 @@ def main():
     # python being run here
     if 'PYTHON' not in os.environ:
         os.environ['PYTHON'] = sys.executable
-    sys.exit(args[0].func(args))
+    if hasattr(args[0], 'func'):
+        sys.exit(args[0].func(args))
+    else:
+        cli.parser.print_help()
 
 
 if __name__ == '__main__':
