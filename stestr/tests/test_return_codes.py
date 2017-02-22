@@ -89,3 +89,6 @@ class TestReturnCodes(base.TestCase):
 
     def test_list(self):
         self.assertRunExit('stestr list', 0)
+
+    def test_no_command(self):
+        self.assertRunExit('stestr', 2)
