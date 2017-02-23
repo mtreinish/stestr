@@ -244,9 +244,9 @@ class _SqlInserter(repository.AbstractTestRun):
             else:
                 self.totals[test_dict['status']] += 1
             values = {}
-            if test_dict['status'] == 'success' or 'xfail':
+            if test_dict['status'] in ('success', 'xfail'):
                 values['passes'] = self.totals['success']
-            elif test_dict['status'] == 'fail' or 'uxsuccess':
+            elif test_dict['status'] in ('fail', 'uxsuccess'):
                 values['fails'] = self.totals['fail']
             elif test_dict['status'] == 'skip':
                 values['skips'] = self.totals['skip']
