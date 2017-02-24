@@ -99,7 +99,14 @@ def main():
     # python being run here
     if 'PYTHON' not in os.environ:
         os.environ['PYTHON'] = sys.executable
-    sys.exit(args[0].func(args))
+    if hasattr(args[0], 'func'):
+        sys.exit(args[0].func(args))
+    else:
+        cli.parser.print_help()
+        # NOTE(andreaf) This point is reached only when using Python 3.x.
+        # Python 2.x fails with return code 2 in case of no
+        # command, so using 2 for consistency
+        sys.exit(2)
 
 
 if __name__ == '__main__':
