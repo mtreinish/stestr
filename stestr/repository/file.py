@@ -258,7 +258,7 @@ class _SafeInserter(object):
         final_path = os.path.join(self._repository.base, str(run_id))
         atomicish_rename(self.fname, final_path)
         # May be too slow, but build and iterate.
-        db = dbm.open(self._repository._path('times.dbm'), 'c')
+        db = my_dbm.open(self._repository._path('times.dbm'), 'c')
         try:
             db_times = {}
             for key, value in self._times.items():
