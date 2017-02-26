@@ -19,7 +19,6 @@ import os
 import sys
 import tempfile
 
-from future.moves import dbm
 from future.moves.dbm import ndbm as my_dbm
 from subunit import TestProtocolClient
 import subunit.v2
