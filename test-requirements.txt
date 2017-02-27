@@ -7,3 +7,4 @@ sphinx!=1.3b1,<1.4,>=1.2.1 # BSD
 mock>=2.0 # BSD
 coverage>=3.6 # Apache-2.0
 reno>=2.0.3 # Apache-2.0
+subunit2sql>=1.8.0
