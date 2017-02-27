@@ -170,6 +170,15 @@ class TestListingFixture(fixtures.Fixture):
         """Clear SIGPIPE : child processes expect the default handler."""
         signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
+    def _start_process(self, cmd):
+        # NOTE(claudiub): Windows does not support passing in a preexec_fn
+        # argument.
+        preexec_fn = None if sys.platform == 'win32' else self._clear_SIGPIPE
+        return subprocess.Popen(cmd, shell=True,
+                                stdout=subprocess.PIPE,
+                                stdin=subprocess.PIPE,
+                                preexec_fn=preexec_fn)
+
     def list_tests(self):
         """List the tests returned by list_cmd.
 
@@ -178,10 +187,7 @@ class TestListingFixture(fixtures.Fixture):
         if '$LISTOPT' not in self.template:
             raise ValueError("LISTOPT not configured in .testr.conf")
         output.output_values([('running', self.list_cmd)])
-        run_proc = subprocess.Popen(self.list_cmd, shell=True,
-                                    stdout=subprocess.PIPE,
-                                    stdin=subprocess.PIPE,
-                                    preexec_fn=self._clear_SIGPIPE)
+        run_proc = self._start_process(self.list_cmd)
         out, err = run_proc.communicate()
         if run_proc.returncode != 0:
             new_out = six.BytesIO()
@@ -208,10 +214,7 @@ class TestListingFixture(fixtures.Fixture):
         # in the parallel case)
         if self.concurrency == 1 and (test_ids is None or test_ids):
             output.output_values([('running', self.cmd)])
-            run_proc = subprocess.Popen(
-                self.cmd, shell=True,
-                stdout=subprocess.PIPE, stdin=subprocess.PIPE,
-                preexec_fn=self._clear_SIGPIPE)
+            run_proc = self._start_process(self.cmd)
             # Prevent processes stalling if they read from stdin; we could
             # pass this through in future, but there is no point doing that
             # until we have a working can-run-debugger-inline story.

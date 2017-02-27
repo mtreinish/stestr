@@ -62,8 +62,10 @@ class TestrConf(object):
             top_dir = options.top_dir
         elif self.parser.has_option('DEFAULT', 'top_dir'):
             top_dir = self.parser.get('DEFAULT', 'top_dir')
-        command = "${PYTHON:-python} -m subunit.run discover -t" \
-                  " %s %s $LISTOPT $IDOPTION" % (top_dir, test_path)
+
+        python = 'python' if sys.platform == 'win32' else '${PYTHON:-python}'
+        command = "%s -m subunit.run discover -t" \
+                  " %s %s $LISTOPT $IDOPTION" % (python, top_dir, test_path)
         listopt = "--list"
         idoption = "--load-list $IDFILE"
         # If the command contains $IDOPTION read that command from config
