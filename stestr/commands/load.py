@@ -37,6 +37,9 @@ def set_cli_opts(parser):
     parser.add_argument("--subunit", action="store_true",
                         default=False,
                         help="Display results in subunit format.")
+    parser.add_argument("--id", "-i", default=None,
+                        help="Append the stream into an existing entry in the "
+                             "repository")
 
 
 def get_cli_help():
@@ -124,7 +127,13 @@ def load(arguments, in_streams=None, partial=False, subunit_out=False,
     if args:
         _subunit = getattr(args, 'subunit')
     _subunit_out = _subunit or subunit_out
-    inserter = repo.get_inserter(partial=partial_stream)
+    _run_id = None
+    if args:
+        _run_id = getattr(args, 'id')
+    if not _run_id:
+        inserter = repo.get_inserter(partial=partial_stream)
+    else:
+        inserter = repo.get_inserter(partial=partial_stream, run_id=_run_id)
     if _subunit_out:
         output_result, summary_result = output.make_result(inserter.get_id)
     else:

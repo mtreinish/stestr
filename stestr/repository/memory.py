@@ -71,8 +71,8 @@ class Repository(repository.AbstractRepository):
             raise KeyError("No tests in repository")
         return result
 
-    def _get_inserter(self, partial):
-        return _Inserter(self, partial)
+    def _get_inserter(self, partial, run_id=None):
+        return _Inserter(self, partial, run_id)
 
     def _get_test_times(self, test_ids):
         result = {}
@@ -127,12 +127,13 @@ class _Failures(repository.AbstractTestRun):
 class _Inserter(repository.AbstractTestRun):
     """Insert test results into a memory repository."""
 
-    def __init__(self, repository, partial):
+    def __init__(self, repository, partial, run_id=None):
         self._repository = repository
         self._partial = partial
         self._tests = []
         # Subunit V2 stream for get_subunit_stream
         self._subunit = None
+        self._run_id = run_id
 
     def startTestRun(self):
         self._subunit = BytesIO()
@@ -157,7 +158,8 @@ class _Inserter(repository.AbstractTestRun):
     def stopTestRun(self):
         self._hook.stopTestRun()
         self._repository._runs.append(self)
-        self._run_id = len(self._repository._runs) - 1
+        if not self._run_id:
+            self._run_id = len(self._repository._runs) - 1
         if not self._partial:
             self._repository._failing = OrderedDict()
         for test_dict in self._tests:
