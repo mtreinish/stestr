@@ -17,7 +17,7 @@ import sys
 
 from stestr import version
 
-__version__ = version.version_info.version_string()
+__version__ = version.version_info.version_string_with_vcs()
 
 
 class StestrCLI(object):
