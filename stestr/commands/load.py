@@ -80,7 +80,7 @@ def run(arguments):
 
 
 def load(arguments, in_streams=None, partial=False, subunit_out=False,
-         repo_type=None, repo_url=None):
+         repo_type=None, repo_url=None, run_id=None):
     args = arguments[0]
     streams = arguments[1]
     if args:
@@ -130,6 +130,7 @@ def load(arguments, in_streams=None, partial=False, subunit_out=False,
     _run_id = None
     if args:
         _run_id = getattr(args, 'id')
+    _run_id = _run_id or run_id
     if not _run_id:
         inserter = repo.get_inserter(partial=partial_stream)
     else:

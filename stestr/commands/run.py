@@ -16,6 +16,7 @@ from math import ceil
 import os
 import subprocess
 
+import six
 import testtools
 
 from stestr.commands import load
@@ -82,6 +83,9 @@ def set_cli_opts(parser):
     parser.add_argument('--random', '-r', action="store_true", default=False,
                         help="Randomize the test order after they are "
                              "partitioned into separate workers")
+    parser.add_argument('--combine', action='store_true', default=False,
+                        help="Combine the results from the test run with the "
+                             "last run in the repository")
 
 
 def get_cli_help():
@@ -121,6 +125,10 @@ def run(arguments):
             print(msg)
             exit(1)
         repo = util.get_repo_initialise(args.repo_type, args.repo_url)
+    combine_id = None
+    if args.combine:
+        latest_id = repo.latest_id()
+        combine_id = six.text_type(latest_id)
     if args.no_discover:
         ids = args.no_discover
         if ids.find('/') != -1:
@@ -135,7 +143,7 @@ def run(arguments):
             return load.load((None, None), in_streams=run_proc,
                              partial=args.partial, subunit_out=args.subunit,
                              repo_type=args.repo_type,
-                             repo_url=args.repo_url)
+                             repo_url=args.repo_url, run_id=combine_id)
 
         if not args.until_failure:
             return run_tests()
@@ -179,14 +187,16 @@ def run(arguments):
                                         args.analyze_isolation,
                                         args.isolated,
                                         args.until_failure,
-                                        subunit_out=args.subunit)
+                                        subunit_out=args.subunit,
+                                        combine_id=combine_id)
                 if run_result > result:
                     result = run_result
             return result
         else:
             return _run_tests(cmd, args.failing, args.analyze_isolation,
                               args.isolated, args.until_failure,
-                              subunit_out=args.subunit)
+                              subunit_out=args.subunit,
+                              combine_id=combine_id)
     else:
         # Where do we source data about the cause of conflicts.
         # XXX: Should instead capture the run id in with the failing test
@@ -321,7 +331,7 @@ def _prior_tests(self, run, failing_id):
 
 
 def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
-               subunit_out=False):
+               subunit_out=False, combine_id=None):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
@@ -338,7 +348,7 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
             return load.load((None, None), in_streams=run_procs,
                              partial=partial, subunit_out=subunit_out,
                              repo_type=cmd.options.repo_type,
-                             repo_url=cmd.options.repo_url)
+                             repo_url=cmd.options.repo_url, run_id=combine_id)
 
         if not until_failure:
             return run_tests()
