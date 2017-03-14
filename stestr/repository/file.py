@@ -128,8 +128,8 @@ class Repository(repository.AbstractRepository):
                 raise
         return _DiskRun(run_id, run_subunit_content)
 
-    def _get_inserter(self, partial):
-        return _Inserter(self, partial)
+    def _get_inserter(self, partial, run_id=None):
+        return _Inserter(self, partial, run_id)
 
     def _get_test_times(self, test_ids):
         # May be too slow, but build and iterate.
@@ -219,13 +219,18 @@ class _DiskRun(repository.AbstractTestRun):
 
 class _SafeInserter(object):
 
-    def __init__(self, repository, partial=False):
+    def __init__(self, repository, partial=False, run_id=None):
         # XXX: Perhaps should factor into a decorator and use an unaltered
         # TestProtocolClient.
         self._repository = repository
-        fd, name = tempfile.mkstemp(dir=self._repository.base)
-        self.fname = name
-        stream = os.fdopen(fd, 'wb')
+        self._run_id = run_id
+        if not self._run_id:
+            fd, name = tempfile.mkstemp(dir=self._repository.base)
+            self.fname = name
+            stream = os.fdopen(fd, 'wb')
+        else:
+            self.fname = os.path.join(self._repository.base, self._run_id)
+            stream = open(self.fname, 'ab')
         self.partial = partial
         # The time take by each test, flushed at the end.
         self._times = {}
@@ -247,15 +252,15 @@ class _SafeInserter(object):
 
     def startTestRun(self):
         self.hook.startTestRun()
-        self._run_id = None
 
     def stopTestRun(self):
         self.hook.stopTestRun()
         self._stream.flush()
         self._stream.close()
         run_id = self._name()
-        final_path = os.path.join(self._repository.base, str(run_id))
-        atomicish_rename(self.fname, final_path)
+        if not self._run_id:
+            final_path = os.path.join(self._repository.base, str(run_id))
+            atomicish_rename(self.fname, final_path)
         # May be too slow, but build and iterate.
         db = my_dbm.open(self._repository._path('times.dbm'), 'c')
         try:
@@ -271,7 +276,8 @@ class _SafeInserter(object):
                     db[key] = value
         finally:
             db.close()
-        self._run_id = run_id
+        if not self._run_id:
+            self._run_id = run_id
 
     def status(self, *args, **kwargs):
         self.hook.status(*args, **kwargs)
@@ -295,7 +301,10 @@ class _FailingInserter(_SafeInserter):
 class _Inserter(_SafeInserter):
 
     def _name(self):
-        return self._repository._allocate()
+        if not self._run_id:
+            return self._repository._allocate()
+        else:
+            return self._run_id
 
     def stopTestRun(self):
         super(_Inserter, self).stopTestRun()

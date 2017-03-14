@@ -107,8 +107,8 @@ class Repository(repository.AbstractRepository):
     def get_test_run(self, run_id):
         return _Subunit2SqlRun(self.base, run_id)
 
-    def _get_inserter(self, partial):
-        return _SqlInserter(self, partial)
+    def _get_inserter(self, partial, run_id=None):
+        return _SqlInserter(self, partial, run_id)
 
     def _get_test_times(self, test_ids):
         result = {}
@@ -172,11 +172,11 @@ class _Subunit2SqlRun(repository.AbstractTestRun):
 class _SqlInserter(repository.AbstractTestRun):
     """Insert test results into a sql repository."""
 
-    def __init__(self, repository, partial=False):
+    def __init__(self, repository, partial=False, run_id=None):
         self._repository = repository
         self.partial = partial
         self._subunit = None
-        self._run_id = None
+        self._run_id = run_id
         # Create a new session factory
         self.engine = sqlalchemy.create_engine(self._repository.base)
         self.session_factory = orm.sessionmaker(bind=self.engine,
@@ -191,8 +191,12 @@ class _SqlInserter(repository.AbstractTestRun):
         self.hook.startTestRun()
         self.start_time = datetime.datetime.utcnow()
         session = self.session_factory()
-        self.run = db_api.create_run(session=session)
-        self._run_id = self.run.uuid
+        if not self._run_id:
+            self.run = db_api.create_run(session=session)
+            self._run_id = self.run.uuid
+        else:
+            int_id = db_api.get_run_id_from_uuid(self._run_id, session=session)
+            self.run = db_api.get_run_by_id(int_id, session=session)
         session.close()
         self.totals = {}
 
