@@ -13,3 +13,6 @@ __pycache__
 doc/build/
 releasenotes/build/
 .stestr.sqlite
+.coverage*
+!.coveragerc
+cover/
