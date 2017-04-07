@@ -2,3 +2,4 @@
 branch = True
 source = stestr
 omit = stestr/tests/*
+parallel = True
