@@ -1,6 +1,13 @@
 Slim/Super Test Repository
 ==========================
 
+.. image:: https://travis-ci.org/mtreinish/stestr.svg?branch=master
+    :target: https://travis-ci.org/mtreinish/stestr
+
+.. image:: https://coveralls.io/repos/github/mtreinish/stestr/badge.svg?branch=master
+    :target: https://coveralls.io/github/mtreinish/stestr?branch=master
+
+
 You can see the full rendered docs at: http://stestr.readthedocs.io/en/latest/
 
 Overview
