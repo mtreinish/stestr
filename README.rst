@@ -7,6 +7,8 @@ Slim/Super Test Repository
 .. image:: https://coveralls.io/repos/github/mtreinish/stestr/badge.svg?branch=master
     :target: https://coveralls.io/github/mtreinish/stestr?branch=master
 
+.. image:: https://img.shields.io/pypi/v/stestr.svg
+    :target: https://pypi.python.org/pypi/stestr
 
 You can see the full rendered docs at: http://stestr.readthedocs.io/en/latest/
 
