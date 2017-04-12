@@ -23,7 +23,7 @@ from stestr import selection
 
 def partition_tests(test_ids, concurrency, repository, group_callback,
                     randomize=False):
-        """Parition test_ids by concurrency.
+        """Partition test_ids by concurrency.
 
         Test durations from the repository are used to get partitions which
         have roughly the same expected runtime. New tests - those with no
@@ -32,7 +32,7 @@ def partition_tests(test_ids, concurrency, repository, group_callback,
 
         :param list test_ids: The list of test_ids to be partitioned
         :param int concurrency: The concurrency that will be used for running
-            the tests. This is the number of patitions that test_ids will be
+            the tests. This is the number of partitions that test_ids will be
             split into.
         :param repository: A repository object that
         :param group_callback: A callback function that is used as a scheduler
@@ -40,7 +40,7 @@ def partition_tests(test_ids, concurrency, repository, group_callback,
             scheduling. This function expects a single test_id parameter and it
             will return a group identifier. Tests_ids that have the same group
             identifier will be kept on the same worker.
-        :param bool randomize: If true each partion's test order will be
+        :param bool randomize: If true each partition's test order will be
                             randomized
 
         :return: A list where each element is a distinct subset of test_ids,

@@ -5,7 +5,8 @@ This document is an attempt to explain at a high level how stestr is
 constructed. It'll likely go stale quickly as the code changes, but hopefully
 it'll be a useful starting point for new developers to understand how the
 stestr is built. Full API documentation can be found at :ref:`api`. It's also
-worth noting that any explanation of workflow or internal operation is not necessarily an exact call path, but instead just a high level explanation of
+worth noting that any explanation of workflow or internal operation is not
+necessarily an exact call path, but instead just a high level explanation of
 how the components operate.
 
 Basic Structure
@@ -73,7 +74,8 @@ is unittest discovery (via subunit.run --discover) which is used to get a
 complete list of tests present. This list is then filtered by any user provided
 selection mechanisms. (for example a cli regex filter) This is used to select
 which tests the user actually intends to run. For more details on test
-selection see: :ref:`api_selection` which defines the functions which are used to actually perform the filtering.
+selection see: :ref:`api_selection` which defines the functions which are used
+to actually perform the filtering.
 
 Once there is complete list of tests that will be run the list gets passed
 to the scheduler/partitioner. The scheduler takes the list of tests and splits

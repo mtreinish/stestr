@@ -18,7 +18,7 @@ The AbstractRepository class defines the contract to which any Repository
 implementation must adhere.
 
 The stestr.repository.file module (see: :ref:`api_repository_file` is the usual
-repository that will be used. The stestr.repostiory.memory module (see:
+repository that will be used. The stestr.repository.memory module (see:
 :ref:`api_repository_memory`) provides a memory only repository useful for
 internal testing.
 
@@ -56,7 +56,7 @@ class AbstractRepository(object):
     def count(self):
         """Return the number of test runs this repository has stored.
 
-        :return count: The count of test runs stored in the repositor.
+        :return count: The count of test runs stored in the repository.
         """
         raise NotImplementedError(self.count)
 

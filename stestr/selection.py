@@ -38,7 +38,7 @@ def filter_tests(filters, test_ids):
 
 def black_reader(blacklist_file):
     black_file = open(blacklist_file, 'r')
-    regex_comment_lst = []  # tupple of (regex_compild, msg, skipped_lst)
+    regex_comment_lst = []  # tuple of (regex_compiled, msg, skipped_lst)
     for line in black_file:
         raw_line = line.strip()
         split_line = raw_line.split('#')
@@ -88,10 +88,10 @@ def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
     :param str black_regex:
     :param bool print_exclude:  If True print a message for each test case
         excluded
-    :param file ouput: Optional ouptut to write print_exclude to. By default it
-        is sys.stdout
+    :param file output: Optional output to write print_exclude to. By default
+        it is sys.stdout
 
-    :retrun: iterable of strings. The strings are full
+    :return: iterable of strings. The strings are full
         test_ids
     :rtype: set
     """
@@ -115,7 +115,7 @@ def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
         black_data = None
 
     if black_regex:
-        msg = "Skipped bacuse of regexp provided as a command line argument:"
+        msg = "Skipped because of regexp provided as a command line argument:"
         record = (re.compile(black_regex), msg, [])
         if black_data:
             black_data.append(record)
