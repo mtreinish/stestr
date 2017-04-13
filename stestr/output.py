@@ -116,7 +116,7 @@ def output_summary(successful, tests, tests_delta, time, time_delta, values,
     :param int tests_delta: The change in the number of tests that ran since
         the last run
     :param float time: The number of seconds that it took for the run to
-        exectute
+        execute
     :param float time_delta: The change in run time since the last run
     :param values: A list of sets that are used for a breakdown of statuses
         other than success. Each set is in the format:
@@ -171,7 +171,7 @@ def output_stream(stream, output=sys.stdout):
 class ReturnCodeToSubunit(object):
     """Converts a process return code to a subunit error on the process stdout.
 
-    The ReturnCodeToSubunit object behaves as a readonly stream, supplying
+    The ReturnCodeToSubunit object behaves as a read-only stream, supplying
     the read, readline and readlines methods. If the process exits non-zero a
     synthetic test is added to the output, making the error accessible to
     subunit stream consumers. If the process closes its stdout and then does

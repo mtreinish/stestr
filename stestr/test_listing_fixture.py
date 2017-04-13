@@ -45,8 +45,7 @@ class TestListingFixture(fixtures.Fixture):
         filled out with the IDFILE when it is created.
     :param listopt: Option to substitute into LISTOPT to cause test listing
                     to take place.
-    :param idoption: Option to substitutde into cmd when supplying any test
-                     ids.
+    :param idoption: Option to substitute into cmd when supplying any test ids.
     :param repository: The repository to query for test times, if needed.
     :param parallel: If not True, prohibit parallel use : used to implement
                      --parallel run recursively.
@@ -54,7 +53,7 @@ class TestListingFixture(fixtures.Fixture):
                      is created.
     :param test_filters: An optional list of test filters to apply. Each
         filter should be a string suitable for passing to re.compile.
-        filters are applied using search() rather than match(), so if
+        Filters are applied using search() rather than match(), so if
         anchoring is needed it should be included in the regex.
         The test ids used for executing are the union of all the
         individual filters: to take the intersection instead, craft a
@@ -210,8 +209,8 @@ class TestListingFixture(fixtures.Fixture):
         """
         result = []
         test_ids = self.test_ids
-        # Handle the single worker case (this is also run recursivly per worker
-        # in the parallel case)
+        # Handle the single worker case (this is also run recursively per
+        # worker in the parallel case)
         if self.concurrency == 1 and (test_ids is None or test_ids):
             output.output_values([('running', self.cmd)])
             run_proc = self._start_process(self.cmd)
