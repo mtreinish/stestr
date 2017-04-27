@@ -53,9 +53,10 @@ class TestrConf(object):
         elif self.parser.has_option('DEFAULT', 'test_path'):
             test_path = self.parser.get('DEFAULT', 'test_path')
         else:
-            print("no test_path can be found in either the command line "
-                  "options nor in config file {0}.  Are you running stestr "
-                  "from an unexpected location?".format(self.config_file))
+            print("No test_path can be found in either the command line "
+                  "options nor in the specified config file {0}.  Please "
+                  "specify a test path either in the config file or via the "
+                  "--test-path argument".format(self.config_file))
             sys.exit(1)
         top_dir = './'
         if options.top_dir:
