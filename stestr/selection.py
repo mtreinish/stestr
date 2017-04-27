@@ -11,7 +11,6 @@
 # under the License.
 
 import re
-import sys
 
 
 def filter_tests(filters, test_ids):
@@ -55,13 +54,6 @@ def black_reader(blacklist_file):
     return regex_comment_lst
 
 
-def print_skips(regex, message, test_list):
-    for test in test_list:
-        print(test)
-    # Extra whitespace to separate
-    print('\n')
-
-
 def _get_regex_from_whitelist_file(file_path):
     lines = []
     for line in open(file_path).read().splitlines():
@@ -74,8 +66,7 @@ def _get_regex_from_whitelist_file(file_path):
 
 
 def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
-                   regexes=None, black_regex=None, print_exclude=False,
-                   output=sys.stdout):
+                   regexes=None, black_regex=None):
     """Filters the discovered test cases
 
     :param list test_ids: The set of test_ids to be filtered
@@ -86,10 +77,6 @@ def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
         of the regexes in this list. If this is None all test_ids will be
         returned
     :param str black_regex:
-    :param bool print_exclude:  If True print a message for each test case
-        excluded
-    :param file output: Optional output to write print_exclude to. By default
-        it is sys.stdout
 
     :return: iterable of strings. The strings are full
         test_ids
@@ -139,8 +126,4 @@ def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
                     set_of_test_cases.remove(test_case)
                     s_list.append(test_case)
 
-    if print_exclude:
-        for (rex, msg, s_list) in black_data:
-            if s_list:
-                print_skips(rex, msg, s_list)
     return set_of_test_cases
