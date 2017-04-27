@@ -21,7 +21,6 @@ import fixtures
 import six
 from subunit import v2
 
-from stestr import output
 from stestr import results
 from stestr import scheduler
 from stestr import selection
@@ -183,22 +182,26 @@ class TestListingFixture(fixtures.Fixture):
 
         :return: A list of test ids.
         """
-        if '$LISTOPT' not in self.template:
-            raise ValueError("LISTOPT not configured in .testr.conf")
-        output.output_values([('running', self.list_cmd)])
         run_proc = self._start_process(self.list_cmd)
         out, err = run_proc.communicate()
         if run_proc.returncode != 0:
+            sys.stdout.write("\n=========================\n"
+                             "Failures during discovery"
+                             "\n=========================\n")
             new_out = six.BytesIO()
             v2.ByteStreamToStreamResult(
                 six.BytesIO(out), 'stdout').run(
                     results.CatFiles(new_out))
             out = new_out.getvalue()
-            sys.stdout.write(six.text_type(out))
-            sys.stderr.write(six.text_type(err))
-            raise ValueError(
-                "Non-zero exit code (%d) from test listing."
-                % (run_proc.returncode))
+            if out:
+                sys.stdout.write(six.text_type(out))
+            if err:
+                sys.stderr.write(six.text_type(err))
+            sys.stdout.write("\n" + "=" * 80 + "\n"
+                             "The above traceback was encountered during "
+                             "test discovery which imports all the found test"
+                             " modules in the specified test_path.\n")
+            exit(100)
         ids = testlist.parse_enumeration(out)
         return ids
 
@@ -212,7 +215,6 @@ class TestListingFixture(fixtures.Fixture):
         # Handle the single worker case (this is also run recursively per
         # worker in the parallel case)
         if self.concurrency == 1 and (test_ids is None or test_ids):
-            output.output_values([('running', self.cmd)])
             run_proc = self._start_process(self.cmd)
             # Prevent processes stalling if they read from stdin; we could
             # pass this through in future, but there is no point doing that
