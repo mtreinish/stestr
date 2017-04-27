@@ -93,20 +93,6 @@ def make_result(get_id, output=sys.stdout):
     return result, summary
 
 
-def output_values(values, output=sys.stdout):
-    """Display key value pairs.
-
-    :param values: A list of tuples for key value pairs. Each tuple in the list
-        is of the form (key, value).
-    :param output: The output file object to write the list to. By default this
-        is sys.stdout
-    """
-    outputs = []
-    for label, value in values:
-        outputs.append('%s=%s' % (label, value))
-    output.write(six.text_type('%s\n' % ', '.join(outputs)))
-
-
 def output_summary(successful, tests, tests_delta, time, time_delta, values,
                    output=sys.stdout):
     """Display a summary view for the test run.
