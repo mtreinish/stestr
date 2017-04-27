@@ -114,8 +114,12 @@ def run(arguments):
         repo = util.get_repo_open(args.repo_type, args.repo_url)
     # If a repo is not found, and there a testr config exists just create it
     except repository.RepositoryNotFound:
-        if not os.path.isfile(args.config):
-            raise
+        if not os.path.isfile(args.config) and not args.test_path:
+            msg = ("No config file found and --test-path not specified. "
+                   "Either create or specify a .stestr.conf or use "
+                   "--test-path ")
+            print(msg)
+            exit(1)
         repo = util.get_repo_initialise(args.repo_type, args.repo_url)
     if args.no_discover:
         ids = args.no_discover
