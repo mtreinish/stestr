@@ -38,7 +38,11 @@ class TestSqlRepository(base.TestCase):
 
     def setUp(self):
         super(TestSqlRepository, self).setUp()
-        _, self.tempfile = tempfile.mkstemp(suffix='.sqlite')
+        # NOTE(mtreinish): Windows likes to fail if the file is already open
+        # when we access it later, so lets explicitly close it before we move
+        # forward
+        _close_me, self.tempfile = tempfile.mkstemp(suffix='.sqlite')
+        os.close(_close_me)
         self.addCleanup(os.remove, self.tempfile)
         self.url = 'sqlite:///' + self.tempfile
 

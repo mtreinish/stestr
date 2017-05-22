@@ -17,6 +17,7 @@ import shutil
 import tempfile
 
 import fixtures
+import testtools
 from testtools import matchers
 
 from stestr.repository import file
@@ -75,6 +76,8 @@ class TestFileRepository(base.TestCase):
             stream.close()
         self.assertEqual("0\n", contents)
 
+    # Skip if windows since ~ in a path doesn't work there
+    @testtools.skipIf(os.name == 'nt', "Windows doesn't support '~' expand")
     def test_initialise_expands_user_directory(self):
         short_path = self.useFixture(HomeDirTempDir()).short_path
         repo = file.RepositoryFactory().initialise(short_path)
@@ -95,6 +98,8 @@ class TestFileRepository(base.TestCase):
         result.stopTestRun()
         self.assertEqual(0, result.get_id())
 
+    # Skip if windows since ~ in a path doesn't work there
+    @testtools.skipIf(os.name == 'nt', "Windows doesn't support '~' expand")
     def test_open_expands_user_directory(self):
         short_path = self.useFixture(HomeDirTempDir()).short_path
         repo1 = file.RepositoryFactory().initialise(short_path)
@@ -108,6 +113,8 @@ class TestFileRepository(base.TestCase):
             matchers.MatchesException(
                 ValueError("Corrupt next-stream file: ''"))))
 
+    # Skip if windows since chmod doesn't work there
+    @testtools.skipIf(os.name == 'nt', "Windows doesn't support chmod")
     def test_get_test_run_unexpected_ioerror_errno(self):
         repo = self.useFixture(FileRepositoryFixture()).repo
         inserter = repo.get_inserter()
