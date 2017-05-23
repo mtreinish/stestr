@@ -146,6 +146,20 @@ selection options to do this, for example::
 This will list all the tests which will be run by stestr using that combination
 of arguments.
 
+Combining Test Results
+----------------------
+There is sometimes a use case for running a single test suite split between
+multiple invocations of the stestr run command. For example, running a subset
+of tests with a different concurrency. In these cases you can use the
+``--combine`` flag on ``stestr run```. When this flag is specified stestr will
+append the subunit stream from the test run into the most recent entry in the
+repository.
+
+Alternatively, you can manually load the test results from a subunit stream into
+an existing test result in the repository using the ``--id``/``-i`` flag on
+the ``stestr load`` command. This will append the results from the input subunit
+stream to the specified id.
+
 
 Running previously failed tests
 '''''''''''''''''''''''''''''''

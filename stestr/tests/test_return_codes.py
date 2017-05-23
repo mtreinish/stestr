@@ -13,11 +13,14 @@
 #    under the License.
 
 import os
+import re
 import shutil
 import subprocess
 import tempfile
 
+import six
 from six import StringIO
+
 from stestr.tests import base
 
 DEVNULL = open(os.devnull, 'wb')
@@ -95,3 +98,32 @@ class TestReturnCodes(base.TestCase):
 
     def test_no_command(self):
         self.assertRunExit('stestr', 2)
+
+    def _get_cmd_stdout(self, cmd):
+        p = subprocess.Popen(cmd, shell=True,
+                             stdout=subprocess.PIPE)
+        out = p.communicate()
+        self.assertEqual(0, p.returncode)
+        return out
+
+    def test_combine_results(self):
+        self.assertRunExit('stestr run passing', 0)
+        stdout = self._get_cmd_stdout('stestr last')
+        stdout = six.text_type(stdout[0])
+        test_count_split = stdout.split(' ')
+        test_count = test_count_split[1]
+        test_count = int(test_count)
+        id_regex = re.compile('\(id=(.*?)\)')
+        test_id = id_regex.search(stdout).group(0)
+        self.assertRunExit('stestr run --combine passing', 0)
+        combine_stdout = self._get_cmd_stdout('stestr last')[0]
+        combine_stdout = six.text_type(combine_stdout)
+        combine_test_count_split = combine_stdout.split(' ')
+        combine_test_count = combine_test_count_split[1]
+        combine_test_count = int(combine_test_count)
+        combine_test_id = id_regex.search(combine_stdout).group(0)
+        self.assertEqual(test_id, combine_test_id)
+
+        # The test results from running the same tests twice with combine
+        # should return a test count 2x as big at the end of the run
+        self.assertEqual(test_count * 2, combine_test_count)
