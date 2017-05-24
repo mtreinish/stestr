@@ -27,7 +27,7 @@ from stestr import selection
 from stestr import testlist
 
 
-class TestListingFixture(fixtures.Fixture):
+class TestProcessorFixture(fixtures.Fixture):
     """Write a temporary file to disk with test ids in it.
 
     The TestListingFixture is used to handle the lifecycle of running
