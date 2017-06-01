@@ -8,6 +8,8 @@ matrix:
       env: TOXENV=py35
     - python: "3.6"
       env: TOXENV=py36
+    - python: "3.6"
+      env: TOXENV=cover
     - python: "3.5"
       env: TOXENV=pep8
     - python: "2.7"
@@ -19,7 +21,6 @@ install: pip install -U tox coveralls
 language: python
 script:
   - tox
-  - tox -e cover
-after_success: coveralls
+after_success: .travis/coveralls.sh
 notifications:
   email: false
