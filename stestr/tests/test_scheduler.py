@@ -169,3 +169,37 @@ class TestScheduler(base.TestCase):
             ['test_a', 'test_b', 'your_test'],
         ]
         self.assertEqual(expected_grouping, groups)
+
+    @mock.patch('six.moves.builtins.open', mock.mock_open(), create=True)
+    def test_generate_worker_partitions_with_count(self):
+        test_ids = ['test_a', 'test_b', 'your_test', 'a_thing1', 'a_thing2']
+        fake_worker_yaml = [
+            {'worker': ['test_']},
+            {'worker': ['test']},
+            {'worker': ['a_thing'], 'concurrency': 2},
+        ]
+        with mock.patch('yaml.load', return_value=fake_worker_yaml):
+            groups = scheduler.generate_worker_partitions(test_ids, 'fakepath')
+        expected_grouping = [
+            ['test_a', 'test_b'],
+            ['test_a', 'test_b', 'your_test'],
+            ['a_thing1'],
+            ['a_thing2'],
+        ]
+        for worker in expected_grouping:
+            self.assertIn(worker, groups)
+
+    @mock.patch('six.moves.builtins.open', mock.mock_open(), create=True)
+    def test_generate_worker_partitions_with_count_1(self):
+        test_ids = ['test_a', 'test_b', 'your_test']
+        fake_worker_yaml = [
+            {'worker': ['test_']},
+            {'worker': ['test'], 'count': 1},
+        ]
+        with mock.patch('yaml.load', return_value=fake_worker_yaml):
+            groups = scheduler.generate_worker_partitions(test_ids, 'fakepath')
+        expected_grouping = [
+            ['test_a', 'test_b'],
+            ['test_a', 'test_b', 'your_test'],
+        ]
+        self.assertEqual(expected_grouping, groups)

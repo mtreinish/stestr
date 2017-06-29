@@ -49,9 +49,14 @@ def partition_tests(test_ids, concurrency, repository, group_callback,
         _group_callback = group_callback
         partitions = [list() for i in range(concurrency)]
         timed_partitions = [[0.0, partition] for partition in partitions]
-        time_data = repository.get_test_times(test_ids)
-        timed_tests = time_data['known']
-        unknown_tests = time_data['unknown']
+        time_data = {}
+        if repository:
+            time_data = repository.get_test_times(test_ids)
+            timed_tests = time_data['known']
+            unknown_tests = time_data['unknown']
+        else:
+            timed_tests = {}
+            unknown_tests = set(test_ids)
         # Group tests: generate group_id -> test_ids.
         group_ids = collections.defaultdict(list)
         if _group_callback is None:
@@ -127,11 +132,26 @@ def local_concurrency():
         return None
 
 
-def generate_worker_partitions(ids, worker_path):
+def generate_worker_partitions(ids, worker_path, repository=None,
+                               group_callback=None, randomize=False):
     """Parse a worker yaml file and generate test groups
 
     :param list ids: A list of test ids too be partitioned
     :param path worker_path: The path to a worker file
+    :param repository: A repository object that will be used for looking up
+        timing data. This is optional, and also will only be used for
+        scheduling if there is a count field on a worker.
+    :param group_callback: A callback function that is used as a scheduler
+        hint to group test_ids together and treat them as a single unit for
+        scheduling. This function expects a single test_id parameter and it
+        will return a group identifier. Tests_ids that have the same group
+        identifier will be kept on the same worker. This is optional and
+        also will only be used for scheduling if there is a count field on a
+        worker.
+    :param bool randomize: If true each partition's test order will be
+        randomized. This is optional and also will only be used for scheduling
+        if there is a count field on a worker.
+
     :returns: A list where each element is a distinct subset of test_ids.
     """
     with open(worker_path, 'r') as worker_file:
@@ -142,9 +162,17 @@ def generate_worker_partitions(ids, worker_path):
             if isinstance(worker['worker'], list):
                 local_worker_list = selection.filter_tests(
                     worker['worker'], ids)
-                # If a worker partition is empty don't add it to the output
-                if local_worker_list:
-                    worker_groups.append(local_worker_list)
+
+                if 'concurrency' in worker.keys() and worker[
+                    'concurrency'] > 1:
+                    partitioned_tests = partition_tests(
+                        local_worker_list, worker['concurrency'], repository,
+                        group_callback, randomize)
+                    worker_groups.extend(partitioned_tests)
+                else:
+                    # If a worker partition is empty don't add it to the output
+                    if local_worker_list:
+                        worker_groups.append(local_worker_list)
             else:
                 raise TypeError('The input yaml is the incorrect format')
         else:
