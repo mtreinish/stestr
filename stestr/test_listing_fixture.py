@@ -227,7 +227,8 @@ class TestListingFixture(fixtures.Fixture):
             if hasattr(self.options, 'randomize'):
                 randomize = self.options.randomize
             test_id_groups = scheduler.generate_worker_partitions(
-                test_ids, self.worker_path, randomize)
+                test_ids, self.worker_path, self.repository,
+                self._group_callback, randomize)
         # If we have multiple workers partition the tests and recursively
         # create single worker TestListingFixtures for each worker
         else:

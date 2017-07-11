@@ -307,7 +307,26 @@ example::
       - regex 3
 
 would create 2 workers. The first would run all tests that match regex 1, and
-the second would run all tests that match regex 2 or regex 3.
+the second would run all tests that match regex 2 or regex 3. In addition if
+you need to mix manual scheduling and the standard scheduling mechanisms you
+can accomplish this with the ``concurrency`` field on a worker in the yaml.
+For example, building on the previous example::
+
+    - worker:
+      - regex 1
+
+    - worker:
+      - regex 2
+      - regex 3
+
+    - worker:
+      - regex 4
+      concurrency: 3
+
+In this case the tests that match regex 4 will be run against 3 workers and the
+tests will be partitioned across those workers with the normal scheduler. This
+includes respecting the other scheduler options, like ``group_regex`` or
+``--random``.
 
 There is also an option on ``stestr run``, ``--random``/``-r`` to randomize the
 order of tests as they are passed to the workers. This is useful in certain
