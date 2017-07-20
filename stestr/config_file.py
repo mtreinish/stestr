@@ -16,7 +16,7 @@ import sys
 from six.moves import configparser
 
 from stestr.repository import util
-from stestr import test_listing_fixture
+from stestr import test_processor
 
 
 class TestrConf(object):
@@ -39,18 +39,21 @@ class TestrConf(object):
                         concurrency=0, blacklist_file=None,
                         whitelist_file=None, black_regex=None,
                         randomize=False):
-        """Get a test_listing_fixture.TestListingFixture for this config file
+        """Get a test_processor.TestProcessorFixture for this config file
 
         Any parameters about running tests will be used for initialize the
         output fixture so the settings are correct when that fixture is used
         to run tests. Parameters will take precedence over values in the config
         file.
 
+        :param options: A argparse Namespace object of the cli options that
+            were used in the invocation of the original CLI command that
+            needs a TestProcessorFixture
         :param list test_ids: an optional list of test_ids to use when running
             tests
         :param list regexes: an optional list of regex strings to use for
             filtering the tests to run. See the test_filters parameter in
-            TestListingFixture to see how this is used.
+            TestProcessorFixture to see how this is used.
         :param str test_path: Set the test path to use for unittest discovery.
             If both this and the corresponding config file option are set, this
             value will be used.
@@ -79,9 +82,9 @@ class TestrConf(object):
          :param bool randomize: Randomize the test order after they are
             partitioned into separate workers
 
-        :returns: a TestListingFixture object for the specified config file and
-            any arguments passed into this function
-        :rtype: test_listing_fixture.TestListingFixture
+        :returns: a TestProcessorFixture object for the specified config file
+            and any arguments passed into this function
+        :rtype: test_processor.TestProcessorFixture
         """
 
         if not test_path and self.parser.has_option('DEFAULT', 'test_path'):
@@ -117,7 +120,7 @@ class TestrConf(object):
 
         # Handle the results repository
         repository = util.get_repo_open(repo_type, repo_url)
-        return test_listing_fixture.TestListingFixture(
+        return test_processor.TestProcessorFixture(
             test_ids, command, listopt, idoption, repository,
             test_filters=regexes, group_callback=group_callback, serial=serial,
             worker_path=worker_path, concurrency=concurrency,

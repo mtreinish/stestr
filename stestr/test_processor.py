@@ -27,10 +27,10 @@ from stestr import selection
 from stestr import testlist
 
 
-class TestListingFixture(fixtures.Fixture):
+class TestProcessorFixture(fixtures.Fixture):
     """Write a temporary file to disk with test ids in it.
 
-    The TestListingFixture is used to handle the lifecycle of running
+    The TestProcessorFixture is used to handle the lifecycle of running
     the subunit.run commands. A fixture is used for this class to handle
     the temporary list files creation.
 
@@ -81,7 +81,7 @@ class TestListingFixture(fixtures.Fixture):
                  test_filters=None, group_callback=None, serial=False,
                  worker_path=None, concurrency=0, blacklist_file=None,
                  black_regex=None, whitelist_file=None, randomize=False):
-        """Create a TestListingFixture."""
+        """Create a TestProcessorFixture."""
 
         self.test_ids = test_ids
         self.template = cmd_template
@@ -103,7 +103,7 @@ class TestListingFixture(fixtures.Fixture):
         self.randomize = randomize
 
     def setUp(self):
-        super(TestListingFixture, self).setUp()
+        super(TestProcessorFixture, self).setUp()
         variable_regex = '\$(IDOPTION|IDFILE|IDLIST|LISTOPT)'
         variables = {}
         list_variables = {'LISTOPT': self.listopt}
@@ -243,7 +243,7 @@ class TestListingFixture(fixtures.Fixture):
                 test_ids, self.worker_path, self.repository,
                 self._group_callback, self.randomize)
         # If we have multiple workers partition the tests and recursively
-        # create single worker TestListingFixtures for each worker
+        # create single worker TestProcessorFixtures for each worker
         else:
             test_id_groups = scheduler.partition_tests(test_ids,
                                                        self.concurrency,
@@ -254,8 +254,9 @@ class TestListingFixture(fixtures.Fixture):
                 # No tests in this partition
                 continue
             fixture = self.useFixture(
-                TestListingFixture(test_ids,
-                                   self.template, self.listopt, self.idoption,
-                                   self.repository, parallel=False))
+                TestProcessorFixture(test_ids,
+                                     self.template, self.listopt,
+                                     self.idoption, self.repository,
+                                     parallel=False))
             result.extend(fixture.run_tests())
         return result

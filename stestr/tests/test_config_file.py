@@ -25,9 +25,9 @@ class TestTestrConf(base.TestCase):
         self._testr_conf.parser = mock.Mock()
 
     @mock.patch.object(config_file.util, 'get_repo_open')
-    @mock.patch.object(config_file.test_listing_fixture, 'TestListingFixture')
+    @mock.patch.object(config_file.test_processor, 'TestProcessorFixture')
     @mock.patch.object(config_file, 'sys')
-    def _check_get_run_command(self, mock_sys, mock_TestListingFixture,
+    def _check_get_run_command(self, mock_sys, mock_TestProcessorFixture,
                                mock_get_repo_open, platform='win32',
                                expected_python='python'):
         mock_sys.platform = platform
@@ -36,14 +36,14 @@ class TestTestrConf(base.TestCase):
                                                    top_dir='fake_top_dir',
                                                    group_regex='.*')
 
-        self.assertEqual(mock_TestListingFixture.return_value, fixture)
+        self.assertEqual(mock_TestProcessorFixture.return_value, fixture)
         mock_get_repo_open.assert_called_once_with('file',
                                                    None)
         command = "%s -m subunit.run discover -t %s %s $LISTOPT $IDOPTION" % (
             expected_python, 'fake_top_dir', 'fake_test_path')
-        # Ensure TestListingFixture is created with defaults except for where
+        # Ensure TestProcessorFixture is created with defaults except for where
         # we specfied and with the correct python.
-        mock_TestListingFixture.assert_called_once_with(
+        mock_TestProcessorFixture.assert_called_once_with(
             None, command, "--list", "--load-list $IDFILE",
             mock_get_repo_open.return_value, black_regex=None,
             blacklist_file=None, concurrency=0, group_callback=mock.ANY,
