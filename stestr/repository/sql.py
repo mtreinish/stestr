@@ -18,7 +18,9 @@ import io
 import os.path
 import re
 import subprocess
+import sys
 
+import six
 import sqlalchemy
 from sqlalchemy import orm
 import subunit.v2
@@ -47,8 +49,15 @@ class RepositoryFactory(repository.AbstractRepositoryFactory):
         result = Repository(url)
         # TODO(mtreinish): Figure out the python api to run the migrations for
         # setting up the schema.
-        subprocess.call(['subunit2sql-db-manage', '--database-connection', url,
-                         'upgrade', 'head'])
+        proc = subprocess.Popen(['subunit2sql-db-manage',
+                                 '--database-connection', url, 'upgrade',
+                                 'head'],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        out, err = proc.communicate()
+        sys.stdout.write(six.text_type(out))
+        sys.stderr.write(six.text_type(err))
+
         return result
 
     def open(self, url):
