@@ -54,27 +54,6 @@ def get_cli_help():
     return help_str
 
 
-class InputToStreamResult(object):
-    """Generate Stream events from stdin.
-
-    Really a UI responsibility?
-    """
-
-    def __init__(self, stream):
-        self.source = stream
-        self.stop = False
-
-    def run(self, result):
-        while True:
-            if self.stop:
-                return
-            char = self.source.read(1)
-            if not char:
-                return
-            if char == b'a':
-                result.status(test_id='stdin', test_status='fail')
-
-
 def run(arguments):
     load(arguments)
 
