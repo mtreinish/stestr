@@ -40,16 +40,32 @@ def set_cli_opts(parser):
 
 def run(arguments):
     args = arguments[0]
-    repo = util.get_repo_open(args.repo_type, args.repo_url)
+    return last(repo_type=args.repo_type, repo_url=args.repo_url,
+                subunit=args.subunit)
+
+
+def last(repo_type='file', repo_url=None, subunit=False):
+    """Show the last run loaded into a a repository
+
+    Note this function depends on the cwd for the repository if `repo_type` is
+    set to file and `repo_url` is not specified it will use the repository
+    located at CWD/.stestr
+
+    :param str repo_type: This is the type of repository to use. Valid choices
+        are 'file' and 'sql'.
+    :param str repo_url: The url of the repository to use.
+    :param bool subunit: Show output as a subunit stream.
+    """
+    repo = util.get_repo_open(repo_type, repo_url)
     latest_run = repo.get_latest_run()
-    if args.subunit:
+    if subunit:
         stream = latest_run.get_subunit_stream()
         output.output_stream(stream)
         # Exits 0 if we successfully wrote the stream.
         return 0
     case = latest_run.get_test()
     try:
-        if args.repo_type == 'file':
+        if repo_type == 'file':
             previous_run = repo.get_test_run(repo.latest_id() - 1)
         # TODO(mtreinish): add a repository api to get the previous_run to
         # unify this logic

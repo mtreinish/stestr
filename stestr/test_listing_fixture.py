@@ -63,11 +63,24 @@ class TestListingFixture(fixtures.Fixture):
         test id and returns a group id. A group id is an arbitrary value
         used as a dictionary key in the scheduler. All test ids with the
         same group id are scheduled onto the same backend test process.
+    :param bool serial: Run tests serially
+    :param path worker_path: Optional path of a manual worker grouping file
+        to use for the run
+    :param int concurrency: How many processes to use. The default (0)
+        autodetects your CPU count and uses that.
+    :param path blacklist_file: Path to a blacklist file, this file contains a
+        separate regex exclude on each newline.
+    :param path whitelist_file: Path to a whitelist file, this file contains a
+         separate regex on each newline.
+    :param boolean randomize: Randomize the test order after they are
+        partitioned into separate workers
     """
 
-    def __init__(self, test_ids, options, cmd_template, listopt, idoption,
+    def __init__(self, test_ids, cmd_template, listopt, idoption,
                  repository, parallel=True, listpath=None,
-                 test_filters=None, group_callback=None):
+                 test_filters=None, group_callback=None, serial=False,
+                 worker_path=None, concurrency=0, blacklist_file=None,
+                 black_regex=None, whitelist_file=None, randomize=False):
         """Create a TestListingFixture."""
 
         self.test_ids = test_ids
@@ -76,15 +89,18 @@ class TestListingFixture(fixtures.Fixture):
         self.idoption = idoption
         self.repository = repository
         self.parallel = parallel
-        if hasattr(options, 'serial') and options.serial:
+        if serial:
             self.parallel = False
         self._listpath = listpath
         self.test_filters = test_filters
         self._group_callback = group_callback
-        self.options = options
         self.worker_path = None
-        if hasattr(options, 'worker_path') and options.worker_path:
-            self.worker_path = options.worker_path
+        self.worker_path = worker_path
+        self.concurrency_value = concurrency
+        self.blacklist_file = blacklist_file
+        self.whitelist_file = whitelist_file
+        self.black_regex = black_regex
+        self.randomize = randomize
 
     def setUp(self):
         super(TestListingFixture, self).setUp()
@@ -103,8 +119,8 @@ class TestListingFixture(fixtures.Fixture):
             self.concurrency = 1
         else:
             self.concurrency = None
-            if hasattr(self.options, 'concurrency'):
-                self.concurrency = int(self.options.concurrency)
+            if self.concurrency_value:
+                self.concurrency = int(self.concurrency_value)
             if not self.concurrency:
                 self.concurrency = scheduler.local_concurrency()
             if not self.concurrency:
@@ -125,10 +141,10 @@ class TestListingFixture(fixtures.Fixture):
             idlist = ''
         else:
             self.test_ids = selection.construct_list(
-                self.test_ids, blacklist_file=self.options.blacklist_file,
-                whitelist_file=self.options.whitelist_file,
+                self.test_ids, blacklist_file=self.blacklist_file,
+                whitelist_file=self.whitelist_file,
                 regexes=self.test_filters,
-                black_regex=self.options.black_regex)
+                black_regex=self.black_regex)
             name = self.make_listfile()
             variables['IDFILE'] = name
             idlist = ' '.join(self.test_ids)
@@ -223,12 +239,9 @@ class TestListingFixture(fixtures.Fixture):
             return [run_proc]
         # If there is a worker path, use that to get worker groups
         elif self.worker_path:
-            randomize = False
-            if hasattr(self.options, 'randomize'):
-                randomize = self.options.randomize
             test_id_groups = scheduler.generate_worker_partitions(
                 test_ids, self.worker_path, self.repository,
-                self._group_callback, randomize)
+                self._group_callback, self.randomize)
         # If we have multiple workers partition the tests and recursively
         # create single worker TestListingFixtures for each worker
         else:
@@ -241,7 +254,7 @@ class TestListingFixture(fixtures.Fixture):
                 # No tests in this partition
                 continue
             fixture = self.useFixture(
-                TestListingFixture(test_ids, self.options,
+                TestListingFixture(test_ids,
                                    self.template, self.listopt, self.idoption,
                                    self.repository, parallel=False))
             result.extend(fixture.run_tests())

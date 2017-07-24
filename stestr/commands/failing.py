@@ -59,13 +59,35 @@ def _make_result(repo, list_tests=False):
 
 def run(arguments):
     args = arguments[0]
-    repo = util.get_repo_open(args.repo_type, args.repo_url)
+    return failing(repo_type=args.repo_type, repo_url=args.repo_url,
+                   list_tests=args.list, subunit=args.subunit)
+
+
+def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False):
+    """Return the failing tests from the most recent run in the repository
+
+    Note this function depends on the cwd for the repository if `repo_type` is
+    set to file and `repo_url` is not specified it will use the repository
+    located at CWD/.stestr
+
+    :param str repo_type: This is the type of repository to use. Valid choices
+        are 'file' and 'sql'.
+    :param str repo_url: The url of the repository to use.
+    :param bool list_test: Show only a list of failing tests.
+    :param bool subunit: Show output as a subunit stream.
+
+    """
+    if repo_type not in ['file', 'sql']:
+        print('Repository type %s is not a type' % repo_type)
+        return 1
+
+    repo = util.get_repo_open(repo_type, repo_url)
     run = repo.get_failing()
-    if args.subunit:
+    if subunit:
         return _show_subunit(run)
     case = run.get_test()
     failed = False
-    result, summary = _make_result(repo, list_tests=args.list)
+    result, summary = _make_result(repo, list_tests=list_tests)
     result.startTestRun()
     try:
         case.run(result)
@@ -76,7 +98,7 @@ def run(arguments):
         result = 1
     else:
         result = 0
-    if args.list:
+    if list_tests:
         failing_tests = [
             test for test, _ in summary.errors + summary.failures]
         output.output_tests(failing_tests)
