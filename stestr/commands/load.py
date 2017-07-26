@@ -13,6 +13,7 @@
 """Load data into a repository."""
 
 
+import datetime
 import functools
 import sys
 
@@ -23,6 +24,7 @@ from stestr import output
 from stestr.repository import abstract as repository
 from stestr.repository import util
 from stestr import results
+from stestr import subunit_trace
 from stestr import utils
 
 
@@ -40,6 +42,9 @@ def set_cli_opts(parser):
     parser.add_argument("--id", "-i", default=None,
                         help="Append the stream into an existing entry in the "
                              "repository")
+    parser.add_argument("--subunit-trace", action='store_true', default=False,
+                        help="Display the loaded stream through the "
+                             "subunit-trace output filter")
 
 
 def get_cli_help():
@@ -58,12 +63,13 @@ def run(arguments):
     args = arguments[0]
     load(repo_type=args.repo_type, repo_url=args.repo_url,
          partial=args.partial, subunit_out=args.subunit,
-         force_init=args.force_init, streams=arguments[1])
+         force_init=args.force_init, streams=arguments[1],
+         pretty_out=args.subunit_trace)
 
 
 def load(force_init=False, in_streams=None,
          partial=False, subunit_out=False, repo_type='file', repo_url=None,
-         run_id=None, streams=None):
+         run_id=None, streams=None, pretty_out=False):
     """Load subunit streams into a repository
 
     :param bool force_init: Initialize the specifiedrepository if it hasn't
@@ -77,6 +83,8 @@ def load(force_init=False, in_streams=None,
     :param str repo_url: The url of the repository to use.
     :param run_id: The optional run id to save the subunit stream to.
     :param list streams: A list of file paths to read for the input streams.
+    :param bool pretty_out: Use the subunit-trace output filter for the loaded
+        stream.
     """
 
     try:
@@ -116,6 +124,14 @@ def load(force_init=False, in_streams=None,
         inserter = repo.get_inserter(partial=partial, run_id=run_id)
     if subunit_out:
         output_result, summary_result = output.make_result(inserter.get_id)
+    if pretty_out:
+        outcomes = testtools.StreamToDict(
+            functools.partial(subunit_trace.show_outcome, sys.stdout))
+        summary_result = testtools.StreamSummary()
+        output_result = testtools.CopyStreamResult([outcomes, summary_result])
+        output_result = testtools.StreamResultRouter(output_result)
+        cat = subunit.test_results.CatFiles(sys.stdout)
+        output_result.add_rule(cat, 'test_id', test_id=None)
     else:
         try:
             previous_run = repo.get_latest_run()
@@ -125,11 +141,17 @@ def load(force_init=False, in_streams=None,
             inserter.get_id, sys.stdout, previous_run)
         summary_result = output_result.get_summary()
     result = testtools.CopyStreamResult([inserter, output_result])
+    start_time = datetime.datetime.utcnow()
     result.startTestRun()
     try:
         case.run(result)
     finally:
         result.stopTestRun()
+    stop_time = datetime.datetime.utcnow()
+    elapsed_time = stop_time - start_time
+    if pretty_out:
+        subunit_trace.print_fails(sys.stdout)
+        subunit_trace.print_summary(sys.stdout, elapsed_time)
     if not summary_result.wasSuccessful():
         return 1
     else:

@@ -86,6 +86,9 @@ def set_cli_opts(parser):
     parser.add_argument('--combine', action='store_true', default=False,
                         help="Combine the results from the test run with the "
                              "last run in the repository")
+    parser.add_argument('--no-subunit-trace', action='store_true',
+                        default=False,
+                        help='Disable the default subunit-trace output filter')
 
 
 def get_cli_help():
@@ -117,7 +120,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                 partial=False, subunit_out=False, until_failure=False,
                 analyze_isolation=False, isolated=False, worker_path=None,
                 blacklist_file=None, whitelist_file=None, black_regex=None,
-                no_discover=False, random=False, combine=False, filters=None):
+                no_discover=False, random=False, combine=False, filters=None,
+                pretty_out=True):
     """Function to execute the run command
 
     This function implements the run command. It will run the tests specified
@@ -168,6 +172,7 @@ def run_command(config='.stestr.conf', repo_type='file',
     :param list filters: A list of string regex filters to initially apply on
         the test list. Tests that match any of the regexes will be used.
         (assuming any other filtering specified also uses it)
+    :param bool pretty_out: Use the subunit-trace output filter
     """
     try:
         repo = util.get_repo_open(repo_type, repo_url)
@@ -198,7 +203,8 @@ def run_command(config='.stestr.conf', repo_type='file',
             return load.load(in_streams=run_proc,
                              partial=partial, subunit_out=subunit_out,
                              repo_type=repo_type,
-                             repo_url=repo_url, run_id=combine_id)
+                             repo_url=repo_url, run_id=combine_id,
+                             pretty_out=pretty_out)
 
         if not until_failure:
             return run_tests()
@@ -256,7 +262,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                                         subunit_out=subunit_out,
                                         combine_id=combine_id,
                                         repo_type=repo_type,
-                                        repo_url=repo_url)
+                                        repo_url=repo_url,
+                                        pretty_out=pretty_out)
                 if run_result > result:
                     result = run_result
             return result
@@ -266,7 +273,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                               subunit_out=subunit_out,
                               combine_id=combine_id,
                               repo_type=repo_type,
-                              repo_url=repo_url)
+                              repo_url=repo_url,
+                              pretty_out=pretty_out)
     else:
         # Where do we source data about the cause of conflicts.
         # XXX: Should instead capture the run id in with the failing test
@@ -411,7 +419,7 @@ def _prior_tests(self, run, failing_id):
 
 def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                subunit_out=False, combine_id=None, repo_type='file',
-               repo_url=None):
+               repo_url=None, pretty_out=True):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
@@ -428,7 +436,8 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
             return load.load((None, None), in_streams=run_procs,
                              partial=partial, subunit_out=subunit_out,
                              repo_type=repo_type,
-                             repo_url=repo_url, run_id=combine_id)
+                             repo_url=repo_url, run_id=combine_id,
+                             pretty_out=pretty_out)
 
         if not until_failure:
             return run_tests()
@@ -444,6 +453,7 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
 def run(arguments):
     filters = arguments[1] or None
     args = arguments[0]
+    pretty_out = not args.no_subunit_trace
 
     return run_command(
         config=args.config, repo_type=args.repo_type, repo_url=args.repo_url,
@@ -456,4 +466,4 @@ def run(arguments):
         worker_path=args.worker_path, blacklist_file=args.blacklist_file,
         whitelist_file=args.whitelist_file, black_regex=args.black_regex,
         no_discover=args.no_discover, random=args.random, combine=args.combine,
-        filters=filters)
+        filters=filters, pretty_out=pretty_out)
