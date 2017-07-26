@@ -54,42 +54,35 @@ def get_cli_help():
     return help_str
 
 
-class InputToStreamResult(object):
-    """Generate Stream events from stdin.
+def run(arguments):
+    args = arguments[0]
+    load(repo_type=args.repo_type, repo_url=args.repo_url,
+         partial=args.partial, subunit_out=args.subunit,
+         force_init=args.force_init, streams=arguments[1])
 
-    Really a UI responsibility?
+
+def load(force_init=False, in_streams=None,
+         partial=False, subunit_out=False, repo_type='file', repo_url=None,
+         run_id=None, streams=None):
+    """Load subunit streams into a repository
+
+    :param bool force_init: Initialize the specifiedrepository if it hasn't
+        been created.
+    :param list in_streams: A list of file objects that will be saved into the
+        repository
+    :param bool partial: Specify the input is a partial stream
+    :param bool subunit_out: Output the subunit stream to stdout
+    :param str repo_type: This is the type of repository to use. Valid choices
+        are 'file' and 'sql'.
+    :param str repo_url: The url of the repository to use.
+    :param run_id: The optional run id to save the subunit stream to.
+    :param list streams: A list of file paths to read for the input streams.
     """
 
-    def __init__(self, stream):
-        self.source = stream
-        self.stop = False
-
-    def run(self, result):
-        while True:
-            if self.stop:
-                return
-            char = self.source.read(1)
-            if not char:
-                return
-            if char == b'a':
-                result.status(test_id='stdin', test_status='fail')
-
-
-def run(arguments):
-    load(arguments)
-
-
-def load(arguments, in_streams=None, partial=False, subunit_out=False,
-         repo_type=None, repo_url=None, run_id=None):
-    args = arguments[0]
-    streams = arguments[1]
-    if args:
-        repo_type = args.repo_type
-        repo_url = args.repo_url
     try:
         repo = util.get_repo_open(repo_type, repo_url)
     except repository.RepositoryNotFound:
-        if args.force_init:
+        if force_init:
             repo = util.get_repo_initialise(repo_type, repo_url)
         else:
             raise
@@ -117,25 +110,11 @@ def load(arguments, in_streams=None, partial=False, subunit_out=False,
             yield (case, str(pos))
 
     case = testtools.ConcurrentStreamTestSuite(make_tests)
-    # One unmodified copy of the stream to repository storage
-    _partial = False
-    if args:
-        _partial = getattr(args, 'partial')
-    # Set partial_stream if it comes in via the CLI or the kwarg
-    partial_stream = _partial or partial
-    _subunit = False
-    if args:
-        _subunit = getattr(args, 'subunit')
-    _subunit_out = _subunit or subunit_out
-    _run_id = None
-    if args:
-        _run_id = getattr(args, 'id')
-    _run_id = _run_id or run_id
-    if not _run_id:
-        inserter = repo.get_inserter(partial=partial_stream)
+    if not run_id:
+        inserter = repo.get_inserter(partial=partial)
     else:
-        inserter = repo.get_inserter(partial=partial_stream, run_id=_run_id)
-    if _subunit_out:
+        inserter = repo.get_inserter(partial=partial, run_id=run_id)
+    if subunit_out:
         output_result, summary_result = output.make_result(inserter.get_id)
     else:
         try:

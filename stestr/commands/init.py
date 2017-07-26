@@ -15,8 +15,24 @@
 from stestr.repository import util
 
 
-def run(args):
-    util.get_repo_initialise(args[0].repo_type, args[0].repo_url)
+def run(arguments):
+    args = arguments[0]
+    init(args.repo_type, args.repo_url)
+
+
+def init(repo_type='file', repo_url=None):
+    """Initialize a new repository
+
+    Note this function depends on the cwd for the repository if `repo_type` is
+    set to file and `repo_url` is not specified it will use the repository
+    located at CWD/.stestr
+
+    :param str repo_type: This is the type of repository to use. Valid choices
+        are 'file' and 'sql'.
+    :param str repo_url: The url of the repository to use.
+    """
+
+    util.get_repo_initialise(repo_type, repo_url)
 
 
 def set_cli_opts(parser):

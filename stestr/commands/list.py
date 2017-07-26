@@ -45,16 +45,59 @@ def set_cli_opts(parser):
                         ' white selection, which by default is everything.')
 
 
-def run(args):
-    _args = args[0]
+def run(arguments):
+    args = arguments[0]
+    filters = arguments[1]
+    return list_command(config=args.config, repo_type=args.repo_type,
+                        repo_url=args.repo_url, group_regex=args.group_regex,
+                        blacklist_file=args.blacklist_file,
+                        whitelist_file=args.whitelist_file,
+                        black_regex=args.black_regex,
+                        filters=filters)
+
+
+def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
+                 test_path=None, top_dir=None, group_regex=None,
+                 blacklist_file=None, whitelist_file=None, black_regex=None,
+                 filters=None):
+    """Print a list of test_ids for a project
+
+    This function will print the test_ids for tests in a project. You can
+    filter the output just like with the run command to see exactly what
+    will be run.
+
+    :param str config: The path to the stestr config file. Must be a string.
+    :param str repo_type: This is the type of repository to use. Valid choices
+        are 'file' and 'sql'.
+    :param str repo_url: The url of the repository to use.
+    :param str test_path: Set the test path to use for unittest discovery.
+        If both this and the corresponding config file option are set, this
+        value will be used.
+    :param str top_dir: The top dir to use for unittest discovery. This takes
+        precedence over the value in the config file. (if one is present in
+        the config file)
+    :param str group_regex: Set a group regex to use for grouping tests
+        together in the stestr scheduler. If both this and the corresponding
+        config file option are set this value will be used.
+    :param str blacklist_file: Path to a blacklist file, this file contains a
+        separate regex exclude on each newline.
+    :param str whitelist_file: Path to a whitelist file, this file contains a
+        separate regex on each newline.
+    :param str black_regex: Test rejection regex. If a test cases name matches
+        on re.search() operation, it will be removed from the final test list.
+    :param list filters: A list of string regex filters to initially apply on
+        the test list. Tests that match any of the regexes will be used.
+        (assuming any other filtering specified also uses it)
+    """
     ids = None
-    filters = None
-    if args[1]:
-        filters = args[1]
-    conf = config_file.TestrConf(_args.config)
-    cmd = conf.get_run_command(_args, ids, filters)
-    not_filtered = filters is None and _args.blacklist_file is None\
-        and _args.whitelist_file is None and _args.black_regex is None
+    conf = config_file.TestrConf(config)
+    cmd = conf.get_run_command(
+        regexes=filters, repo_type=repo_type,
+        repo_url=repo_url, group_regex=group_regex,
+        blacklist_file=blacklist_file, whitelist_file=whitelist_file,
+        black_regex=black_regex)
+    not_filtered = filters is None and blacklist_file is None\
+        and whitelist_file is None and black_regex is None
     try:
         cmd.setUp()
         # List tests if the fixture has not already needed to to filter.

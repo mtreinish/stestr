@@ -111,26 +111,81 @@ def _find_failing(repo):
     return ids
 
 
-def run(arguments):
-    args = arguments[0]
-    filters = arguments[1] or None
+def run_command(config='.stestr.conf', repo_type='file',
+                repo_url=None, test_path=None, top_dir=None, group_regex=None,
+                failing=False, serial=False, concurrency=0, load_list=None,
+                partial=False, subunit_out=False, until_failure=False,
+                analyze_isolation=False, isolated=False, worker_path=None,
+                blacklist_file=None, whitelist_file=None, black_regex=None,
+                no_discover=False, random=False, combine=False, filters=None):
+    """Function to execute the run command
+
+    This function implements the run command. It will run the tests specified
+    in the parameters based on the provided config file and/or arguments
+    specified in the way specified by the arguments.
+
+    :param str config: The path to the stestr config file. Must be a string.
+    :param str repo_type: This is the type of repository to use. Valid choices
+        are 'file' and 'sql'.
+    :param str repo_url: The url of the repository to use.
+    :param str test_path: Set the test path to use for unittest discovery.
+        If both this and the corresponding config file option are set, this
+        value will be used.
+    :param str top_dir: The top dir to use for unittest discovery. This takes
+        precedence over the value in the config file. (if one is present in
+        the config file)
+    :param str group_regex: Set a group regex to use for grouping tests
+        together in the stestr scheduler. If both this and the corresponding
+        config file option are set this value will be used.
+    :param bool failing: Run only tests known to be failing.
+    :param bool serial: Run tests serially
+    :param int concurrency: "How many processes to use. The default (0)
+        autodetects your CPU count and uses that.
+    :param str load_list: The path to a list of test_ids. If specified only
+        tests listed in the named file will be run.
+    :param bool partial: Only some tests will be run. Implied by `--failing`.
+    :param bool subunit_out: Display results in subunit format.
+    :param bool until_failure: Repeat the run again and again until failure
+        occurs.
+    :param bool analyze_isolation: Search the last test run for 2-test test
+        isolation interactions.
+    :param bool isolated: Run each test id in a separate test runner.
+    :param str worker_path: Optional path of a manual worker grouping file
+        to use for the run.
+    :param str blacklist_file: Path to a blacklist file, this file contains a
+        separate regex exclude on each newline.
+    :param str whitelist_file: Path to a whitelist file, this file contains a
+        separate regex on each newline.
+    :param str black_regex: Test rejection regex. If a test cases name matches
+        on re.search() operation, it will be removed from the final test list.
+    :param str no_discover: Takes in a single test_id to bypasses test
+        discover and just execute the test specified. A file name may be used
+        in place of a test name.
+    :param bool random: Randomize the test order after they are partitioned
+        into separate workers
+    :param bool combine: Combine the results from the test run with the
+        last run in the repository
+    :param list filters: A list of string regex filters to initially apply on
+        the test list. Tests that match any of the regexes will be used.
+        (assuming any other filtering specified also uses it)
+    """
     try:
-        repo = util.get_repo_open(args.repo_type, args.repo_url)
+        repo = util.get_repo_open(repo_type, repo_url)
     # If a repo is not found, and there a testr config exists just create it
     except repository.RepositoryNotFound:
-        if not os.path.isfile(args.config) and not args.test_path:
+        if not os.path.isfile(config) and not test_path:
             msg = ("No config file found and --test-path not specified. "
                    "Either create or specify a .stestr.conf or use "
                    "--test-path ")
             print(msg)
             exit(1)
-        repo = util.get_repo_initialise(args.repo_type, args.repo_url)
+        repo = util.get_repo_initialise(repo_type, repo_url)
     combine_id = None
-    if args.combine:
+    if combine:
         latest_id = repo.latest_id()
         combine_id = six.text_type(latest_id)
-    if args.no_discover:
-        ids = args.no_discover
+    if no_discover:
+        ids = no_discover
         if ids.find('/') != -1:
             root, _ = os.path.splitext(ids)
             ids = root.replace('/', '.')
@@ -140,12 +195,12 @@ def run(arguments):
             run_proc = [('subunit', output.ReturnCodeToSubunit(
                 subprocess.Popen(run_cmd, shell=True,
                                  stdout=subprocess.PIPE)))]
-            return load.load((None, None), in_streams=run_proc,
-                             partial=args.partial, subunit_out=args.subunit,
-                             repo_type=args.repo_type,
-                             repo_url=args.repo_url, run_id=combine_id)
+            return load.load(in_streams=run_proc,
+                             partial=partial, subunit_out=subunit_out,
+                             repo_type=repo_type,
+                             repo_url=repo_url, run_id=combine_id)
 
-        if not args.until_failure:
+        if not until_failure:
             return run_tests()
         else:
             result = run_tests()
@@ -153,14 +208,14 @@ def run(arguments):
                 result = run_tests()
             return result
 
-    if args.failing or args.analyze_isolation:
+    if failing or analyze_isolation:
         ids = _find_failing(repo)
     else:
         ids = None
-    if args.load_list:
+    if load_list:
         list_ids = set()
         # Should perhaps be text.. currently does its own decode.
-        with open(args.load_list, 'rb') as list_file:
+        with open(load_list, 'rb') as list_file:
             list_ids = set(parse_list(list_file.read()))
         if ids is None:
             # Use the supplied list verbatim
@@ -170,10 +225,15 @@ def run(arguments):
             # that are both failing and listed.
             ids = list_ids.intersection(ids)
 
-    conf = config_file.TestrConf(args.config)
-    if not args.analyze_isolation:
-        cmd = conf.get_run_command(args, ids, filters)
-        if args.isolated:
+    conf = config_file.TestrConf(config)
+    if not analyze_isolation:
+        cmd = conf.get_run_command(
+            ids, regexes=filters, group_regex=group_regex, repo_type=repo_type,
+            repo_url=repo_url, serial=serial, worker_path=worker_path,
+            concurrency=concurrency, blacklist_file=blacklist_file,
+            black_regex=black_regex, top_dir=top_dir, test_path=test_path,
+            randomize=random)
+        if isolated:
             result = 0
             cmd.setUp()
             try:
@@ -182,21 +242,31 @@ def run(arguments):
                 cmd.cleanUp()
             for test_id in ids:
                 # TODO(mtreinish): add regex
-                cmd = conf.get_run_command(args, [test_id], filters)
-                run_result = _run_tests(cmd, args.failing,
-                                        args.analyze_isolation,
-                                        args.isolated,
-                                        args.until_failure,
-                                        subunit_out=args.subunit,
-                                        combine_id=combine_id)
+                cmd = conf.get_run_command(
+                    [test_id], filters, group_regex=group_regex,
+                    repo_type=repo_type, repo_url=repo_url, serial=serial,
+                    worker_path=worker_path, concurrency=concurrency,
+                    blacklist_file=blacklist_file, black_regex=black_regex,
+                    randomize=random, test_path=test_path, top_dir=top_dir)
+
+                run_result = _run_tests(cmd, failing,
+                                        analyze_isolation,
+                                        isolated,
+                                        until_failure,
+                                        subunit_out=subunit_out,
+                                        combine_id=combine_id,
+                                        repo_type=repo_type,
+                                        repo_url=repo_url)
                 if run_result > result:
                     result = run_result
             return result
         else:
-            return _run_tests(cmd, args.failing, args.analyze_isolation,
-                              args.isolated, args.until_failure,
-                              subunit_out=args.subunit,
-                              combine_id=combine_id)
+            return _run_tests(cmd, failing, analyze_isolation,
+                              isolated, until_failure,
+                              subunit_out=subunit_out,
+                              combine_id=combine_id,
+                              repo_type=repo_type,
+                              repo_url=repo_url)
     else:
         # Where do we source data about the cause of conflicts.
         # XXX: Should instead capture the run id in with the failing test
@@ -208,7 +278,12 @@ def run(arguments):
         spurious_failures = set()
         for test_id in ids:
             # TODO(mtrienish): Add regex
-            cmd = conf.get_run_command(args, [test_id])
+            cmd = conf.get_run_command(
+                [test_id], group_regex=group_regex, repo_type=repo_type,
+                repo_url=repo_url, serial=serial, worker_path=worker_path,
+                concurrency=concurrency, blacklist_file=blacklist_file,
+                black_regex=black_regex, randomize=random, test_path=test_path,
+                top_dir=top_dir)
             if not _run_tests(cmd):
                 # If the test was filtered, it won't have been run.
                 if test_id in repo.get_test_ids(repo.latest_id()):
@@ -238,9 +313,13 @@ def run(arguments):
                 check_width = int(ceil(width / 2.0))
                 # TODO(mtreinish): Add regex
                 cmd = conf.get_run_command(
-                    args,
                     candidate_causes[bottom:bottom + check_width]
-                    + [spurious_failure])
+                    + [spurious_failure],
+                    group_regex=group_regex, repo_type=repo_type,
+                    repo_url=repo_url, serial=serial, worker_path=worker_path,
+                    concurrency=concurrency, blacklist_file=blacklist_file,
+                    black_regex=black_regex, randomize=random,
+                    test_path=test_path, top_dir=top_dir)
                 _run_tests(cmd)
                 # check that the test we're probing still failed - still
                 # awkward.
@@ -331,7 +410,8 @@ def _prior_tests(self, run, failing_id):
 
 
 def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
-               subunit_out=False, combine_id=None):
+               subunit_out=False, combine_id=None, repo_type='file',
+               repo_url=None):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
@@ -347,8 +427,8 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                 return 0
             return load.load((None, None), in_streams=run_procs,
                              partial=partial, subunit_out=subunit_out,
-                             repo_type=cmd.options.repo_type,
-                             repo_url=cmd.options.repo_url, run_id=combine_id)
+                             repo_type=repo_type,
+                             repo_url=repo_url, run_id=combine_id)
 
         if not until_failure:
             return run_tests()
@@ -359,3 +439,21 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
             return result
     finally:
         cmd.cleanUp()
+
+
+def run(arguments):
+    filters = arguments[1] or None
+    args = arguments[0]
+
+    return run_command(
+        config=args.config, repo_type=args.repo_type, repo_url=args.repo_url,
+        test_path=args.test_path, top_dir=args.top_dir,
+        group_regex=args.group_regex, failing=args.failing, serial=args.serial,
+        concurrency=args.concurrency, load_list=args.load_list,
+        partial=args.partial, subunit_out=args.subunit,
+        until_failure=args.until_failure,
+        analyze_isolation=args.analyze_isolation, isolated=args.isolated,
+        worker_path=args.worker_path, blacklist_file=args.blacklist_file,
+        whitelist_file=args.whitelist_file, black_regex=args.black_regex,
+        no_discover=args.no_discover, random=args.random, combine=args.combine,
+        filters=filters)

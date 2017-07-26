@@ -50,8 +50,22 @@ def format_times(times):
     return times
 
 
-def run(args):
-    repo = util.get_repo_open(args[0].repo_type, args[0].repo_url)
+def run(arguments):
+    args = arguments[0]
+    return slowest(repo_type=args.repo_type, repo_url=args.repo_url,
+                   show_all=args.all)
+
+
+def slowest(repo_type='file', repo_url=None, show_all=False):
+    """Print the slowest times from the last run in the repository
+
+    :param str repo_type: This is the type of repository to use. Valid choices
+        are 'file' and 'sql'.
+    :param str repo_url: The url of the repository to use.
+    :param bool show_all: Show timing for all tests.
+    """
+
+    repo = util.get_repo_open(repo_type, repo_url)
     try:
         latest_id = repo.latest_id()
     except KeyError:
@@ -62,7 +76,7 @@ def run(args):
     known_times.sort(key=itemgetter(1), reverse=True)
     if len(known_times) > 0:
         # By default show 10 rows
-        if not args[0].all:
+        if not show_all:
             known_times = known_times[:10]
         known_times = format_times(known_times)
         header = ('Test id', 'Runtime (s)')

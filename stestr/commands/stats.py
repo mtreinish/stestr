@@ -25,7 +25,18 @@ def set_cli_opts(parser):
     pass
 
 
-def run(args):
-    repo = util.get_repo_open(args[0].repo_type, args[0].repo_url)
+def run(arguments):
+    args = arguments[0]
+    return stats(repo_type=args.repo_type, repo_url=args.repo_url)
+
+
+def stats(repo_type='file', repo_url=None):
+    """Print repo stats
+
+    :param str repo_type: This is the type of repository to use. Valid choices
+        are 'file' and 'sql'.
+    :param str repo_url: The url of the repository to use.
+    """
+    repo = util.get_repo_open(repo_type, repo_url)
     sys.stdout.write('%s=%s\n' % ('runs', repo.count()))
     return 0
