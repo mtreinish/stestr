@@ -89,7 +89,7 @@ class TestrConf(object):
 
         if not test_path and self.parser.has_option('DEFAULT', 'test_path'):
             test_path = self.parser.get('DEFAULT', 'test_path')
-        else:
+        elif not test_path:
             print("No test_path can be found in either the command line "
                   "options nor in the specified config file {0}.  Please "
                   "specify a test path either in the config file or via the "
