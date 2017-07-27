@@ -108,7 +108,8 @@ class TestReturnCodes(base.TestCase):
 
     def test_combine_results(self):
         self.assertRunExit('stestr run passing', 0)
-        stdout = self._get_cmd_stdout('stestr last')
+        stdout = self._get_cmd_stdout(
+            'stestr last --no-subunit-trace')
         stdout = six.text_type(stdout[0])
         test_count_split = stdout.split(' ')
         test_count = test_count_split[1]
@@ -116,7 +117,8 @@ class TestReturnCodes(base.TestCase):
         id_regex = re.compile('\(id=(.*?)\)')
         test_id = id_regex.search(stdout).group(0)
         self.assertRunExit('stestr run --combine passing', 0)
-        combine_stdout = self._get_cmd_stdout('stestr last')[0]
+        combine_stdout = self._get_cmd_stdout(
+            'stestr last --no-subunit-trace')[0]
         combine_stdout = six.text_type(combine_stdout)
         combine_test_count_split = combine_stdout.split(' ')
         combine_test_count = combine_test_count_split[1]
