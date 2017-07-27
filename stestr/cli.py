@@ -22,8 +22,7 @@ __version__ = version.version_info.version_string_with_vcs()
 
 class StestrCLI(object):
 
-    commands = ['run', 'list', 'slowest', 'failing', 'stats', 'last', 'init',
-                'load']
+    commands = ['run', 'list', 'slowest', 'failing', 'last', 'init', 'load']
     command_module = 'stestr.commands.'
 
     def __init__(self):
