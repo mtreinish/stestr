@@ -66,6 +66,11 @@ def load(force_init=False, in_streams=None,
          run_id=None, streams=None):
     """Load subunit streams into a repository
 
+    This function will load subunit streams into the repository. It will
+    output to STDOUT the results from the input stream. Internally this is
+    used by the run command to both output the results as well as store the
+    result in the repository.
+
     :param bool force_init: Initialize the specifiedrepository if it hasn't
         been created.
     :param list in_streams: A list of file objects that will be saved into the
@@ -77,6 +82,10 @@ def load(force_init=False, in_streams=None,
     :param str repo_url: The url of the repository to use.
     :param run_id: The optional run id to save the subunit stream to.
     :param list streams: A list of file paths to read for the input streams.
+
+    :return return_code: The exit code for the command. 0 for success and > 0
+        for failures.
+    :rtype: int
     """
 
     try:
