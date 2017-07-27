@@ -45,6 +45,10 @@ def set_cli_opts(parser):
     parser.add_argument("--subunit-trace", action='store_true', default=False,
                         help="Display the loaded stream through the "
                              "subunit-trace output filter")
+    parser.add_argument('--color', action='store_true', default=False,
+                        help='Enable color output in the subunit-trace output,'
+                             ' if subunit-trace output is enabled. If '
+                             'subunit-trace is disable this does nothing.')
 
 
 def get_cli_help():
@@ -64,12 +68,12 @@ def run(arguments):
     load(repo_type=args.repo_type, repo_url=args.repo_url,
          partial=args.partial, subunit_out=args.subunit,
          force_init=args.force_init, streams=arguments[1],
-         pretty_out=args.subunit_trace)
+         pretty_out=args.subunit_trace, color=args.color)
 
 
 def load(force_init=False, in_streams=None,
          partial=False, subunit_out=False, repo_type='file', repo_url=None,
-         run_id=None, streams=None, pretty_out=False):
+         run_id=None, streams=None, pretty_out=False, color=False):
     """Load subunit streams into a repository
 
     :param bool force_init: Initialize the specifiedrepository if it hasn't
@@ -85,6 +89,7 @@ def load(force_init=False, in_streams=None,
     :param list streams: A list of file paths to read for the input streams.
     :param bool pretty_out: Use the subunit-trace output filter for the loaded
         stream.
+    :param bool color: Enabled colorized subunit-trace output
     """
 
     try:
@@ -126,7 +131,8 @@ def load(force_init=False, in_streams=None,
         output_result, summary_result = output.make_result(inserter.get_id)
     if pretty_out:
         outcomes = testtools.StreamToDict(
-            functools.partial(subunit_trace.show_outcome, sys.stdout))
+            functools.partial(subunit_trace.show_outcome, sys.stdout,
+                              enable_color=color))
         summary_result = testtools.StreamSummary()
         output_result = testtools.CopyStreamResult([outcomes, summary_result])
         output_result = testtools.StreamResultRouter(output_result)
