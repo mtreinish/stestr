@@ -64,7 +64,12 @@ def run(arguments):
 
 
 def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False):
-    """Return the failing tests from the most recent run in the repository
+    """Print the failing tests from the most recent run in the repository
+
+    This function will print to STDOUT whether there are any tests that failed
+    in the last run. It optionally will print the test_ids for the failing
+    tests if ``list_tests`` is true. If ``subunit`` is true a subunit stream
+    with just the failed tests will be printed to STDOUT.
 
     Note this function depends on the cwd for the repository if `repo_type` is
     set to file and `repo_url` is not specified it will use the repository
@@ -76,6 +81,9 @@ def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False):
     :param bool list_test: Show only a list of failing tests.
     :param bool subunit: Show output as a subunit stream.
 
+    :return return_code: The exit code for the command. 0 for success and > 0
+        for failures.
+    :rtype: int
     """
     if repo_type not in ['file', 'sql']:
         print('Repository type %s is not a type' % repo_type)

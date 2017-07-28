@@ -60,6 +60,10 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
          color=False):
     """Show the last run loaded into a a repository
 
+    This function will print the results from the last run in the repository
+    to STDOUT. It can optionally print the subunit stream for the last run
+    to STDOUT if the ``subunit`` option is set to true.
+
     Note this function depends on the cwd for the repository if `repo_type` is
     set to file and `repo_url` is not specified it will use the repository
     located at CWD/.stestr
@@ -70,6 +74,11 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
     :param bool subunit_out: Show output as a subunit stream.
     :param pretty_out: Use the subunit-trace output filter.
     :param color: Enable colorized output with the subunit-trace output filter.
+    :param bool subunit: Show output as a subunit stream.
+
+    :return return_code: The exit code for the command. 0 for success and > 0
+        for failures.
+    :rtype: int
     """
     repo = util.get_repo_open(repo_type, repo_url)
     latest_run = repo.get_latest_run()

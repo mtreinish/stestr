@@ -76,6 +76,11 @@ def load(force_init=False, in_streams=None,
          run_id=None, streams=None, pretty_out=False, color=False):
     """Load subunit streams into a repository
 
+    This function will load subunit streams into the repository. It will
+    output to STDOUT the results from the input stream. Internally this is
+    used by the run command to both output the results as well as store the
+    result in the repository.
+
     :param bool force_init: Initialize the specifiedrepository if it hasn't
         been created.
     :param list in_streams: A list of file objects that will be saved into the
@@ -90,6 +95,10 @@ def load(force_init=False, in_streams=None,
     :param bool pretty_out: Use the subunit-trace output filter for the loaded
         stream.
     :param bool color: Enabled colorized subunit-trace output
+
+    :return return_code: The exit code for the command. 0 for success and > 0
+        for failures.
+    :rtype: int
     """
 
     try:

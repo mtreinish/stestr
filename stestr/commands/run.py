@@ -132,7 +132,8 @@ def run_command(config='.stestr.conf', repo_type='file',
 
     This function implements the run command. It will run the tests specified
     in the parameters based on the provided config file and/or arguments
-    specified in the way specified by the arguments.
+    specified in the way specified by the arguments. The results will be
+    printed to STDOUT and loaded into the repository.
 
     :param str config: The path to the stestr config file. Must be a string.
     :param str repo_type: This is the type of repository to use. Valid choices
@@ -180,6 +181,10 @@ def run_command(config='.stestr.conf', repo_type='file',
         (assuming any other filtering specified also uses it)
     :param bool pretty_out: Use the subunit-trace output filter
     :param bool color: Enable colorized output in subunit-trace
+
+    :return return_code: The exit code for the command. 0 for success and > 0
+        for failures.
+    :rtype: int
     """
     try:
         repo = util.get_repo_open(repo_type, repo_url)
