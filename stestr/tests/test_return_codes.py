@@ -93,6 +93,13 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit('stestr run --subunit passing', 0,
                            subunit=True)
 
+    def test_until_failure_fails(self):
+        self.assertRunExit('stestr run --until-failure', 1)
+
+    def test_until_failure_with_subunit_fails(self):
+        self.assertRunExit('stestr run --until-failure --subunit', 1,
+                           subunit=True)
+
     def test_list(self):
         self.assertRunExit('stestr list', 0)
 
