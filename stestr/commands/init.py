@@ -23,6 +23,9 @@ def run(arguments):
 def init(repo_type='file', repo_url=None):
     """Initialize a new repository
 
+    This function will create initialize a new repostiory if one does not
+    exist. If one exists the command will fail.
+
     Note this function depends on the cwd for the repository if `repo_type` is
     set to file and `repo_url` is not specified it will use the repository
     located at CWD/.stestr
@@ -30,6 +33,10 @@ def init(repo_type='file', repo_url=None):
     :param str repo_type: This is the type of repository to use. Valid choices
         are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
+
+    :return return_code: The exit code for the command. 0 for success and > 0
+        for failures.
+    :rtype: int
     """
 
     util.get_repo_initialise(repo_type, repo_url)

@@ -59,10 +59,18 @@ def run(arguments):
 def slowest(repo_type='file', repo_url=None, show_all=False):
     """Print the slowest times from the last run in the repository
 
+    This function will print to STDOUT the 10 slowests tests in the last run.
+    Optionally, using the ``show_all`` argument, it will print all the tests,
+    instead of just 10. sorted by time.
+
     :param str repo_type: This is the type of repository to use. Valid choices
         are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param bool show_all: Show timing for all tests.
+
+    :return return_code: The exit code for the command. 0 for success and > 0
+        for failures.
+    :rtype: int
     """
 
     repo = util.get_repo_open(repo_type, repo_url)
