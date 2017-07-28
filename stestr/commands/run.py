@@ -17,6 +17,7 @@ import os
 import subprocess
 
 import six
+import subunit
 import testtools
 
 from stestr.commands import load
@@ -203,10 +204,24 @@ def run_command(config='.stestr.conf', repo_type='file',
         if not until_failure:
             return run_tests()
         else:
-            result = run_tests()
-            while not result:
+            while True:
                 result = run_tests()
-            return result
+                # If we're using subunit output we want to make sure to check
+                # the result from the repository because load() returns 0
+                # always on subunit output
+                if subunit:
+                    summary = testtools.StreamSummary()
+                    last_run = repo.get_latest_run().get_subunit_stream()
+                    stream = subunit.ByteStreamToStreamResult(last_run)
+                    summary.startTestRun()
+                    try:
+                        stream.run(summary)
+                    finally:
+                        summary.stopTestRun()
+                    if not summary.wasSuccessful():
+                        result = 1
+                if result:
+                    return result
 
     if failing or analyze_isolation:
         ids = _find_failing(repo)
@@ -433,10 +448,25 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
         if not until_failure:
             return run_tests()
         else:
-            result = run_tests()
-            while not result:
+            while True:
                 result = run_tests()
-            return result
+                # If we're using subunit output we want to make sure to check
+                # the result from the repository because load() returns 0
+                # always on subunit output
+                if subunit_out:
+                    repo = util.get_repo_open(repo_type, repo_url)
+                    summary = testtools.StreamSummary()
+                    last_run = repo.get_latest_run().get_subunit_stream()
+                    stream = subunit.ByteStreamToStreamResult(last_run)
+                    summary.startTestRun()
+                    try:
+                        stream.run(summary)
+                    finally:
+                        summary.stopTestRun()
+                    if not summary.wasSuccessful():
+                        result = 1
+                if result:
+                    return result
     finally:
         cmd.cleanUp()
 
