@@ -1,7 +1,7 @@
-.. _api_test_listing_fixture:
+.. _api_test_processor:
 
-Test Listing Fixture Module
-===========================
+Test Processor Module
+=====================
 
 This module contains the definition of the TestListingFixture fixture class.
 This fixture is used for handling the actual spawning of worker processes
@@ -26,5 +26,5 @@ needed.
 API Reference
 -------------
 
-.. automodule:: stestr.test_listing_fixture
+.. automodule:: stestr.test_processor
    :members:

@@ -79,7 +79,7 @@ class TestrConf(object):
         :param str black_regex: Test rejection regex. If a test cases name
             matches on re.search() operation, it will be removed from the final
             test list.
-         :param bool randomize: Randomize the test order after they are
+        :param bool randomize: Randomize the test order after they are
             partitioned into separate workers
 
         :returns: a TestProcessorFixture object for the specified config file

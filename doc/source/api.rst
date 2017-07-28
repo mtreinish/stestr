@@ -87,4 +87,4 @@ will be noted in the api doc.
    api/selection
    api/scheduler
    api/output
-   api/test_listing_fixture
+   api/test_processor
