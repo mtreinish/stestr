@@ -21,6 +21,69 @@ import yaml
 from stestr import selection
 
 
+def get_dynamic_test_list(test_ids, repository=None, group_callback=None,
+                          randomize=False):
+    dynamic_test_list = []
+    _group_callback = group_callback
+    time_data = {}
+    if randomize:
+        return random.shuffle(test_ids)
+    if repository:
+        time_data = repository.get_test_times(test_ids)
+        timed_tests = time_data['known']
+        unknown_tests = time_data['unknown']
+    else:
+        timed_tests = {}
+        unknown_tests = set(test_ids)
+    # Group tests: generate group_id -> test_ids.
+    group_ids = collections.defaultdict(list)
+    if _group_callback is None:
+        group_callback = lambda _: None
+    else:
+        group_callback = _group_callback
+    for test_id in test_ids:
+        group_id = group_callback(test_id) or test_id
+        group_ids[group_id].append(test_id)
+    # Time groups: generate three sets of groups:
+    # - fully timed dict(group_id -> time),
+    # - partially timed dict(group_id -> time) and
+    # - unknown (set of group_id)
+    # We may in future treat partially timed different for scheduling, but
+    # at least today we just schedule them after the fully timed groups.
+    timed = {}
+    partial = {}
+    unknown = []
+    for group_id, group_tests in group_ids.items():
+        untimed_ids = unknown_tests.intersection(group_tests)
+        group_time = sum(
+            [timed_tests[test_id]
+                for test_id in untimed_ids.symmetric_difference(
+                    group_tests)])
+        if not untimed_ids:
+            timed[group_id] = group_time
+        elif group_time:
+            partial[group_id] = group_time
+        else:
+            unknown.append(group_id)
+
+    # Scheduling is NP complete in general, so we avoid aiming for
+    # perfection. A quick approximation that is sufficient for our general
+    # needs:
+    # sort the groups by time
+    # allocate to partitions by putting each group in to the partition with
+    # the current (lowest time, shortest length[in tests])
+    def consume_queue(groups):
+        queue = sorted(
+            groups.items(), key=operator.itemgetter(1), reverse=True)
+        dynamic_test_list.extend([group[0] for group in queue])
+
+    consume_queue(timed)
+    consume_queue(partial)
+    dynamic_test_list.extend(unknown)
+
+    return dynamic_test_list
+
+
 def partition_tests(test_ids, concurrency, repository, group_callback,
                     randomize=False):
         """Partition test_ids by concurrency.

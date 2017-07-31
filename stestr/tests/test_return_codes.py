@@ -81,15 +81,18 @@ class TestReturnCodes(base.TestCase):
         self.assertThat(len(tests), testtools.matchers.GreaterThan(0))
 
     def assertRunExit(self, cmd, expected, subunit=False, stdin=None):
+        env = os.environ
         if stdin:
             p = subprocess.Popen(
                 "%s" % cmd, shell=True, stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                env=env)
             out, err = p.communicate(stdin)
         else:
             p = subprocess.Popen(
                 "%s" % cmd, shell=True,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                env=env)
             out, err = p.communicate()
 
         if not subunit:
@@ -235,8 +238,10 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit('stestr list', 0)
 
     def _get_cmd_stdout(self, cmd):
+        env = os.environ
         p = subprocess.Popen(cmd, shell=True,
-                             stdout=subprocess.PIPE)
+                             stdout=subprocess.PIPE,
+                             env=env)
         out = p.communicate()
         self.assertEqual(0, p.returncode)
         return out

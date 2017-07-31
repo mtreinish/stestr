@@ -49,7 +49,8 @@ class TestrConf(object):
                         serial=False, worker_path=None,
                         concurrency=0, blacklist_file=None,
                         whitelist_file=None, black_regex=None,
-                        randomize=False, parallel_class=None):
+                        randomize=False, parallel_class=None,
+                        dynamic=False):
         """Get a test_processor.TestProcessorFixture for this config file
 
         Any parameters about running tests will be used for initialize the
@@ -96,6 +97,7 @@ class TestrConf(object):
             stestr scheduler by class. If both this and the corresponding
             config file option which includes `group-regex` are set, this value
             will be used.
+        :param bool dynamic: Enable dynamic scheduling
 
         :returns: a TestProcessorFixture object for the specified config file
             and any arguments passed into this function
@@ -166,4 +168,5 @@ class TestrConf(object):
             test_filters=regexes, group_callback=group_callback, serial=serial,
             worker_path=worker_path, concurrency=concurrency,
             blacklist_file=blacklist_file, black_regex=black_regex,
-            whitelist_file=whitelist_file, randomize=randomize)
+            whitelist_file=whitelist_file, randomize=randomize,
+            dynamic=dynamic)

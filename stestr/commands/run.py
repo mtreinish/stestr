@@ -168,6 +168,8 @@ class Run(command.Command):
                             dest='all_attachments',
                             help='If set print all text attachment contents on'
                             ' a successful test execution')
+        parser.add_argument('--dynamic', action='store_true', default=False,
+                            help='Enable the EXPERIMENTAL dynamic scheduler')
         return parser
 
     def take_action(self, parsed_args):
@@ -244,7 +246,8 @@ class Run(command.Command):
             filters=filters, pretty_out=pretty_out, color=color,
             stdout=stdout, abbreviate=abbreviate,
             suppress_attachments=suppress_attachments,
-            all_attachments=all_attachments, pdb=args.pdb)
+            all_attachments=all_attachments, pdb=args.pdb,
+            dynamic=args.dynamic)
 
         # Always output slowest test info if requested, regardless of other
         # test run options
@@ -285,7 +288,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                 no_discover=False, random=False, combine=False, filters=None,
                 pretty_out=True, color=False, stdout=sys.stdout,
                 abbreviate=False, suppress_attachments=False,
-                all_attachments=False, pdb=False):
+                all_attachments=False, pdb=False, dynamic=False):
     """Function to execute the run command
 
     This function implements the run command. It will run the tests specified
@@ -351,6 +354,7 @@ def run_command(config='.stestr.conf', repo_type='file',
     :param str pdb: Takes in a single test_id to bypasses test
         discover and just execute the test specified without launching any
         additional processes. A file name may be used in place of a test name.
+    :param bool dynamic: Enable dynamic scheduling
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -388,6 +392,13 @@ def run_command(config='.stestr.conf', repo_type='file',
                ">= 0 must be used.\n" % concurrency)
         stdout.write(msg)
         return 2
+    if dynamic:
+        if sys.version_info()[0] < 3 or sys.version_info[1] < 5:
+            msg = 'Dynamic mode requires python 3.5 or newer.'
+            exit(1)
+
+        warnings.warn("WARNING: The dynamic scheduler is still experimental. "
+                      "You might encounter issues while using it")
     if combine:
         latest_id = repo.latest_id()
         combine_id = six.text_type(latest_id)
@@ -501,7 +512,8 @@ def run_command(config='.stestr.conf', repo_type='file',
             repo_url=repo_url, serial=serial, worker_path=worker_path,
             concurrency=concurrency, blacklist_file=blacklist_file,
             whitelist_file=whitelist_file, black_regex=black_regex,
-            top_dir=top_dir, test_path=test_path, randomize=random)
+            top_dir=top_dir, test_path=test_path, randomize=random,
+            dynamic=dynamic)
         if isolated:
             result = 0
             cmd.setUp()
@@ -525,7 +537,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                     repo_type=repo_type, repo_url=repo_url,
                     pretty_out=pretty_out, color=color, abbreviate=abbreviate,
                     stdout=stdout, suppress_attachments=suppress_attachments,
-                    all_attachments=all_attachments)
+                    all_attachments=all_attachments, dynamic=dynamic)
+
                 if run_result > result:
                     result = run_result
             return result
@@ -540,7 +553,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                               stdout=stdout,
                               abbreviate=abbreviate,
                               suppress_attachments=suppress_attachments,
-                              all_attachments=all_attachments)
+                              all_attachments=all_attachments,
+                              dynamic=dynamic)
     else:
         # Where do we source data about the cause of conflicts.
         latest_run = repo.get_latest_run()
@@ -585,14 +599,21 @@ def _run_tests(cmd, until_failure,
                subunit_out=False, combine_id=None, repo_type='file',
                repo_url=None, pretty_out=True, color=False, stdout=sys.stdout,
                abbreviate=False, suppress_attachments=False,
-               all_attachments=False):
+               all_attachments=False, dynamic=False):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
         def run_tests():
-            run_procs = [('subunit',
-                          output.ReturnCodeToSubunit(
-                              proc)) for proc in cmd.run_tests()]
+            if not dynamic or cmd.concurrency == 1:
+                run_procs = [('subunit',
+                              output.ReturnCodeToSubunit(
+                                  proc,
+                                  dynamic=False)) for proc in cmd.run_tests()]
+            else:
+                run_procs = [('subunit',
+                              output.ReturnCodeToSubunit(
+                                  os.fdopen(proc['stream']),
+                                  proc['proc'])) for proc in cmd.run_tests()]
             if not run_procs:
                 stdout.write("The specified regex doesn't match with anything")
                 return 1
