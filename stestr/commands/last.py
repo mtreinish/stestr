@@ -57,7 +57,7 @@ def run(arguments):
 
 
 def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
-         color=False):
+         color=False, stdout=sys.stdout):
     """Show the last run loaded into a a repository
 
     This function will print the results from the last run in the repository
@@ -75,6 +75,8 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
     :param pretty_out: Use the subunit-trace output filter.
     :param color: Enable colorized output with the subunit-trace output filter.
     :param bool subunit: Show output as a subunit stream.
+    :param file stdout: The output file to write all output to. By default
+         this is sys.stdout
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -84,7 +86,7 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
     latest_run = repo.get_latest_run()
     if subunit_out:
         stream = latest_run.get_subunit_stream()
-        output.output_stream(stream)
+        output.output_stream(stream, output=stdout)
         # Exits 0 if we successfully wrote the stream.
         return 0
     case = latest_run.get_test()
@@ -99,7 +101,7 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
         previous_run = None
     failed = False
     if not pretty_out:
-        output_result = results.CLITestResult(latest_run.get_id, sys.stdout,
+        output_result = results.CLITestResult(latest_run.get_id, stdout,
                                               previous_run)
         summary = output_result.get_summary()
         output_result.startTestRun()
@@ -110,7 +112,7 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
         failed = not summary.wasSuccessful()
     else:
         stream = latest_run.get_subunit_stream()
-        failed = subunit_trace.trace(stream, sys.stdout, post_fails=True,
+        failed = subunit_trace.trace(stream, stdout, post_fails=True,
                                      color=color)
     if failed:
         return 1

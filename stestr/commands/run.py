@@ -15,6 +15,7 @@
 from math import ceil
 import os
 import subprocess
+import sys
 
 import six
 import subunit
@@ -127,7 +128,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                 analyze_isolation=False, isolated=False, worker_path=None,
                 blacklist_file=None, whitelist_file=None, black_regex=None,
                 no_discover=False, random=False, combine=False, filters=None,
-                pretty_out=True, color=False):
+                pretty_out=True, color=False, stdout=sys.stdout):
     """Function to execute the run command
 
     This function implements the run command. It will run the tests specified
@@ -181,6 +182,8 @@ def run_command(config='.stestr.conf', repo_type='file',
         (assuming any other filtering specified also uses it)
     :param bool pretty_out: Use the subunit-trace output filter
     :param bool color: Enable colorized output in subunit-trace
+    :param file stdout: The file object to write all output to. By default this
+        is sys.stdout
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -194,7 +197,7 @@ def run_command(config='.stestr.conf', repo_type='file',
             msg = ("No config file found and --test-path not specified. "
                    "Either create or specify a .stestr.conf or use "
                    "--test-path ")
-            print(msg)
+            stdout.write(msg)
             exit(1)
         repo = util.get_repo_initialise(repo_type, repo_url)
     combine_id = None
@@ -217,7 +220,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                              repo_type=repo_type,
                              repo_url=repo_url, run_id=combine_id,
                              pretty_out=pretty_out,
-                             color=color)
+                             color=color, stdout=stdout)
 
         if not until_failure:
             return run_tests()
@@ -291,7 +294,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                                         repo_type=repo_type,
                                         repo_url=repo_url,
                                         pretty_out=pretty_out,
-                                        color=color)
+                                        color=color,
+                                        stdout=stdout)
                 if run_result > result:
                     result = run_result
             return result
@@ -303,7 +307,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                               repo_type=repo_type,
                               repo_url=repo_url,
                               pretty_out=pretty_out,
-                              color=color)
+                              color=color,
+                              stdout=stdout)
     else:
         # Where do we source data about the cause of conflicts.
         # XXX: Should instead capture the run id in with the failing test
@@ -448,7 +453,7 @@ def _prior_tests(self, run, failing_id):
 
 def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                subunit_out=False, combine_id=None, repo_type='file',
-               repo_url=None, pretty_out=True, color=False):
+               repo_url=None, pretty_out=True, color=False, stdout=sys.stdout):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
@@ -460,13 +465,13 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
             if (failing or analyze_isolation or isolated):
                 partial = True
             if not run_procs:
-                print("The specified regex doesn't match with anything.")
+                stdout.write("The specified regex doesn't match with anything")
                 return 0
             return load.load((None, None), in_streams=run_procs,
                              partial=partial, subunit_out=subunit_out,
                              repo_type=repo_type,
                              repo_url=repo_url, run_id=combine_id,
-                             pretty_out=pretty_out, color=color)
+                             pretty_out=pretty_out, color=color, stdout=stdout)
 
         if not until_failure:
             return run_tests()

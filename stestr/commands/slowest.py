@@ -14,6 +14,7 @@
 
 import math
 from operator import itemgetter
+import sys
 
 from stestr import output
 from stestr.repository import util
@@ -56,7 +57,8 @@ def run(arguments):
                    show_all=args.all)
 
 
-def slowest(repo_type='file', repo_url=None, show_all=False):
+def slowest(repo_type='file', repo_url=None, show_all=False,
+            stdout=sys.stdout):
     """Print the slowest times from the last run in the repository
 
     This function will print to STDOUT the 10 slowests tests in the last run.
@@ -67,6 +69,8 @@ def slowest(repo_type='file', repo_url=None, show_all=False):
         are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param bool show_all: Show timing for all tests.
+    :param file stdout: The output file to write all output to. By default
+        this is sys.stdout
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -89,5 +93,5 @@ def slowest(repo_type='file', repo_url=None, show_all=False):
         known_times = format_times(known_times)
         header = ('Test id', 'Runtime (s)')
         rows = [header] + known_times
-        output.output_table(rows)
+        output.output_table(rows, output=stdout)
     return 0
