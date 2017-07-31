@@ -74,7 +74,7 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit('stestr run passing', 0)
 
     def test_parallel_passing_bad_regex(self):
-        self.assertRunExit('stestr run bad.regex.foobar', 0)
+        self.assertRunExit('stestr run bad.regex.foobar', 1)
 
     def test_parallel_fails(self):
         self.assertRunExit('stestr run', 1)

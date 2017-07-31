@@ -466,7 +466,7 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                 partial = True
             if not run_procs:
                 stdout.write("The specified regex doesn't match with anything")
-                return 0
+                return 1
             return load.load((None, None), in_streams=run_procs,
                              partial=partial, subunit_out=subunit_out,
                              repo_type=repo_type,
