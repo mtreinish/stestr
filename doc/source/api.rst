@@ -21,6 +21,57 @@ Repository
 Commands
 --------
 
+These modules are used for the operation of all the various subcommands in
+stestr. As of the 1.0.0 release each of these commands should be considered
+a stable interface that can be relied on externally.
+
+Each command module conforms to a basic format that is used by ``stestr.cli``
+to load each command. The basic structure for these modules is the following
+three functions::
+
+  def get_cli_help():
+      """This function returns a string that is used for the subcommand help"""
+      help_str = "A descriptive help string about the command"
+      return help_str
+
+  def get_cli_opts(parser):
+      """This function takes a parser and any subcommand arguments are defined
+         here"""
+      parser.add_argument(...)
+
+  def run(arguments):
+      """This function actually runs the command. It takes in a tuple arguments
+         which the first element is the argparse Namespace object with the
+         arguments from the parser. The second element is a list of unknown
+         arguments from the CLI. The expectation of the run method is that it
+         will process the arguments and call another function that does the
+         real work. The return value is expected to be an int and is used for
+         the exit code (assuming the function doesn't call sys.exit() on it's
+         own)"""
+      args = arguments[0]
+      unknown_args = arguments[1]
+      return call_foo()
+
+The command module will not work if all 3 of these function are not defined.
+However, to make the commands externally consumable each module also contains
+another public function which performs the real work for the command. Each one
+of these functions has a defined stable Python API signature with args and
+kwargs so that people can easily call the functions from other python programs.
+This function is what can be expected to be used outside of stestr as the stable
+interface.
+
+.. toctree::
+   :maxdepth: 2
+
+   api/commands/failing
+   api/commands/init
+   api/commands/last
+   api/commands/list
+   api/commands/load
+   api/commands/run
+   api/commands/slowest
+
+
 Internal APIs
 -------------
 
@@ -36,4 +87,4 @@ will be noted in the api doc.
    api/selection
    api/scheduler
    api/output
-   api/test_listing_fixture
+   api/test_processor

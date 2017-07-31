@@ -146,6 +146,24 @@ selection options to do this, for example::
 This will list all the tests which will be run by stestr using that combination
 of arguments.
 
+Adjusting test run output
+-------------------------
+
+By default the ``stestr run`` command uses an output filter called
+subunit-trace. (as does the ``stestr last`` command) This displays the tests
+as they are finished executing, as well as their worker and status. It also
+prints aggregate numbers about the run at the end. You can read more about
+subunit-trace in the module doc: :ref:`subunit_trace`.
+
+However, the test run output is configurable, you can disable this output
+with the ``--no-subunit-trace`` flag which will be completely silent except for
+any failures it encounters. There is also the ``--color`` flag which will enable
+colorization with subunit-trace output. If you prefer to deal with the raw
+subunit yourself and run your own output rendering or filtering you can use
+the ``--subunit`` flag to output the result stream as raw subunit v2.
+
+
+
 Combining Test Results
 ----------------------
 There is sometimes a use case for running a single test suite split between

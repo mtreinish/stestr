@@ -58,15 +58,16 @@ run(arguments)
 This is where the real work for the command is performed. This is the function
 that is called when the command is executed. This function is called being
 wrapped by sys.exit() so an integer return is expected that will be used
-for the command's return code.
-
-.. todo::
-  Define an API for the arguments. Right now it's a tuple with a
-  argparse.Namespace object and a list, but this isn't set in stone.
+for the command's return code. The arguments input arg is a tuple, the first
+element is the argparse.Namespace object from the parsed CLI options and the
+second element is a list of unknown arguments from the CLI. The expectation
+is that this function will call a separate function with a real python API
+that does all the real work. (which is the public python interface for the
+command)
 
 
 Operations for Running Tests
---------------------------
+----------------------------
 
 The basic flow when stestr run is called at a high level is fairly straight
 forward. In the default case when run is called the first operation performed
