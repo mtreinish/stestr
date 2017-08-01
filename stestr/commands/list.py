@@ -13,6 +13,7 @@
 """List the tests from a project and show them."""
 
 from io import BytesIO
+import sys
 
 from stestr import config_file
 from stestr import output
@@ -59,7 +60,7 @@ def run(arguments):
 def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
                  test_path=None, top_dir=None, group_regex=None,
                  blacklist_file=None, whitelist_file=None, black_regex=None,
-                 filters=None):
+                 filters=None, stdout=sys.stdout):
     """Print a list of test_ids for a project
 
     This function will print the test_ids for tests in a project. You can
@@ -88,6 +89,9 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
     :param list filters: A list of string regex filters to initially apply on
         the test list. Tests that match any of the regexes will be used.
         (assuming any other filtering specified also uses it)
+    :param file stdout: The output file to write all output to. By default
+        this is sys.stdout
+
     """
     ids = None
     conf = config_file.TestrConf(config)
@@ -109,7 +113,7 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
         for id in ids:
             stream.write(('%s\n' % id).encode('utf8'))
         stream.seek(0)
-        output.output_stream(stream)
+        output.output_stream(stream, output=stdout)
         return 0
     finally:
         cmd.cleanUp()
