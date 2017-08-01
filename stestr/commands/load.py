@@ -73,7 +73,8 @@ def run(arguments):
 
 def load(force_init=False, in_streams=None,
          partial=False, subunit_out=False, repo_type='file', repo_url=None,
-         run_id=None, streams=None, pretty_out=False, color=False):
+         run_id=None, streams=None, pretty_out=False, color=False,
+         stdout=sys.stdout):
     """Load subunit streams into a repository
 
     This function will load subunit streams into the repository. It will
@@ -95,6 +96,8 @@ def load(force_init=False, in_streams=None,
     :param bool pretty_out: Use the subunit-trace output filter for the loaded
         stream.
     :param bool color: Enabled colorized subunit-trace output
+    :param file stdout: The output file to write all output to. By default
+        this is sys.stdout
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -140,12 +143,12 @@ def load(force_init=False, in_streams=None,
         output_result, summary_result = output.make_result(inserter.get_id)
     if pretty_out:
         outcomes = testtools.StreamToDict(
-            functools.partial(subunit_trace.show_outcome, sys.stdout,
+            functools.partial(subunit_trace.show_outcome, stdout,
                               enable_color=color))
         summary_result = testtools.StreamSummary()
         output_result = testtools.CopyStreamResult([outcomes, summary_result])
         output_result = testtools.StreamResultRouter(output_result)
-        cat = subunit.test_results.CatFiles(sys.stdout)
+        cat = subunit.test_results.CatFiles(stdout)
         output_result.add_rule(cat, 'test_id', test_id=None)
     else:
         try:
@@ -153,7 +156,7 @@ def load(force_init=False, in_streams=None,
         except KeyError:
             previous_run = None
         output_result = results.CLITestResult(
-            inserter.get_id, sys.stdout, previous_run)
+            inserter.get_id, stdout, previous_run)
         summary_result = output_result.get_summary()
     result = testtools.CopyStreamResult([inserter, output_result])
     start_time = datetime.datetime.utcnow()
@@ -165,8 +168,8 @@ def load(force_init=False, in_streams=None,
     stop_time = datetime.datetime.utcnow()
     elapsed_time = stop_time - start_time
     if pretty_out:
-        subunit_trace.print_fails(sys.stdout)
-        subunit_trace.print_summary(sys.stdout, elapsed_time)
+        subunit_trace.print_fails(stdout)
+        subunit_trace.print_summary(stdout, elapsed_time)
     if not summary_result.wasSuccessful():
         return 1
     else:

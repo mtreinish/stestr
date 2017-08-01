@@ -43,7 +43,7 @@ def _show_subunit(run):
     return 0
 
 
-def _make_result(repo, list_tests=False):
+def _make_result(repo, list_tests=False, stdout=sys.stdout):
     if list_tests:
         list_result = testtools.StreamSummary()
         return list_result, list_result
@@ -52,7 +52,7 @@ def _make_result(repo, list_tests=False):
             return repo.get_latest_run().get_id()
 
         output_result = results.CLITestResult(_get_id,
-                                              sys.stdout, None)
+                                              stdout, None)
         summary_result = output_result.get_summary()
         return output_result, summary_result
 
@@ -63,7 +63,8 @@ def run(arguments):
                    list_tests=args.list, subunit=args.subunit)
 
 
-def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False):
+def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False,
+            stdout=sys.stdout):
     """Print the failing tests from the most recent run in the repository
 
     This function will print to STDOUT whether there are any tests that failed
@@ -80,13 +81,15 @@ def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False):
     :param str repo_url: The url of the repository to use.
     :param bool list_test: Show only a list of failing tests.
     :param bool subunit: Show output as a subunit stream.
+    :param file stdout: The output file to write all output to. By default
+        this is sys.stdout
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
     :rtype: int
     """
     if repo_type not in ['file', 'sql']:
-        print('Repository type %s is not a type' % repo_type)
+        stdout.write('Repository type %s is not a type' % repo_type)
         return 1
 
     repo = util.get_repo_open(repo_type, repo_url)
@@ -109,5 +112,5 @@ def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False):
     if list_tests:
         failing_tests = [
             test for test, _ in summary.errors + summary.failures]
-        output.output_tests(failing_tests)
+        output.output_tests(failing_tests, output=stdout)
     return result
