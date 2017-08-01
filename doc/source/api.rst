@@ -88,3 +88,4 @@ will be noted in the api doc.
    api/scheduler
    api/output
    api/test_processor
+   api/subunit_trace
