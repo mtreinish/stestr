@@ -18,5 +18,5 @@ from stestr.commands.load import load as load_command
 from stestr.commands.run import run_command
 from stestr.commands.slowest import slowest as slowest_command
 
-__all__ = [failing_command, init_command, last_command,
-           list_command, load_command, run_command, slowest_command]
+__all__ = ['failing_command', 'init_command', 'last_command',
+           'list_command', 'load_command', 'run_command', 'slowest_command']

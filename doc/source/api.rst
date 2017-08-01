@@ -59,10 +59,17 @@ of these functions has a defined stable Python API signature with args and
 kwargs so that people can easily call the functions from other python programs.
 This function is what can be expected to be used outside of stestr as the stable
 interface.
+All the stable functions can be imported the the command module directly::
+
+  from stestr import command
+
+  def my_list():
+      command.list_command(...)
 
 .. toctree::
    :maxdepth: 2
 
+   api/commands/__init__
    api/commands/failing
    api/commands/init
    api/commands/last
