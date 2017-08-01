@@ -12,6 +12,8 @@ matrix:
       env: TOXENV=cover
     - python: "3.5"
       env: TOXENV=pep8
+    - python: "3.5"
+      env: TOXENV=docs
     - python: "2.7"
       env: TOXENV=py27
 cache:
