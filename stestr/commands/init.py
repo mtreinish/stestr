@@ -12,6 +12,8 @@
 
 """Initialise a new repository."""
 
+import sys
+
 from stestr.repository import util
 
 
@@ -20,7 +22,7 @@ def run(arguments):
     init(args.repo_type, args.repo_url)
 
 
-def init(repo_type='file', repo_url=None):
+def init(repo_type='file', repo_url=None, stdout=sys.stdout):
     """Initialize a new repository
 
     This function will create initialize a new repostiory if one does not
@@ -38,8 +40,16 @@ def init(repo_type='file', repo_url=None):
         for failures.
     :rtype: int
     """
-
-    util.get_repo_initialise(repo_type, repo_url)
+    try:
+        util.get_repo_initialise(repo_type, repo_url)
+    except OSError as e:
+        if e.errno != 17:
+            raise
+        repo_path = repo_url or './stestr'
+        stdout.write('The specified repository directory %s already exists. '
+                     'Please check if the repository already exists or '
+                     'select a different path\n' % repo_path)
+        return 1
 
 
 def set_cli_opts(parser):
