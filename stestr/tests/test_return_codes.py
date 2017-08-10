@@ -23,8 +23,6 @@ from six import StringIO
 
 from stestr.tests import base
 
-DEVNULL = open(os.devnull, 'wb')
-
 
 class TestReturnCodes(base.TestCase):
     def setUp(self):

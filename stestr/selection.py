@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import contextlib
 import re
 
 
@@ -36,21 +37,21 @@ def filter_tests(filters, test_ids):
 
 
 def black_reader(blacklist_file):
-    black_file = open(blacklist_file, 'r')
-    regex_comment_lst = []  # tuple of (regex_compiled, msg, skipped_lst)
-    for line in black_file:
-        raw_line = line.strip()
-        split_line = raw_line.split('#')
-        # Before the # is the regex
-        line_regex = split_line[0].strip()
-        if len(split_line) > 1:
-            # After the # is a comment
-            comment = ''.join(split_line[1:]).strip()
-        else:
-            comment = 'Skipped because of regex %s:' % line_regex
-        if not line_regex:
-            continue
-        regex_comment_lst.append((re.compile(line_regex), comment, []))
+    with contextlib.closing(open(blacklist_file, 'r')) as black_file:
+        regex_comment_lst = []  # tuple of (regex_compiled, msg, skipped_lst)
+        for line in black_file:
+            raw_line = line.strip()
+            split_line = raw_line.split('#')
+            # Before the # is the regex
+            line_regex = split_line[0].strip()
+            if len(split_line) > 1:
+                # After the # is a comment
+                comment = ''.join(split_line[1:]).strip()
+            else:
+                comment = 'Skipped because of regex %s:' % line_regex
+            if not line_regex:
+                continue
+            regex_comment_lst.append((re.compile(line_regex), comment, []))
     return regex_comment_lst
 
 
