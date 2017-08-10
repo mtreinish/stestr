@@ -16,6 +16,9 @@ matrix:
       env: TOXENV=docs
     - python: "2.7"
       env: TOXENV=py27
+    - os: osx
+      env: TOXENV=py36
+
 cache:
   directories:
     - $HOME/.cache/pip
