@@ -170,9 +170,9 @@ class TestProcessorFixture(fixtures.Fixture):
             else:
                 fd, name = tempfile.mkstemp()
                 stream = os.fdopen(fd, 'wb')
-            self.list_file_name = name
-            testlist.write_list(stream, self.test_ids)
-            stream.close()
+            with stream:
+                self.list_file_name = name
+                testlist.write_list(stream, self.test_ids)
         except Exception:
             if name:
                 os.unlink(name)
