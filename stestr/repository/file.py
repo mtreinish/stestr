@@ -41,11 +41,8 @@ class RepositoryFactory(repository.AbstractRepositoryFactory):
         """Create a repository at url/path."""
         base = os.path.join(os.path.expanduser(url), '.stestr')
         os.mkdir(base)
-        stream = open(os.path.join(base, 'format'), 'wt')
-        try:
+        with open(os.path.join(base, 'format'), 'wt') as stream:
             stream.write('1\n')
-        finally:
-            stream.close()
         result = Repository(base)
         result._write_next_stream(0)
         return result
@@ -166,11 +163,8 @@ class Repository(repository.AbstractRepository):
         # term. Likewise we don't fsync - this data isn't valuable enough to
         # force disk IO.
         prefix = self._path('next-stream')
-        stream = open(prefix + '.new', 'wt')
-        try:
+        with open(prefix + '.new', 'wt') as stream:
             stream.write('%d\n' % value)
-        finally:
-            stream.close()
         atomicish_rename(prefix + '.new', prefix)
 
 

@@ -63,17 +63,11 @@ class TestFileRepository(base.TestCase):
         base = os.path.join(self.tempdir, '.stestr')
         self.assertTrue(os.path.isdir(base))
         self.assertTrue(os.path.isfile(os.path.join(base, 'format')))
-        stream = open(os.path.join(base, 'format'), 'rt')
-        try:
+        with open(os.path.join(base, 'format'), 'rt') as stream:
             contents = stream.read()
-        finally:
-            stream.close()
         self.assertEqual("1\n", contents)
-        stream = open(os.path.join(base, 'next-stream'), 'rt')
-        try:
+        with open(os.path.join(base, 'next-stream'), 'rt') as stream:
             contents = stream.read()
-        finally:
-            stream.close()
         self.assertEqual("0\n", contents)
 
     # Skip if windows since ~ in a path doesn't work there
