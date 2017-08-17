@@ -12,7 +12,6 @@
 
 """Run a projects tests and load them into stestr."""
 
-from math import ceil
 import os
 import subprocess
 import sys
@@ -21,6 +20,7 @@ import six
 import subunit
 import testtools
 
+from stestr import bisect_tests
 from stestr.commands import load
 from stestr import config_file
 from stestr import output
@@ -318,11 +318,6 @@ def run_command(config='.stestr.conf', repo_type='file',
                               stdout=stdout,
                               abbreviate=abbreviate)
     else:
-        # Where do we source data about the cause of conflicts.
-        # XXX: Should instead capture the run id in with the failing test
-        # data so that we can deal with failures split across many partial
-        # runs.
-        latest_run = repo.get_latest_run()
         # Stage one: reduce the list of failing tests (possibly further
         # reduced by testfilters) to eliminate fails-on-own tests.
         spurious_failures = set()
@@ -335,7 +330,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                 whitelist_file=whitelist_file, black_regex=black_regex,
                 randomize=random, test_path=test_path,
                 top_dir=top_dir)
-            if not _run_tests(cmd):
+            if not _run_tests(cmd, failing, analyze_isolation, isolated,
+                              until_failure):
                 # If the test was filtered, it won't have been run.
                 if test_id in repo.get_test_ids(repo.latest_id()):
                     spurious_failures.add(test_id)
@@ -352,112 +348,17 @@ def run_command(config='.stestr.conf', repo_type='file',
         if not spurious_failures:
             # All done.
             return 0
+        # Where do we source data about the cause of conflicts.
+        # XXX: Should instead capture the run id in with the failing test
+        # data so that we can deal with failures split across many partial
+        # runs.
+        latest_run = repo.get_latest_run()
+        bisect_runner = bisect_tests.IsolationAnalyzer(
+            latest_run, conf, _run_tests, repo, test_path=test_path,
+            top_dir=top_dir, group_regex=group_regex, repo_type=repo_type,
+            repo_url=repo_url, serial=serial, concurrency=concurrency)
         # spurious-failure -> cause.
-        test_conflicts = {}
-        for spurious_failure in spurious_failures:
-            candidate_causes = _prior_tests(
-                latest_run, spurious_failure)
-            bottom = 0
-            top = len(candidate_causes)
-            width = top - bottom
-            while width:
-                check_width = int(ceil(width / 2.0))
-                # TODO(mtreinish): Add regex
-                cmd = conf.get_run_command(
-                    candidate_causes[bottom:bottom + check_width]
-                    + [spurious_failure],
-                    group_regex=group_regex, repo_type=repo_type,
-                    repo_url=repo_url, serial=serial, worker_path=worker_path,
-                    concurrency=concurrency, blacklist_file=blacklist_file,
-                    whitelist_file=whitelist_file, black_regex=black_regex,
-                    randomize=random, test_path=test_path, top_dir=top_dir)
-                _run_tests(cmd)
-                # check that the test we're probing still failed - still
-                # awkward.
-                found_fail = []
-
-                def find_fail(test_dict):
-                    if test_dict['id'] == spurious_failure:
-                        found_fail.append(True)
-
-                checker = testtools.StreamToDict(find_fail)
-                checker.startTestRun()
-                try:
-                    repo.get_failing().get_test().run(checker)
-                finally:
-                    checker.stopTestRun()
-                if found_fail:
-                    # Our conflict is in bottom - clamp the range down.
-                    top = bottom + check_width
-                    if width == 1:
-                        # found the cause
-                        test_conflicts[
-                            spurious_failure] = candidate_causes[bottom]
-                        width = 0
-                    else:
-                        width = top - bottom
-                else:
-                    # Conflict in the range we did not run: discard bottom.
-                    bottom = bottom + check_width
-                    if width == 1:
-                        # there will be no more to check, so we didn't
-                        # reproduce the failure.
-                        width = 0
-                    else:
-                        width = top - bottom
-            if spurious_failure not in test_conflicts:
-                # Could not determine cause
-                test_conflicts[spurious_failure] = 'unknown - no conflicts'
-        if test_conflicts:
-            table = [('failing test', 'caused by test')]
-            for failure, causes in test_conflicts.items():
-                table.append((failure, causes))
-            output.output_table(table)
-            return 3
-        return 0
-
-
-def _prior_tests(self, run, failing_id):
-    """Calculate what tests from the test run run ran before test_id.
-
-    Tests that ran in a different worker are not included in the result.
-    """
-    if not getattr(self, '_worker_to_test', False):
-        case = run.get_test()
-        # Use None if there is no worker-N tag
-        # If there are multiple, map them all.
-        # (worker-N -> [testid, ...])
-        worker_to_test = {}
-        # (testid -> [workerN, ...])
-        test_to_worker = {}
-
-        def map_test(test_dict):
-            tags = test_dict['tags']
-            id = test_dict['id']
-            workers = []
-            for tag in tags:
-                if tag.startswith('worker-'):
-                    workers.append(tag)
-            if not workers:
-                workers = [None]
-            for worker in workers:
-                worker_to_test.setdefault(worker, []).append(id)
-            test_to_worker.setdefault(id, []).extend(workers)
-
-        mapper = testtools.StreamToDict(map_test)
-        mapper.startTestRun()
-        try:
-            case.run(mapper)
-        finally:
-            mapper.stopTestRun()
-        self._worker_to_test = worker_to_test
-        self._test_to_worker = test_to_worker
-    failing_workers = self._test_to_worker[failing_id]
-    prior_tests = []
-    for worker in failing_workers:
-        worker_tests = self._worker_to_test[worker]
-        prior_tests.extend(worker_tests[:worker_tests.index(failing_id)])
-    return prior_tests
+        return bisect_runner.bisect_tests(spurious_failures)
 
 
 def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
