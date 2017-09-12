@@ -94,11 +94,11 @@ run the tests that have a regex match with foo **or** a regex match with bar.
 stestr allows you do to do simple test exclusion via passing a rejection/black
 regexp::
 
-    $ stestr --back-regex 'slow_tests|bad_tests'
+    $ stestr --black-regex 'slow_tests|bad_tests'
 
 stestr also allow you to combine these arguments::
 
-    $ stestr --back-regexp 'slow_tests|bad_tests' ui\.interface
+    $ stestr --black-regex 'slow_tests|bad_tests' ui\.interface
 
 Here first we selected all tests which matches to ``ui\.interface``, then we are
 dropping all test which matches ``slow_tests|bad_tests`` from the final list.
