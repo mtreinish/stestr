@@ -51,6 +51,7 @@ def run(arguments):
     filters = arguments[1]
     return list_command(config=args.config, repo_type=args.repo_type,
                         repo_url=args.repo_url, group_regex=args.group_regex,
+                        test_path=args.test_path,
                         blacklist_file=args.blacklist_file,
                         whitelist_file=args.whitelist_file,
                         black_regex=args.black_regex,
@@ -99,7 +100,7 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
         regexes=filters, repo_type=repo_type,
         repo_url=repo_url, group_regex=group_regex,
         blacklist_file=blacklist_file, whitelist_file=whitelist_file,
-        black_regex=black_regex)
+        black_regex=black_regex, test_path=test_path)
     not_filtered = filters is None and blacklist_file is None\
         and whitelist_file is None and black_regex is None
     try:
