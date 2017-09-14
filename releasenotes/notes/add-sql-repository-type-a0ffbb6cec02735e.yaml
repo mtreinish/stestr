@@ -1,6 +1,0 @@
----
-features:
-  - A new repository type sql was added. This is based on top of subunit2sql.
-    This repository type is still experimental and not production ready.
-  - A new CLI mechanism for switching between different repository types and
-    specifying alternative repository urls.
