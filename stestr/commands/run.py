@@ -267,8 +267,8 @@ def run_command(config='.stestr.conf', repo_type='file',
             ids, regexes=filters, group_regex=group_regex, repo_type=repo_type,
             repo_url=repo_url, serial=serial, worker_path=worker_path,
             concurrency=concurrency, blacklist_file=blacklist_file,
-            black_regex=black_regex, top_dir=top_dir, test_path=test_path,
-            randomize=random)
+            whitelist_file=whitelist_file, black_regex=black_regex,
+            top_dir=top_dir, test_path=test_path, randomize=random)
         if isolated:
             result = 0
             cmd.setUp()
@@ -282,7 +282,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                     [test_id], filters, group_regex=group_regex,
                     repo_type=repo_type, repo_url=repo_url, serial=serial,
                     worker_path=worker_path, concurrency=concurrency,
-                    blacklist_file=blacklist_file, black_regex=black_regex,
+                    blacklist_file=blacklist_file,
+                    whitelist_file=whitelist_file, black_regex=black_regex,
                     randomize=random, test_path=test_path, top_dir=top_dir)
 
                 run_result = _run_tests(cmd, failing,
@@ -324,7 +325,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                 [test_id], group_regex=group_regex, repo_type=repo_type,
                 repo_url=repo_url, serial=serial, worker_path=worker_path,
                 concurrency=concurrency, blacklist_file=blacklist_file,
-                black_regex=black_regex, randomize=random, test_path=test_path,
+                whitelist_file=whitelist_file, black_regex=black_regex,
+                randomize=random, test_path=test_path,
                 top_dir=top_dir)
             if not _run_tests(cmd):
                 # If the test was filtered, it won't have been run.
@@ -360,8 +362,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                     group_regex=group_regex, repo_type=repo_type,
                     repo_url=repo_url, serial=serial, worker_path=worker_path,
                     concurrency=concurrency, blacklist_file=blacklist_file,
-                    black_regex=black_regex, randomize=random,
-                    test_path=test_path, top_dir=top_dir)
+                    whitelist_file=whitelist_file, black_regex=black_regex,
+                    randomize=random, test_path=test_path, top_dir=top_dir)
                 _run_tests(cmd)
                 # check that the test we're probing still failed - still
                 # awkward.
