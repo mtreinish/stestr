@@ -15,6 +15,7 @@
 import sys
 
 from stestr import output
+from stestr.repository import abstract
 from stestr.repository import util
 from stestr import results
 from stestr import subunit_trace
@@ -82,8 +83,18 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
         for failures.
     :rtype: int
     """
-    repo = util.get_repo_open(repo_type, repo_url)
-    latest_run = repo.get_latest_run()
+    try:
+        repo = util.get_repo_open(repo_type, repo_url)
+    except abstract.RepositoryNotFound as e:
+        stdout.write(str(e) + '\n')
+        return 1
+
+    try:
+        latest_run = repo.get_latest_run()
+    except KeyError as e:
+        stdout.write(str(e) + '\n')
+        return 1
+
     if subunit_out:
         stream = latest_run.get_subunit_stream()
         output.output_stream(stream, output=stdout)
