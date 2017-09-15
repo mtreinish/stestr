@@ -94,11 +94,11 @@ run the tests that have a regex match with foo **or** a regex match with bar.
 stestr allows you do to do simple test exclusion via passing a rejection/black
 regexp::
 
-    $ stestr --black-regex 'slow_tests|bad_tests'
+    $ stestr run --black-regex 'slow_tests|bad_tests'
 
 stestr also allow you to combine these arguments::
 
-    $ stestr --black-regex 'slow_tests|bad_tests' ui\.interface
+    $ stestr run --black-regex 'slow_tests|bad_tests' ui\.interface
 
 Here first we selected all tests which matches to ``ui\.interface``, then we are
 dropping all test which matches ``slow_tests|bad_tests`` from the final list.
@@ -107,7 +107,7 @@ stestr also allows you to specify a blacklist file to define a set of regexes
 to exclude. You can specify a blacklist file with the
 ``--blacklist-file``/``-b`` option, for example::
 
-    $ stestr --blacklist_file $path_to_file
+    $ stestr run --blacklist_file $path_to_file
 
 The format for the file is line separated regex, with '#' used to signify the
 start of a comment on a line. For example::
@@ -127,7 +127,7 @@ The dual of the blacklist file is the whitelist file which will include any
 tests matching the regexes in the file. You can specify the path to the file
 with ``--whitelist_file``/``-w``, for example::
 
-    $ stestr --whitelist_file $path_to_file
+    $ stestr run --whitelist_file $path_to_file
 
 The format for the file is more or less identical to the blacklist file::
 
