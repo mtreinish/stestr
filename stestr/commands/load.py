@@ -49,6 +49,9 @@ def set_cli_opts(parser):
                         help='Enable color output in the subunit-trace output,'
                              ' if subunit-trace output is enabled. If '
                              'subunit-trace is disable this does nothing.')
+    parser.add_argument('--abbreviate', action='store_true',
+                        dest='abbreviate',
+                        help='Print one character status for each test')
 
 
 def get_cli_help():
@@ -68,13 +71,14 @@ def run(arguments):
     load(repo_type=args.repo_type, repo_url=args.repo_url,
          partial=args.partial, subunit_out=args.subunit,
          force_init=args.force_init, streams=arguments[1],
-         pretty_out=args.subunit_trace, color=args.color)
+         pretty_out=args.subunit_trace, color=args.color,
+         abbreviate=args.abbreviate)
 
 
 def load(force_init=False, in_streams=None,
          partial=False, subunit_out=False, repo_type='file', repo_url=None,
          run_id=None, streams=None, pretty_out=False, color=False,
-         stdout=sys.stdout):
+         stdout=sys.stdout, abbreviate=False):
     """Load subunit streams into a repository
 
     This function will load subunit streams into the repository. It will
@@ -98,6 +102,7 @@ def load(force_init=False, in_streams=None,
     :param bool color: Enabled colorized subunit-trace output
     :param file stdout: The output file to write all output to. By default
         this is sys.stdout
+    :param bool abbreviate: Use abbreviated output if set true
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -144,7 +149,7 @@ def load(force_init=False, in_streams=None,
     if pretty_out:
         outcomes = testtools.StreamToDict(
             functools.partial(subunit_trace.show_outcome, stdout,
-                              enable_color=color))
+                              enable_color=color, abbreviate=abbreviate))
         summary_result = testtools.StreamSummary()
         output_result = testtools.CopyStreamResult([outcomes, summary_result])
         output_result = testtools.StreamResultRouter(output_result)
