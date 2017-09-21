@@ -162,6 +162,9 @@ colorization with subunit-trace output. If you prefer to deal with the raw
 subunit yourself and run your own output rendering or filtering you can use
 the ``--subunit`` flag to output the result stream as raw subunit v2.
 
+There is also an ``--abbreviate`` flag availble, when this is used a single
+character is printed for each test as it is executed. A ``.`` is printed for a
+successful test, a ``F`` for a failed test, and a ``S`` for a skipped test.
 
 
 Combining Test Results
