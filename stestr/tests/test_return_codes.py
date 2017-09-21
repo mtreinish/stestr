@@ -162,9 +162,6 @@ class TestReturnCodes(base.TestCase):
     def test_list(self):
         self.assertRunExit('stestr list', 0)
 
-    def test_no_command(self):
-        self.assertRunExit('stestr', 2)
-
     def _get_cmd_stdout(self, cmd):
         p = subprocess.Popen(cmd, shell=True,
                              stdout=subprocess.PIPE)

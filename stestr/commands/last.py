@@ -14,6 +14,8 @@
 
 import sys
 
+from cliff import command
+
 from stestr import output
 from stestr.repository import abstract
 from stestr.repository import util
@@ -21,40 +23,42 @@ from stestr import results
 from stestr import subunit_trace
 
 
-def get_cli_help():
-    help_str = """Show the last run loaded into a repository.
+class Last(command.Command):
+    def get_description(self):
+        help_str = """Show the last run loaded into a repository.
 
-    Failing tests are shown on the console and a summary of the run is printed
-    at the end.
+        Failing tests are shown on the console and a summary of the run is
+        printed at the end.
 
-    Without --subunit, the process exit code will be non-zero if the test run
-    was not successful. With --subunit, the process exit code is non-zero if
-    the subunit stream could not be generated successfully.
-    """
-    return help_str
+        Without --subunit, the process exit code will be non-zero if the test
+        run was not successful. With --subunit, the process exit code is
+        non-zero if the subunit stream could not be generated successfully.
+        """
+        return help_str
 
+    def get_parser(self, prog_name):
+        parser = super(Last, self).get_parser(prog_name)
+        parser.add_argument(
+            "--subunit", action="store_true",
+            default=False, help="Show output as a subunit stream.")
+        parser.add_argument("--no-subunit-trace", action='store_true',
+                            default=False,
+                            help="Disable output with the subunit-trace "
+                            "output filter")
+        parser.add_argument('--color', action='store_true', default=False,
+                            help='Enable color output in the subunit-trace '
+                            'output, if subunit-trace output is enabled. '
+                            '(this is the default). If subunit-trace is '
+                            'disable this does nothing.')
+        return parser
 
-def set_cli_opts(parser):
-    parser.add_argument(
-        "--subunit", action="store_true",
-        default=False, help="Show output as a subunit stream.")
-    parser.add_argument("--no-subunit-trace", action='store_true',
-                        default=False,
-                        help="Disable output with the subunit-trace output "
-                             "filter")
-    parser.add_argument('--color', action='store_true', default=False,
-                        help='Enable color output in the subunit-trace output,'
-                             ' if subunit-trace output is enabled. (this is '
-                             'the default). If subunit-trace is disable this '
-                             ' does nothing.')
-
-
-def run(arguments):
-    args = arguments[0]
-    pretty_out = not args.no_subunit_trace
-    return last(repo_type=args.repo_type, repo_url=args.repo_url,
-                subunit_out=args.subunit, pretty_out=pretty_out,
-                color=args.color)
+    def take_action(self, parsed_args):
+        args = parsed_args
+        pretty_out = not args.no_subunit_trace
+        return last(repo_type=self.app_args.repo_type,
+                    repo_url=self.app_args.repo_url,
+                    subunit_out=args.subunit, pretty_out=pretty_out,
+                    color=args.color)
 
 
 def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,

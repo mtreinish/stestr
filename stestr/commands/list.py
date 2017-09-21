@@ -15,47 +15,61 @@
 from io import BytesIO
 import sys
 
+from cliff import command
+
 from stestr import config_file
 from stestr import output
 
 
-def get_cli_help():
-    help_str = ("List the tests for a project. You can use a filter just like"
-                "with the run command to see exactly what tests match")
-    return help_str
+class List(command.Command):
 
+    def get_description(self):
+        help_str = ("List the tests for a project. You can use a filter just "
+                    "like with the run command to see exactly what tests "
+                    "match")
+        return help_str
 
-def set_cli_opts(parser):
-    parser.add_argument('--blacklist-file', '-b',
-                        default=None, dest='blacklist_file',
-                        help='Path to a blacklist file, this file '
-                             'contains a separate regex exclude on each '
-                             'newline')
-    parser.add_argument('--whitelist-file', '-w',
-                        default=None, dest='whitelist_file',
-                        help='Path to a whitelist file, this file '
-                             'contains a separate regex on each newline.')
-    parser.add_argument('--black-regex', '-B',
-                        default=None, dest='black_regex',
-                        help='Test rejection regex. If a test cases name '
-                        'matches on re.search() operation , '
-                        'it will be removed from the final test list. '
-                        'Effectively the black-regexp is added to '
-                        ' black regexp list, but you do need to edit a file. '
-                        'The black filtering happens after the initial '
-                        ' white selection, which by default is everything.')
+    def get_parser(self, prog_name):
+        parser = super(List, self).get_parser(prog_name)
+        parser.add_argument("filters", nargs="*", default=None,
+                            help="A list of string regex filters to initially "
+                            "apply on the test list. Tests that match any of "
+                            "the regexes will be used. (assuming any other "
+                            "filtering specified also uses it)")
+        parser.add_argument('--blacklist-file', '-b',
+                            default=None, dest='blacklist_file',
+                            help='Path to a blacklist file, this file '
+                                 'contains a separate regex exclude on each '
+                                 'newline')
+        parser.add_argument('--whitelist-file', '-w',
+                            default=None, dest='whitelist_file',
+                            help='Path to a whitelist file, this file '
+                                 'contains a separate regex on each newline.')
+        parser.add_argument('--black-regex', '-B',
+                            default=None, dest='black_regex',
+                            help='Test rejection regex. If a test cases name '
+                            'matches on re.search() operation , '
+                            'it will be removed from the final test list. '
+                            'Effectively the black-regexp is added to '
+                            ' black regexp list, but you do need to edit a '
+                            'file. The black filtering happens after the '
+                            'initial white selection, which by default is '
+                            'everything.')
+        return parser
 
-
-def run(arguments):
-    args = arguments[0]
-    filters = arguments[1]
-    return list_command(config=args.config, repo_type=args.repo_type,
-                        repo_url=args.repo_url, group_regex=args.group_regex,
-                        test_path=args.test_path, top_dir=args.top_dir,
-                        blacklist_file=args.blacklist_file,
-                        whitelist_file=args.whitelist_file,
-                        black_regex=args.black_regex,
-                        filters=filters)
+    def take_action(self, parsed_args):
+        args = parsed_args
+        filters = parsed_args.filters
+        return list_command(config=self.app_args.config,
+                            repo_type=self.app_args.repo_type,
+                            repo_url=self.app_args.repo_url,
+                            group_regex=self.app_args.group_regex,
+                            test_path=self.app_args.test_path,
+                            top_dir=self.app_args.top_dir,
+                            blacklist_file=args.blacklist_file,
+                            whitelist_file=args.whitelist_file,
+                            black_regex=args.black_regex,
+                            filters=filters)
 
 
 def list_command(config='.stestr.conf', repo_type='file', repo_url=None,

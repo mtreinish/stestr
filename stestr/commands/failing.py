@@ -14,6 +14,7 @@
 
 import sys
 
+from cliff import command
 import testtools
 
 from stestr import output
@@ -21,17 +22,25 @@ from stestr.repository import util
 from stestr import results
 
 
-def get_cli_help():
-    return "Show the current failures known by the repository"
+class Failing(command.Command):
+    def get_description(self):
+        return "Show the current failures known by the repository"
 
+    def get_parser(self, prog_name):
+        parser = super(Failing, self).get_parser(prog_name)
+        parser.add_argument(
+            "--subunit", action="store_true",
+            default=False, help="Show output as a subunit stream.")
+        parser.add_argument(
+            "--list", action="store_true",
+            default=False, help="Show only a list of failing tests.")
+        return parser
 
-def set_cli_opts(parser):
-    parser.add_argument(
-        "--subunit", action="store_true",
-        default=False, help="Show output as a subunit stream."),
-    parser.add_argument(
-        "--list", action="store_true",
-        default=False, help="Show only a list of failing tests."),
+    def take_action(self, parsed_args):
+        args = parsed_args
+        return failing(repo_type=self.app_args.repo_type,
+                       repo_url=self.app_args.repo_url,
+                       list_tests=args.list, subunit=args.subunit)
 
 
 def _show_subunit(run):
@@ -55,12 +64,6 @@ def _make_result(repo, list_tests=False, stdout=sys.stdout):
                                               stdout, None)
         summary_result = output_result.get_summary()
         return output_result, summary_result
-
-
-def run(arguments):
-    args = arguments[0]
-    return failing(repo_type=args.repo_type, repo_url=args.repo_url,
-                   list_tests=args.list, subunit=args.subunit)
 
 
 def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False,

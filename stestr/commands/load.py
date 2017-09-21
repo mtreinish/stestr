@@ -19,6 +19,7 @@ import os
 import sys
 import warnings
 
+from cliff import command
 import subunit
 import testtools
 
@@ -30,51 +31,57 @@ from stestr import subunit_trace
 from stestr import utils
 
 
-def set_cli_opts(parser):
-    parser.add_argument("--partial", action="store_true",
-                        default=False,
-                        help="DEPRECATED: The stream being loaded was a "
-                             "partial run. This option is deprecated and no "
-                             "does anything. It will be removed in the future")
-    parser.add_argument("--force-init", action="store_true",
-                        default=False,
-                        help="Initialise the repository if it does not exist "
-                             "already")
-    parser.add_argument("--subunit", action="store_true",
-                        default=False,
-                        help="Display results in subunit format.")
-    parser.add_argument("--id", "-i", default=None,
-                        help="Append the stream into an existing entry in the "
-                             "repository")
-    parser.add_argument("--subunit-trace", action='store_true', default=False,
-                        help="Display the loaded stream through the "
-                             "subunit-trace output filter")
-    parser.add_argument('--color', action='store_true', default=False,
-                        help='Enable color output in the subunit-trace output,'
-                             ' if subunit-trace output is enabled. If '
-                             'subunit-trace is disable this does nothing.')
-    parser.add_argument('--abbreviate', action='store_true',
-                        dest='abbreviate',
-                        help='Print one character status for each test')
+class Load(command.Command):
+    def get_parser(self, prog_name):
+        parser = super(Load, self).get_parser(prog_name)
+        parser.add_argument("files", nargs="*", default=False,
+                            help="DEPRECATED: The stream being loaded was a "
+                            "partial run. This option is deprecated and no "
+                            "does anything. It will be removed in the future")
+        parser.add_argument("--partial", action="store_true",
+                            default=False,
+                            help="The stream being loaded was a partial run.")
+        parser.add_argument("--force-init", action="store_true",
+                            default=False,
+                            help="Initialise the repository if it does not "
+                            "exist already")
+        parser.add_argument("--subunit", action="store_true",
+                            default=False,
+                            help="Display results in subunit format.")
+        parser.add_argument("--id", "-i", default=None,
+                            help="Append the stream into an existing entry in "
+                            "the repository")
+        parser.add_argument("--subunit-trace", action='store_true',
+                            default=False,
+                            help="Display the loaded stream through the "
+                                 "subunit-trace output filter")
+        parser.add_argument('--color', action='store_true', default=False,
+                            help='Enable color output in the subunit-trace '
+                            'output, if subunit-trace output is enabled. If '
+                                 'subunit-trace is disable this does nothing.')
+        parser.add_argument('--abbreviate', action='store_true',
+                            dest='abbreviate',
+                            help='Print one character status for each test')
+        return parser
 
+    def get_description(self):
+        help_str = """Load a subunit stream into a repository.
 
-def get_cli_help():
-    help_str = """Load a subunit stream into a repository.
+            Failing tests are shown on the console and a summary of the stream
+            is printed at the end.
+            """
+        return help_str
 
-        Failing tests are shown on the console and a summary of the stream is
-        printed at the end.
-        """
-    return help_str
-
-
-def run(arguments):
-    args = arguments[0]
-    stdout = open(os.devnull, 'w') if args.quiet else sys.stdout
-    load(repo_type=args.repo_type, repo_url=args.repo_url,
-         partial=args.partial, subunit_out=args.subunit,
-         force_init=args.force_init, streams=arguments[1],
-         pretty_out=args.subunit_trace, color=args.color,
-         stdout=stdout, abbreviate=args.abbreviate)
+    def take_action(self, parsed_args):
+        args = parsed_args
+        verbose_level = self.app.options.verbose_level
+        stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
+        load(repo_type=self.app_args.repo_type,
+             repo_url=self.app_args.repo_url,
+             partial=args.partial, subunit_out=args.subunit,
+             force_init=args.force_init, streams=args.files,
+             pretty_out=args.subunit_trace, color=args.color,
+             stdout=stdout, abbreviate=args.abbreviate)
 
 
 def load(force_init=False, in_streams=None,

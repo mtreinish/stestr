@@ -17,6 +17,7 @@ import subprocess
 import sys
 import warnings
 
+from cliff import command
 import six
 import subunit
 import testtools
@@ -30,83 +31,119 @@ from stestr.repository import util
 from stestr.testlist import parse_list
 
 
-def set_cli_opts(parser):
-    parser.add_argument("--failing", action="store_true",
-                        default=False,
-                        help="Run only tests known to be failing.")
-    parser.add_argument("--serial", action="store_true",
-                        default=False,
-                        help="Run tests in a serial process.")
-    parser.add_argument("--concurrency", action="store", default=0,
-                        help="How many processes to use. The default (0) "
-                             "autodetects your CPU count.")
-    parser.add_argument("--load-list", default=None,
-                        help="Only run tests listed in the named file."),
-    parser.add_argument("--partial", action="store_true", default=False,
-                        help="DEPRECATED: Only some tests will be run. Implied"
-                             " by --failing. This option is deprecated and no "
-                             "longer does anything. It will be removed in the "
-                             "future")
-    parser.add_argument("--subunit", action="store_true", default=False,
-                        help="Display results in subunit format.")
-    parser.add_argument("--until-failure", action="store_true", default=False,
-                        help="Repeat the run again and again until failure "
-                             "occurs.")
-    parser.add_argument("--analyze-isolation", action="store_true",
-                        default=False,
-                        help="Search the last test run for 2-test test "
-                             "isolation interactions.")
-    parser.add_argument("--isolated", action="store_true",
-                        default=False,
-                        help="Run each test id in a separate test runner.")
-    parser.add_argument("--worker-file", action="store", default=None,
-                        dest='worker_path',
-                        help="Optional path of a manual worker grouping file "
-                             "to use for the run")
-    parser.add_argument('--blacklist-file', '-b',
-                        default=None, dest='blacklist_file',
-                        help='Path to a blacklist file, this file '
-                             'contains a separate regex exclude on each '
-                             'newline')
-    parser.add_argument('--whitelist-file', '-w',
-                        default=None, dest='whitelist_file',
-                        help='Path to a whitelist file, this file '
-                             'contains a separate regex on each newline.')
-    parser.add_argument('--black-regex', '-B', default=None,
-                        dest='black_regex',
-                        help='Test rejection regex. If a test cases name '
-                        'matches on re.search() operation , '
-                        'it will be removed from the final test list. '
-                        'Effectively the black-regexp is added to '
-                        ' black regexp list, but you do need to edit a file. '
-                        'The black filtering happens after the initial '
-                        ' white selection, which by default is everything.')
-    parser.add_argument('--no-discover', '-n', default=None, metavar='TEST_ID',
-                        help="Takes in a single test to bypasses test discover"
-                             " and just execute the test specified. A file "
-                             "name may be used in place of a test name.")
-    parser.add_argument('--random', '-r', action="store_true", default=False,
-                        help="Randomize the test order after they are "
-                             "partitioned into separate workers")
-    parser.add_argument('--combine', action='store_true', default=False,
-                        help="Combine the results from the test run with the "
-                             "last run in the repository")
-    parser.add_argument('--no-subunit-trace', action='store_true',
-                        default=False,
-                        help='Disable the default subunit-trace output filter')
-    parser.add_argument('--color', action='store_true', default=False,
-                        help='Enable color output in the subunit-trace output,'
-                             ' if subunit-trace output is enabled. (this is '
-                             'the default). If subunit-trace is disable this '
-                             ' does nothing.')
-    parser.add_argument('--abbreviate', action='store_true',
-                        dest='abbreviate',
-                        help='Print one character status for each test')
+class Run(command.Command):
 
+    def get_parser(self, prog_name):
+        parser = super(Run, self).get_parser(prog_name)
+        parser.add_argument("filters", nargs="*", default=None,
+                            help="A list of string regex filters to initially "
+                            "apply on the test list. Tests that match any of "
+                            "the regexes will be used. (assuming any other "
+                            "filtering specified also uses it)")
+        parser.add_argument("--failing", action="store_true",
+                            default=False,
+                            help="Run only tests known to be failing.")
+        parser.add_argument("--serial", action="store_true",
+                            default=False,
+                            help="Run tests in a serial process.")
+        parser.add_argument("--concurrency", action="store", default=0,
+                            help="How many processes to use. The default (0) "
+                            "autodetects your CPU count.")
+        parser.add_argument("--load-list", default=None,
+                            help="Only run tests listed in the named file."),
+        parser.add_argument("--partial", action="store_true", default=False,
+                            help="DEPRECATED: Only some tests will be run. "
+                            "Implied by --failing. This option is deprecated "
+                            "and no longer does anything. It will be removed "
+                            "in the future")
+        parser.add_argument("--subunit", action="store_true", default=False,
+                            help="Display results in subunit format.")
+        parser.add_argument("--until-failure", action="store_true",
+                            default=False,
+                            help="Repeat the run again and again until "
+                            "failure occurs.")
+        parser.add_argument("--analyze-isolation", action="store_true",
+                            default=False,
+                            help="Search the last test run for 2-test test "
+                            "isolation interactions.")
+        parser.add_argument("--isolated", action="store_true",
+                            default=False,
+                            help="Run each test id in a separate test runner.")
+        parser.add_argument("--worker-file", action="store", default=None,
+                            dest='worker_path',
+                            help="Optional path of a manual worker grouping "
+                            "file to use for the run")
+        parser.add_argument('--blacklist-file', '-b',
+                            default=None, dest='blacklist_file',
+                            help='Path to a blacklist file, this file '
+                            'contains a separate regex exclude on each '
+                            'newline')
+        parser.add_argument('--whitelist-file', '-w',
+                            default=None, dest='whitelist_file',
+                            help='Path to a whitelist file, this file '
+                            'contains a separate regex on each newline.')
+        parser.add_argument('--black-regex', '-B', default=None,
+                            dest='black_regex',
+                            help='Test rejection regex. If a test cases name '
+                            'matches on re.search() operation , '
+                            'it will be removed from the final test list. '
+                            'Effectively the black-regexp is added to '
+                            ' black regexp list, but you do need to edit a '
+                            'file. The black filtering happens after the '
+                            'initial white selection, which by default is '
+                            'everything.')
+        parser.add_argument('--no-discover', '-n', default=None,
+                            metavar='TEST_ID',
+                            help="Takes in a single test to bypasses test "
+                            "discover and just execute the test specified. A "
+                            "file may be used in place of a test name.")
+        parser.add_argument('--random', '-r', action="store_true",
+                            default=False,
+                            help="Randomize the test order after they are "
+                            "partitioned into separate workers")
+        parser.add_argument('--combine', action='store_true', default=False,
+                            help="Combine the results from the test run with "
+                            "the last run in the repository")
+        parser.add_argument('--no-subunit-trace', action='store_true',
+                            default=False,
+                            help='Disable the default subunit-trace output '
+                            'filter')
+        parser.add_argument('--color', action='store_true', default=False,
+                            help='Enable color output in the subunit-trace '
+                            'output, if subunit-trace output is enabled. '
+                            '(this is the default). If subunit-trace is '
+                            'disable this does nothing.')
+        parser.add_argument('--abbreviate', action='store_true',
+                            dest='abbreviate',
+                            help='Print one character status for each test')
+        return parser
 
-def get_cli_help():
-    help_str = "Run the tests for a project and load them into a repository."
-    return help_str
+    def get_description(self):
+        help_str = "Run the tests for a project and load them into a "
+        "repository."
+        return help_str
+
+    def take_action(self, parsed_args):
+        filters = parsed_args.filters
+        args = parsed_args
+        pretty_out = not args.no_subunit_trace
+        verbose_level = self.app.options.verbose_level
+        stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
+        return run_command(
+            config=self.app_args.config, repo_type=self.app_args.repo_type,
+            repo_url=self.app_args.repo_url,
+            test_path=self.app_args.test_path, top_dir=self.app_args.top_dir,
+            group_regex=self.app_args.group_regex, failing=args.failing,
+            serial=args.serial, concurrency=args.concurrency,
+            load_list=args.load_list, partial=args.partial,
+            subunit_out=args.subunit, until_failure=args.until_failure,
+            analyze_isolation=args.analyze_isolation, isolated=args.isolated,
+            worker_path=args.worker_path, blacklist_file=args.blacklist_file,
+            whitelist_file=args.whitelist_file, black_regex=args.black_regex,
+            no_discover=args.no_discover, random=args.random,
+            combine=args.combine,
+            filters=filters, pretty_out=pretty_out, color=args.color,
+            stdout=stdout, abbreviate=args.abbreviate)
 
 
 def _find_failing(repo):
@@ -411,24 +448,3 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                     return result
     finally:
         cmd.cleanUp()
-
-
-def run(arguments):
-    filters = arguments[1] or None
-    args = arguments[0]
-    pretty_out = not args.no_subunit_trace
-    stdout = open(os.devnull, 'w') if args.quiet else sys.stdout
-
-    return run_command(
-        config=args.config, repo_type=args.repo_type, repo_url=args.repo_url,
-        test_path=args.test_path, top_dir=args.top_dir,
-        group_regex=args.group_regex, failing=args.failing, serial=args.serial,
-        concurrency=args.concurrency, load_list=args.load_list,
-        partial=args.partial, subunit_out=args.subunit,
-        until_failure=args.until_failure,
-        analyze_isolation=args.analyze_isolation, isolated=args.isolated,
-        worker_path=args.worker_path, blacklist_file=args.blacklist_file,
-        whitelist_file=args.whitelist_file, black_regex=args.black_regex,
-        no_discover=args.no_discover, random=args.random, combine=args.combine,
-        filters=filters, pretty_out=pretty_out, color=args.color,
-        stdout=stdout, abbreviate=args.abbreviate)

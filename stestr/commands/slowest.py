@@ -16,23 +16,33 @@ import math
 from operator import itemgetter
 import sys
 
+from cliff import command
+
 from stestr import output
 from stestr.repository import util
 
 
-def get_cli_help():
-    help_str = """Show the slowest tests from the last test run.
+class Slowest(command.Command):
+    def get_description(self):
+        help_str = """Show the slowest tests from the last test run.
 
-    This command shows a table, with the longest running
-    tests at the top.
-    """
-    return help_str
+        This command shows a table, with the longest running
+        tests at the top.
+        """
+        return help_str
 
+    def get_parser(self, prog_name):
+        parser = super(Slowest, self).get_parser(prog_name)
+        parser.add_argument(
+            "--all", action="store_true",
+            default=False, help="Show timing for all tests.")
+        return parser
 
-def set_cli_opts(parser):
-    parser.add_argument(
-        "--all", action="store_true",
-        default=False, help="Show timing for all tests."),
+    def take_action(self, parsed_args):
+        args = parsed_args
+        return slowest(repo_type=self.app_args.repo_type,
+                       repo_url=self.app_args.repo_url,
+                       show_all=args.all)
 
 
 def format_times(times):
@@ -49,12 +59,6 @@ def format_times(times):
         return "%*.*f" % (min_length, precision, time)
     times = [(name, format_time(time)) for name, time in times]
     return times
-
-
-def run(arguments):
-    args = arguments[0]
-    return slowest(repo_type=args.repo_type, repo_url=args.repo_url,
-                   show_all=args.all)
 
 
 def slowest(repo_type='file', repo_url=None, show_all=False,
