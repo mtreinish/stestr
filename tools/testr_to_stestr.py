@@ -43,7 +43,7 @@ for line in test_command.split('\n'):
                     test_dir = command_parts[idx + 2]
             else:
                 if val == 'discover':
-                    test_dir = command_parts[idx + 2]
+                    test_dir = command_parts[idx + 1]
 
 with open('.stestr.conf', 'w') as stestr_conf_file:
     stestr_conf_file.write('[DEFAULT]\n')
