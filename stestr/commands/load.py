@@ -146,7 +146,7 @@ def load(force_init=False, in_streams=None,
         inserter = repo.get_inserter(partial=partial, run_id=run_id)
     if subunit_out:
         output_result, summary_result = output.make_result(inserter.get_id)
-    if pretty_out:
+    elif pretty_out:
         outcomes = testtools.StreamToDict(
             functools.partial(subunit_trace.show_outcome, stdout,
                               enable_color=color, abbreviate=abbreviate))
@@ -172,7 +172,7 @@ def load(force_init=False, in_streams=None,
         result.stopTestRun()
     stop_time = datetime.datetime.utcnow()
     elapsed_time = stop_time - start_time
-    if pretty_out:
+    if pretty_out and not subunit_out:
         subunit_trace.print_fails(stdout)
         subunit_trace.print_summary(stdout, elapsed_time)
     if not summary_result.wasSuccessful():
