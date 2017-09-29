@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
+import io
 import os
 import re
 import shutil
@@ -20,6 +22,8 @@ import tempfile
 
 import six
 from six import StringIO
+import subunit as subunit_lib
+import testtools
 
 from stestr.tests import base
 
@@ -67,6 +71,23 @@ class TestReturnCodes(base.TestCase):
             self.assertEqual(p.returncode, expected,
                              "Expected return code: %s doesn't match actual "
                              "return code of: %s" % (expected, p.returncode))
+            output_stream = io.BytesIO(out)
+            stream = subunit_lib.ByteStreamToStreamResult(output_stream)
+            starts = testtools.StreamResult()
+            summary = testtools.StreamSummary()
+            tests = []
+
+            def _add_dict(test):
+                tests.append(test)
+
+            outcomes = testtools.StreamToDict(functools.partial(_add_dict))
+            result = testtools.CopyStreamResult([starts, outcomes, summary])
+            result.startTestRun()
+            try:
+                stream.run(result)
+            finally:
+                result.stopTestRun()
+            self.assertThat(len(tests), testtools.matchers.GreaterThan(0))
 
     def test_parallel_passing(self):
         self.assertRunExit('stestr run passing', 0)
