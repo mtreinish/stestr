@@ -115,6 +115,8 @@ class TestProcessorFixture(fixtures.Fixture):
 
         self.list_cmd = re.sub(variable_regex, list_subst, cmd)
         nonparallel = not self.parallel
+        selection_logic = (self.test_filters or self.blacklist_file or
+                           self.whitelist_file or self.black_regex)
         if nonparallel:
             self.concurrency = 1
         else:
@@ -129,8 +131,7 @@ class TestProcessorFixture(fixtures.Fixture):
             if self.concurrency == 1:
                 if default_idstr:
                     self.test_ids = default_idstr.split()
-            if self.concurrency != 1 or self.test_filters is not None \
-                    or self.worker_path:
+            if self.concurrency != 1 or selection_logic or self.worker_path:
                 # Have to be able to tell each worker what to run / filter
                 # tests.
                 self.test_ids = self.list_tests()

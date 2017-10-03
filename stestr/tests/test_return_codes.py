@@ -98,11 +98,43 @@ class TestReturnCodes(base.TestCase):
     def test_parallel_fails(self):
         self.assertRunExit('stestr run', 1)
 
+    def test_parallel_blacklist(self):
+        fd, path = tempfile.mkstemp()
+        self.addCleanup(os.remove, path)
+        with os.fdopen(fd, 'w') as blacklist:
+            blacklist.write('fail')
+        cmd = 'stestr run --blacklist-file %s' % path
+        self.assertRunExit(cmd, 0)
+
+    def test_parallel_whitelist(self):
+        fd, path = tempfile.mkstemp()
+        self.addCleanup(os.remove, path)
+        with os.fdopen(fd, 'w') as whitelist:
+            whitelist.write('passing')
+        cmd = 'stestr run --whitelist-file %s' % path
+        self.assertRunExit(cmd, 0)
+
     def test_serial_passing(self):
         self.assertRunExit('stestr run --serial passing', 0)
 
     def test_serial_fails(self):
         self.assertRunExit('stestr run --serial', 1)
+
+    def test_serial_blacklist(self):
+        fd, path = tempfile.mkstemp()
+        self.addCleanup(os.remove, path)
+        with os.fdopen(fd, 'w') as blacklist:
+            blacklist.write('fail')
+        cmd = 'stestr run --serial --blacklist-file %s' % path
+        self.assertRunExit(cmd, 0)
+
+    def test_serial_whitelist(self):
+        fd, path = tempfile.mkstemp()
+        self.addCleanup(os.remove, path)
+        with os.fdopen(fd, 'w') as whitelist:
+            whitelist.write('passing')
+        cmd = 'stestr run --serial --whitelist-file %s' % path
+        self.assertRunExit(cmd, 0)
 
     def test_serial_subunit_passing(self):
         self.assertRunExit('stestr run --subunit passing', 0,
