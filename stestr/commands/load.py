@@ -125,7 +125,7 @@ def load(force_init=False, in_streams=None,
         opener = functools.partial(open, mode='rb')
         streams = map(opener, streams)
     else:
-        streams = [sys.stdin.buffer]
+        streams = [sys.stdin]
 
     def mktagger(pos, result):
         return testtools.StreamTagger([result], add=['worker-%d' % pos])
