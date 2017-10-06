@@ -57,11 +57,17 @@ class TestReturnCodes(base.TestCase):
         os.chdir(self.directory)
         subprocess.call('stestr init', shell=True)
 
-    def assertRunExit(self, cmd, expected, subunit=False):
-        p = subprocess.Popen(
-            "%s" % cmd, shell=True,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
+    def assertRunExit(self, cmd, expected, subunit=False, stdin=None):
+        if stdin:
+            p = subprocess.Popen(
+                "%s" % cmd, shell=True, stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = p.communicate(stdin)
+        else:
+            p = subprocess.Popen(
+                "%s" % cmd, shell=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = p.communicate()
 
         if not subunit:
             self.assertEqual(
@@ -187,3 +193,9 @@ class TestReturnCodes(base.TestCase):
         # The test results from running the same tests twice with combine
         # should return a test count 2x as big at the end of the run
         self.assertEqual(test_count * 2, combine_test_count)
+
+    def test_load_from_stdin(self):
+        self.assertRunExit('stestr run passing', 0)
+        stream = self._get_cmd_stdout(
+            'stestr last --subunit')[0]
+        self.assertRunExit('stestr load', 0, stdin=stream)
