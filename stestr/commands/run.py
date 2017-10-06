@@ -318,6 +318,11 @@ def run_command(config='.stestr.conf', repo_type='file',
                               stdout=stdout,
                               abbreviate=abbreviate)
     else:
+        # Where do we source data about the cause of conflicts.
+        # XXX: Should instead capture the run id in with the failing test
+        # data so that we can deal with failures split across many partial
+        # runs.
+        latest_run = repo.get_latest_run()
         # Stage one: reduce the list of failing tests (possibly further
         # reduced by testfilters) to eliminate fails-on-own tests.
         spurious_failures = set()
@@ -348,11 +353,6 @@ def run_command(config='.stestr.conf', repo_type='file',
         if not spurious_failures:
             # All done.
             return 0
-        # Where do we source data about the cause of conflicts.
-        # XXX: Should instead capture the run id in with the failing test
-        # data so that we can deal with failures split across many partial
-        # runs.
-        latest_run = repo.get_latest_run()
         bisect_runner = bisect_tests.IsolationAnalyzer(
             latest_run, conf, _run_tests, repo, test_path=test_path,
             top_dir=top_dir, group_regex=group_regex, repo_type=repo_type,

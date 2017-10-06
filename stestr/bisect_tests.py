@@ -31,7 +31,7 @@ class IsolationAnalyzer(object):
         self.repo_type = repo_type
         self.repo_url = repo_url
         self.serial = serial
-        self.concurrency = concurrency,
+        self.concurrency = concurrency
         self.test_path = test_path
         self.top_dir = top_dir
         self.run_func = run_func
@@ -57,7 +57,7 @@ class IsolationAnalyzer(object):
                     repo_type=self.repo_type, repo_url=self.repo_url,
                     serial=self.serial, concurrency=self.concurrency,
                     test_path=self.test_path, top_dir=self.top_dir)
-                self.run_func(cmd, True, True, False, False,
+                self.run_func(cmd, False, True, False, False,
                               pretty_out=False,
                               repo_type=self.repo_type,
                               repo_url=self.repo_url)
