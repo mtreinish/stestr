@@ -145,7 +145,8 @@ def load(force_init=False, in_streams=None,
     else:
         inserter = repo.get_inserter(partial=partial, run_id=run_id)
     if subunit_out:
-        output_result, summary_result = output.make_result(inserter.get_id)
+        output_result, summary_result = output.make_result(inserter.get_id,
+                                                           output=stdout)
     elif pretty_out:
         outcomes = testtools.StreamToDict(
             functools.partial(subunit_trace.show_outcome, stdout,
