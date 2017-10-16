@@ -50,7 +50,7 @@ def set_cli_opts(parser):
 
 
 def run(arguments):
-    args = arguments[0]
+    args = arguments
     pretty_out = not args.no_subunit_trace
     return last(repo_type=args.repo_type, repo_url=args.repo_url,
                 subunit_out=args.subunit, pretty_out=pretty_out,

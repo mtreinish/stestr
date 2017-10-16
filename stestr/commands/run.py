@@ -30,6 +30,11 @@ from stestr.testlist import parse_list
 
 
 def set_cli_opts(parser):
+    parser.add_argument("filters", nargs="*", default=None,
+                        help="A list of string regex filters to initially "
+                        "apply on the test list. Tests that match any of "
+                        "the regexes will be used. (assuming any other "
+                        "filtering specified also uses it)")
     parser.add_argument("--failing", action="store_true",
                         default=False,
                         help="Run only tests known to be failing.")
@@ -511,8 +516,8 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
 
 
 def run(arguments):
-    filters = arguments[1] or None
-    args = arguments[0]
+    filters = arguments.filters or None
+    args = arguments
     pretty_out = not args.no_subunit_trace
 
     return run_command(

@@ -26,6 +26,11 @@ def get_cli_help():
 
 
 def set_cli_opts(parser):
+    parser.add_argument("filters", nargs="*", default=None,
+                        help="A list of string regex filters to initially "
+                        "apply on the test list. Tests that match any of "
+                        "the regexes will be used. (assuming any other "
+                        "filtering specified also uses it)")
     parser.add_argument('--blacklist-file', '-b',
                         default=None, dest='blacklist_file',
                         help='Path to a blacklist file, this file '
@@ -47,8 +52,8 @@ def set_cli_opts(parser):
 
 
 def run(arguments):
-    args = arguments[0]
-    filters = arguments[1]
+    args = arguments
+    filters = args.filters
     return list_command(config=args.config, repo_type=args.repo_type,
                         repo_url=args.repo_url, group_regex=args.group_regex,
                         test_path=args.test_path, top_dir=args.top_dir,

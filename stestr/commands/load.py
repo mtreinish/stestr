@@ -29,6 +29,9 @@ from stestr import utils
 
 
 def set_cli_opts(parser):
+    parser.add_argument("files", nargs="*", default=False,
+                        help="A list of file paths to read for the input "
+                        "streams.")
     parser.add_argument("--partial", action="store_true",
                         default=False,
                         help="The stream being loaded was a partial run.")
@@ -67,10 +70,10 @@ def get_cli_help():
 
 
 def run(arguments):
-    args = arguments[0]
+    args = arguments
     load(repo_type=args.repo_type, repo_url=args.repo_url,
          partial=args.partial, subunit_out=args.subunit,
-         force_init=args.force_init, streams=arguments[1],
+         force_init=args.force_init, streams=args.files,
          pretty_out=args.subunit_trace, color=args.color,
          abbreviate=args.abbreviate)
 
