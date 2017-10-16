@@ -48,8 +48,7 @@ three functions::
          real work. The return value is expected to be an int and is used for
          the exit code (assuming the function doesn't call sys.exit() on it's
          own)"""
-      args = arguments[0]
-      unknown_args = arguments[1]
+      args = arguments
       return call_foo()
 
 The command module will not work if all 3 of these function are not defined.

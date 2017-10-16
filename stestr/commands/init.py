@@ -18,7 +18,7 @@ from stestr.repository import util
 
 
 def run(arguments):
-    args = arguments[0]
+    args = arguments
     init(args.repo_type, args.repo_url)
 
 

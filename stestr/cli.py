@@ -91,15 +91,15 @@ class StestrCLI(object):
 
 def main():
     cli = StestrCLI()
-    args = cli.parser.parse_known_args()
-    if args[0].here:
-        os.chdir(args[0].here)
+    args = cli.parser.parse_args()
+    if args.here:
+        os.chdir(args.here)
     # NOTE(mtreinish): Make sure any subprocesses launch the same version of
     # python being run here
     if 'PYTHON' not in os.environ:
         os.environ['PYTHON'] = sys.executable
-    if hasattr(args[0], 'func'):
-        sys.exit(args[0].func(args))
+    if hasattr(args, 'func'):
+        sys.exit(args.func(args))
     else:
         cli.parser.print_help()
         # NOTE(andreaf) This point is reached only when using Python 3.x.

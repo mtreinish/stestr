@@ -52,7 +52,7 @@ def format_times(times):
 
 
 def run(arguments):
-    args = arguments[0]
+    args = arguments
     return slowest(repo_type=args.repo_type, repo_url=args.repo_url,
                    show_all=args.all)
 

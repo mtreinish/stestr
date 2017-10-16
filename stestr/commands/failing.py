@@ -58,7 +58,7 @@ def _make_result(repo, list_tests=False, stdout=sys.stdout):
 
 
 def run(arguments):
-    args = arguments[0]
+    args = arguments
     return failing(repo_type=args.repo_type, repo_url=args.repo_url,
                    list_tests=args.list, subunit=args.subunit)
 
