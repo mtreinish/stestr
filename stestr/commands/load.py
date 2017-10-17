@@ -16,6 +16,7 @@
 import datetime
 import functools
 import sys
+import warnings
 
 import subunit
 import testtools
@@ -31,7 +32,9 @@ from stestr import utils
 def set_cli_opts(parser):
     parser.add_argument("--partial", action="store_true",
                         default=False,
-                        help="The stream being loaded was a partial run.")
+                        help="DEPRECATED: The stream being loaded was a "
+                             "partial run. This option is deprecated and no "
+                             "does anything. It will be removed in the future")
     parser.add_argument("--force-init", action="store_true",
                         default=False,
                         help="Initialise the repository if it does not exist "
@@ -59,9 +62,6 @@ def get_cli_help():
 
         Failing tests are shown on the console and a summary of the stream is
         printed at the end.
-
-        Unless the stream is a partial stream, any existing failures are
-        discarded.
         """
     return help_str
 
@@ -90,7 +90,9 @@ def load(force_init=False, in_streams=None,
         been created.
     :param list in_streams: A list of file objects that will be saved into the
         repository
-    :param bool partial: Specify the input is a partial stream
+    :param bool partial: DEPRECATED: Specify the input is a partial stream.
+        This option is deprecated and no longer does anything. It will be
+        removed in the future.
     :param bool subunit_out: Output the subunit stream to stdout
     :param str repo_type: This is the type of repository to use. Valid choices
         are 'file' and 'sql'.
@@ -108,6 +110,9 @@ def load(force_init=False, in_streams=None,
         for failures.
     :rtype: int
     """
+    if partial:
+        warnings.warn('The partial flag is deprecated and has no effect '
+                      'anymore')
 
     try:
         repo = util.get_repo_open(repo_type, repo_url)
@@ -141,9 +146,9 @@ def load(force_init=False, in_streams=None,
 
     case = testtools.ConcurrentStreamTestSuite(make_tests)
     if not run_id:
-        inserter = repo.get_inserter(partial=partial)
+        inserter = repo.get_inserter()
     else:
-        inserter = repo.get_inserter(partial=partial, run_id=run_id)
+        inserter = repo.get_inserter(run_id=run_id)
     if subunit_out:
         output_result, summary_result = output.make_result(inserter.get_id,
                                                            output=stdout)

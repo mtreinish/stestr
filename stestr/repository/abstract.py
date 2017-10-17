@@ -75,8 +75,10 @@ class AbstractRepository(object):
         get_inserter() does not add timing data to streams: it should be
         provided by the caller of get_inserter (e.g. commands.load).
 
-        :param partial: If True, the stream being inserted only executed some
-            tests rather than all the projects tests.
+        :param partial: DEPREACTED: If True, the stream being inserted only
+            executed some tests rather than all the projects tests. This
+            option is deprecated and no longer does anything. It will be
+            removed in the future.
         :return an inserter: Inserters meet the extended TestResult protocol
             that testtools 0.9.2 and above offer. The startTestRun and
             stopTestRun methods in particular must be called.

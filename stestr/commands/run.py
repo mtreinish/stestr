@@ -15,6 +15,7 @@
 import os
 import subprocess
 import sys
+import warnings
 
 import six
 import subunit
@@ -42,8 +43,10 @@ def set_cli_opts(parser):
     parser.add_argument("--load-list", default=None,
                         help="Only run tests listed in the named file."),
     parser.add_argument("--partial", action="store_true", default=False,
-                        help="Only some tests will be run. Implied by "
-                             "--failing.")
+                        help="DEPRECATED: Only some tests will be run. Implied"
+                             " by --failing. This option is deprecated and no "
+                             "longer does anything. It will be removed in the "
+                             "future")
     parser.add_argument("--subunit", action="store_true", default=False,
                         help="Display results in subunit format.")
     parser.add_argument("--until-failure", action="store_true", default=False,
@@ -159,7 +162,9 @@ def run_command(config='.stestr.conf', repo_type='file',
         autodetects your CPU count and uses that.
     :param str load_list: The path to a list of test_ids. If specified only
         tests listed in the named file will be run.
-    :param bool partial: Only some tests will be run. Implied by `--failing`.
+    :param bool partial: DEPRECATED: Only some tests will be run. Implied by
+        `--failing`. This flag is deprecated because and doesn't do anything
+        it will be removed in a future release.
     :param bool subunit_out: Display results in subunit format.
     :param bool until_failure: Repeat the run again and again until failure
         occurs.
@@ -194,6 +199,9 @@ def run_command(config='.stestr.conf', repo_type='file',
         for failures.
     :rtype: int
     """
+    if partial:
+        warnings.warn('The partial flag is deprecated and has no effect '
+                      'anymore')
     try:
         repo = util.get_repo_open(repo_type, repo_url)
     # If a repo is not found, and there a testr config exists just create it
@@ -221,7 +229,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                 subprocess.Popen(run_cmd, shell=True,
                                  stdout=subprocess.PIPE)))]
             return load.load(in_streams=run_proc,
-                             partial=partial, subunit_out=subunit_out,
+                             subunit_out=subunit_out,
                              repo_type=repo_type,
                              repo_url=repo_url, run_id=combine_id,
                              pretty_out=pretty_out,
@@ -319,9 +327,6 @@ def run_command(config='.stestr.conf', repo_type='file',
                               abbreviate=abbreviate)
     else:
         # Where do we source data about the cause of conflicts.
-        # XXX: Should instead capture the run id in with the failing test
-        # data so that we can deal with failures split across many partial
-        # runs.
         latest_run = repo.get_latest_run()
         # Stage one: reduce the list of failing tests (possibly further
         # reduced by testfilters) to eliminate fails-on-own tests.
@@ -372,14 +377,11 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
             run_procs = [('subunit',
                           output.ReturnCodeToSubunit(
                               proc)) for proc in cmd.run_tests()]
-            partial = False
-            if (failing or analyze_isolation or isolated):
-                partial = True
             if not run_procs:
                 stdout.write("The specified regex doesn't match with anything")
                 return 1
             return load.load((None, None), in_streams=run_procs,
-                             partial=partial, subunit_out=subunit_out,
+                             subunit_out=subunit_out,
                              repo_type=repo_type,
                              repo_url=repo_url, run_id=combine_id,
                              pretty_out=pretty_out, color=color, stdout=stdout,
