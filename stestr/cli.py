@@ -81,7 +81,8 @@ class StestrCLI(object):
                                  "discovery. If both this and the "
                                  "corresponding config file option are set, "
                                  "this value will be used.")
-        parser.add_argument('--group_regex', '-g', dest='group_regex',
+        parser.add_argument('--group-regex', '--group_regex', '-g',
+                            dest='group_regex',
                             default=None,
                             help="Set a group regex to use for grouping tests"
                                  " together in the stestr scheduler. If "
