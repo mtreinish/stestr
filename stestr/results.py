@@ -154,7 +154,7 @@ class CLITestResult(testtools.StreamResult):
             values.append(('skips', skips, None))
         output.output_summary(
             not bool(failures), self._summary.testsRun, num_tests_run_delta,
-            time, time_delta, values)
+            time, time_delta, values, output=self.stream)
 
     def startTestRun(self):
         super(CLITestResult, self).startTestRun()
