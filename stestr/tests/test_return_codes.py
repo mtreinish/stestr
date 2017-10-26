@@ -73,6 +73,7 @@ class TestReturnCodes(base.TestCase):
             self.assertEqual(
                 p.returncode, expected,
                 "Stdout: %s; Stderr: %s" % (out, err))
+            return (out, err)
         else:
             self.assertEqual(p.returncode, expected,
                              "Expected return code: %s doesn't match actual "
@@ -94,6 +95,7 @@ class TestReturnCodes(base.TestCase):
             finally:
                 result.stopTestRun()
             self.assertThat(len(tests), testtools.matchers.GreaterThan(0))
+            return (out, err)
 
     def test_parallel_passing(self):
         self.assertRunExit('stestr run passing', 0)
@@ -199,3 +201,14 @@ class TestReturnCodes(base.TestCase):
         stream = self._get_cmd_stdout(
             'stestr last --subunit')[0]
         self.assertRunExit('stestr load', 0, stdin=stream)
+
+    def test_load_from_stdin_quiet(self):
+        out, err = self.assertRunExit('stestr -q run passing', 0)
+        self.assertEqual(out.decode('utf-8'), '')
+        # FIXME(masayukig): We get some warnings when we run a coverage job.
+        # So, just ignore 'err' here.
+        stream = self._get_cmd_stdout(
+            'stestr last --subunit')[0]
+        out, err = self.assertRunExit('stestr -q load', 0, stdin=stream)
+        self.assertEqual(out.decode('utf-8'), '')
+        self.assertEqual(err.decode('utf-8'), '')

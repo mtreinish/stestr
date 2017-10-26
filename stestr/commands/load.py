@@ -15,6 +15,7 @@
 
 import datetime
 import functools
+import os
 import sys
 import warnings
 
@@ -68,11 +69,12 @@ def get_cli_help():
 
 def run(arguments):
     args = arguments[0]
+    stdout = open(os.devnull, 'w') if args.quiet else sys.stdout
     load(repo_type=args.repo_type, repo_url=args.repo_url,
          partial=args.partial, subunit_out=args.subunit,
          force_init=args.force_init, streams=arguments[1],
          pretty_out=args.subunit_trace, color=args.color,
-         abbreviate=args.abbreviate)
+         stdout=stdout, abbreviate=args.abbreviate)
 
 
 def load(force_init=False, in_streams=None,

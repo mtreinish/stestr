@@ -417,6 +417,7 @@ def run(arguments):
     filters = arguments[1] or None
     args = arguments[0]
     pretty_out = not args.no_subunit_trace
+    stdout = open(os.devnull, 'w') if args.quiet else sys.stdout
 
     return run_command(
         config=args.config, repo_type=args.repo_type, repo_url=args.repo_url,
@@ -430,4 +431,4 @@ def run(arguments):
         whitelist_file=args.whitelist_file, black_regex=args.black_regex,
         no_discover=args.no_discover, random=args.random, combine=args.combine,
         filters=filters, pretty_out=pretty_out, color=args.color,
-        abbreviate=args.abbreviate)
+        stdout=stdout, abbreviate=args.abbreviate)
