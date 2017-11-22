@@ -39,12 +39,12 @@ top of the output of::
 
 However, the 2 most important options in the stestr config file are
 ``test_path`` and ``top_dir``. These 2 options are used to set the `unittest
-discovery`_ options for stestr. (test_path is the same as --start-directory and
-top_dir is the same as --top-level-directory in the doc) Only test_path is a
-required field in the config file, if top_dir is not specified it defaults to
-'./'. It's also worth noting that shell variables for these 2 config options
-(and only these 2 options) are expanded on platforms that have a shell. This
-enables you to have conditional discovery paths based on your environment.
+discovery`_ options for stestr. (test_path is the same as ``--start-directory``
+and top_dir is the same as ``--top-level-directory`` in the doc) Only test_path
+is a required field in the config file, if top_dir is not specified it defaults
+to ``./``. It's also worth noting that shell variables for these 2 config
+options (and only these 2 options) are expanded on platforms that have a shell.
+This enables you to have conditional discovery paths based on your environment.
 
 .. _unittest discovery: https://docs.python.org/2/library/unittest.html#test-discovery
 
@@ -71,13 +71,13 @@ If you'd like to avoid the overhead of test discovery and just manually execute
 a single test (test class, or module) you can do this using the
 ``--no-discover``/``-n`` option. For example::
 
-    stestr run --no-discover project.tests.test_foo.TestFoo
+  $ stestr run --no-discover project.tests.test_foo.TestFoo
 
 you can also give it a file path and stestr will convert that to the proper
 python path under the covers. (assuming your project don't manually mess with
 import paths) For example::
 
-    stestr run --no-discover project/tests/test_foo.py
+  $ stestr run --no-discover project/tests/test_foo.py
 
 will also bypass discovery and directly call subunit.run on the module
 specified.
@@ -94,11 +94,11 @@ run the tests that have a regex match with foo **or** a regex match with bar.
 stestr allows you do to do simple test exclusion via passing a rejection/black
 regexp::
 
-    $ stestr run --black-regex 'slow_tests|bad_tests'
+  $ stestr run --black-regex 'slow_tests|bad_tests'
 
 stestr also allow you to combine these arguments::
 
-    $ stestr run --black-regex 'slow_tests|bad_tests' ui\.interface
+  $ stestr run --black-regex 'slow_tests|bad_tests' ui\.interface
 
 Here first we selected all tests which matches to ``ui\.interface``, then we are
 dropping all test which matches ``slow_tests|bad_tests`` from the final list.
@@ -107,41 +107,41 @@ stestr also allows you to specify a blacklist file to define a set of regexes
 to exclude. You can specify a blacklist file with the
 ``--blacklist-file``/``-b`` option, for example::
 
-    $ stestr run --blacklist_file $path_to_file
+  $ stestr run --blacklist_file $path_to_file
 
-The format for the file is line separated regex, with '#' used to signify the
+The format for the file is line separated regex, with ``#`` used to signify the
 start of a comment on a line. For example::
 
-    # Blacklist File
-    ^regex1 # Excludes these tests
-    .*regex2 # exclude those tests
+  # Blacklist File
+  ^regex1 # Excludes these tests
+  .*regex2 # exclude those tests
 
 The regexp used in the blacklist file or passed as argument, will be used to
 drop tests from the initial selection list. It will generate a list which will
-exclude any tests matching '^regex1' or '.*regex2'. If a blacklist file is used
-in conjunction with the normal filters then the regex filters passed in as an
-argument regex will be used for the initial test selection, and the exclusion
-regexes from the blacklist file on top of that.
+exclude any tests matching ``^regex1`` or ``.*regex2``. If a blacklist file is
+used in conjunction with the normal filters then the regex filters passed in as
+an argument regex will be used for the initial test selection, and the
+exclusion regexes from the blacklist file on top of that.
 
 The dual of the blacklist file is the whitelist file which will include any
 tests matching the regexes in the file. You can specify the path to the file
 with ``--whitelist_file``/``-w``, for example::
 
-    $ stestr run --whitelist_file $path_to_file
+  $ stestr run --whitelist_file $path_to_file
 
 The format for the file is more or less identical to the blacklist file::
 
-    # Whitelist File
-    ^regex1 # Include these tests
-    .*regex2 # include those tests
+  # Whitelist File
+  ^regex1 # Include these tests
+  .*regex2 # include those tests
 
 However, instead of excluding the matches it will include them.
 
 It's also worth noting that you can use the test list option to dry run any
-selection arguments you are using. You just need to use --list/-l with your
-selection options to do this, for example::
+selection arguments you are using. You just need to use ``--list``/``-l``
+with your selection options to do this, for example::
 
-    $ stestr list 'regex3.*' --blacklist_file blacklist.txt
+  $ stestr list 'regex3.*' --blacklist_file blacklist.txt
 
 This will list all the tests which will be run by stestr using that combination
 of arguments.
@@ -172,7 +172,7 @@ Combining Test Results
 There is sometimes a use case for running a single test suite split between
 multiple invocations of the stestr run command. For example, running a subset
 of tests with a different concurrency. In these cases you can use the
-``--combine`` flag on ``stestr run```. When this flag is specified stestr will
+``--combine`` flag on ``stestr run``. When this flag is specified stestr will
 append the subunit stream from the test run into the most recent entry in the
 repository.
 
@@ -186,7 +186,7 @@ Running previously failed tests
 '''''''''''''''''''''''''''''''
 
 ``stestr run`` also enables you to run just the tests that failed in the
-previous run. To do this you can use the ``---failing`` argument.
+previous run. To do this you can use the ``--failing`` argument.
 
 A common workflow using this is::
 
@@ -267,7 +267,7 @@ equal-time buckets for tests that stestr has seen run.
 To determine how many CPUs are present in the machine, stestr will
 use the multiprocessing Python module On operating systems where this is not
 implemented, or if you need to control the number of workers that are used,
-the --concurrency option will let you do so::
+the ``--concurrency`` option will let you do so::
 
   $ stestr run --concurrency=2
 
