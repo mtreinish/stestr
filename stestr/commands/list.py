@@ -59,7 +59,7 @@ class List(command.Command):
 
     def take_action(self, parsed_args):
         args = parsed_args
-        filters = parsed_args.filters
+        filters = parsed_args.filters or None
         return list_command(config=self.app_args.config,
                             repo_type=self.app_args.repo_type,
                             repo_url=self.app_args.repo_url,

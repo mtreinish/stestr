@@ -55,8 +55,8 @@ get_description()
 '''''''''''''''''
 The intent of this function is to return an command specific help information.
 It is expected to return a string that will be used when the subcommand is
-defined in argparse and will be displayed before the arguments when --help is
-used on the subcommand.
+defined in argparse and will be displayed before the arguments when ``--help``
+is used on the subcommand.
 
 take_action(parsed_args)
 ''''''''''''''''''''''''
@@ -72,7 +72,7 @@ Operations for Running Tests
 
 The basic flow when stestr run is called at a high level is fairly straight
 forward. In the default case when run is called the first operation performed
-is unittest discovery (via subunit.run --discover) which is used to get a
+is unittest discovery (via ``subunit.run --discover``) which is used to get a
 complete list of tests present. This list is then filtered by any user provided
 selection mechanisms. (for example a cli regex filter) This is used to select
 which tests the user actually intends to run. For more details on test
@@ -93,4 +93,4 @@ emits a subunit stream to stdout. These stdout streams are combined in real
 time and stored in the repository at the end of the run (using the load
 command). The combined stream is also used for the CLI output either in a
 summary view or with a real time subunit output (which is enabled with the
---subunit argument)
+``--subunit`` argument)
