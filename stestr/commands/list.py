@@ -48,7 +48,7 @@ def set_cli_opts(parser):
 
 def run(arguments):
     args = arguments[0]
-    filters = arguments[1]
+    filters = arguments[1] or None
     return list_command(config=args.config, repo_type=args.repo_type,
                         repo_url=args.repo_url, group_regex=args.group_regex,
                         test_path=args.test_path, top_dir=args.top_dir,
