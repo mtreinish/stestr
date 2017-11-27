@@ -48,16 +48,17 @@ Using stestr
 ------------
 
 After you install stestr to use it to run tests is pretty straightforward. The
-first thing you'll need to do is create a .stestr.conf file for your project.
-This file is used to tell stestr where to find tests and basic information
-about how tests are run. A basic minimal example of the contents of this is::
+first thing you'll need to do is create a ``.stestr.conf`` file for your
+project. This file is used to tell stestr where to find tests and basic
+information about how tests are run. A basic minimal example of the
+contents of this is::
 
   [DEFAULT]
   test_path=./project_source_dir/tests
 
 which just tells stestr the relative path for the directory to use for
-test discovery. This is the same as --start-directory in the standard `unittest
-discovery`_
+test discovery. This is the same as ``--start-directory`` in the standard
+`unittest discovery`_
 
 .. _unittest discovery: https://docs.python.org/2.7/library/unittest.html#test-discovery
 
@@ -85,10 +86,10 @@ Migrating from testrepository
 
 If you have a project that is already using testrepository stestr's source repo
 contains a helper script for migrating your repo to use stestr. This script
-just creates a .stestr.conf file from a .testr.conf file. (assuming it uses a
-standard subunit.run test command format) To run this from your project repo
-just call::
+just creates a ``.stestr.conf`` file from a ``.testr.conf`` file.
+(assuming it uses a standard subunit.run test command format) To run
+this from your project repo just call::
 
     $STESTR_SOURCE_DIR/tools/testr_to_stestr.py
 
-and you'll have a .stestr.conf created.
+and you'll have a ``.stestr.conf`` created.
