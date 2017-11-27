@@ -197,7 +197,7 @@ class ReturnCodeToSubunit(object):
 
     def read(self, count=-1):
         if count == 0:
-            return six.text_type('')
+            return six.binary_type('')
         result = self.source.read(count)
         if result:
             self.lastoutput = result[-1]
