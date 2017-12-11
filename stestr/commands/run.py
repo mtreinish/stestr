@@ -23,6 +23,7 @@ import testtools
 
 from stestr import bisect_tests
 from stestr.commands import load
+from stestr.commands import slowest
 from stestr import config_file
 from stestr import output
 from stestr.repository import abstract as repository
@@ -99,6 +100,8 @@ def set_cli_opts(parser):
                              ' if subunit-trace output is enabled. (this is '
                              'the default). If subunit-trace is disable this '
                              ' does nothing.')
+    parser.add_argument('--slowest', action='store_true', default=False,
+                        help='After the test run, print the slowest tests.')
     parser.add_argument('--abbreviate', action='store_true',
                         dest='abbreviate',
                         help='Print one character status for each test')
@@ -419,7 +422,7 @@ def run(arguments):
     pretty_out = not args.no_subunit_trace
     stdout = open(os.devnull, 'w') if args.quiet else sys.stdout
 
-    return run_command(
+    result = run_command(
         config=args.config, repo_type=args.repo_type, repo_url=args.repo_url,
         test_path=args.test_path, top_dir=args.top_dir,
         group_regex=args.group_regex, failing=args.failing, serial=args.serial,
@@ -432,3 +435,10 @@ def run(arguments):
         no_discover=args.no_discover, random=args.random, combine=args.combine,
         filters=filters, pretty_out=pretty_out, color=args.color,
         stdout=stdout, abbreviate=args.abbreviate)
+
+    # Always output slowest test info if requested, regardless of other test
+    # run options
+    if args.slowest:
+        slowest.slowest(repo_type=args.repo_type, repo_url=args.repo_url)
+
+    return result
