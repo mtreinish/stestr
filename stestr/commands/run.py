@@ -114,7 +114,8 @@ class Run(command.Command):
                             '(this is the default). If subunit-trace is '
                             'disable this does nothing.')
         parser.add_argument('--slowest', action='store_true', default=False,
-                            help='After the test run, print the slowest tests.')
+                            help='After the test run, print the slowest '
+                            'tests.')
         parser.add_argument('--abbreviate', action='store_true',
                             dest='abbreviate',
                             help='Print one character status for each test')
@@ -147,8 +148,8 @@ class Run(command.Command):
             filters=filters, pretty_out=pretty_out, color=args.color,
             stdout=stdout, abbreviate=args.abbreviate)
 
-        # Always output slowest test info if requested, regardless of other test
-        # run options
+        # Always output slowest test info if requested, regardless of other
+        # test run options
         if args.slowest:
             slowest.slowest(repo_type=args.repo_type, repo_url=args.repo_url)
 
@@ -457,4 +458,3 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                     return result
     finally:
         cmd.cleanUp()
-        
