@@ -24,6 +24,7 @@ import testtools
 
 from stestr import bisect_tests
 from stestr.commands import load
+from stestr.commands import slowest
 from stestr import config_file
 from stestr import output
 from stestr.repository import abstract as repository
@@ -32,7 +33,6 @@ from stestr.testlist import parse_list
 
 
 class Run(command.Command):
-
     def get_parser(self, prog_name):
         parser = super(Run, self).get_parser(prog_name)
         parser.add_argument("filters", nargs="*", default=None,
@@ -113,6 +113,8 @@ class Run(command.Command):
                             'output, if subunit-trace output is enabled. '
                             '(this is the default). If subunit-trace is '
                             'disable this does nothing.')
+        parser.add_argument('--slowest', action='store_true', default=False,
+                            help='After the test run, print the slowest tests.')
         parser.add_argument('--abbreviate', action='store_true',
                             dest='abbreviate',
                             help='Print one character status for each test')
@@ -129,7 +131,7 @@ class Run(command.Command):
         pretty_out = not args.no_subunit_trace
         verbose_level = self.app.options.verbose_level
         stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
-        return run_command(
+        result = run_command(
             config=self.app_args.config, repo_type=self.app_args.repo_type,
             repo_url=self.app_args.repo_url,
             test_path=self.app_args.test_path, top_dir=self.app_args.top_dir,
@@ -144,6 +146,13 @@ class Run(command.Command):
             combine=args.combine,
             filters=filters, pretty_out=pretty_out, color=args.color,
             stdout=stdout, abbreviate=args.abbreviate)
+
+        # Always output slowest test info if requested, regardless of other test
+        # run options
+        if args.slowest:
+            slowest.slowest(repo_type=args.repo_type, repo_url=args.repo_url)
+
+        return result
 
 
 def _find_failing(repo):
@@ -448,3 +457,4 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                     return result
     finally:
         cmd.cleanUp()
+        

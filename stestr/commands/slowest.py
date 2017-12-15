@@ -48,8 +48,12 @@ class Slowest(command.Command):
 def format_times(times):
     times = list(times)
     precision = 3
-    digits_before_point = int(
-        math.log10(times[0][1])) + 1
+    digits_before_point = 1
+    for time in times:
+        if time[1] <= 0:
+            continue
+        digits_before_point = int(math.log10(time[1])) + 1
+        break
     min_length = digits_before_point + precision + 1
 
     def format_time(time):
