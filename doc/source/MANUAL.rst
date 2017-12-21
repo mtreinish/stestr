@@ -162,7 +162,7 @@ colorization with subunit-trace output. If you prefer to deal with the raw
 subunit yourself and run your own output rendering or filtering you can use
 the ``--subunit`` flag to output the result stream as raw subunit v2.
 
-There is also an ``--abbreviate`` flag availble, when this is used a single
+There is also an ``--abbreviate`` flag available, when this is used a single
 character is printed for each test as it is executed. A ``.`` is printed for a
 successful test, a ``F`` for a failed test, and a ``S`` for a skipped test.
 
@@ -300,7 +300,8 @@ the stestr config file permits this. When set, tests are grouped by the group(0)
 of any regex match. Tests with no match are not grouped.
 
 For example, setting the following option in the stestr config file will group
-tests in the same class together (the last . splits the class and test method)::
+tests in the same class together (the last '.' splits the class and test
+method)::
 
     group_regex=([^\.]+\.)+
 
