@@ -4,6 +4,9 @@ Slim/Super Test Repository
 .. image:: https://travis-ci.org/mtreinish/stestr.svg?branch=master
     :target: https://travis-ci.org/mtreinish/stestr
 
+.. image:: https://img.shields.io/appveyor/ci/mtreinish/stestr/master.svg?logo=appveyor
+    :target: https://ci.appveyor.com/project/mtreinish/stestr
+
 .. image:: https://coveralls.io/repos/github/mtreinish/stestr/badge.svg?branch=master
     :target: https://coveralls.io/github/mtreinish/stestr?branch=master
 
