@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright 2014 Hewlett-Packard Development Company, L.P.
 # Copyright 2014 Samsung Electronics
 # All Rights Reserved.
