@@ -25,34 +25,31 @@ These modules are used for the operation of all the various subcommands in
 stestr. As of the 1.0.0 release each of these commands should be considered
 a stable interface that can be relied on externally.
 
-Each command module conforms to a basic format that is used by ``stestr.cli``
-to load each command. The basic structure for these modules is the following
-three functions::
+Each command module conforms to a basic format that is based on the
+`cliff`_ framework. The basic structure for these modules is the
+following three functions in each class::
 
-  def get_cli_help():
+  def get_description():
       """This function returns a string that is used for the subcommand help"""
       help_str = "A descriptive help string about the command"
       return help_str
 
-  def get_cli_opts(parser):
+  def get_parser(prog_name):
       """This function takes a parser and any subcommand arguments are defined
          here"""
       parser.add_argument(...)
 
-  def run(arguments):
-      """This function actually runs the command. It takes in a tuple arguments
-         which the first element is the argparse Namespace object with the
-         arguments from the parser. The second element is a list of unknown
-         arguments from the CLI. The expectation of the run method is that it
-         will process the arguments and call another function that does the
-         real work. The return value is expected to be an int and is used for
-         the exit code (assuming the function doesn't call sys.exit() on it's
-         own)"""
-      args = arguments[0]
-      unknown_args = arguments[1]
-      return call_foo()
+  def take_action(parsed_args):
+      """This is where the real work for the command is performed. This is the function
+         that is called when the command is executed. This function is called being
+         wrapped by sys.exit() so an integer return is expected that will be used
+         for the command's return code. The arguments input parsed_args is the
+         argparse.Namespace object from the parsed CLI options."""
+      return call_foo(...)
 
-The command module will not work if all 3 of these function are not defined.
+.. _cliff: https://docs.openstack.org/cliff/latest/reference/index.html
+
+The command class will not work if all 3 of these function are not defined.
 However, to make the commands externally consumable each module also contains
 another public function which performs the real work for the command. Each one
 of these functions has a defined stable Python API signature with args and

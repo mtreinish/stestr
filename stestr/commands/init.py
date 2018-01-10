@@ -14,12 +14,18 @@
 
 import sys
 
+from cliff import command
+
 from stestr.repository import util
 
 
-def run(arguments):
-    args = arguments[0]
-    init(args.repo_type, args.repo_url)
+class Init(command.Command):
+    def take_action(self, parsed_args):
+        init(self.app_args.repo_type, self.app_args.repo_url)
+
+    def get_description(self):
+        help_str = "Create a new repository."
+        return help_str
 
 
 def init(repo_type='file', repo_url=None, stdout=sys.stdout):
@@ -50,12 +56,3 @@ def init(repo_type='file', repo_url=None, stdout=sys.stdout):
                      'Please check if the repository already exists or '
                      'select a different path\n' % repo_path)
         return 1
-
-
-def set_cli_opts(parser):
-    pass
-
-
-def get_cli_help():
-    help_str = "Create a new repository."
-    return help_str

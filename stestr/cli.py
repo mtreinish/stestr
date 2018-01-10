@@ -10,36 +10,41 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import argparse
-import importlib
-import os
 import sys
 
+from cliff import app
+from cliff import commandmanager
 from stestr import version
 
 __version__ = version.version_info.version_string_with_vcs()
 
 
-class StestrCLI(object):
-
-    commands = ['run', 'list', 'slowest', 'failing', 'last', 'init', 'load']
-    command_module = 'stestr.commands.'
+class StestrCLI(app.App):
 
     def __init__(self):
-        self.parser = self._get_parser()
+        super(StestrCLI, self).__init__(
+            description='stestr application',
+            version=__version__,
+            command_manager=commandmanager.CommandManager('stestr.cm'),
+            deferred_help=True,
+            )
 
-    def _get_parser(self):
-        self.command_dict = {}
-        parser = argparse.ArgumentParser()
-        self._set_common_opts(parser)
-        subparsers = parser.add_subparsers(help='command help')
-        for cmd in self.commands:
-            self.command_dict[cmd] = importlib.import_module(
-                self.command_module + cmd)
-            help_str = self.command_dict[cmd].get_cli_help()
-            command_parser = subparsers.add_parser(cmd, help=help_str)
-            self.command_dict[cmd].set_cli_opts(command_parser)
-            command_parser.set_defaults(func=self.command_dict[cmd].run)
+    def initialize_app(self, argv):
+        self.LOG.debug('initialize_app')
+
+    def prepare_to_run_command(self, cmd):
+        self.LOG.debug('prepare_to_run_command %s', cmd.__class__.__name__)
+
+    def clean_up(self, cmd, result, err):
+        self.LOG.debug('clean_up %s', cmd.__class__.__name__)
+        if err:
+            self.LOG.debug('got an error: %s', err)
+
+    def build_option_parser(self, description, version, argparse_kwargs=None):
+        parser = super(StestrCLI,
+                       self).build_option_parser(description, version,
+                                                 argparse_kwargs)
+        parser = self._set_common_opts(parser)
         return parser
 
     def _set_common_opts(self, parser):
@@ -49,12 +54,6 @@ class StestrCLI(object):
                                  "path lookups but does not affect paths "
                                  "supplied to the command.",
                             default=None, type=str)
-        parser.add_argument("-q", "--quiet", action="store_true",
-                            default=False,
-                            help="Turn off output other than the primary "
-                                 "output for a command and any errors.")
-        parser.add_argument('--version', action='version',
-                            version=__version__)
         parser.add_argument('--config', '-c', dest='config',
                             default='.stestr.conf',
                             help="Set a stestr config file to use with this "
@@ -89,25 +88,13 @@ class StestrCLI(object):
                                  "both this and the corresponding config file "
                                  "option are set this value will be used.")
 
+        return parser
 
-def main():
+
+def main(argv=sys.argv[1:]):
     cli = StestrCLI()
-    args = cli.parser.parse_known_args()
-    if args[0].here:
-        os.chdir(args[0].here)
-    # NOTE(mtreinish): Make sure any subprocesses launch the same version of
-    # python being run here
-    if 'PYTHON' not in os.environ:
-        os.environ['PYTHON'] = sys.executable
-    if hasattr(args[0], 'func'):
-        sys.exit(args[0].func(args))
-    else:
-        cli.parser.print_help()
-        # NOTE(andreaf) This point is reached only when using Python 3.x.
-        # Python 2.x fails with return code 2 in case of no
-        # command, so using 2 for consistency
-        sys.exit(2)
+    return cli.run(argv)
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main(sys.argv[1:]))

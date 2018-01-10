@@ -27,17 +27,22 @@ the command line interface for performing the different stestr operations.
 
 CLI Layer
 ---------
-The CLI layer is built using modular subcommands in argparse. The stestr.cli
-module defines a basic interface using argparse and then loops over a list of
-command modules in stestr.commands. Each subcommand has its own module in
-stestr.commands and has 3 required functions to work properly:
+The CLI layer is built using the `cliff.command`_ module. The
+stestr.cli module defines a basic interface using cliff. Each
+subcommand has its own module in stestr.commands and has 3 required
+functions to work properly:
 
- #. set_cli_opts(parser)
- #. get_cli_help()
- #. run(arguments)
+ #. get_parser(prog_name)
+ #. get_description()
+ #. take_action(parsed_args)
 
-set_cli_opts(parser)
-''''''''''''''''''''
+NOTE: To keep the api compatibility in stestr.commands, we still have
+each subcommands there.
+
+.. _cliff.command: https://docs.openstack.org/cliff/latest/reference/index.html
+
+get_parser(prog_name)
+'''''''''''''''''''''
 
 This function is used to define subcommand arguments. It has a single argparse
 parser object passed into it. The intent of this function is to have any command
@@ -46,24 +51,20 @@ specific arguments defined on the provided parser object by calling
 
 .. _parser.add_argument(): https://docs.python.org/2/library/argparse.html#the-add-argument-method
 
-get_cli_help()
-''''''''''''''
+get_description()
+'''''''''''''''''
 The intent of this function is to return an command specific help information.
 It is expected to return a string that will be used when the subcommand is
 defined in argparse and will be displayed before the arguments when ``--help``
 is used on the subcommand.
 
-run(arguments)
-''''''''''''''
+take_action(parsed_args)
+''''''''''''''''''''''''
 This is where the real work for the command is performed. This is the function
 that is called when the command is executed. This function is called being
 wrapped by sys.exit() so an integer return is expected that will be used
-for the command's return code. The arguments input arg is a tuple, the first
-element is the argparse.Namespace object from the parsed CLI options and the
-second element is a list of unknown arguments from the CLI. The expectation
-is that this function will call a separate function with a real python API
-that does all the real work. (which is the public python interface for the
-command)
+for the command's return code. The arguments input parsed_args is the
+argparse.Namespace object from the parsed CLI options.
 
 
 Operations for Running Tests
