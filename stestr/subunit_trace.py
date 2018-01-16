@@ -301,8 +301,7 @@ def print_summary(stream, elapsed_time):
         for w in range(max(RESULTS.keys()) + 1):
             if w not in RESULTS:
                 stream.write(
-                    " - WARNING: missing Worker %s! "
-                    "Race in testr accounting.\n" % w)
+                    " - WARNING: missing Worker %s!\n" % w)
             else:
                 num, time = worker_stats(w)
                 out_str = " - Worker %s (%s tests) => %s" % (w, num, time)
