@@ -28,6 +28,7 @@ from stestr.repository import abstract as repository
 from stestr.repository import util
 from stestr import results
 from stestr import subunit_trace
+from stestr import user_config
 from stestr import utils
 
 
@@ -73,15 +74,29 @@ class Load(command.Command):
         return help_str
 
     def take_action(self, parsed_args):
+        user_conf = user_config.get_user_config(self.app_args.user_config)
         args = parsed_args
+        if getattr(user_conf, 'load', False):
+            force_init = args.force_init or user_conf.load.get('force-init',
+                                                               False)
+            pretty_out = args.subunit_trace or user_conf.load.get(
+                'subunit-trace', False)
+            color = args.color or user_conf.load.get('color', False)
+            abbreviate = args.abbreviate or user_conf.load.get('abbreviate',
+                                                               False)
+        else:
+            force_init = args.force_init
+            pretty_out = args.subunit_trace
+            color = args.color
+            abbreviate = args.abbreviate
         verbose_level = self.app.options.verbose_level
         stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
         load(repo_type=self.app_args.repo_type,
              repo_url=self.app_args.repo_url,
              partial=args.partial, subunit_out=args.subunit,
-             force_init=args.force_init, streams=args.files,
-             pretty_out=args.subunit_trace, color=args.color,
-             stdout=stdout, abbreviate=args.abbreviate)
+             force_init=force_init, streams=args.files,
+             pretty_out=pretty_out, color=color,
+             stdout=stdout, abbreviate=abbreviate)
 
 
 def load(force_init=False, in_streams=None,

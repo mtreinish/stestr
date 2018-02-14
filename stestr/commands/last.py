@@ -21,6 +21,7 @@ from stestr.repository import abstract
 from stestr.repository import util
 from stestr import results
 from stestr import subunit_trace
+from stestr import user_config
 
 
 class Last(command.Command):
@@ -45,6 +46,10 @@ class Last(command.Command):
                             default=False,
                             help="Disable output with the subunit-trace "
                             "output filter")
+        parser.add_argument('--force-subunit-trace', action='store_true',
+                            default=False,
+                            help='Force subunit-trace output regardless of any'
+                                 'other options or config settings')
         parser.add_argument('--color', action='store_true', default=False,
                             help='Enable color output in the subunit-trace '
                             'output, if subunit-trace output is enabled. '
@@ -53,12 +58,25 @@ class Last(command.Command):
         return parser
 
     def take_action(self, parsed_args):
+        user_conf = user_config.get_user_config(self.app_args.user_config)
         args = parsed_args
-        pretty_out = not args.no_subunit_trace
+        if getattr(user_conf, 'last', False):
+            if not user_conf.last.get('no-subunit-trace'):
+                if not args.no_subunit_trace:
+                    pretty_out = True
+                else:
+                    pretty_out = False
+            else:
+                pretty_out = False
+            pretty_out = args.force_subunit_trace or pretty_out
+            color = args.color or user_conf.last.get('color', False)
+        else:
+            pretty_out = args.force_subunit_trace or not args.no_subunit_trace
+            color = args.color
         return last(repo_type=self.app_args.repo_type,
                     repo_url=self.app_args.repo_url,
                     subunit_out=args.subunit, pretty_out=pretty_out,
-                    color=args.color)
+                    color=color)
 
 
 def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,

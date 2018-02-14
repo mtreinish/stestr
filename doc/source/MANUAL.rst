@@ -354,6 +354,42 @@ There is also an option on ``stestr run``, ``--random``/``-r`` to randomize the
 order of tests as they are passed to the workers. This is useful in certain
 use cases, especially when you want to test isolation between test cases.
 
+
+User Config Files
+-----------------
+
+If you prefer to have a different default output or setting for a particular
+command stestr enables you to write a user config file to overide the defaults
+for some options on some commands. By default stestr will look for this config
+file in ``~/.stestr.yaml`` and ``~/.config/stestr.yaml`` in that order. You
+can also specify the path to a config file with the ``--user-config``
+parameter.
+
+The config file is a yaml file that has a top level key for the command and
+then a sub key for each option. For an example, a fully populated config file
+that changes the default on all available options in the config file is::
+
+    run:
+      concurrency: 42 # This can be any integer value >= 0
+      random: True
+      no-subunit-trace: True
+      color: True
+      abbreviate: True
+      slowest: True
+    failing:
+      list: True
+    last:
+      no-subunit-trace: True
+      color: True
+    load:
+      force-init: True
+      subunit-trace: True
+      color: True
+      abbreviate: True
+
+If you choose to use a user config file you can specify any subset of the
+options and commands you choose.
+
 Automated test isolation bisection
 ----------------------------------
 

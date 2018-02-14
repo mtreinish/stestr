@@ -20,6 +20,7 @@ import testtools
 from stestr import output
 from stestr.repository import util
 from stestr import results
+from stestr import user_config
 
 
 class Failing(command.Command):
@@ -37,10 +38,15 @@ class Failing(command.Command):
         return parser
 
     def take_action(self, parsed_args):
+        user_conf = user_config.get_user_config(self.app_args.user_config)
         args = parsed_args
+        if getattr(user_conf, 'failing', False):
+            list_opt = args.list or user_conf.failing.get('list', False)
+        else:
+            list_opt = args.list
         return failing(repo_type=self.app_args.repo_type,
                        repo_url=self.app_args.repo_url,
-                       list_tests=args.list, subunit=args.subunit)
+                       list_tests=list_opt, subunit=args.subunit)
 
 
 def _show_subunit(run):

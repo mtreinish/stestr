@@ -30,6 +30,7 @@ from stestr import output
 from stestr.repository import abstract as repository
 from stestr.repository import util
 from stestr.testlist import parse_list
+from stestr import user_config
 
 
 class Run(command.Command):
@@ -46,7 +47,8 @@ class Run(command.Command):
         parser.add_argument("--serial", action="store_true",
                             default=False,
                             help="Run tests in a serial process.")
-        parser.add_argument("--concurrency", action="store", default=0,
+        parser.add_argument("--concurrency", action="store", default=None,
+                            type=int,
                             help="How many processes to use. The default (0) "
                             "autodetects your CPU count.")
         parser.add_argument("--load-list", default=None,
@@ -108,6 +110,10 @@ class Run(command.Command):
                             default=False,
                             help='Disable the default subunit-trace output '
                             'filter')
+        parser.add_argument('--force-subunit-trace', action='store_true',
+                            default=False,
+                            help='Force subunit-trace output regardless of any'
+                                 'other options or config settings')
         parser.add_argument('--color', action='store_true', default=False,
                             help='Enable color output in the subunit-trace '
                             'output, if subunit-trace output is enabled. '
@@ -127,9 +133,33 @@ class Run(command.Command):
         return help_str
 
     def take_action(self, parsed_args):
+        user_conf = user_config.get_user_config(self.app_args.user_config)
         filters = parsed_args.filters
         args = parsed_args
-        pretty_out = not args.no_subunit_trace
+        if getattr(user_conf, 'run', False):
+            if not user_conf.run.get('no-subunit-trace'):
+                if not args.no_subunit_trace:
+                    pretty_out = True
+                else:
+                    pretty_out = False
+            else:
+                pretty_out = False
+
+            pretty_out = args.force_subunit_trace or pretty_out
+            if args.concurrency is None:
+                concurrency = user_conf.run.get('concurrency', 0)
+            else:
+                concurrency = args.concurrency
+            random = args.random or user_conf.run.get('random', False)
+            color = args.color or user_conf.run.get('color', False)
+            abbreviate = args.abbreviate = user_conf.run.get(
+                'abbreviate', False)
+        else:
+            pretty_out = args.force_subunit_trace or not args.no_subunit_trace
+            concurrency = args.concurrency or 0
+            random = args.random
+            color = args.color
+            abbreviate = args.abbreviate
         verbose_level = self.app.options.verbose_level
         stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
         result = run_command(
@@ -137,20 +167,23 @@ class Run(command.Command):
             repo_url=self.app_args.repo_url,
             test_path=self.app_args.test_path, top_dir=self.app_args.top_dir,
             group_regex=self.app_args.group_regex, failing=args.failing,
-            serial=args.serial, concurrency=args.concurrency,
+            serial=args.serial, concurrency=concurrency,
             load_list=args.load_list, partial=args.partial,
             subunit_out=args.subunit, until_failure=args.until_failure,
             analyze_isolation=args.analyze_isolation, isolated=args.isolated,
             worker_path=args.worker_path, blacklist_file=args.blacklist_file,
             whitelist_file=args.whitelist_file, black_regex=args.black_regex,
-            no_discover=args.no_discover, random=args.random,
+            no_discover=args.no_discover, random=random,
             combine=args.combine,
-            filters=filters, pretty_out=pretty_out, color=args.color,
-            stdout=stdout, abbreviate=args.abbreviate)
+            filters=filters, pretty_out=pretty_out, color=color,
+            stdout=stdout, abbreviate=abbreviate)
 
         # Always output slowest test info if requested, regardless of other
         # test run options
-        if args.slowest:
+        user_slowest = False
+        if getattr(user_conf, 'run', False):
+            user_slowest = user_conf.run.get('slowest', False)
+        if args.slowest or user_slowest:
             slowest.slowest(repo_type=args.repo_type, repo_url=args.repo_url)
 
         return result
