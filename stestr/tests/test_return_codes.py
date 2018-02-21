@@ -152,6 +152,12 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit('stestr run --subunit passing', 0,
                            subunit=True)
 
+    def test_slowest_passing(self):
+        self.assertRunExit('stestr run --slowest passing', 0)
+
+    def test_slowest_failing(self):
+        self.assertRunExit('stestr run --slowest failing', 1)
+
     def test_until_failure_fails(self):
         self.assertRunExit('stestr run --until-failure', 1)
 

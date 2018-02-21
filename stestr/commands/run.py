@@ -184,7 +184,8 @@ class Run(command.Command):
         if getattr(user_conf, 'run', False):
             user_slowest = user_conf.run.get('slowest', False)
         if args.slowest or user_slowest:
-            slowest.slowest(repo_type=args.repo_type, repo_url=args.repo_url)
+            slowest.slowest(repo_type=self.app_args.repo_type,
+                            repo_url=self.app_args.repo_url)
 
         return result
 
