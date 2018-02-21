@@ -48,6 +48,11 @@ class StestrCLI(app.App):
         return parser
 
     def _set_common_opts(self, parser):
+        parser.add_argument('--user-config', dest='user_config', default=None,
+                            help='An optional path to a default user config '
+                                 'file if one is not specified ~/.stestr.yaml '
+                                 'and ~/.config/stestr.yaml will be tried in '
+                                 'that order')
         parser.add_argument('-d', '--here', dest='here',
                             help="Set the directory or url that a command "
                                  "should run from. This affects all default "
