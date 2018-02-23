@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import io
 import os
 import sys
 
@@ -136,7 +137,7 @@ class TestUserConfig(base.TestCase):
         self.assertEqual(error_string, std_out.read().rstrip())
 
     @mock.patch('six.moves.builtins.open',
-                return_value=six.StringIO(FULL_YAML))
+                return_value=io.BytesIO(FULL_YAML.encode('utf-8')))
     def test_user_config_full_config(self, open_mock):
         user_conf = user_config.UserConfig('/path')
         full_dict = {
@@ -162,7 +163,7 @@ class TestUserConfig(base.TestCase):
 
     @mock.patch('sys.exit')
     @mock.patch('six.moves.builtins.open',
-                return_value=six.StringIO(INVALID_YAML_FIELD))
+                return_value=io.BytesIO(INVALID_YAML_FIELD.encode('utf-8')))
     def test_user_config_invalid_value_type(self, open_mock, exit_mock):
         temp_out = sys.stdout
         std_out = six.StringIO()
@@ -178,7 +179,7 @@ class TestUserConfig(base.TestCase):
 
     @mock.patch('sys.exit')
     @mock.patch('six.moves.builtins.open',
-                return_value=six.StringIO(YAML_NOT_INT))
+                return_value=io.BytesIO(YAML_NOT_INT.encode('utf-8')))
     def test_user_config_invalid_integer(self, open_mock, exit_mock):
         temp_out = sys.stdout
         std_out = six.StringIO()

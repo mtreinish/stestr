@@ -215,3 +215,12 @@ class TestReturnCodes(base.TestCase):
         out, err = self.assertRunExit('stestr -q load', 0, stdin=stream)
         self.assertEqual(out.decode('utf-8'), '')
         self.assertEqual(err.decode('utf-8'), '')
+
+    def test_no_subunit_trace_force_subunit_trace(self):
+        out, err = self.assertRunExit(
+            'stestr run --no-subunit-trace --force-subunit-trace passing', 0)
+        out = six.text_type(out)
+        self.assertNotIn('PASSED (id=0)', out)
+        self.assertIn('Totals', out)
+        self.assertIn('Worker Balance', out)
+        self.assertIn('Sum of execute time for each test:', out)

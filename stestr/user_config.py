@@ -63,7 +63,10 @@ class UserConfig(object):
                 vp.Optional('abbreviate'): bool,
             }
         })
-        self.config = yaml.load(open(path, 'r').read())
+        with open(path, 'r') as fd:
+            self.config = yaml.load(fd.read())
+        if self.config is None:
+            self.config = {}
         try:
             self.schema(self.config)
         except vp.MultipleInvalid as e:
