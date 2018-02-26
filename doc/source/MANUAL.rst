@@ -107,7 +107,7 @@ stestr also allows you to specify a blacklist file to define a set of regexes
 to exclude. You can specify a blacklist file with the
 ``--blacklist-file``/``-b`` option, for example::
 
-  $ stestr run --blacklist_file $path_to_file
+  $ stestr run --blacklist-file $path_to_file
 
 The format for the file is line separated regex, with ``#`` used to signify the
 start of a comment on a line. For example::
@@ -125,9 +125,9 @@ exclusion regexes from the blacklist file on top of that.
 
 The dual of the blacklist file is the whitelist file which will include any
 tests matching the regexes in the file. You can specify the path to the file
-with ``--whitelist_file``/``-w``, for example::
+with ``--whitelist-file``/``-w``, for example::
 
-  $ stestr run --whitelist_file $path_to_file
+  $ stestr run --whitelist-file $path_to_file
 
 The format for the file is more or less identical to the blacklist file::
 
@@ -141,7 +141,7 @@ It's also worth noting that you can use the test list option to dry run any
 selection arguments you are using. You just need to use ``stestr list``
 with your selection options to do this, for example::
 
-  $ stestr list 'regex3.*' --blacklist_file blacklist.txt
+  $ stestr list 'regex3.*' --blacklist-file blacklist.txt
 
 This will list all the tests which will be run by stestr using that combination
 of arguments.
