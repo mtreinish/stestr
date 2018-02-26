@@ -138,7 +138,7 @@ The format for the file is more or less identical to the blacklist file::
 However, instead of excluding the matches it will include them.
 
 It's also worth noting that you can use the test list option to dry run any
-selection arguments you are using. You just need to use ``--list``/``-l``
+selection arguments you are using. You just need to use ``stestr list``
 with your selection options to do this, for example::
 
   $ stestr list 'regex3.*' --blacklist_file blacklist.txt
