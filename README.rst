@@ -1,16 +1,16 @@
 Slim/Super Test Repository
 ==========================
 
-.. image:: https://travis-ci.org/mtreinish/stestr.svg?branch=master
+.. image:: https://img.shields.io/travis/mtreinish/stestr/master.svg?style=flat-square
     :target: https://travis-ci.org/mtreinish/stestr
 
-.. image:: https://img.shields.io/appveyor/ci/mtreinish/stestr/master.svg?logo=appveyor
+.. image:: https://img.shields.io/appveyor/ci/mtreinish/stestr/master.svg?logo=appveyor&style=flat-square
     :target: https://ci.appveyor.com/project/mtreinish/stestr
 
-.. image:: https://coveralls.io/repos/github/mtreinish/stestr/badge.svg?branch=master
+.. image:: https://img.shields.io/coveralls/github/mtreinish/stestr/master.svg?style=flat-square
     :target: https://coveralls.io/github/mtreinish/stestr?branch=master
 
-.. image:: https://img.shields.io/pypi/v/stestr.svg
+.. image:: https://img.shields.io/pypi/v/stestr.svg?style=flat-square
     :target: https://pypi.python.org/pypi/stestr
 
 You can see the full rendered docs at: http://stestr.readthedocs.io/en/latest/
