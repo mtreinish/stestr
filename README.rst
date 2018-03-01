@@ -82,7 +82,7 @@ running a single test (or module) and want to avoid the overhead of doing test
 discovery you can use the ``--no-discover``/``-n`` option.
 
 For all the details on these commands and more thorough explanation of options
-see the :ref:`manual`.
+see the stestr manual: https://stestr.readthedocs.io/en/latest/MANUAL.html
 
 Migrating from testrepository
 -----------------------------
