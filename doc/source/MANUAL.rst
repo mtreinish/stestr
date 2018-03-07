@@ -3,6 +3,15 @@
 stestr user manual
 ==================
 
+Usage
+-----
+
+.. autoprogram-cliff:: stestr.cli.StestrCLI
+   :application: stestr
+
+.. autoprogram-cliff:: stestr.cm
+   :application: stestr
+
 Overview
 --------
 

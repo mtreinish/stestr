@@ -27,6 +27,7 @@ import sys, os
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'sphinx.ext.viewcode',
+              'cliff.sphinxext',
              ]
 
 # Enable todos in the output
