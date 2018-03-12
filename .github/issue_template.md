@@ -6,6 +6,12 @@ to reproduce the issue.
 
 Note if you encounter an error message try to re-run the command with --debug to print any tracebacks
 
+#### Expected behavior and actual behavior
+
+#### Steps to reproduce the problem
+
+#### Specifications like the version of the project, operating system, or hardware
+
 ### System information
 
 **stestr version (`stestr --version`):**
