@@ -23,7 +23,7 @@ class StestrCLI(app.App):
 
     def __init__(self):
         super(StestrCLI, self).__init__(
-            description='stestr application',
+            description="A parallel Python test runner built around subunit",
             version=__version__,
             command_manager=commandmanager.CommandManager('stestr.cm'),
             deferred_help=True,
