@@ -13,11 +13,9 @@
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 
 import six
-import testtools
 
 from stestr.tests import base
 
@@ -51,9 +49,6 @@ class TestBisectReturnCodes(base.TestCase):
         os.chdir(self.directory)
         subprocess.call('stestr init', shell=True)
 
-    # TODO(mtreinish): Remove the skip condition when subunit 1.2.0 is released
-    @testtools.skipIf(sys.platform == 'win32',
-                      'Not supported on Windows with subunit < 1.2.0')
     def test_bisect_serial_fail_detected(self):
         p = subprocess.Popen(
             "stestr run --serial", shell=True, stdout=subprocess.PIPE,
