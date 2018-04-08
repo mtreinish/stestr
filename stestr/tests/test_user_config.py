@@ -28,16 +28,19 @@ run:
   color: True
   abbreviate: True
   slowest: True
+  suppress-attachments: True
 failing:
   list: True
 last:
   no-subunit-trace: True
   color: True
+  suppress-attachments: True
 load:
   force-init: True
   subunit-trace: True
   color: True
   abbreviate: True
+  suppress-attachments: True
 """
 
 INVALID_YAML_FIELD = """
@@ -147,17 +150,20 @@ class TestUserConfig(base.TestCase):
                 'no-subunit-trace': True,
                 'color': True,
                 'abbreviate': True,
-                'slowest': True},
+                'slowest': True,
+                'suppress-attachments': True},
             'failing': {
                 'list': True},
             'last': {
                 'no-subunit-trace': True,
-                'color': True},
+                'color': True,
+                'suppress-attachments': True},
             'load': {
                 'force-init': True,
                 'subunit-trace': True,
                 'color': True,
-                'abbreviate': True}
+                'abbreviate': True,
+                'suppress-attachments': True}
         }
         self.assertEqual(full_dict, user_conf.config)
 
