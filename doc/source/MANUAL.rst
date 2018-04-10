@@ -385,16 +385,19 @@ that changes the default on all available options in the config file is::
       color: True
       abbreviate: True
       slowest: True
+      suppress-attachments: True
     failing:
       list: True
     last:
       no-subunit-trace: True
       color: True
+      suppress-attachments: True
     load:
       force-init: True
       subunit-trace: True
       color: True
       abbreviate: True
+      suppress-attachments: True
 
 If you choose to use a user config file you can specify any subset of the
 options and commands you choose.

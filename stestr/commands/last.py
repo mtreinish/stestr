@@ -55,6 +55,11 @@ class Last(command.Command):
                             'output, if subunit-trace output is enabled. '
                             '(this is the default). If subunit-trace is '
                             'disable this does nothing.')
+        parser.add_argument('--suppress-attachments', action='store_true',
+                            dest='suppress_attachments',
+                            help='If set do not print stdout or stderr '
+                            'attachment contents on a successful test '
+                            'execution')
         return parser
 
     def take_action(self, parsed_args):
@@ -70,17 +75,22 @@ class Last(command.Command):
                 pretty_out = False
             pretty_out = args.force_subunit_trace or pretty_out
             color = args.color or user_conf.last.get('color', False)
+            suppress_attachments = (
+                args.suppress_attachments or user_conf.last.get(
+                    'suppress-attachments', False))
+
         else:
             pretty_out = args.force_subunit_trace or not args.no_subunit_trace
             color = args.color
+            suppress_attachments = args.suppress_attachments
         return last(repo_type=self.app_args.repo_type,
                     repo_url=self.app_args.repo_url,
                     subunit_out=args.subunit, pretty_out=pretty_out,
-                    color=color)
+                    color=color, suppress_attachments=suppress_attachments)
 
 
 def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
-         color=False, stdout=sys.stdout):
+         color=False, stdout=sys.stdout, suppress_attachments=False):
     """Show the last run loaded into a a repository
 
     This function will print the results from the last run in the repository
@@ -100,6 +110,8 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
     :param bool subunit: Show output as a subunit stream.
     :param file stdout: The output file to write all output to. By default
          this is sys.stdout
+    :param bool suppress_attachments: When set true attachments subunit_trace
+        will not print attachments on successful test execution.
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -146,7 +158,8 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
     else:
         stream = latest_run.get_subunit_stream()
         failed = subunit_trace.trace(stream, stdout, post_fails=True,
-                                     color=color)
+                                     color=color,
+                                     suppress_attachments=suppress_attachments)
     if failed:
         return 1
     else:

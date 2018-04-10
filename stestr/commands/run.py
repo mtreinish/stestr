@@ -125,6 +125,11 @@ class Run(command.Command):
         parser.add_argument('--abbreviate', action='store_true',
                             dest='abbreviate',
                             help='Print one character status for each test')
+        parser.add_argument('--suppress-attachments', action='store_true',
+                            dest='suppress_attachments',
+                            help='If set do not print stdout or stderr '
+                            'attachment contents on a successful test '
+                            'execution')
         return parser
 
     def get_description(self):
@@ -154,12 +159,16 @@ class Run(command.Command):
             color = args.color or user_conf.run.get('color', False)
             abbreviate = args.abbreviate = user_conf.run.get(
                 'abbreviate', False)
+            suppress_attachments = (
+                args.suppress_attachments or user_conf.run.get(
+                    'suppress-attachments', False))
         else:
             pretty_out = args.force_subunit_trace or not args.no_subunit_trace
             concurrency = args.concurrency or 0
             random = args.random
             color = args.color
             abbreviate = args.abbreviate
+            suppress_attachments = args.suppress_attachments
         verbose_level = self.app.options.verbose_level
         stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
         result = run_command(
@@ -176,7 +185,8 @@ class Run(command.Command):
             no_discover=args.no_discover, random=random,
             combine=args.combine,
             filters=filters, pretty_out=pretty_out, color=color,
-            stdout=stdout, abbreviate=abbreviate)
+            stdout=stdout, abbreviate=abbreviate,
+            suppress_attachments=suppress_attachments)
 
         # Always output slowest test info if requested, regardless of other
         # test run options
@@ -216,7 +226,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                 blacklist_file=None, whitelist_file=None, black_regex=None,
                 no_discover=False, random=False, combine=False, filters=None,
                 pretty_out=True, color=False, stdout=sys.stdout,
-                abbreviate=False):
+                abbreviate=False, suppress_attachments=False):
     """Function to execute the run command
 
     This function implements the run command. It will run the tests specified
@@ -275,6 +285,8 @@ def run_command(config='.stestr.conf', repo_type='file',
     :param file stdout: The file object to write all output to. By default this
         is sys.stdout
     :param bool abbreviate: Use abbreviated output if set true
+    :param bool suppress_attachments: When set true attachments subunit_trace
+        will not print attachments on successful test execution.
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -314,7 +326,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                              repo_type=repo_type,
                              repo_url=repo_url, run_id=combine_id,
                              pretty_out=pretty_out,
-                             color=color, stdout=stdout, abbreviate=abbreviate)
+                             color=color, stdout=stdout, abbreviate=abbreviate,
+                             suppress_attachments=suppress_attachments)
 
         if not until_failure:
             return run_tests()
@@ -380,18 +393,12 @@ def run_command(config='.stestr.conf', repo_type='file',
                     whitelist_file=whitelist_file, black_regex=black_regex,
                     randomize=random, test_path=test_path, top_dir=top_dir)
 
-                run_result = _run_tests(cmd, failing,
-                                        analyze_isolation,
-                                        isolated,
-                                        until_failure,
-                                        subunit_out=subunit_out,
-                                        combine_id=combine_id,
-                                        repo_type=repo_type,
-                                        repo_url=repo_url,
-                                        pretty_out=pretty_out,
-                                        color=color,
-                                        abbreviate=abbreviate,
-                                        stdout=stdout)
+                run_result = _run_tests(
+                    cmd, failing, analyze_isolation, isolated, until_failure,
+                    subunit_out=subunit_out, combine_id=combine_id,
+                    repo_type=repo_type, repo_url=repo_url,
+                    pretty_out=pretty_out, color=color, abbreviate=abbreviate,
+                    stdout=stdout, suppress_attachments=suppress_attachments)
                 if run_result > result:
                     result = run_result
             return result
@@ -405,7 +412,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                               pretty_out=pretty_out,
                               color=color,
                               stdout=stdout,
-                              abbreviate=abbreviate)
+                              abbreviate=abbreviate,
+                              suppress_attachments=suppress_attachments)
     else:
         # Where do we source data about the cause of conflicts.
         latest_run = repo.get_latest_run()
@@ -450,7 +458,7 @@ def run_command(config='.stestr.conf', repo_type='file',
 def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                subunit_out=False, combine_id=None, repo_type='file',
                repo_url=None, pretty_out=True, color=False, stdout=sys.stdout,
-               abbreviate=False):
+               abbreviate=False, suppress_attachments=False):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
@@ -466,7 +474,8 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                              repo_type=repo_type,
                              repo_url=repo_url, run_id=combine_id,
                              pretty_out=pretty_out, color=color, stdout=stdout,
-                             abbreviate=abbreviate)
+                             abbreviate=abbreviate,
+                             suppress_attachments=suppress_attachments)
 
         if not until_failure:
             return run_tests()
