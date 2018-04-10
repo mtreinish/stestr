@@ -63,6 +63,11 @@ class Load(command.Command):
         parser.add_argument('--abbreviate', action='store_true',
                             dest='abbreviate',
                             help='Print one character status for each test')
+        parser.add_argument('--suppress-attachments', action='store_true',
+                            dest='suppress_attachments',
+                            help='If set do not print stdout or stderr '
+                            'attachment contents on a successful test '
+                            'execution')
         return parser
 
     def get_description(self):
@@ -84,11 +89,15 @@ class Load(command.Command):
             color = args.color or user_conf.load.get('color', False)
             abbreviate = args.abbreviate or user_conf.load.get('abbreviate',
                                                                False)
+            suppress_attachments = (
+                args.suppress_attachments or user_conf.load.get(
+                    'suppress-attachments', False))
         else:
             force_init = args.force_init
             pretty_out = args.subunit_trace
             color = args.color
             abbreviate = args.abbreviate
+            suppress_attachments = args.suppress_attachments
         verbose_level = self.app.options.verbose_level
         stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
         load(repo_type=self.app_args.repo_type,
@@ -96,13 +105,14 @@ class Load(command.Command):
              partial=args.partial, subunit_out=args.subunit,
              force_init=force_init, streams=args.files,
              pretty_out=pretty_out, color=color,
-             stdout=stdout, abbreviate=abbreviate)
+             stdout=stdout, abbreviate=abbreviate,
+             suppress_attachments=suppress_attachments)
 
 
 def load(force_init=False, in_streams=None,
          partial=False, subunit_out=False, repo_type='file', repo_url=None,
          run_id=None, streams=None, pretty_out=False, color=False,
-         stdout=sys.stdout, abbreviate=False):
+         stdout=sys.stdout, abbreviate=False, suppress_attachments=False):
     """Load subunit streams into a repository
 
     This function will load subunit streams into the repository. It will
@@ -129,6 +139,8 @@ def load(force_init=False, in_streams=None,
     :param file stdout: The output file to write all output to. By default
         this is sys.stdout
     :param bool abbreviate: Use abbreviated output if set true
+    :param bool suppress_attachments: When set true attachments subunit_trace
+        will not print attachments on successful test execution.
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -179,7 +191,8 @@ def load(force_init=False, in_streams=None,
     elif pretty_out:
         outcomes = testtools.StreamToDict(
             functools.partial(subunit_trace.show_outcome, stdout,
-                              enable_color=color, abbreviate=abbreviate))
+                              enable_color=color, abbreviate=abbreviate,
+                              suppress_attachments=suppress_attachments))
         summary_result = testtools.StreamSummary()
         output_result = testtools.CopyStreamResult([outcomes, summary_result])
         output_result = testtools.StreamResultRouter(output_result)
