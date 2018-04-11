@@ -12,6 +12,7 @@
 
 import datetime
 from datetime import datetime as dt
+import sys
 
 from stestr import results
 from stestr.tests import base
@@ -56,3 +57,20 @@ class TestSummarizingResult(base.TestCase):
         self.sr._first_time = now
         self.sr._last_time = now + datetime.timedelta(seconds=3)
         self.assertEqual(3, self.sr.get_time_taken())
+
+
+class TestCatFiles(base.TestCase):
+    def setUp(self):
+        super(TestCatFiles, self).setUp()
+        self.cat_files = results.CatFiles(sys.stdout)
+
+    def test_status_file_name_none(self):
+        self.cat_files.status(file_name=None)
+        self.assertEqual(None, self.cat_files.last_file)
+
+    def test_status_file_name_foo(self):
+        self.cat_files.status(file_name='foo', file_bytes=b'abc')
+        self.assertEqual('foo', self.cat_files.last_file)
+        # Try again with the same file name
+        self.cat_files.status(file_name='foo', file_bytes=b'abc')
+        self.assertEqual('foo', self.cat_files.last_file)
