@@ -175,6 +175,11 @@ There is also an ``--abbreviate`` flag available, when this is used a single
 character is printed for each test as it is executed. A ``.`` is printed for a
 successful test, a ``F`` for a failed test, and a ``S`` for a skipped test.
 
+In the default subunit-trace output any captured output to stdout and stderr is
+printed after test execution, for both successful and failed tests. However,
+in some cases printing these attachments on a successful tests is not the
+preferred behavior. You can use the ``--suppress-attachments`` flag to disable
+printing stdout or stderr attachments for successful tests.
 
 Combining Test Results
 ----------------------
