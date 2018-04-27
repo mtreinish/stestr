@@ -35,7 +35,7 @@ install:
   - ECHO "Installed SDKs:"
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
- # Install Python (from the official .msi of http://python.org) and pip when
+  # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
   - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
 
@@ -50,7 +50,9 @@ install:
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  # NOTE(mtreinish): Because of bugs in pip>=10.0.0 preventing pip from working
+  # we're capping pip here
+  - "pip install --disable-pip-version-check --user --upgrade pip<10.0.0"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
