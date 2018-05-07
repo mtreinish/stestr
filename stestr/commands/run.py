@@ -157,7 +157,7 @@ class Run(command.Command):
                 concurrency = args.concurrency
             random = args.random or user_conf.run.get('random', False)
             color = args.color or user_conf.run.get('color', False)
-            abbreviate = args.abbreviate = user_conf.run.get(
+            abbreviate = args.abbreviate or user_conf.run.get(
                 'abbreviate', False)
             suppress_attachments = (
                 args.suppress_attachments or user_conf.run.get(
