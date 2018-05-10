@@ -36,7 +36,7 @@ class TestReturnCodes(base.TestCase):
         super(TestReturnCodes, self).setUp()
         # Setup test dirs
         self.directory = tempfile.mkdtemp(prefix='stestr-unit')
-        self.addCleanup(shutil.rmtree, self.directory)
+        self.addCleanup(shutil.rmtree, self.directory, ignore_errors=True)
         self.test_dir = os.path.join(self.directory, 'tests')
         os.mkdir(self.test_dir)
         # Setup Test files
