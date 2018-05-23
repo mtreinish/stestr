@@ -74,10 +74,7 @@ def output_tests(tests, output=sys.stdout):
     """
 
     for test in tests:
-        # On Python 2.6 id() returns bytes.
         id_str = test.id()
-        if type(id_str) is bytes:
-            id_str = id_str.decode('utf8')
         output.write(id_str)
         output.write(six.text_type('\n'))
 
