@@ -49,7 +49,7 @@ parser object passed into it. The intent of this function is to have any command
 specific arguments defined on the provided parser object by calling
 `parser.add_argument()`_ for each argument.
 
-.. _parser.add_argument(): https://docs.python.org/2/library/argparse.html#the-add-argument-method
+.. _parser.add_argument(): https://docs.python.org/3/library/argparse.html#the-add-argument-method
 
 get_description()
 '''''''''''''''''

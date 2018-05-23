@@ -52,7 +52,7 @@ to ``./``. It's also worth noting that shell variables for these 2 config
 options (and only these 2 options) are expanded on platforms that have a shell.
 This enables you to have conditional discovery paths based on your environment.
 
-.. _unittest discovery: https://docs.python.org/2/library/unittest.html#test-discovery
+.. _unittest discovery: https://docs.python.org/3/library/unittest.html#test-discovery
 
 For example, having a config file like::
 
