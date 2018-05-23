@@ -67,7 +67,7 @@ which just tells stestr the relative path for the directory to use for
 test discovery. This is the same as ``--start-directory`` in the standard
 `unittest discovery`_
 
-.. _unittest discovery: https://docs.python.org/2.7/library/unittest.html#test-discovery
+.. _unittest discovery: https://docs.python.org/3/library/unittest.html#test-discovery
 
 After this file is created you should be all set to start using stestr to run
 tests. You can create a repository for test results with the stestr init
