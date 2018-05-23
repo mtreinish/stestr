@@ -37,25 +37,22 @@ Will be useful to explore the system.
 Configuration
 -------------
 
-stestr is configured with a config file that tells stestr some basic information
-about how to run tests. By default the config file needs to be ``.stestr.conf``
-in the same directory that stestr is run from. However, the ``--config``/``-c``
-CLI argument can specify an alternate path for it. stestr also includes an
-online help for all the options that can be set in the config file. It is in the
-top of the output of::
+To configure stestr for a project you can write a stestr configuration file.
+This lets you set basic information about how tests are run for a project.
+By default the config file needs to be ``.stestr.conf`` in the same directory
+that stestr is run from, normally the root of a project's repository. However,
+the ``--config``/``-c`` CLI argument can specify an alternate path for it.
 
-  $ stestr run --help
-
-However, the 2 most important options in the stestr config file are
-``test_path`` and ``top_dir``. These 2 options are used to set the `unittest
-discovery`_ options for stestr. (test_path is the same as ``--start-directory``
+The 2 most important options in the stestr config file are ``test_path``
+and ``top_dir``. These 2 options are used to set the `unittest discovery`_
+options for stestr. (test_path is the same as ``--start-directory``
 and top_dir is the same as ``--top-level-directory`` in the doc) Only test_path
 is a required field in the config file, if top_dir is not specified it defaults
 to ``./``. It's also worth noting that shell variables for these 2 config
 options (and only these 2 options) are expanded on platforms that have a shell.
 This enables you to have conditional discovery paths based on your environment.
 
-.. _unittest discovery: https://docs.python.org/2/library/unittest.html#test-discovery
+.. _unittest discovery: https://docs.python.org/3/library/unittest.html#test-discovery
 
 For example, having a config file like::
 
@@ -64,6 +61,18 @@ For example, having a config file like::
 
 will let you override the discovery start path using the TEST_PATH environment
 variable.
+
+A full example config file is::
+
+  [DEFAULT]
+  test_path=./project/tests
+  top_dir=./
+  group_regex=([^\.]*\.)*
+
+
+The ``group_regex`` option is used to specify is used to provide a scheduler
+hint for how tests should be divided between test runners. See the
+:ref:`group_regex` section for more information on how this works.
 
 There is also an option to specify all the options in the config file via the
 CLI. This way you can run stestr directly without having to write a config file
@@ -304,6 +313,8 @@ its test error::
 And then find tests with that tag::
 
   $ stestr last --subunit | subunit-filter -s --xfail --with-tag=worker-3 | subunit-ls > slave-3.list
+
+.. _group_regex:
 
 Grouping Tests
 --------------
