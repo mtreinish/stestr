@@ -319,10 +319,11 @@ And then find tests with that tag::
 Grouping Tests
 --------------
 
-In certain scenarios you may want to group tests of a certain type together
-so that they will be run by the same worker process. The group_regex option in
-the stestr config file permits this. When set, tests are grouped by the group(0)
-of any regex match. Tests with no match are not grouped.
+In certain scenarios you may want to group tests of a certain type together so
+that they will be run by the same worker process. The ``group_regex`` option in
+the stestr config file permits this. When set, tests are grouped by the entire
+matching portion of the regex. The match must begin at the start of the string.
+Tests with no match are not grouped.
 
 For example, setting the following option in the stestr config file will group
 tests in the same class together (the last '.' splits the class and test
