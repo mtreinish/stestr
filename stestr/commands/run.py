@@ -133,8 +133,8 @@ class Run(command.Command):
         return parser
 
     def get_description(self):
-        help_str = "Run the tests for a project and load them into a "
-        "repository."
+        help_str = (
+            "Run the tests for a project and store them into the repository.")
         return help_str
 
     def take_action(self, parsed_args):
