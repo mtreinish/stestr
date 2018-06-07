@@ -36,12 +36,13 @@ class Load(command.Command):
     def get_parser(self, prog_name):
         parser = super(Load, self).get_parser(prog_name)
         parser.add_argument("files", nargs="*", default=False,
+                            help="The subunit v2 stream files to load into the"
+                            " repository")
+        parser.add_argument("--partial", action="store_true",
+                            default=False,
                             help="DEPRECATED: The stream being loaded was a "
                             "partial run. This option is deprecated and no "
                             "does anything. It will be removed in the future")
-        parser.add_argument("--partial", action="store_true",
-                            default=False,
-                            help="The stream being loaded was a partial run.")
         parser.add_argument("--force-init", action="store_true",
                             default=False,
                             help="Initialise the repository if it does not "
@@ -55,11 +56,11 @@ class Load(command.Command):
         parser.add_argument("--subunit-trace", action='store_true',
                             default=False,
                             help="Display the loaded stream through the "
-                                 "subunit-trace output filter")
+                            "subunit-trace output filter")
         parser.add_argument('--color', action='store_true', default=False,
                             help='Enable color output in the subunit-trace '
                             'output, if subunit-trace output is enabled. If '
-                                 'subunit-trace is disable this does nothing.')
+                            'subunit-trace is disable this does nothing.')
         parser.add_argument('--abbreviate', action='store_true',
                             dest='abbreviate',
                             help='Print one character status for each test')
