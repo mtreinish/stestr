@@ -12,6 +12,7 @@
 
 import contextlib
 import re
+import sys
 
 
 def filter_tests(filters, test_ids):
@@ -26,7 +27,17 @@ def filter_tests(filters, test_ids):
     """
     if filters is None:
         return test_ids
-    _filters = list(map(re.compile, filters))
+
+    _filters = []
+    for f in filters:
+        if isinstance(f, str):
+            try:
+                _filters.append(re.compile(f))
+            except re.error:
+                print("Invalid regex: %s provided in filters" % f)
+                sys.exit(5)
+        else:
+            _filters.append(f)
 
     def include(test_id):
         for pred in _filters:
@@ -51,7 +62,12 @@ def black_reader(blacklist_file):
                 comment = 'Skipped because of regex %s:' % line_regex
             if not line_regex:
                 continue
-            regex_comment_lst.append((re.compile(line_regex), comment, []))
+            try:
+                regex_comment_lst.append((re.compile(line_regex), comment, []))
+            except re.error:
+                print("Invalid regex: %s in provided blacklist file" %
+                      line_regex)
+                sys.exit(5)
     return regex_comment_lst
 
 
@@ -62,8 +78,13 @@ def _get_regex_from_whitelist_file(file_path):
         # Before the # is the regex
         line_regex = split_line[0].strip()
         if line_regex:
-            lines.append(line_regex)
-    return '|'.join(lines)
+            try:
+                lines.append(re.compile(line_regex))
+            except re.error:
+                print("Invalid regex: %s in provided whitelist file" %
+                      line_regex)
+                sys.exit(5)
+    return lines
 
 
 def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
@@ -87,15 +108,14 @@ def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
     if not regexes:
         regexes = None  # handle the other false things
 
+    white_re = None
     if whitelist_file:
         white_re = _get_regex_from_whitelist_file(whitelist_file)
-    else:
-        white_re = ''
 
     if not regexes and white_re:
-        regexes = [white_re]
+        regexes = white_re
     elif regexes and white_re:
-        regexes.append(white_re)
+        regexes += white_re
 
     if blacklist_file:
         black_data = black_reader(blacklist_file)
@@ -104,7 +124,11 @@ def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
 
     if black_regex:
         msg = "Skipped because of regexp provided as a command line argument:"
-        record = (re.compile(black_regex), msg, [])
+        try:
+            record = (re.compile(black_regex), msg, [])
+        except re.error:
+            print("Invalid regex: %s used for black_regex" % black_regex)
+            sys.exit(5)
         if black_data:
             black_data.append(record)
         else:
