@@ -30,6 +30,14 @@ class TestSelection(base.TestCase):
         result = selection.filter_tests(['a'], test_list)
         self.assertEqual(['a'], result)
 
+    def test_filter_invalid_regex(self):
+        test_list = ['a', 'b', 'c']
+        with mock.patch('sys.exit', side_effect=ImportError) as mock_exit:
+            self.assertRaises(ImportError, selection.filter_tests,
+                              ['fake_regex_with_bad_part[The-BAD-part]'],
+                              test_list)
+            mock_exit.assert_called_once_with(5)
+
 
 class TestBlackReader(base.TestCase):
     def test_black_reader(self):
@@ -51,6 +59,16 @@ class TestBlackReader(base.TestCase):
             self.assertIn('search', dir(r[0]))  # like a compiled regexp
         self.assertEqual(note_cnt, 4)
 
+    def test_invalid_regex(self):
+        blacklist_file = six.StringIO()
+        blacklist_file.write("fake_regex_with_bad_part[The-BAD-part]")
+        blacklist_file.seek(0)
+        with mock.patch('six.moves.builtins.open',
+                        return_value=blacklist_file):
+            with mock.patch('sys.exit') as mock_exit:
+                selection.black_reader('fake_path')
+                mock_exit.assert_called_once_with(5)
+
 
 class TestConstructList(base.TestCase):
     def test_simple_re(self):
@@ -63,6 +81,14 @@ class TestConstructList(base.TestCase):
         result = selection.construct_list(test_lists, black_regex='foo')
         self.assertEqual(list(result), ['fake_test(scen)[tag,bar])'])
 
+    def test_invalid_black_re(self):
+        test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])']
+        invalid_regex = "fake_regex_with_bad_part[The-BAD-part]"
+        with mock.patch('sys.exit', side_effect=ImportError) as exit_mock:
+            self.assertRaises(ImportError, selection.construct_list,
+                              test_lists, black_regex=invalid_regex)
+            exit_mock.assert_called_once_with(5)
+
     def test_blacklist(self):
         black_list = [(re.compile('foo'), 'foo not liked', [])]
         test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])']
@@ -74,7 +100,7 @@ class TestConstructList(base.TestCase):
         self.assertEqual(list(result), ['fake_test(scen)[tag,bar])'])
 
     def test_whitelist(self):
-        white_list = 'fake_test1|fake_test2'
+        white_list = [re.compile('fake_test1'), re.compile('fake_test2')]
         test_lists = ['fake_test1[tg]', 'fake_test2[tg]', 'fake_test3[tg]']
         white_getter = 'stestr.selection._get_regex_from_whitelist_file'
         with mock.patch(white_getter,
@@ -84,8 +110,18 @@ class TestConstructList(base.TestCase):
         self.assertEqual(set(result),
                          set(('fake_test1[tg]', 'fake_test2[tg]')))
 
+    def test_whitelist_invalid_regex(self):
+        whitelist_file = six.StringIO()
+        whitelist_file.write("fake_regex_with_bad_part[The-BAD-part]")
+        whitelist_file.seek(0)
+        with mock.patch('six.moves.builtins.open',
+                        return_value=whitelist_file):
+            with mock.patch('sys.exit') as mock_exit:
+                selection._get_regex_from_whitelist_file('fake_path')
+                mock_exit.assert_called_once_with(5)
+
     def test_whitelist_blacklist_re(self):
-        white_list = 'fake_test1|fake_test2'
+        white_list = [re.compile('fake_test1'), re.compile('fake_test2')]
         test_lists = ['fake_test1[tg]', 'fake_test2[spam]',
                       'fake_test3[tg,foo]', 'fake_test4[spam]']
         black_list = [(re.compile('spam'), 'spam not liked', [])]
