@@ -11,7 +11,7 @@
 # under the License.
 
 """Persistent storage of test results."""
-
+from __future__ import print_function
 
 import datetime
 import io
@@ -45,7 +45,7 @@ class RepositoryFactory(repository.AbstractRepositoryFactory):
     def initialise(klass, url):
         """Create a repository at url/path."""
         print("WARNING: The SQL repository type is still experimental. You "
-              "might encounter issues while using it.")
+              "might encounter issues while using it.", file=sys.stderr)
         result = Repository(url)
         # TODO(mtreinish): Figure out the python api to run the migrations for
         # setting up the schema.

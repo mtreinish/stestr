@@ -12,10 +12,8 @@
 
 import io
 import os
-import sys
 
 import mock
-import six
 
 from stestr.tests import base
 from stestr import user_config
@@ -67,7 +65,8 @@ class TestUserConfig(base.TestCase):
     @mock.patch('stestr.user_config.UserConfig')
     def test_get_user_config_invalid_path(self, user_mock, exit_mock):
         user_config.get_user_config('/i_am_an_invalid_path')
-        exit_mock.assert_called_once_with(1)
+        msg = 'The specified stestr user config is not a valid path'
+        exit_mock.assert_called_once_with(msg)
 
     @mock.patch('os.path.isfile')
     @mock.patch('stestr.user_config.UserConfig')
@@ -103,41 +102,24 @@ class TestUserConfig(base.TestCase):
         user_conf = user_config.UserConfig('/path')
         self.assertEqual({}, user_conf.config)
 
-    def _restore_stdout(self, old_out):
-        sys.stdout = old_out
-
     @mock.patch('yaml.load', return_value={'init': {'subunit-trace': True}})
     @mock.patch('sys.exit')
     @mock.patch('six.moves.builtins.open', mock.mock_open())
     def test_user_config_invalid_command(self, exit_mock, yaml_mock):
-
-        temp_out = sys.stdout
-        std_out = six.StringIO()
-        sys.stdout = std_out
-        self.addCleanup(self._restore_stdout, temp_out)
         user_config.UserConfig('/path')
-        exit_mock.assert_called_once_with(1)
         error_string = ("Provided user config file /path is invalid because:\n"
                         "extra keys not allowed @ data['init']")
-        std_out.seek(0)
-        self.assertEqual(error_string, std_out.read().rstrip())
+        exit_mock.assert_called_once_with(error_string)
 
     @mock.patch('yaml.load', return_value={'run': {'subunit-trace': True}})
     @mock.patch('sys.exit')
     @mock.patch('six.moves.builtins.open', mock.mock_open())
     def test_user_config_invalid_option(self, exit_mock, yaml_mock):
-
-        temp_out = sys.stdout
-        std_out = six.StringIO()
-        sys.stdout = std_out
-        self.addCleanup(self._restore_stdout, temp_out)
         user_config.UserConfig('/path')
-        exit_mock.assert_called_once_with(1)
         error_string = ("Provided user config file /path is invalid because:\n"
                         "extra keys not allowed @ "
                         "data['run']['subunit-trace']")
-        std_out.seek(0)
-        self.assertEqual(error_string, std_out.read().rstrip())
+        exit_mock.assert_called_once_with(error_string)
 
     @mock.patch('six.moves.builtins.open',
                 return_value=io.BytesIO(FULL_YAML.encode('utf-8')))
@@ -171,30 +153,18 @@ class TestUserConfig(base.TestCase):
     @mock.patch('six.moves.builtins.open',
                 return_value=io.BytesIO(INVALID_YAML_FIELD.encode('utf-8')))
     def test_user_config_invalid_value_type(self, open_mock, exit_mock):
-        temp_out = sys.stdout
-        std_out = six.StringIO()
-        sys.stdout = std_out
-        self.addCleanup(self._restore_stdout, temp_out)
         user_config.UserConfig('/path')
-        exit_mock.assert_called_once_with(1)
         error_string = ("Provided user config file /path is invalid because:\n"
                         "expected bool for dictionary value @ "
                         "data['run']['color']")
-        std_out.seek(0)
-        self.assertEqual(error_string, std_out.read().rstrip())
+        exit_mock.assert_called_once_with(error_string)
 
     @mock.patch('sys.exit')
     @mock.patch('six.moves.builtins.open',
                 return_value=io.BytesIO(YAML_NOT_INT.encode('utf-8')))
     def test_user_config_invalid_integer(self, open_mock, exit_mock):
-        temp_out = sys.stdout
-        std_out = six.StringIO()
-        sys.stdout = std_out
-        self.addCleanup(self._restore_stdout, temp_out)
         user_config.UserConfig('/path')
-        exit_mock.assert_called_once_with(1)
         error_string = ("Provided user config file /path is invalid because:\n"
                         "expected int for dictionary value @ "
                         "data['run']['concurrency']")
-        std_out.seek(0)
-        self.assertEqual(error_string, std_out.read().rstrip())
+        exit_mock.assert_called_once_with(error_string)
