@@ -121,6 +121,12 @@ class TestReturnCodes(base.TestCase):
     def test_parallel_passing(self):
         self.assertRunExit('stestr run passing', 0)
 
+    def test_parallel_passing_xfail(self):
+        self.assertRunExit('stestr run xfail', 0)
+
+    def test_parallel_fails_unxsuccess(self):
+        self.assertRunExit('stestr run unxsuccess', 1)
+
     def test_parallel_passing_bad_regex(self):
         self.assertRunExit('stestr run bad.regex.foobar', 1)
 
@@ -148,6 +154,12 @@ class TestReturnCodes(base.TestCase):
 
     def test_serial_fails(self):
         self.assertRunExit('stestr run --serial', 1)
+
+    def test_serial_passing_xfail(self):
+        self.assertRunExit('stestr run --serial xfail', 0)
+
+    def test_serial_fails_unxsuccess(self):
+        self.assertRunExit('stestr run --serial unxsuccess', 1)
 
     def test_serial_blacklist(self):
         fd, path = tempfile.mkstemp()

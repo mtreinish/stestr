@@ -219,7 +219,8 @@ def load(force_init=False, in_streams=None,
     if pretty_out and not subunit_out:
         subunit_trace.print_fails(stdout)
         subunit_trace.print_summary(stdout, elapsed_time)
-    if not summary_result.wasSuccessful():
+    if (not summary_result.wasSuccessful() or
+        subunit_trace.count_tests('status', '^uxsuccess$') > 0):
         return 1
     else:
         return 0
