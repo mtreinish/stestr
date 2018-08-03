@@ -127,6 +127,12 @@ class TestReturnCodes(base.TestCase):
     def test_parallel_fails(self):
         self.assertRunExit('stestr run', 1)
 
+    def test_parallel_passing_xfail(self):
+        self.assertRunExit('stestr run xfail', 0)
+
+    def test_parallel_fails_unxsuccess(self):
+        self.assertRunExit('stestr run unexpected', 1)
+
     def test_parallel_blacklist(self):
         fd, path = tempfile.mkstemp()
         self.addCleanup(os.remove, path)
