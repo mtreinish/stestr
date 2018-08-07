@@ -29,6 +29,7 @@ from stestr import config_file
 from stestr import output
 from stestr.repository import abstract as repository
 from stestr.repository import util
+from stestr import results
 from stestr.testlist import parse_list
 from stestr import user_config
 
@@ -346,7 +347,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                         stream.run(summary)
                     finally:
                         summary.stopTestRun()
-                    if not summary.wasSuccessful():
+                    if not results.wasSuccessful(summary):
                         result = 1
                 if result:
                     return result
@@ -495,7 +496,7 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                         stream.run(summary)
                     finally:
                         summary.stopTestRun()
-                    if not summary.wasSuccessful():
+                    if not results.wasSuccessful(summary):
                         result = 1
                 if result:
                     return result

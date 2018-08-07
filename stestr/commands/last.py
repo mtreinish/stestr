@@ -154,7 +154,7 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
             case.run(output_result)
         finally:
             output_result.stopTestRun()
-        failed = not summary.wasSuccessful()
+        failed = not results.wasSuccessful(summary)
     else:
         stream = latest_run.get_subunit_stream()
         failed = subunit_trace.trace(stream, stdout, post_fails=True,

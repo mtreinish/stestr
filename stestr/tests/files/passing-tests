@@ -21,3 +21,7 @@ class FakeTestClass(testtools.TestCase):
     def test_pass_list(self):
         test_list = ['test', 'a', 'b']
         self.assertIn('test', test_list)
+
+    def test_xfail(self):
+        self.expectFailure("we are sad",
+                           self.assertEqual, 1, 0)

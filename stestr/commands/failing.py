@@ -113,7 +113,7 @@ def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False,
         case.run(result)
     finally:
         result.stopTestRun()
-    failed = not summary.wasSuccessful()
+    failed = not results.wasSuccessful(summary)
     if failed:
         result = 1
     else:

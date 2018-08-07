@@ -17,6 +17,11 @@ import testtools
 from stestr import output
 
 
+def wasSuccessful(summary):
+    return not (summary.errors or summary.failures or
+                summary.unexpectedSuccesses)
+
+
 class SummarizingResult(testtools.StreamSummary):
 
     def __init__(self):
