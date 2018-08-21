@@ -30,6 +30,7 @@ import subunit
 import testtools
 
 from stestr import colorizer
+from stestr import results
 
 # NOTE(mtreinish) on python3 anydbm was renamed dbm and the python2 dbm module
 # was renamed to dbm.ndbm, this block takes that into account
@@ -389,7 +390,7 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
     if count_tests('status', '^success$') == 0:
         print("\nNo tests were successful during the run", file=sys.stderr)
         return 1
-    return 0 if summary.wasSuccessful() else 1
+    return 0 if results.wasSuccessful(summary) else 1
 
 
 def main():
