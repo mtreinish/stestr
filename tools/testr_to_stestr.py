@@ -18,8 +18,7 @@ import sys
 import six
 
 if not os.path.isfile('.testr.conf'):
-    print("Testr config file not found")
-    sys.exit(1)
+    sys.exit("Testr config file not found")
 
 with open('.testr.conf', 'r') as testr_conf_file:
     config = six.moves.configparser.ConfigParser()

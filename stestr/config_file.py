@@ -90,11 +90,10 @@ class TestrConf(object):
         if not test_path and self.parser.has_option('DEFAULT', 'test_path'):
             test_path = self.parser.get('DEFAULT', 'test_path')
         elif not test_path:
-            print("No test_path can be found in either the command line "
-                  "options nor in the specified config file {0}.  Please "
-                  "specify a test path either in the config file or via the "
-                  "--test-path argument".format(self.config_file))
-            sys.exit(1)
+            sys.exit("No test_path can be found in either the command line "
+                     "options nor in the specified config file {0}.  Please "
+                     "specify a test path either in the config file or via "
+                     "the --test-path argument".format(self.config_file))
         if not top_dir and self.parser.has_option('DEFAULT', 'top_dir'):
             top_dir = self.parser.get('DEFAULT', 'top_dir')
         elif not top_dir:

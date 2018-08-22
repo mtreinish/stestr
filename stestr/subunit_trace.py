@@ -16,6 +16,7 @@
 
 """Trace a subunit stream in reasonable detail and high accuracy."""
 from __future__ import absolute_import
+from __future__ import print_function
 
 import argparse
 import datetime
@@ -377,7 +378,7 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
     elapsed_time = stop_time - start_time
 
     if count_tests('status', '.*') == 0:
-        print("The test run didn't actually run any tests")
+        print("The test run didn't actually run any tests", file=sys.stderr)
         return 1
     if post_fails:
         print_fails(stdout)
@@ -387,7 +388,7 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
     # NOTE(mtreinish): Ideally this should live in testtools streamSummary
     # this is just in place until the behavior lands there (if it ever does)
     if count_tests('status', '^success$') == 0:
-        print("\nNo tests were successful during the run")
+        print("\nNo tests were successful during the run", file=sys.stderr)
         return 1
     return 0 if results.wasSuccessful(summary) else 1
 
