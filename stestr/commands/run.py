@@ -313,8 +313,10 @@ def run_command(config='.stestr.conf', repo_type='file',
         combine_id = six.text_type(latest_id)
     if no_discover:
         ids = no_discover
+        if '::' in ids:
+            ids = ids.replace('::', '.')
         if ids.find('/') != -1:
-            root, _ = os.path.splitext(ids)
+            root = ids.replace('.py', '')
             ids = root.replace('/', '.')
         run_cmd = 'python -m subunit.run ' + ids
 
