@@ -100,6 +100,14 @@ import paths) For example::
 will also bypass discovery and directly call subunit.run on the module
 specified.
 
+Additionally you can specify a specific class or method within that file using
+``::`` to specify a class and method. For example::
+
+  $ stestr run --no-discover project/tests/test_foo.py::TestFoo::test_method
+
+will skip discovery and directly call subunit.run on the test method in the
+specified test class.
+
 Test Selection
 --------------
 
