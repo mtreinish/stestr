@@ -13,7 +13,6 @@
 """Load data into a repository."""
 
 
-import datetime
 import functools
 import os
 import sys
@@ -208,15 +207,22 @@ def load(force_init=False, in_streams=None,
             inserter.get_id, stdout, previous_run)
         summary_result = output_result.get_summary()
     result = testtools.CopyStreamResult([inserter, output_result])
-    start_time = datetime.datetime.utcnow()
     result.startTestRun()
     try:
         case.run(result)
     finally:
         result.stopTestRun()
-    stop_time = datetime.datetime.utcnow()
-    elapsed_time = stop_time - start_time
     if pretty_out and not subunit_out:
+        start_times = []
+        stop_times = []
+        for worker in subunit_trace.RESULTS:
+            start_times += [
+                x['timestamps'][0] for x in subunit_trace.RESULTS[worker]]
+            stop_times += [
+                x['timestamps'][1] for x in subunit_trace.RESULTS[worker]]
+        start_time = min(start_times)
+        stop_time = max(stop_times)
+        elapsed_time = stop_time - start_time
         subunit_trace.print_fails(stdout)
         subunit_trace.print_summary(stdout, elapsed_time)
     if not results.wasSuccessful(summary_result):
