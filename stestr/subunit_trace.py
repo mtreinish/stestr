@@ -19,7 +19,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import argparse
-import datetime
 import functools
 import os
 import re
@@ -368,13 +367,18 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
     result = testtools.StreamResultRouter(result)
     cat = subunit.test_results.CatFiles(stdout)
     result.add_rule(cat, 'test_id', test_id=None)
-    start_time = datetime.datetime.utcnow()
     result.startTestRun()
     try:
         stream.run(result)
     finally:
         result.stopTestRun()
-    stop_time = datetime.datetime.utcnow()
+    start_times = []
+    stop_times = []
+    for worker in RESULTS:
+        start_times += [x['timestamps'][0] for x in RESULTS[worker]]
+        stop_times += [x['timestamps'][1] for x in RESULTS[worker]]
+    start_time = min(start_times)
+    stop_time = max(stop_times)
     elapsed_time = stop_time - start_time
 
     if count_tests('status', '.*') == 0:
