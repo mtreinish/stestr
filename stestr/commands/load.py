@@ -106,13 +106,14 @@ class Load(command.Command):
              force_init=force_init, streams=args.files,
              pretty_out=pretty_out, color=color,
              stdout=stdout, abbreviate=abbreviate,
-             suppress_attachments=suppress_attachments)
+             suppress_attachments=suppress_attachments, serial=True)
 
 
 def load(force_init=False, in_streams=None,
          partial=False, subunit_out=False, repo_type='file', repo_url=None,
          run_id=None, streams=None, pretty_out=False, color=False,
-         stdout=sys.stdout, abbreviate=False, suppress_attachments=False):
+         stdout=sys.stdout, abbreviate=False, suppress_attachments=False,
+         serial=False):
     """Load subunit streams into a repository
 
     This function will load subunit streams into the repository. It will
@@ -180,7 +181,13 @@ def load(force_init=False, in_streams=None,
             case = testtools.DecorateTestCaseResult(case, decorate)
             yield (case, str(pos))
 
-    case = testtools.ConcurrentStreamTestSuite(make_tests)
+    if serial:
+        for _, stream in enumerate(streams):
+            # Calls StreamResult API.
+            case = subunit.ByteStreamToStreamResult(
+                stream, non_subunit_name='stdout')
+    else:
+        case = testtools.ConcurrentStreamTestSuite(make_tests)
     if not run_id:
         inserter = repo.get_inserter()
     else:
