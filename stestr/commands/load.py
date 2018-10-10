@@ -180,18 +180,33 @@ def load(force_init=False, in_streams=None,
             decorate = functools.partial(mktagger, pos)
             case = testtools.DecorateTestCaseResult(case, decorate)
             yield (case, str(pos))
-
-    if serial:
-        for _, stream in enumerate(streams):
-            # Calls StreamResult API.
-            case = subunit.ByteStreamToStreamResult(
-                stream, non_subunit_name='stdout')
-    else:
-        case = testtools.ConcurrentStreamTestSuite(make_tests)
     if not run_id:
         inserter = repo.get_inserter()
     else:
         inserter = repo.get_inserter(run_id=run_id)
+
+    retval = 0
+    if serial:
+        for stream in streams:
+            # Calls StreamResult API.
+            case = subunit.ByteStreamToStreamResult(
+                stream, non_subunit_name='stdout')
+            if not retval and \
+               not _load_case(inserter, repo, case, subunit_out, pretty_out,
+                              color, stdout, abbreviate, suppress_attachments):
+                retval = 0
+            else:
+                retval = 1
+    else:
+        case = testtools.ConcurrentStreamTestSuite(make_tests)
+        retval = _load_case(inserter, repo, case, subunit_out, pretty_out,
+                            color, stdout, abbreviate, suppress_attachments)
+
+    return retval
+
+
+def _load_case(inserter, repo, case, subunit_out, pretty_out,
+               color, stdout, abbreviate, suppress_attachments):
     if subunit_out:
         output_result, summary_result = output.make_result(inserter.get_id,
                                                            output=stdout)
