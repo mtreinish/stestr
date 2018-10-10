@@ -135,6 +135,8 @@ class Run(command.Command):
                             dest='coverage',
                             help='Replace PYTHON with coverage and merge '
                             'coverage from each testr worker.')
+        parser.add_argument('--omit', default='', dest='omit', help='Files '
+                            'to omit from coverage calculations')
         return parser
 
     def get_description(self):
@@ -146,6 +148,10 @@ class Run(command.Command):
         user_conf = user_config.get_user_config(self.app_args.user_config)
         filters = parsed_args.filters
         args = parsed_args
+        if not args.coverage and args.omit:
+            msg = ("--omit needs to be specified with --cover option.\n")
+            sys.stderr.write(msg)
+            return 1
         if getattr(user_conf, 'run', False):
             if not user_conf.run.get('no-subunit-trace'):
                 if not args.no_subunit_trace:
@@ -191,7 +197,8 @@ class Run(command.Command):
             combine=args.combine,
             filters=filters, pretty_out=pretty_out, color=color,
             stdout=stdout, abbreviate=abbreviate,
-            suppress_attachments=suppress_attachments, coverage=args.coverage)
+            suppress_attachments=suppress_attachments, coverage=args.coverage,
+            omit=args.omit)
 
         # Always output slowest test info if requested, regardless of other
         # test run options
@@ -295,6 +302,7 @@ def run_command(config='.stestr.conf', repo_type='file',
         will not print attachments on successful test execution.
     :param bool coverage: Run stestr in code coverage mode. This assumes the
         installation of the python coverage module.
+    :param str omit: Files to omit from coverage calculations.
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -331,6 +339,8 @@ def run_command(config='.stestr.conf', repo_type='file',
             package = 'stestr'
             options = "--source %s --parallel-mode" % package
             python = ("coverage run %s" % options)
+            if omit:
+                omit = "--omit=%s" % omit
         run_cmd = ('%s -m subunit.run ' % python) + ids
 
         def run_tests():
@@ -393,6 +403,9 @@ def run_command(config='.stestr.conf', repo_type='file',
         package = 'stestr'
         options = "--source %s --parallel-mode" % package
         os.environ['PYTHON'] = ("coverage run %s" % options)
+        if omit:
+            omit = "--omit=%s" % omit
+
 
     conf = config_file.TestrConf(config)
     if not analyze_isolation:
@@ -425,7 +438,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                     repo_type=repo_type, repo_url=repo_url,
                     pretty_out=pretty_out, color=color, abbreviate=abbreviate,
                     stdout=stdout, suppress_attachments=suppress_attachments,
-                    coverage=coverage)
+                    coverage=coverage, omit=omit)
                 if run_result > result:
                     result = run_result
             return result
@@ -441,7 +454,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                               stdout=stdout,
                               abbreviate=abbreviate,
                               suppress_attachments=suppress_attachments,
-                              coverage=coverage)
+                              coverage=coverage,
+                              omit=omit)
     else:
         # Where do we source data about the cause of conflicts.
         latest_run = repo.get_latest_run()
