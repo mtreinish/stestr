@@ -406,7 +406,6 @@ def run_command(config='.stestr.conf', repo_type='file',
         if omit:
             omit = "--omit=%s" % omit
 
-
     conf = config_file.TestrConf(config)
     if not analyze_isolation:
         cmd = conf.get_run_command(
