@@ -111,11 +111,12 @@ specified test class.
 Test Selection
 --------------
 
-Arguments passed to ``stestr run`` are used to filter test ids that will be run.
-stestr will perform unittest discovery to get a list of all test ids and then
-apply each argument as a regex filter. Tests that match any of the given filters
-will be run. For example, if you called ``stestr run foo bar`` this will only
-run the tests that have a regex match with foo **or** a regex match with bar.
+Arguments passed to ``stestr run`` are used to filter test ids that will be
+run. stestr will perform unittest discovery to get a list of all test ids and
+then apply each argument as a regex filter. Tests that match any of the given
+filters will be run. For example, if you called ``stestr run foo bar`` this
+will only run the tests that have a regex match with foo **or** a regex match
+with bar.
 
 stestr allows you do to do simple test exclusion via passing a rejection/black
 regexp::
@@ -126,8 +127,9 @@ stestr also allow you to combine these arguments::
 
   $ stestr run --black-regex 'slow_tests|bad_tests' ui\.interface
 
-Here first we selected all tests which matches to ``ui\.interface``, then we are
-dropping all test which matches ``slow_tests|bad_tests`` from the final list.
+Here first we selected all tests which matches to ``ui\.interface``, then we
+are dropping all test which matches ``slow_tests|bad_tests`` from the final
+list.
 
 stestr also allows you to specify a blacklist file to define a set of regexes
 to exclude. You can specify a blacklist file with the
@@ -183,9 +185,9 @@ subunit-trace in the module doc: :ref:`subunit_trace`.
 
 However, the test run output is configurable, you can disable this output
 with the ``--no-subunit-trace`` flag which will be completely silent except for
-any failures it encounters. There is also the ``--color`` flag which will enable
-colorization with subunit-trace output. If you prefer to deal with the raw
-subunit yourself and run your own output rendering or filtering you can use
+any failures it encounters. There is also the ``--color`` flag which will
+enable colorization with subunit-trace output. If you prefer to deal with the
+raw subunit yourself and run your own output rendering or filtering you can use
 the ``--subunit`` flag to output the result stream as raw subunit v2.
 
 There is also an ``--abbreviate`` flag available, when this is used a single
@@ -207,10 +209,10 @@ of tests with a different concurrency. In these cases you can use the
 append the subunit stream from the test run into the most recent entry in the
 repository.
 
-Alternatively, you can manually load the test results from a subunit stream into
-an existing test result in the repository using the ``--id``/``-i`` flag on
-the ``stestr load`` command. This will append the results from the input subunit
-stream to the specified id.
+Alternatively, you can manually load the test results from a subunit stream
+into an existing test result in the repository using the ``--id``/``-i`` flag
+on the ``stestr load`` command. This will append the results from the input
+subunit stream to the specified id.
 
 
 Running previously failed tests
@@ -288,9 +290,9 @@ To see a list of tests found by stestr you can use the ``stestr list`` command.
 This will list all tests found by discovery.
 
 You can also use this to see what tests will be run by a given stestr run
-command. For instance, the tests that ``stestr run myfilter`` will run are shown
-by ``stestr list myfilter``. As with the run command, arguments to list are used
-to regex filter the tests.
+command. For instance, the tests that ``stestr run myfilter`` will run are
+shown by ``stestr list myfilter``. As with the run command, arguments to list
+are used to regex filter the tests.
 
 Parallel testing
 ----------------
@@ -484,8 +486,8 @@ Forcing isolation
 -----------------
 
 Sometimes it is useful to force a separate test runner instance for each test
-executed. The ``--isolated`` flag will cause stestr to execute a separate runner
-per test::
+executed. The ``--isolated`` flag will cause stestr to execute a separate
+runner per test::
 
   $ stestr run --isolated
 
@@ -525,8 +527,8 @@ contains the following files:
 * format: This file identifies the precise layout of the repository, in case
   future changes are needed.
 
-* next-stream: This file contains the serial number to be used when adding another
-  stream to the repository.
+* next-stream: This file contains the serial number to be used when adding
+  another stream to the repository.
 
 * failing: This file is a stream containing just the known failing tests. It
   is updated whenever a new stream is added to the repository, so that it only

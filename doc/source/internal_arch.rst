@@ -45,8 +45,8 @@ get_parser(prog_name)
 '''''''''''''''''''''
 
 This function is used to define subcommand arguments. It has a single argparse
-parser object passed into it. The intent of this function is to have any command
-specific arguments defined on the provided parser object by calling
+parser object passed into it. The intent of this function is to have any
+command specific arguments defined on the provided parser object by calling
 `parser.add_argument()`_ for each argument.
 
 .. _parser.add_argument(): https://docs.python.org/3/library/argparse.html#the-add-argument-method
@@ -83,8 +83,9 @@ Once there is complete list of tests that will be run the list gets passed
 to the scheduler/partitioner. The scheduler takes the list of tests and splits
 it into N groups where N is the concurrency that stestr will use to run tests.
 If there is any timing data available in the repository from previous runs this
-is used by the scheduler to try balancing the test load between the workers. For
-the full details on how the partitioning is performed see: :ref:`api_scheduler`.
+is used by the scheduler to try balancing the test load between the workers.
+For the full details on how the partitioning is performed see:
+:ref:`api_scheduler`.
 
 With the tests split into multiple groups for each worker process we're
 ready to start executing the tests. Each group of tests is used to launch a
