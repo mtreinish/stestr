@@ -191,12 +191,13 @@ def load(force_init=False, in_streams=None,
             # Calls StreamResult API.
             case = subunit.ByteStreamToStreamResult(
                 stream, non_subunit_name='stdout')
-            if not retval and \
-               not _load_case(inserter, repo, case, subunit_out, pretty_out,
-                              color, stdout, abbreviate, suppress_attachments):
-                retval = 0
-            else:
+            result = _load_case(inserter, repo, case, subunit_out, pretty_out,
+                                color, stdout, abbreviate,
+                                suppress_attachments)
+            if result or retval:
                 retval = 1
+            else:
+                retval = 0
     else:
         case = testtools.ConcurrentStreamTestSuite(make_tests)
         retval = _load_case(inserter, repo, case, subunit_out, pretty_out,
