@@ -131,6 +131,12 @@ class Run(command.Command):
                             help='If set do not print stdout or stderr '
                             'attachment contents on a successful test '
                             'execution')
+        parser.add_argument('--coverage', action='store_true',
+                            dest='coverage',
+                            help='Replace PYTHON with coverage and merge '
+                            'coverage from each testr worker.')
+        parser.add_argument('--omit', default='', dest='omit', help='Files '
+                            'to omit from coverage calculations')
         return parser
 
     def get_description(self):
@@ -142,6 +148,10 @@ class Run(command.Command):
         user_conf = user_config.get_user_config(self.app_args.user_config)
         filters = parsed_args.filters
         args = parsed_args
+        if not args.coverage and args.omit:
+            msg = ("--omit needs to be specified with --cover option.\n")
+            sys.stderr.write(msg)
+            return 1
         if getattr(user_conf, 'run', False):
             if not user_conf.run.get('no-subunit-trace'):
                 if not args.no_subunit_trace:
@@ -187,7 +197,8 @@ class Run(command.Command):
             combine=args.combine,
             filters=filters, pretty_out=pretty_out, color=color,
             stdout=stdout, abbreviate=abbreviate,
-            suppress_attachments=suppress_attachments)
+            suppress_attachments=suppress_attachments, coverage=args.coverage,
+            omit=args.omit)
 
         # Always output slowest test info if requested, regardless of other
         # test run options
@@ -227,7 +238,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                 blacklist_file=None, whitelist_file=None, black_regex=None,
                 no_discover=False, random=False, combine=False, filters=None,
                 pretty_out=True, color=False, stdout=sys.stdout,
-                abbreviate=False, suppress_attachments=False):
+                abbreviate=False, suppress_attachments=False, coverage=False,
+                omit=''):
     """Function to execute the run command
 
     This function implements the run command. It will run the tests specified
@@ -288,6 +300,9 @@ def run_command(config='.stestr.conf', repo_type='file',
     :param bool abbreviate: Use abbreviated output if set true
     :param bool suppress_attachments: When set true attachments subunit_trace
         will not print attachments on successful test execution.
+    :param bool coverage: Run stestr in code coverage mode. This assumes the
+        installation of the python coverage module.
+    :param str omit: Files to omit from coverage calculations.
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -308,6 +323,7 @@ def run_command(config='.stestr.conf', repo_type='file',
             exit(1)
         repo = util.get_repo_initialise(repo_type, repo_url)
     combine_id = None
+
     if combine:
         latest_id = repo.latest_id()
         combine_id = six.text_type(latest_id)
@@ -318,19 +334,32 @@ def run_command(config='.stestr.conf', repo_type='file',
         if ids.find('/') != -1:
             root = ids.replace('.py', '')
             ids = root.replace('/', '.')
-        run_cmd = 'python -m subunit.run ' + ids
+        python = 'python'
+        if coverage:
+            package = 'stestr'
+            options = "--source %s --parallel-mode" % package
+            python = ("coverage run %s" % options)
+            if omit:
+                omit = "--omit=%s" % omit
+        run_cmd = ('%s -m subunit.run ' % python) + ids
 
         def run_tests():
             run_proc = [('subunit', output.ReturnCodeToSubunit(
                 subprocess.Popen(run_cmd, shell=True,
                                  stdout=subprocess.PIPE)))]
-            return load.load(in_streams=run_proc,
-                             subunit_out=subunit_out,
-                             repo_type=repo_type,
-                             repo_url=repo_url, run_id=combine_id,
-                             pretty_out=pretty_out,
-                             color=color, stdout=stdout, abbreviate=abbreviate,
-                             suppress_attachments=suppress_attachments)
+
+            result = load.load(in_streams=run_proc,
+                               subunit_out=subunit_out,
+                               repo_type=repo_type,
+                               repo_url=repo_url, run_id=combine_id,
+                               pretty_out=pretty_out,
+                               color=color, stdout=stdout,
+                               abbreviate=abbreviate,
+                               suppress_attachments=suppress_attachments)
+            if coverage:
+                os.system("coverage combine")
+                os.system("coverage html -d ./cover %s" % omit)
+            return result
 
         if not until_failure:
             return run_tests()
@@ -370,6 +399,12 @@ def run_command(config='.stestr.conf', repo_type='file',
             # We have some already limited set of ids, just reduce to ids
             # that are both failing and listed.
             ids = list_ids.intersection(ids)
+    if coverage:
+        package = 'stestr'
+        options = "--source %s --parallel-mode" % package
+        os.environ['PYTHON'] = ("coverage run %s" % options)
+        if omit:
+            omit = "--omit=%s" % omit
 
     conf = config_file.TestrConf(config)
     if not analyze_isolation:
@@ -401,7 +436,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                     subunit_out=subunit_out, combine_id=combine_id,
                     repo_type=repo_type, repo_url=repo_url,
                     pretty_out=pretty_out, color=color, abbreviate=abbreviate,
-                    stdout=stdout, suppress_attachments=suppress_attachments)
+                    stdout=stdout, suppress_attachments=suppress_attachments,
+                    coverage=coverage, omit=omit)
                 if run_result > result:
                     result = run_result
             return result
@@ -416,7 +452,9 @@ def run_command(config='.stestr.conf', repo_type='file',
                               color=color,
                               stdout=stdout,
                               abbreviate=abbreviate,
-                              suppress_attachments=suppress_attachments)
+                              suppress_attachments=suppress_attachments,
+                              coverage=coverage,
+                              omit=omit)
     else:
         # Where do we source data about the cause of conflicts.
         latest_run = repo.get_latest_run()
@@ -461,7 +499,8 @@ def run_command(config='.stestr.conf', repo_type='file',
 def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                subunit_out=False, combine_id=None, repo_type='file',
                repo_url=None, pretty_out=True, color=False, stdout=sys.stdout,
-               abbreviate=False, suppress_attachments=False):
+               abbreviate=False, suppress_attachments=False, coverage=False,
+               omit=''):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
@@ -472,13 +511,19 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
             if not run_procs:
                 stdout.write("The specified regex doesn't match with anything")
                 return 1
-            return load.load((None, None), in_streams=run_procs,
-                             subunit_out=subunit_out,
-                             repo_type=repo_type,
-                             repo_url=repo_url, run_id=combine_id,
-                             pretty_out=pretty_out, color=color, stdout=stdout,
-                             abbreviate=abbreviate,
-                             suppress_attachments=suppress_attachments)
+
+            result = load.load((None, None), in_streams=run_procs,
+                               subunit_out=subunit_out,
+                               repo_type=repo_type,
+                               repo_url=repo_url, run_id=combine_id,
+                               pretty_out=pretty_out, color=color,
+                               stdout=stdout, abbreviate=abbreviate,
+                               suppress_attachments=suppress_attachments)
+            if coverage:
+                os.system("coverage combine")
+                os.system("coverage html -d ./cover %s" % omit)
+
+            return result
 
         if not until_failure:
             return run_tests()
