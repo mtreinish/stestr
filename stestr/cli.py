@@ -34,6 +34,9 @@ class StestrCLI(app.App):
 
     def prepare_to_run_command(self, cmd):
         self.LOG.debug('prepare_to_run_command %s', cmd.__class__.__name__)
+        group_regex = '([^\.]*\.)*' \
+            if cmd.app_args.parallel_class else cmd.app_args.group_regex
+        cmd.app_args.group_regex = group_regex
 
     def clean_up(self, cmd, result, err):
         self.LOG.debug('clean_up %s', cmd.__class__.__name__)
@@ -92,6 +95,12 @@ class StestrCLI(app.App):
                                  " together in the stestr scheduler. If "
                                  "both this and the corresponding config file "
                                  "option are set this value will be used.")
+        parser.add_argument('--parallel-class', '-p',
+                            action='store_true',
+                            default=False,
+                            help="Set the flag to group tests by class. NOTE: "
+                                 "This flag takes priority over the "
+                                 "`--group-regex` option even if it's set.")
 
         return parser
 

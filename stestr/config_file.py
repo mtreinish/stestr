@@ -38,7 +38,7 @@ class TestrConf(object):
                         serial=False, worker_path=None,
                         concurrency=0, blacklist_file=None,
                         whitelist_file=None, black_regex=None,
-                        randomize=False):
+                        randomize=False, parallel_class=None):
         """Get a test_processor.TestProcessorFixture for this config file
 
         Any parameters about running tests will be used for initialize the
@@ -81,6 +81,10 @@ class TestrConf(object):
             test list.
         :param bool randomize: Randomize the test order after they are
             partitioned into separate workers
+        :param bool parallel_class: Set the flag to group tests together in the
+            stestr scheduler by class. If both this and the corresponding
+            config file option which includes `group-regex` are set, this value
+            will be used.
 
         :returns: a TestProcessorFixture object for the specified config file
             and any arguments passed into this function
@@ -106,6 +110,12 @@ class TestrConf(object):
         idoption = "--load-list $IDFILE"
         # If the command contains $IDOPTION read that command from config
         # Use a group regex if one is defined
+        if parallel_class:
+            group_regex = '([^\.]*\.)*'
+        if not group_regex \
+                and self.parser.has_option('DEFAULT', 'parallel_class') \
+                and self.parser.getboolean('DEFAULT', 'parallel_class'):
+            group_regex = '([^\.]*\.)*'
         if not group_regex and self.parser.has_option('DEFAULT',
                                                       'group_regex'):
             group_regex = self.parser.get('DEFAULT', 'group_regex')
@@ -116,7 +126,6 @@ class TestrConf(object):
                     return match.group(0)
         else:
             group_callback = None
-
         # Handle the results repository
         repository = util.get_repo_open(repo_type, repo_url)
         return test_processor.TestProcessorFixture(

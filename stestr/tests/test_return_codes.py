@@ -192,6 +192,13 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit('stestr run --until-failure --subunit', 1,
                            subunit=True)
 
+    def test_with_parallel_class(self):
+        # NOTE(masayukig): Ideally, it's better to figure out the
+        # difference between with --parallel-class and without
+        # --parallel-class. However, it's difficult to make such a
+        # test from a command line based test.
+        self.assertRunExit('stestr --parallel-class run passing', 0)
+
     def test_list(self):
         self.assertRunExit('stestr list', 0)
 
