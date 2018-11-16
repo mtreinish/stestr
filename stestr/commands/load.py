@@ -13,7 +13,6 @@
 """Load data into a repository."""
 
 
-import datetime
 import functools
 import os
 import sys
@@ -107,13 +106,14 @@ class Load(command.Command):
              force_init=force_init, streams=args.files,
              pretty_out=pretty_out, color=color,
              stdout=stdout, abbreviate=abbreviate,
-             suppress_attachments=suppress_attachments)
+             suppress_attachments=suppress_attachments, serial=True)
 
 
 def load(force_init=False, in_streams=None,
          partial=False, subunit_out=False, repo_type='file', repo_url=None,
          run_id=None, streams=None, pretty_out=False, color=False,
-         stdout=sys.stdout, abbreviate=False, suppress_attachments=False):
+         stdout=sys.stdout, abbreviate=False, suppress_attachments=False,
+         serial=False):
     """Load subunit streams into a repository
 
     This function will load subunit streams into the repository. It will
@@ -180,12 +180,34 @@ def load(force_init=False, in_streams=None,
             decorate = functools.partial(mktagger, pos)
             case = testtools.DecorateTestCaseResult(case, decorate)
             yield (case, str(pos))
-
-    case = testtools.ConcurrentStreamTestSuite(make_tests)
     if not run_id:
         inserter = repo.get_inserter()
     else:
         inserter = repo.get_inserter(run_id=run_id)
+
+    retval = 0
+    if serial:
+        for stream in streams:
+            # Calls StreamResult API.
+            case = subunit.ByteStreamToStreamResult(
+                stream, non_subunit_name='stdout')
+            result = _load_case(inserter, repo, case, subunit_out, pretty_out,
+                                color, stdout, abbreviate,
+                                suppress_attachments)
+            if result or retval:
+                retval = 1
+            else:
+                retval = 0
+    else:
+        case = testtools.ConcurrentStreamTestSuite(make_tests)
+        retval = _load_case(inserter, repo, case, subunit_out, pretty_out,
+                            color, stdout, abbreviate, suppress_attachments)
+
+    return retval
+
+
+def _load_case(inserter, repo, case, subunit_out, pretty_out,
+               color, stdout, abbreviate, suppress_attachments):
     if subunit_out:
         output_result, summary_result = output.make_result(inserter.get_id,
                                                            output=stdout)
@@ -208,15 +230,22 @@ def load(force_init=False, in_streams=None,
             inserter.get_id, stdout, previous_run)
         summary_result = output_result.get_summary()
     result = testtools.CopyStreamResult([inserter, output_result])
-    start_time = datetime.datetime.utcnow()
     result.startTestRun()
     try:
         case.run(result)
     finally:
         result.stopTestRun()
-    stop_time = datetime.datetime.utcnow()
-    elapsed_time = stop_time - start_time
     if pretty_out and not subunit_out:
+        start_times = []
+        stop_times = []
+        for worker in subunit_trace.RESULTS:
+            start_times += [
+                x['timestamps'][0] for x in subunit_trace.RESULTS[worker]]
+            stop_times += [
+                x['timestamps'][1] for x in subunit_trace.RESULTS[worker]]
+        start_time = min(start_times)
+        stop_time = max(stop_times)
+        elapsed_time = stop_time - start_time
         subunit_trace.print_fails(stdout)
         subunit_trace.print_summary(stdout, elapsed_time)
     if not results.wasSuccessful(summary_result):

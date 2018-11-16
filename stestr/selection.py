@@ -9,6 +9,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from __future__ import print_function
 
 import contextlib
 import re
@@ -34,7 +35,8 @@ def filter_tests(filters, test_ids):
             try:
                 _filters.append(re.compile(f))
             except re.error:
-                print("Invalid regex: %s provided in filters" % f)
+                print("Invalid regex: %s provided in filters" % f,
+                      file=sys.stderr)
                 sys.exit(5)
         else:
             _filters.append(f)
@@ -66,7 +68,7 @@ def black_reader(blacklist_file):
                 regex_comment_lst.append((re.compile(line_regex), comment, []))
             except re.error:
                 print("Invalid regex: %s in provided blacklist file" %
-                      line_regex)
+                      line_regex, file=sys.stderr)
                 sys.exit(5)
     return regex_comment_lst
 
@@ -82,7 +84,7 @@ def _get_regex_from_whitelist_file(file_path):
                 lines.append(re.compile(line_regex))
             except re.error:
                 print("Invalid regex: %s in provided whitelist file" %
-                      line_regex)
+                      line_regex, file=sys.stderr)
                 sys.exit(5)
     return lines
 
@@ -127,7 +129,8 @@ def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
         try:
             record = (re.compile(black_regex), msg, [])
         except re.error:
-            print("Invalid regex: %s used for black_regex" % black_regex)
+            print("Invalid regex: %s used for black_regex" % black_regex,
+                  file=sys.stderr)
             sys.exit(5)
         if black_data:
             black_data.append(record)

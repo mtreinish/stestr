@@ -31,8 +31,7 @@ def get_user_config(path=None):
     else:
         if not os.path.isfile(path):
             msg = 'The specified stestr user config is not a valid path'
-            print(msg)
-            sys.exit(1)
+            sys.exit(msg)
 
     return UserConfig(path)
 
@@ -75,8 +74,7 @@ class UserConfig(object):
         except vp.MultipleInvalid as e:
             msg = 'Provided user config file %s is invalid because:\n%s' % (
                 path, str(e))
-            print(msg)
-            sys.exit(1)
+            sys.exit(msg)
 
     @property
     def run(self):

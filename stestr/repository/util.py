@@ -37,10 +37,9 @@ def get_repo_open(repo_type, repo_url=None):
         repo_module = importlib.import_module('stestr.repository.' + repo_type)
     except ImportError:
         if repo_type == 'sql':
-            print("sql repository type requirements aren't installed. To use "
-                  "the sql repository ensure you installed the extra "
-                  "requirements with `pip install 'stestr[sql]'`")
-            sys.exit(1)
+            sys.exit("sql repository type requirements aren't installed. To "
+                     "use the sql repository ensure you installed the extra "
+                     "requirements with `pip install 'stestr[sql]'`")
         else:
             raise
     if not repo_url:
@@ -59,10 +58,9 @@ def get_repo_initialise(repo_type, repo_url=None):
         repo_module = importlib.import_module('stestr.repository.' + repo_type)
     except ImportError:
         if repo_type == 'sql':
-            print("sql repository type requirements aren't installed. To use "
-                  "the sql repository ensure you installed the extra "
-                  "requirements with `pip install 'stestr[sql]'`")
-            sys.exit(1)
+            sys.exit("sql repository type requirements aren't installed. To "
+                     "use the sql repository ensure you installed the extra "
+                     "requirements with `pip install 'stestr[sql]'`")
         else:
             raise
     if not repo_url:
