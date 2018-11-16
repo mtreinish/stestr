@@ -22,12 +22,22 @@ You can see the full rendered docs at: http://stestr.readthedocs.io/en/latest/
 Overview
 --------
 
-stestr is a fork of the `testrepository`_ that concentrates on being a
-dedicated test runner for python projects. The generic abstraction
-layers which enabled testr to work with any subunit emitting runner are gone.
-stestr hard codes python-subunit-isms into how it works. The code base is also
-designed to try and be explicit, and to provide a python api that is documented
-and has examples.
+stestr is parallel Python test runner designed to execute `unittest`_ test
+suites using multiple processes to split up execution of a test suite. It also
+will store a history of all test runs to help in debugging failures and
+optimizing the scheduler to improve speed. To accomplish this goal it uses the
+`subunit`_ protocol to facilitate streaming and storing results from multiple
+workers.
+
+.. _unittest: https://docs.python.org/3/library/unittest.html
+.. _subunit: https://github.com/testing-cabal/subunit
+
+stestr originally started as a fork of the `testrepository`_ that concentrates
+on being a dedicated test runner for python projects. The generic abstraction
+layers which enabled testrepository to work with any subunit emitting runner
+are gone. stestr hard codes python-subunit-isms into how it works. The code
+base is also designed to try and be explicit, and to provide a python api that
+is documented and has examples.
 
 .. _testrepository: https://testrepository.readthedocs.org/en/latest
 
