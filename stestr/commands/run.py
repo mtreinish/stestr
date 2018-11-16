@@ -397,7 +397,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                     randomize=random, test_path=test_path, top_dir=top_dir)
 
                 run_result = _run_tests(
-                    cmd, failing, analyze_isolation, isolated, until_failure,
+                    cmd, until_failure,
                     subunit_out=subunit_out, combine_id=combine_id,
                     repo_type=repo_type, repo_url=repo_url,
                     pretty_out=pretty_out, color=color, abbreviate=abbreviate,
@@ -406,8 +406,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                     result = run_result
             return result
         else:
-            return _run_tests(cmd, failing, analyze_isolation,
-                              isolated, until_failure,
+            return _run_tests(cmd, until_failure,
                               subunit_out=subunit_out,
                               combine_id=combine_id,
                               repo_type=repo_type,
@@ -432,8 +431,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                 whitelist_file=whitelist_file, black_regex=black_regex,
                 randomize=random, test_path=test_path,
                 top_dir=top_dir)
-            if not _run_tests(cmd, failing, analyze_isolation, isolated,
-                              until_failure):
+            if not _run_tests(cmd, until_failure):
                 # If the test was filtered, it won't have been run.
                 if test_id in repo.get_test_ids(repo.latest_id()):
                     spurious_failures.add(test_id)
@@ -458,7 +456,7 @@ def run_command(config='.stestr.conf', repo_type='file',
         return bisect_runner.bisect_tests(spurious_failures)
 
 
-def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
+def _run_tests(cmd, until_failure,
                subunit_out=False, combine_id=None, repo_type='file',
                repo_url=None, pretty_out=True, color=False, stdout=sys.stdout,
                abbreviate=False, suppress_attachments=False):

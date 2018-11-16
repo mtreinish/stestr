@@ -66,7 +66,7 @@ class TestBisectReturnCodes(base.TestCase):
         lines = six.text_type(out.rstrip()).splitlines()
         self.assertEqual(3, p_analyze.returncode,
                          'Analyze isolation returned an unexpected return code'
-                         'Stdout: %s\nStderr: %s' % (out, err))
+                         '\nStdout: %s\nStderr: %s' % (out, err))
         last_line = ('tests.test_serial_fails.TestFakeClass.test_B  '
                      'tests.test_serial_fails.TestFakeClass.test_A')
         self.assertEqual(last_line, lines[-1])
