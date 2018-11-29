@@ -211,9 +211,15 @@ class TestProcessorFixture(fixtures.Fixture):
                     results.CatFiles(new_out))
             out = new_out.getvalue()
             if out:
-                sys.stdout.write(six.text_type(out))
+                if six.PY3:
+                    sys.stdout.write(out.decode('utf8'))
+                else:
+                    sys.stdout.write(out)
             if err:
-                sys.stderr.write(six.text_type(err))
+                if six.PY3:
+                    sys.stdout.write(out.decode('utf8'))
+                else:
+                    sys.stderr.write(err)
             sys.stdout.write("\n" + "=" * 80 + "\n"
                              "The above traceback was encountered during "
                              "test discovery which imports all the found test"
