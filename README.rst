@@ -1,5 +1,5 @@
-Slim/Super Test Repository
-==========================
+stestr
+======
 
 .. image:: https://img.shields.io/travis/mtreinish/stestr/master.svg?style=flat-square
     :target: https://travis-ci.org/mtreinish/stestr
