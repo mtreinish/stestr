@@ -356,13 +356,13 @@ method)::
 
     group_regex=([^\.]+\.)+
 
-However, because grouping tests at the class level is a common use case there is also a config option, ``parallel_class``, to do this. For example, you can use::
+However, because grouping tests at the class level is a common use
+case there is also a config option, ``parallel_class``, to do
+this. For example, you can use::
 
     parallel_class=True
-    
+
 and it will group tests in the same class together.
-
-    parallel_class=True
 
 .. note::
    This ``parallel_class`` option takes priority over the
