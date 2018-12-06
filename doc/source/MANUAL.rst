@@ -74,9 +74,10 @@ The ``group_regex`` option is used to specify is used to provide a scheduler
 hint for how tests should be divided between test runners. See the
 :ref:`group_regex` section for more information on how this works.
 You can also specify the ``parallel_class=True`` instead of
-``group_regex=([^\.]*\.)*``. This ``parallel_class`` option is to
-group tests together in the stestr scheduler by class. So, you don't
-need to memorize the complicated regex with it.
+group_regex to group tests in the stestr scheduler together by
+class. Since this is a common use case this enables that without
+needing to memorize the complicated regex for ``group_regex`` to do
+this.
 
 There is also an option to specify all the options in the config file via the
 CLI. This way you can run stestr directly without having to write a config file
