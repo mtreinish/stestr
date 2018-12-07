@@ -73,6 +73,11 @@ A full example config file is::
 The ``group_regex`` option is used to specify is used to provide a scheduler
 hint for how tests should be divided between test runners. See the
 :ref:`group_regex` section for more information on how this works.
+You can also specify the ``parallel_class=True`` instead of
+group_regex to group tests in the stestr scheduler together by
+class. Since this is a common use case this enables that without
+needing to memorize the complicated regex for ``group_regex`` to do
+this.
 
 There is also an option to specify all the options in the config file via the
 CLI. This way you can run stestr directly without having to write a config file
@@ -351,6 +356,22 @@ tests in the same class together (the last '.' splits the class and test
 method)::
 
     group_regex=([^\.]+\.)+
+
+However, because grouping tests at the class level is a common use
+case there is also a config option, ``parallel_class``, to do
+this. For example, you can use::
+
+    parallel_class=True
+
+and it will group tests in the same class together.
+
+.. note::
+   This ``parallel_class`` option takes priority over the
+   ``group_regex`` option. And if both on the CLI and in the config
+   are set, we use the option on the CLI not in a config file. For
+   example, ``--group-regex`` on the CLI and ``parallel-class`` in a
+   config file are set, ``--group-regex`` is higer priority than
+   ``parallel-class`` in this case.
 
 Test Scheduling
 ---------------
