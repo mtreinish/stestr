@@ -172,11 +172,19 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit(cmd, 0)
 
     def test_serial_subunit_passing(self):
-        self.assertRunExit('stestr run --subunit passing', 0,
-                           subunit=True)
+        self.assertRunExit('stestr run --subunit --serial passing',
+                           0, subunit=True)
+
+    def test_serial_subunit_failing(self):
+        self.assertRunExit('stestr run --subunit --serial failing',
+                           0, subunit=True)
 
     def test_parallel_subunit_passing(self):
         self.assertRunExit('stestr run --subunit passing', 0,
+                           subunit=True)
+
+    def test_parallel_subunit_failing(self):
+        self.assertRunExit('stestr run --subunit failing', 0,
                            subunit=True)
 
     def test_slowest_passing(self):
