@@ -104,8 +104,8 @@ class TestrConf(object):
             top_dir = './'
 
         python = 'python' if sys.platform == 'win32' else '${PYTHON:-python}'
-        command = "%s -m subunit.run discover -t" \
-                  " %s %s $LISTOPT $IDOPTION" % (python, top_dir, test_path)
+        command = '%s -m subunit.run discover -t "%s" "%s" ' \
+                  '$LISTOPT $IDOPTION' % (python, top_dir, test_path)
         listopt = "--list"
         idoption = "--load-list $IDFILE"
         # If the command contains $IDOPTION read that command from config
