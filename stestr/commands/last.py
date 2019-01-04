@@ -33,7 +33,10 @@ class Last(command.Command):
 
         Without --subunit, the process exit code will be non-zero if the test
         run was not successful. With --subunit, the process exit code is
-        non-zero if the subunit stream could not be generated successfully.
+        non-zero only if the subunit stream could not be generated
+        successfully. The test results and run status are included in the
+        subunit stream, so the stream should be used to determining the result
+        of the run instead of the exit code when using the --subunit flag.
         """
         return help_str
 

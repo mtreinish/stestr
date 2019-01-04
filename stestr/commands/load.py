@@ -73,9 +73,16 @@ class Load(command.Command):
     def get_description(self):
         help_str = """Load a subunit stream into a repository.
 
-            Failing tests are shown on the console and a summary of the stream
-            is printed at the end.
-            """
+        Failing tests are shown on the console and a summary of the stream
+        is printed at the end.
+
+        Without --subunit, the process exit code will be non-zero if the test
+        run was not successful. With --subunit, the process exit code is
+        non-zero if the subunit stream could not be generated successfully.
+        The test results and run status are included in the subunit stream, so
+        the stream should be used to determining the result of the run instead
+        of the exit code when using the --subunit flag.
+        """
         return help_str
 
     def take_action(self, parsed_args):

@@ -134,8 +134,16 @@ class Run(command.Command):
         return parser
 
     def get_description(self):
-        help_str = (
-            "Run the tests for a project and store them into the repository.")
+        help_str = """Run the tests for a project and store them into the
+        repository.
+
+        Without --subunit, the process exit code will be non-zero if the test
+        run was not successful. However, with --subunit, the process exit code
+        is non-zero only if the subunit stream could not be generated
+        successfully. The test results and run status are included in the
+        subunit stream, so the stream should be used to determining the result
+        of the run instead of the exit code when using the --subunit flag.
+        """
         return help_str
 
     def take_action(self, parsed_args):
