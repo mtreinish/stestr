@@ -103,7 +103,8 @@ class TestrConf(object):
         elif not top_dir:
             top_dir = './'
 
-        python = 'python' if sys.platform == 'win32' else '${PYTHON:-python}'
+        python = sys.executable if sys.platform == 'win32' else \
+            '${PYTHON:-%s}' % (sys.executable)
         command = "%s -m subunit.run discover -t" \
                   " %s %s $LISTOPT $IDOPTION" % (python, top_dir, test_path)
         listopt = "--list"
