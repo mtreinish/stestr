@@ -33,6 +33,7 @@ class TestTestrConf(base.TestCase):
                                expected_python='python',
                                expected_group_callback=mock.ANY):
         mock_sys.platform = platform
+        mock_sys.executable = 'python'
 
         fixture = \
             self._testr_conf.get_run_command(test_path='fake_test_path',
