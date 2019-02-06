@@ -30,6 +30,7 @@ class StestrCLI(app.App):
             )
 
     def initialize_app(self, argv):
+        self.options.debug = True
         self.LOG.debug('initialize_app')
 
     def prepare_to_run_command(self, cmd):
