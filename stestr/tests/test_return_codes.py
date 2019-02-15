@@ -46,12 +46,14 @@ class TestReturnCodes(base.TestCase):
         self.failing_file = os.path.join(self.test_dir, 'test_failing.py')
         self.init_file = os.path.join(self.test_dir, '__init__.py')
         self.setup_py = os.path.join(self.directory, 'setup.py')
+        self.user_config = os.path.join(self.directory, 'stestr.yaml')
         shutil.copy('stestr/tests/files/testr-conf', self.testr_conf_file)
         shutil.copy('stestr/tests/files/passing-tests', self.passing_file)
         shutil.copy('stestr/tests/files/failing-tests', self.failing_file)
         shutil.copy('setup.py', self.setup_py)
         shutil.copy('stestr/tests/files/setup.cfg', self.setup_cfg_file)
         shutil.copy('stestr/tests/files/__init__.py', self.init_file)
+        shutil.copy('stestr/tests/files/stestr.yaml', self.user_config)
 
         self.stdout = StringIO()
         self.stderr = StringIO()
@@ -172,20 +174,19 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit(cmd, 0)
 
     def test_serial_subunit_passing(self):
-        self.assertRunExit('stestr run --subunit --serial passing',
-                           0, subunit=True)
-
+        self.assertRunExit('stestr --user-config stestr.yaml run --subunit '
+                           '--serial passing', 0, subunit=True)
     def test_serial_subunit_failing(self):
-        self.assertRunExit('stestr run --subunit --serial failing',
-                           0, subunit=True)
+        self.assertRunExit('stestr --user-config stestr.yaml run --subunit '
+                           '--serial failing', 0, subunit=True)
 
     def test_parallel_subunit_passing(self):
-        self.assertRunExit('stestr run --subunit passing', 0,
-                           subunit=True)
+        self.assertRunExit('stestr --user-config stestr.yaml run --subunit '
+                           'passing', 0, subunit=True)
 
     def test_parallel_subunit_failing(self):
-        self.assertRunExit('stestr run --subunit failing', 0,
-                           subunit=True)
+        self.assertRunExit('stestr --user-config stestr.yaml run --subunit '
+                           'failing', 0, subunit=True)
 
     def test_slowest_passing(self):
         self.assertRunExit('stestr run --slowest passing', 0)
@@ -197,8 +198,8 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit('stestr run --until-failure', 1)
 
     def test_until_failure_with_subunit_fails(self):
-        self.assertRunExit('stestr run --until-failure --subunit', 1,
-                           subunit=True)
+        self.assertRunExit('stestr --user-config stestr.yaml run '
+                           '--until-failure --subunit', 1, subunit=True)
 
     def test_with_parallel_class(self):
         # NOTE(masayukig): Ideally, it's better to figure out the
@@ -248,13 +249,14 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit('stestr load', 0, stdin=stream)
 
     def test_load_from_stdin_quiet(self):
-        out, err = self.assertRunExit('stestr -q run passing', 0)
+        out, err = self.assertRunExit('stestr --user-config stestr.yaml -q '
+                                      'run passing', 0)
         self.assertEqual(out.decode('utf-8'), '')
         # FIXME(masayukig): We get some warnings when we run a coverage job.
         # So, just ignore 'err' here.
-        stream = self._get_cmd_stdout(
-            'stestr last --subunit')[0]
-        out, err = self.assertRunExit('stestr -q load', 0, stdin=stream)
+        stream = self._get_cmd_stdout('stestr last --subunit')[0]
+        out, err = self.assertRunExit('stestr --user-config stestr.yaml -q '
+                                      'load', 0, stdin=stream)
         self.assertEqual(out.decode('utf-8'), '')
         self.assertEqual(err.decode('utf-8'), '')
 
