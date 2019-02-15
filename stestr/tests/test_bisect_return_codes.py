@@ -33,10 +33,12 @@ class TestBisectReturnCodes(base.TestCase):
         self.setup_cfg_file = os.path.join(self.directory, 'setup.cfg')
         self.init_file = os.path.join(self.test_dir, '__init__.py')
         self.setup_py = os.path.join(self.directory, 'setup.py')
+        self.user_config = os.path.join(self.directory, 'stestr.yaml')
         shutil.copy('stestr/tests/files/testr-conf', self.testr_conf_file)
         shutil.copy('setup.py', self.setup_py)
         shutil.copy('stestr/tests/files/setup.cfg', self.setup_cfg_file)
         shutil.copy('stestr/tests/files/__init__.py', self.init_file)
+        shutil.copy('stestr/tests/files/stestr.yaml', self.user_config)
 
         # Move around the test code
         self.serial_fail_file = os.path.join(self.test_dir,
@@ -58,8 +60,8 @@ class TestBisectReturnCodes(base.TestCase):
                          'stestr run returned an unexpected return code'
                          'Stdout: %s\nStderr: %s' % (out, err))
         p_analyze = subprocess.Popen(
-            "stestr run --analyze-isolation", shell=True,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            "stestr --user-config stestr.yaml run --analyze-isolation",
+            shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p_analyze.communicate()
         out = out.decode('utf-8')
         # For debugging potential failures
