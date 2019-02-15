@@ -44,8 +44,9 @@ class TestTestrConf(base.TestCase):
         self.assertEqual(mock_TestProcessorFixture.return_value, fixture)
         mock_get_repo_open.assert_called_once_with('file',
                                                    None)
-        command = "%s -m subunit.run discover -t %s %s $LISTOPT $IDOPTION" % (
-            expected_python, 'fake_top_dir', 'fake_test_path')
+        command = '%s -m subunit.run discover -t "%s" "%s" ' \
+                  '$LISTOPT $IDOPTION' % (expected_python, 'fake_top_dir',
+                                          'fake_test_path')
         # Ensure TestProcessorFixture is created with defaults except for where
         # we specfied and with the correct python.
         mock_TestProcessorFixture.assert_called_once_with(
