@@ -177,9 +177,17 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit('stestr --user-config stestr.yaml run --subunit '
                            '--serial passing', 0, subunit=True)
 
+    def test_serial_subunit_failing(self):
+        self.assertRunExit('stestr --user-config stestr.yaml run --subunit '
+                           '--serial failing', 0, subunit=True)
+
     def test_parallel_subunit_passing(self):
         self.assertRunExit('stestr --user-config stestr.yaml run --subunit '
                            'passing', 0, subunit=True)
+
+    def test_parallel_subunit_failing(self):
+        self.assertRunExit('stestr --user-config stestr.yaml run --subunit '
+                           'failing', 0, subunit=True)
 
     def test_slowest_passing(self):
         self.assertRunExit('stestr run --slowest passing', 0)
