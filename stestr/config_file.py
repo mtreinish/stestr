@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
 import re
 import sys
 
@@ -103,10 +104,24 @@ class TestrConf(object):
         elif not top_dir:
             top_dir = './'
 
-        python = sys.executable if sys.platform == 'win32' else \
-            '${PYTHON:-%s}' % (sys.executable)
-        command = "%s -m subunit.run discover -t" \
-                  " %s %s $LISTOPT $IDOPTION" % (python, top_dir, test_path)
+        stestr_python = sys.executable
+        # let's try to be explicit, even if it means a longer set of ifs
+        if sys.platform == 'win32':
+            # it may happen, albeit rarely
+            if not stestr_python:
+                raise RuntimeError("The Python interpreter was not found")
+            python = stestr_python
+        else:
+            if os.environ.get('PYTHON'):
+                python = '${PYTHON}'
+            elif stestr_python:
+                python = stestr_python
+            else:
+                raise RuntimeError("The Python interpreter was not found and "
+                                   "PYTHON is not set")
+
+        command = '%s -m subunit.run discover -t "%s" "%s" ' \
+                  '$LISTOPT $IDOPTION' % (python, top_dir, test_path)
         listopt = "--list"
         idoption = "--load-list $IDFILE"
         # If the command contains $IDOPTION read that command from config

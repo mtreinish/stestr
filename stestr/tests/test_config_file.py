@@ -30,22 +30,28 @@ class TestTestrConf(base.TestCase):
     def _check_get_run_command(self, mock_sys, mock_TestProcessorFixture,
                                mock_get_repo_open, platform='win32',
                                group_regex='.*', parallel_class=False,
-                               expected_python='python',
-                               expected_group_callback=mock.ANY):
+                               sys_executable='/usr/bin/python',
+                               expected_python='/usr/bin/python',
+                               expected_group_callback=mock.ANY,
+                               environment=None):
         mock_sys.platform = platform
-        mock_sys.executable = 'python'
+        mock_sys.executable = sys_executable
+        if environment is None:
+            environment = {'PYTHON': ''}
 
-        fixture = \
-            self._testr_conf.get_run_command(test_path='fake_test_path',
-                                             top_dir='fake_top_dir',
-                                             group_regex=group_regex,
-                                             parallel_class=parallel_class)
+        with mock.patch.dict('os.environ', environment):
+            fixture = \
+                self._testr_conf.get_run_command(test_path='fake_test_path',
+                                                 top_dir='fake_top_dir',
+                                                 group_regex=group_regex,
+                                                 parallel_class=parallel_class)
 
         self.assertEqual(mock_TestProcessorFixture.return_value, fixture)
         mock_get_repo_open.assert_called_once_with('file',
                                                    None)
-        command = "%s -m subunit.run discover -t %s %s $LISTOPT $IDOPTION" % (
-            expected_python, 'fake_top_dir', 'fake_test_path')
+        command = '%s -m subunit.run discover -t "%s" "%s" ' \
+                  '$LISTOPT $IDOPTION' % (expected_python, 'fake_top_dir',
+                                          'fake_test_path')
         # Ensure TestProcessorFixture is created with defaults except for where
         # we specfied and with the correct python.
         mock_TestProcessorFixture.assert_called_once_with(
@@ -56,9 +62,40 @@ class TestTestrConf(base.TestCase):
             test_filters=None, randomize=False, serial=False,
             whitelist_file=None, worker_path=None)
 
+    @mock.patch.object(config_file, 'sys')
+    def _check_get_run_command_exception(self, mock_sys, platform='win32',
+                                         sys_executable='/usr/bin/python',
+                                         environment=None):
+        mock_sys.platform = platform
+        mock_sys.executable = sys_executable
+        if environment is None:
+            environment = {'PYTHON': ''}
+
+        with mock.patch.dict('os.environ', environment):
+            self.assertRaises(RuntimeError, self._testr_conf.get_run_command,
+                              test_path='fake_test_path',
+                              top_dir='fake_top_dir')
+
     def test_get_run_command_linux(self):
-        self._check_get_run_command(platform='linux2',
-                                    expected_python='${PYTHON:-python}')
+        self._check_get_run_command(
+            platform='linux2',
+            expected_python='/usr/bin/python')
+
+    def test_get_run_command_emptysysexecutable_noenv(self):
+        self._check_get_run_command_exception(
+            platform='linux2',
+            sys_executable=None)
+
+    def test_get_run_command_emptysysexecutable_win32(self):
+        self._check_get_run_command_exception(
+            platform='win32', sys_executable=None,
+            environment={'PYTHON': 'python3'})
+
+    def test_get_run_command_emptysysexecutable_withenv(self):
+        self._check_get_run_command(
+            platform='linux2', sys_executable=None,
+            expected_python='${PYTHON}',
+            environment={'PYTHON': '/usr/bin/python3'})
 
     def test_get_run_command_win32(self):
         self._check_get_run_command()
