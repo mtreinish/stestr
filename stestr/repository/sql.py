@@ -116,8 +116,8 @@ class Repository(repository.AbstractRepository):
     def get_test_run(self, run_id):
         return _Subunit2SqlRun(self.base, run_id)
 
-    def _get_inserter(self, partial, run_id=None):
-        return _SqlInserter(self, partial, run_id)
+    def _get_inserter(self, partial, run_id=None, metadata=None):
+        return _SqlInserter(self, partial, run_id, metadata)
 
     def _get_test_times(self, test_ids):
         result = {}
@@ -135,6 +135,12 @@ class Repository(repository.AbstractRepository):
                 result[test_id] = test.run_time
         session.close()
         return result
+
+    def find_metadata(self, metadata):
+        session = self.session_factory()
+        runs = db_api.get_runs_by_key_value('stestr_run_meta', metadata,
+                                            session=session)
+        return [x.uuid for x in runs]
 
 
 class _Subunit2SqlRun(repository.AbstractTestRun):
@@ -177,15 +183,25 @@ class _Subunit2SqlRun(repository.AbstractTestRun):
         case = subunit.ByteStreamToStreamResult(stream)
         return case
 
+    def get_metadata(self):
+        if self._run_id:
+            session = self.session_factory()
+            metadata = db_api.get_run_metadata(self._run_id, session=session)
+            for meta in metadata:
+                if meta.key == 'stestr_run_meta':
+                    return meta.value
+        return None
+
 
 class _SqlInserter(repository.AbstractTestRun):
     """Insert test results into a sql repository."""
 
-    def __init__(self, repository, partial=False, run_id=None):
+    def __init__(self, repository, partial=False, run_id=None, metadata=None):
         self._repository = repository
         self.partial = partial
         self._subunit = None
         self._run_id = run_id
+        self._metadata = metadata
         # Create a new session factory
         self.engine = sqlalchemy.create_engine(self._repository.base)
         self.session_factory = orm.sessionmaker(bind=self.engine,
@@ -202,6 +218,9 @@ class _SqlInserter(repository.AbstractTestRun):
         session = self.session_factory()
         if not self._run_id:
             self.run = db_api.create_run(session=session)
+            if self._metadata:
+                db_api.add_run_metadata({'stestr_run_meta': self._metadata},
+                                        self.run.id, session=session)
             self._run_id = self.run.uuid
         else:
             int_id = db_api.get_run_id_from_uuid(self._run_id, session=session)

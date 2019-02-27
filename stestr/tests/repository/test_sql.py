@@ -80,3 +80,23 @@ class TestSqlRepository(base.TestCase):
         self.assertIsNotNone(stream)
         self.assertTrue(stream.readable())
         self.assertEqual([], stream.readlines())
+
+    def test_get_metadata(self):
+        repo = self.useFixture(SqlRepositoryFixture(url=self.url)).repo
+        result = repo.get_inserter(metadata='fun')
+        result.startTestRun()
+        result.stopTestRun()
+        run = repo.get_test_run(result.get_id())
+        self.assertEqual('fun', run.get_metadata())
+
+    def test_find_metadata(self):
+        repo = self.useFixture(SqlRepositoryFixture(url=self.url)).repo
+        result = repo.get_inserter(metadata='fun')
+        result.startTestRun()
+        result.stopTestRun()
+        result_bad = repo.get_inserter(metadata='not_fun')
+        result_bad.startTestRun()
+        result_bad.stopTestRun()
+        run_ids = repo.find_metadata('fun')
+        self.assertIn(result.get_id(), run_ids)
+        self.assertNotIn(result_bad.get_id(), run_ids)

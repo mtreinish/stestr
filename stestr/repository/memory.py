@@ -71,7 +71,7 @@ class Repository(repository.AbstractRepository):
             raise KeyError("No tests in repository")
         return result
 
-    def _get_inserter(self, partial, run_id=None):
+    def _get_inserter(self, partial, run_id=None, metadata=None):
         return _Inserter(self, partial, run_id)
 
     def _get_test_times(self, test_ids):
@@ -127,13 +127,14 @@ class _Failures(repository.AbstractTestRun):
 class _Inserter(repository.AbstractTestRun):
     """Insert test results into a memory repository."""
 
-    def __init__(self, repository, partial, run_id=None):
+    def __init__(self, repository, partial, run_id=None, metadata=None):
         self._repository = repository
         self._partial = partial
         self._tests = []
         # Subunit V2 stream for get_subunit_stream
         self._subunit = None
         self._run_id = run_id
+        self._metadata = metadata
 
     def startTestRun(self):
         self._subunit = BytesIO()
