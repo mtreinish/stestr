@@ -35,6 +35,16 @@ from stestr import user_config
 
 
 class Run(command.Command):
+    """Run the tests for a project and store them into the repository.
+
+    Without --subunit, the process exit code will be non-zero if the test
+    run was not successful. However, with --subunit, the process exit code
+    is non-zero only if the subunit stream could not be generated
+    successfully. The test results and run status are included in the
+    subunit stream, so the stream should be used to determining the result
+    of the run instead of the exit code when using the --subunit flag.
+    """
+
     def get_parser(self, prog_name):
         parser = super(Run, self).get_parser(prog_name)
         parser.add_argument("filters", nargs="*", default=None,
@@ -132,19 +142,6 @@ class Run(command.Command):
                             'attachment contents on a successful test '
                             'execution')
         return parser
-
-    def get_description(self):
-        help_str = """Run the tests for a project and store them into the
-        repository.
-
-        Without --subunit, the process exit code will be non-zero if the test
-        run was not successful. However, with --subunit, the process exit code
-        is non-zero only if the subunit stream could not be generated
-        successfully. The test results and run status are included in the
-        subunit stream, so the stream should be used to determining the result
-        of the run instead of the exit code when using the --subunit flag.
-        """
-        return help_str
 
     def take_action(self, parsed_args):
         user_conf = user_config.get_user_config(self.app_args.user_config)
