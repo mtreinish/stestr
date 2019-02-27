@@ -172,6 +172,11 @@ class Run(command.Command):
             suppress_attachments = args.suppress_attachments
         verbose_level = self.app.options.verbose_level
         stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
+        if concurrency and concurrency < 0:
+            msg = ("The provided concurrency value: %s is not valid. An "
+                   "integer >= 0 must be used.\n" % concurrency)
+            stdout.write(msg)
+            return 2
         result = run_command(
             config=self.app_args.config, repo_type=self.app_args.repo_type,
             repo_url=self.app_args.repo_url,
@@ -308,6 +313,11 @@ def run_command(config='.stestr.conf', repo_type='file',
             exit(1)
         repo = util.get_repo_initialise(repo_type, repo_url)
     combine_id = None
+    if concurrency and concurrency < 0:
+        msg = ("The provided concurrency value: %s is not valid. An integer "
+               ">= 0 must be used.\n" % concurrency)
+        stdout.write(msg)
+        return 2
     if combine:
         latest_id = repo.latest_id()
         combine_id = six.text_type(latest_id)
