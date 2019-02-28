@@ -23,13 +23,10 @@ from stestr.repository import util
 
 
 class Slowest(command.Command):
-    def get_description(self):
-        help_str = """Show the slowest tests from the last test run.
+    """Show the slowest tests from the last test run.
 
-        This command shows a table, with the longest running
-        tests at the top.
-        """
-        return help_str
+    This command shows a table, with the longest running tests at the top.
+    """
 
     def get_parser(self, prog_name):
         parser = super(Slowest, self).get_parser(prog_name)
