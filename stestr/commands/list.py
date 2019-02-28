@@ -22,12 +22,11 @@ from stestr import output
 
 
 class List(command.Command):
+    """List the tests for a project.
 
-    def get_description(self):
-        help_str = ("List the tests for a project. You can use a filter just "
-                    "like with the run command to see exactly what tests "
-                    "match")
-        return help_str
+    You can use a filter just like with the run command to see exactly what
+    tests match.
+    """
 
     def get_parser(self, prog_name):
         parser = super(List, self).get_parser(prog_name)
