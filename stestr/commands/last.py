@@ -25,17 +25,18 @@ from stestr import user_config
 
 
 class Last(command.Command):
-    def get_description(self):
-        help_str = """Show the last run loaded into a repository.
+    """Show the last run loaded into a repository.
 
-        Failing tests are shown on the console and a summary of the run is
-        printed at the end.
+    Failing tests are shown on the console and a summary of the run is
+    printed at the end.
 
-        Without --subunit, the process exit code will be non-zero if the test
-        run was not successful. With --subunit, the process exit code is
-        non-zero if the subunit stream could not be generated successfully.
-        """
-        return help_str
+    Without --subunit, the process exit code will be non-zero if the test
+    run was not successful. With --subunit, the process exit code is
+    non-zero only if the subunit stream could not be generated
+    successfully. The test results and run status are included in the
+    subunit stream, so the stream should be used to determining the result
+    of the run instead of the exit code when using the --subunit flag.
+    """
 
     def get_parser(self, prog_name):
         parser = super(Last, self).get_parser(prog_name)
