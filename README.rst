@@ -17,7 +17,8 @@ stestr
     :target: https://pypi.python.org/pypi/stestr
     :alt: Latest Version
 
-You can see the full rendered docs at: http://stestr.readthedocs.io/en/latest/
+* You can see the full rendered docs at: http://stestr.readthedocs.io/en/latest/
+* The code of the project is on Github: https://github.com/mtreinish/stestr
 
 Overview
 --------
