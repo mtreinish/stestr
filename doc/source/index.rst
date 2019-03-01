@@ -13,10 +13,10 @@ Contents:
 
    README
    MANUAL
+   CONTRIBUTING
    developer_guidelines
    internal_arch
    api
-
 
 
 Indices and tables
