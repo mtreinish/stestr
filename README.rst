@@ -118,3 +118,18 @@ from the root of the stestr repository::
 
 which will generate the troff file in doc/build/man/stestr.1 which is ready to
 be packaged and or put in your system's man pages.
+
+Contributing
+------------
+
+To browse the latest code, see: https://github.com/mtreinish/stestr
+To clone the latest code, use: ``git clone https://github.com/mtreinish/stestr.git``
+
+Guidelines for contribution are documented at: http://stestr.readthedocs.io/en/latest/developer_guidelines.html
+
+Use `github pull requests`_ to submit patches. Before you submit a pull request
+ensure that all the automated testing will pass by running ``tox`` locally.
+This will run the test suite and also the automated style rule checks just as
+they will in CI. If CI fails on your change it will not be able to merge.
+
+.. _github pull requests: https://help.github.com/articles/about-pull-requests/
