@@ -144,6 +144,16 @@ class Run(command.Command):
         return parser
 
     def take_action(self, parsed_args):
+        def to_int(possible, default=0):
+            try:
+                i = int(possible)
+            except ValueError:
+                i = default
+                msg = ('Unable to convert "%s" to an integer.  Using %d.\n' %
+                       (possible, default))
+                stdout.write(msg)
+            return i
+
         user_conf = user_config.get_user_config(self.app_args.user_config)
         filters = parsed_args.filters
         args = parsed_args
@@ -177,6 +187,8 @@ class Run(command.Command):
             suppress_attachments = args.suppress_attachments
         verbose_level = self.app.options.verbose_level
         stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
+        # Make sure all (python) callers have provided an int()
+        concurrency = to_int(concurrency)
         if concurrency and concurrency < 0:
             msg = ("The provided concurrency value: %s is not valid. An "
                    "integer >= 0 must be used.\n" % concurrency)
