@@ -37,7 +37,7 @@ from stestr import user_config
 def _to_int(possible, default=0, out=sys.stderr):
     try:
         i = int(possible)
-    except ValueError:
+    except (ValueError, TypeError):
         i = default
         msg = ('Unable to convert "%s" to an integer.  Using %d.\n' %
                (possible, default))

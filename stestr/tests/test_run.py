@@ -37,3 +37,12 @@ class TestRunCommand(base.TestCase):
             'Using 0.\n')
         self.assertEqual(fake_stderr.getvalue(), expected)
         self.assertEqual(0, out)
+
+    def test_to_int_none(self):
+        fake_stderr = io.StringIO()
+        out = run._to_int(None, out=fake_stderr)
+        expected = (
+            'Unable to convert "None" to an integer.  '
+            'Using 0.\n')
+        self.assertEqual(fake_stderr.getvalue(), expected)
+        self.assertEqual(0, out)
