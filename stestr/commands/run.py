@@ -34,6 +34,17 @@ from stestr.testlist import parse_list
 from stestr import user_config
 
 
+def _to_int(possible, default=0, out=sys.stderr):
+    try:
+        i = int(possible)
+    except ValueError:
+        i = default
+        msg = ('Unable to convert "%s" to an integer.  Using %d.\n' %
+               (possible, default))
+        out.write(six.text_type(msg))
+    return i
+
+
 class Run(command.Command):
     """Run the tests for a project and store them into the repository.
 
@@ -177,6 +188,8 @@ class Run(command.Command):
             suppress_attachments = args.suppress_attachments
         verbose_level = self.app.options.verbose_level
         stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
+        # Make sure all (python) callers have provided an int()
+        concurrency = _to_int(concurrency)
         if concurrency and concurrency < 0:
             msg = ("The provided concurrency value: %s is not valid. An "
                    "integer >= 0 must be used.\n" % concurrency)
@@ -318,6 +331,8 @@ def run_command(config='.stestr.conf', repo_type='file',
             exit(1)
         repo = util.get_repo_initialise(repo_type, repo_url)
     combine_id = None
+    concurrency = _to_int(concurrency)
+
     if concurrency and concurrency < 0:
         msg = ("The provided concurrency value: %s is not valid. An integer "
                ">= 0 must be used.\n" % concurrency)

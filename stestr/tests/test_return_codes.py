@@ -293,6 +293,19 @@ class TestReturnCodes(base.TestCase):
         self.assertEqual(0, run.run_command(filters=['passing'], serial=True,
                                             stdout=stdout.stream))
 
+    def test_str_concurrency_passing_from_func(self):
+        stdout = fixtures.StringStream('stdout')
+        self.useFixture(stdout)
+        self.assertEqual(0, run.run_command(filters=['passing'],
+                                            concurrency='1',
+                                            stdout=stdout.stream))
+
+    def test_str_concurrency_fails_from_func(self):
+        stdout = fixtures.StringStream('stdout')
+        self.useFixture(stdout)
+        self.assertEqual(1, run.run_command(concurrency='1',
+                                            stdout=stdout.stream))
+
     def test_serial_fails_from_func(self):
         stdout = fixtures.StringStream('stdout')
         self.useFixture(stdout)
