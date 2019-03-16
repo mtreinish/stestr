@@ -124,7 +124,7 @@ class TestScheduler(base.TestCase):
             {'worker': ['test_']},
             {'worker': ['test']},
         ]
-        with mock.patch('yaml.load', return_value=fake_worker_yaml):
+        with mock.patch('yaml.safe_load', return_value=fake_worker_yaml):
             groups = scheduler.generate_worker_partitions(test_ids, 'fakepath')
         expected_grouping = [
             ['test_a', 'test_b'],
@@ -139,7 +139,7 @@ class TestScheduler(base.TestCase):
             {'worker': ['test_']},
             {'worker': 'test'},
         ]
-        with mock.patch('yaml.load', return_value=fake_worker_yaml):
+        with mock.patch('yaml.safe_load', return_value=fake_worker_yaml):
             self.assertRaises(TypeError, scheduler.generate_worker_partitions,
                               test_ids, 'fakepath')
 
@@ -150,7 +150,7 @@ class TestScheduler(base.TestCase):
             {'worker-foo': ['test_']},
             {'worker': ['test']},
         ]
-        with mock.patch('yaml.load', return_value=fake_worker_yaml):
+        with mock.patch('yaml.safe_load', return_value=fake_worker_yaml):
             self.assertRaises(TypeError, scheduler.generate_worker_partitions,
                               test_ids, 'fakepath')
 
@@ -162,7 +162,7 @@ class TestScheduler(base.TestCase):
             {'worker': ['test']},
             {'worker': ['foo']}
         ]
-        with mock.patch('yaml.load', return_value=fake_worker_yaml):
+        with mock.patch('yaml.safe_load', return_value=fake_worker_yaml):
             groups = scheduler.generate_worker_partitions(test_ids, 'fakepath')
         expected_grouping = [
             ['test_a', 'test_b'],
@@ -178,7 +178,7 @@ class TestScheduler(base.TestCase):
             {'worker': ['test']},
             {'worker': ['a_thing'], 'concurrency': 2},
         ]
-        with mock.patch('yaml.load', return_value=fake_worker_yaml):
+        with mock.patch('yaml.safe_load', return_value=fake_worker_yaml):
             groups = scheduler.generate_worker_partitions(test_ids, 'fakepath')
         expected_grouping = [
             ['test_a', 'test_b'],
@@ -196,7 +196,7 @@ class TestScheduler(base.TestCase):
             {'worker': ['test_']},
             {'worker': ['test'], 'count': 1},
         ]
-        with mock.patch('yaml.load', return_value=fake_worker_yaml):
+        with mock.patch('yaml.safe_load', return_value=fake_worker_yaml):
             groups = scheduler.generate_worker_partitions(test_ids, 'fakepath')
         expected_grouping = [
             ['test_a', 'test_b'],

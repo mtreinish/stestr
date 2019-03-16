@@ -66,7 +66,7 @@ class UserConfig(object):
             }
         })
         with open(path, 'r') as fd:
-            self.config = yaml.load(fd.read())
+            self.config = yaml.safe_load(fd.read())
         if self.config is None:
             self.config = {}
         try:
