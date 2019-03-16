@@ -155,7 +155,7 @@ def generate_worker_partitions(ids, worker_path, repository=None,
     :returns: A list where each element is a distinct subset of test_ids.
     """
     with open(worker_path, 'r') as worker_file:
-        workers_desc = yaml.load(worker_file.read())
+        workers_desc = yaml.safe_load(worker_file.read())
     worker_groups = []
     for worker in workers_desc:
         if isinstance(worker, dict) and 'worker' in worker.keys():

@@ -96,13 +96,14 @@ class TestUserConfig(base.TestCase):
         user_config.get_user_config()
         user_mock.assert_called_once_with(self.home_path)
 
-    @mock.patch('yaml.load', return_value={})
+    @mock.patch('yaml.safe_load', return_value={})
     @mock.patch('six.moves.builtins.open', mock.mock_open())
     def test_user_config_empty_schema(self, yaml_mock):
         user_conf = user_config.UserConfig('/path')
         self.assertEqual({}, user_conf.config)
 
-    @mock.patch('yaml.load', return_value={'init': {'subunit-trace': True}})
+    @mock.patch('yaml.safe_load',
+                return_value={'init': {'subunit-trace': True}})
     @mock.patch('sys.exit')
     @mock.patch('six.moves.builtins.open', mock.mock_open())
     def test_user_config_invalid_command(self, exit_mock, yaml_mock):
@@ -111,7 +112,8 @@ class TestUserConfig(base.TestCase):
                         "extra keys not allowed @ data['init']")
         exit_mock.assert_called_once_with(error_string)
 
-    @mock.patch('yaml.load', return_value={'run': {'subunit-trace': True}})
+    @mock.patch('yaml.safe_load',
+                return_value={'run': {'subunit-trace': True}})
     @mock.patch('sys.exit')
     @mock.patch('six.moves.builtins.open', mock.mock_open())
     def test_user_config_invalid_option(self, exit_mock, yaml_mock):
