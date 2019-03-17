@@ -20,7 +20,6 @@ import sys
 import tempfile
 
 from future.moves.dbm import dumb as my_dbm
-import six
 from subunit import TestProtocolClient
 import subunit.v2
 import testtools
@@ -285,8 +284,8 @@ class _SafeInserter(object):
         if self._metadata:
             db = my_dbm.open(self._repository._path('meta.dbm'), 'c')
             try:
-                dbm_run_id = six.text_type(run_id)
-                db[dbm_run_id] = self._metadata
+                dbm_run_id = str(run_id)
+                db[dbm_run_id] = str(self._metadata)
             finally:
                 db.close()
 
