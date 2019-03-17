@@ -72,7 +72,7 @@ class Repository(repository.AbstractRepository):
         return result
 
     def _get_inserter(self, partial, run_id=None, metadata=None):
-         return _Inserter(self, partial, run_id, metadata)
+        return _Inserter(self, partial, run_id, metadata)
 
     def _get_test_times(self, test_ids):
         result = {}
