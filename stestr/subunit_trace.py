@@ -207,7 +207,7 @@ def show_outcome(stream, test, print_failures=False, failonly=False,
                 color.write('ok', 'green')
                 stream.write('\n')
                 if not suppress_attachments:
-                    print_attachments(stream, test)
+                    print_attachments(stream, test, all_channels=True)
         elif status == 'skip':
             if abbreviate:
                 color.write('S', 'blue')
