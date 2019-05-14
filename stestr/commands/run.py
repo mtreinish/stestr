@@ -348,7 +348,15 @@ def run_command(config='.stestr.conf', repo_type='file',
         if ids.find('/') != -1:
             root = ids.replace('.py', '')
             ids = root.replace('/', '.')
-        run_cmd = 'python -m subunit.run ' + ids
+        stestr_python = sys.executable
+        if os.environ.get('PYTHON'):
+            python_bin = os.environ.get('PYTHON')
+        elif stestr_python:
+            python_bin = stestr_python
+        else:
+            raise RuntimeError("The Python interpreter was not found and "
+                               "PYTHON is not set")
+        run_cmd = python_bin + ' -m subunit.run ' + ids
 
         def run_tests():
             run_proc = [('subunit', output.ReturnCodeToSubunit(
