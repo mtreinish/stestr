@@ -18,6 +18,7 @@ import tempfile
 import uuid
 
 import fixtures
+import testtools
 
 from stestr.repository import sql
 from stestr.tests import base
@@ -81,6 +82,7 @@ class TestSqlRepository(base.TestCase):
         self.assertTrue(stream.readable())
         self.assertEqual([], stream.readlines())
 
+    @testtools.skipIf(os.name == 'nt', 'tempfile fails on appveyor')
     def test_get_metadata(self):
         repo = self.useFixture(SqlRepositoryFixture(url=self.url)).repo
         result = repo.get_inserter(metadata='fun')
@@ -89,6 +91,7 @@ class TestSqlRepository(base.TestCase):
         run = repo.get_test_run(result.get_id())
         self.assertEqual('fun', run.get_metadata())
 
+    @testtools.skipIf(os.name == 'nt', 'tempfile fails on appveyor')
     def test_find_metadata(self):
         repo = self.useFixture(SqlRepositoryFixture(url=self.url)).repo
         result = repo.get_inserter(metadata='fun')
