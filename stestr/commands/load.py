@@ -81,6 +81,10 @@ class Load(command.Command):
                             help='If set do not print stdout or stderr '
                             'attachment contents on a successful test '
                             'execution')
+        parser.add_argument('--all-attachments', action='store_true',
+                            dest='all_attachments',
+                            help='If set print all text attachment contents on'
+                            ' a successful test execution')
         return parser
 
     def take_action(self, parsed_args):
@@ -97,12 +101,16 @@ class Load(command.Command):
             suppress_attachments = (
                 args.suppress_attachments or user_conf.load.get(
                     'suppress-attachments', False))
+            all_attachments = (
+                args.all_attachments or user_conf.load.get(
+                    'all-attachments', False))
         else:
             force_init = args.force_init
             pretty_out = args.subunit_trace
             color = args.color
             abbreviate = args.abbreviate
             suppress_attachments = args.suppress_attachments
+            all_attachments = args.all_attachments
         verbose_level = self.app.options.verbose_level
         stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
         load(repo_type=self.app_args.repo_type,
@@ -111,14 +119,15 @@ class Load(command.Command):
              force_init=force_init, streams=args.files,
              pretty_out=pretty_out, color=color,
              stdout=stdout, abbreviate=abbreviate,
-             suppress_attachments=suppress_attachments, serial=True)
+             suppress_attachments=suppress_attachments, serial=True,
+             all_attachments=all_attachments)
 
 
 def load(force_init=False, in_streams=None,
          partial=False, subunit_out=False, repo_type='file', repo_url=None,
          run_id=None, streams=None, pretty_out=False, color=False,
          stdout=sys.stdout, abbreviate=False, suppress_attachments=False,
-         serial=False):
+         serial=False, all_attachments=False):
     """Load subunit streams into a repository
 
     This function will load subunit streams into the repository. It will
@@ -147,6 +156,8 @@ def load(force_init=False, in_streams=None,
     :param bool abbreviate: Use abbreviated output if set true
     :param bool suppress_attachments: When set true attachments subunit_trace
         will not print attachments on successful test execution.
+    :param bool all_attachments: When set true subunit_trace will print all
+        text attachments on successful test execution.
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -198,7 +209,7 @@ def load(force_init=False, in_streams=None,
                 stream, non_subunit_name='stdout')
             result = _load_case(inserter, repo, case, subunit_out, pretty_out,
                                 color, stdout, abbreviate,
-                                suppress_attachments)
+                                suppress_attachments, all_attachments)
             if result or retval:
                 retval = 1
             else:
@@ -206,13 +217,15 @@ def load(force_init=False, in_streams=None,
     else:
         case = testtools.ConcurrentStreamTestSuite(make_tests)
         retval = _load_case(inserter, repo, case, subunit_out, pretty_out,
-                            color, stdout, abbreviate, suppress_attachments)
+                            color, stdout, abbreviate, suppress_attachments,
+                            all_attachments)
 
     return retval
 
 
 def _load_case(inserter, repo, case, subunit_out, pretty_out,
-               color, stdout, abbreviate, suppress_attachments):
+               color, stdout, abbreviate, suppress_attachments,
+               all_attachments):
     if subunit_out:
         output_result, summary_result = output.make_result(inserter.get_id,
                                                            output=stdout)
@@ -220,7 +233,8 @@ def _load_case(inserter, repo, case, subunit_out, pretty_out,
         outcomes = testtools.StreamToDict(
             functools.partial(subunit_trace.show_outcome, stdout,
                               enable_color=color, abbreviate=abbreviate,
-                              suppress_attachments=suppress_attachments))
+                              suppress_attachments=suppress_attachments,
+                              all_attachments=all_attachments))
         summary_result = testtools.StreamSummary()
         output_result = testtools.CopyStreamResult([outcomes, summary_result])
         output_result = testtools.StreamResultRouter(output_result)

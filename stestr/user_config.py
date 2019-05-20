@@ -48,6 +48,7 @@ class UserConfig(object):
                 vp.Optional('abbreviate'): bool,
                 vp.Optional('slowest'): bool,
                 vp.Optional('suppress-attachments'): bool,
+                vp.Optional('all-attachments'): bool,
             },
             vp.Optional('failing'): {
                 vp.Optional('list'): bool,
@@ -56,6 +57,7 @@ class UserConfig(object):
                 vp.Optional('no-subunit-trace'): bool,
                 vp.Optional('color'): bool,
                 vp.Optional('suppress-attachments'): bool,
+                vp.Optional('all-attachments'): bool,
             },
             vp.Optional('load'): {
                 vp.Optional('force-init'): bool,
@@ -63,6 +65,7 @@ class UserConfig(object):
                 vp.Optional('color'): bool,
                 vp.Optional('abbreviate'): bool,
                 vp.Optional('suppress-attachments'): bool,
+                vp.Optional('all-attachments'): bool,
             }
         })
         with open(path, 'r') as fd:

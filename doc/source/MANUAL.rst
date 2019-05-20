@@ -205,6 +205,16 @@ in some cases printing these attachments on a successful tests is not the
 preferred behavior. You can use the ``--suppress-attachments`` flag to disable
 printing stdout or stderr attachments for successful tests.
 
+While by default attachments for captured stdout and stderr are printed, it
+is also possible that a test has other text attachments (a common example is
+python logging) which are not printed on successful test execution, only on
+failures. If you would like to have these attachments also printed for
+successful tests you can use the ``--all-attachments`` flag to print all text
+attachments on both successful and failed tests. If both ``--all-attachments``
+and ``--suppress-attachments`` are set then the ``--suppress--attachments``
+flag will take priority and no attachments will be printed for successful
+tests.
+
 Combining Test Results
 ----------------------
 There is sometimes a use case for running a single test suite split between
@@ -445,18 +455,21 @@ that changes the default on all available options in the config file is::
       abbreviate: True
       slowest: True
       suppress-attachments: True
+      all-attachments: True
     failing:
       list: True
     last:
       no-subunit-trace: True
       color: True
       suppress-attachments: True
+      all-attachments: True
     load:
       force-init: True
       subunit-trace: True
       color: True
       abbreviate: True
       suppress-attachments: True
+      all-attachments: True
 
 If you choose to use a user config file you can specify any subset of the
 options and commands you choose.
