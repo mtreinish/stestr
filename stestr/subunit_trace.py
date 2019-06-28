@@ -152,7 +152,8 @@ def find_test_run_time_diff(test_id, run_time):
 
 def show_outcome(stream, test, print_failures=False, failonly=False,
                  enable_diff=False, threshold='0', abbreviate=False,
-                 enable_color=False, suppress_attachments=False):
+                 enable_color=False, suppress_attachments=False,
+                 all_attachments=False):
     global RESULTS
     status = test['status']
     # TODO(sdague): ask lifeless why on this?
@@ -207,7 +208,10 @@ def show_outcome(stream, test, print_failures=False, failonly=False,
                 color.write('ok', 'green')
                 stream.write('\n')
                 if not suppress_attachments:
-                    print_attachments(stream, test)
+                    if not all_attachments:
+                        print_attachments(stream, test)
+                    else:
+                        print_attachments(stream, test, all_channels=True)
         elif status == 'skip':
             if abbreviate:
                 color.write('S', 'blue')
@@ -351,7 +355,7 @@ def parse_args():
 
 def trace(stdin, stdout, print_failures=False, failonly=False,
           enable_diff=False, abbreviate=False, color=False, post_fails=False,
-          no_summary=False, suppress_attachments=False):
+          no_summary=False, suppress_attachments=False, all_attachments=False):
     stream = subunit.ByteStreamToStreamResult(
         stdin, non_subunit_name='stdout')
     outcomes = testtools.StreamToDict(
@@ -361,7 +365,8 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
                           enable_diff=enable_diff,
                           abbreviate=abbreviate,
                           enable_color=color,
-                          suppress_attachments=suppress_attachments))
+                          suppress_attachments=suppress_attachments,
+                          all_attachments=all_attachments))
     summary = testtools.StreamSummary()
     result = testtools.CopyStreamResult([outcomes, summary])
     result = testtools.StreamResultRouter(result)
