@@ -70,6 +70,12 @@ class Last(command.Command):
     def take_action(self, parsed_args):
         user_conf = user_config.get_user_config(self.app_args.user_config)
         args = parsed_args
+        if args.suppress_attachments and args.all_attachments:
+            msg = ("The --suppress-attachments and --all-attachments "
+                   "options are mutually exclusive, you can not use both "
+                   "at the same time")
+            print(msg)
+            sys.exit(1)
         if getattr(user_conf, 'last', False):
             if not user_conf.last.get('no-subunit-trace'):
                 if not args.no_subunit_trace:
@@ -80,12 +86,19 @@ class Last(command.Command):
                 pretty_out = False
             pretty_out = args.force_subunit_trace or pretty_out
             color = args.color or user_conf.last.get('color', False)
-            suppress_attachments = (
-                args.suppress_attachments or user_conf.last.get(
-                    'suppress-attachments', False))
-            all_attachments = (
-                args.all_attachments or user_conf.last.get(
-                    'all-attachments', False))
+            suppress_attachments_conf = user_conf.run.get(
+                'suppress-attachments', False)
+            all_attachments_conf = user_conf.run.get(
+                'all-attachments', False)
+            if not args.suppress_attachments and not args.all_attachments:
+                suppress_attachments = suppress_attachments_conf
+                all_attachments = all_attachments_conf
+            elif args.suppress_attachments:
+                all_attachments = False
+                suppress_attachments = args.suppress_attachments
+            elif args.all_attachments:
+                suppress_attachments = False
+                all_attachments = args.all_attachments
         else:
             pretty_out = args.force_subunit_trace or not args.no_subunit_trace
             color = args.color

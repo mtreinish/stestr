@@ -90,6 +90,12 @@ class Load(command.Command):
     def take_action(self, parsed_args):
         user_conf = user_config.get_user_config(self.app_args.user_config)
         args = parsed_args
+        if args.suppress_attachments and args.all_attachments:
+            msg = ("The --suppress-attachments and --all-attachments "
+                   "options are mutually exclusive, you can not use both "
+                   "at the same time")
+            print(msg)
+            sys.exit(1)
         if getattr(user_conf, 'load', False):
             force_init = args.force_init or user_conf.load.get('force-init',
                                                                False)
@@ -98,12 +104,19 @@ class Load(command.Command):
             color = args.color or user_conf.load.get('color', False)
             abbreviate = args.abbreviate or user_conf.load.get('abbreviate',
                                                                False)
-            suppress_attachments = (
-                args.suppress_attachments or user_conf.load.get(
-                    'suppress-attachments', False))
-            all_attachments = (
-                args.all_attachments or user_conf.load.get(
-                    'all-attachments', False))
+            suppress_attachments_conf = user_conf.run.get(
+                'suppress-attachments', False)
+            all_attachments_conf = user_conf.run.get(
+                'all-attachments', False)
+            if not args.suppress_attachments and not args.all_attachments:
+                suppress_attachments = suppress_attachments_conf
+                all_attachments = all_attachments_conf
+            elif args.suppress_attachments:
+                all_attachments = False
+                suppress_attachments = args.suppress_attachments
+            elif args.all_attachments:
+                suppress_attachments = False
+                all_attachments = args.all_attachments
         else:
             force_init = args.force_init
             pretty_out = args.subunit_trace
