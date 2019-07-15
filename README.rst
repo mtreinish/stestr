@@ -20,6 +20,10 @@ stestr
 * You can see the full rendered docs at: http://stestr.readthedocs.io/en/latest/
 * The code of the project is on Github: https://github.com/mtreinish/stestr
 
+.. note:: stestr v2.x.x release series will be the last series that supports
+    Python 2. Support for Python 2.7 will be dropped in stestr release 3.0.0
+    which is being planned for early 2020.
+
 Overview
 --------
 
