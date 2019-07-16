@@ -162,6 +162,12 @@ class Run(command.Command):
         user_conf = user_config.get_user_config(self.app_args.user_config)
         filters = parsed_args.filters
         args = parsed_args
+        if args.suppress_attachments and args.all_attachments:
+            msg = ("The --suppress-attachments and --all-attachments "
+                   "options are mutually exclusive, you can not use both "
+                   "at the same time")
+            print(msg)
+            sys.exit(1)
         if getattr(user_conf, 'run', False):
             if not user_conf.run.get('no-subunit-trace'):
                 if not args.no_subunit_trace:
@@ -180,13 +186,19 @@ class Run(command.Command):
             color = args.color or user_conf.run.get('color', False)
             abbreviate = args.abbreviate or user_conf.run.get(
                 'abbreviate', False)
-            suppress_attachments = (
-                args.suppress_attachments or user_conf.run.get(
-                    'suppress-attachments', False))
-            all_attachments = (
-                args.all_attachments or user_conf.run.get(
-                    'all-attachments', False))
-
+            suppress_attachments_conf = user_conf.run.get(
+                'suppress-attachments', False)
+            all_attachments_conf = user_conf.run.get(
+                'all-attachments', False)
+            if not args.suppress_attachments and not args.all_attachments:
+                suppress_attachments = suppress_attachments_conf
+                all_attachments = all_attachments_conf
+            elif args.suppress_attachments:
+                all_attachments = False
+                suppress_attachments = args.suppress_attachments
+            elif args.all_attachments:
+                suppress_attachments = False
+                all_attachments = args.all_attachments
         else:
             pretty_out = args.force_subunit_trace or not args.no_subunit_trace
             concurrency = args.concurrency or 0
