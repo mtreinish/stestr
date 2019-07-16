@@ -210,10 +210,12 @@ is also possible that a test has other text attachments (a common example is
 python logging) which are not printed on successful test execution, only on
 failures. If you would like to have these attachments also printed for
 successful tests you can use the ``--all-attachments`` flag to print all text
-attachments on both successful and failed tests. If both ``--all-attachments``
-and ``--suppress-attachments`` are set then the ``--suppress--attachments``
-flag will take priority and no attachments will be printed for successful
-tests.
+attachments on both successful and failed tests. Both ``--all-attachments``
+and ``--suppress-attachments`` can not be set at the same time. If both are
+set in the user config file then the ``suppress-attachments`` flag will take
+priority and no attachments will be printed for successful tests. If either
+``--suppress-attachments`` or ``--all-attachments`` is set via the CLI it
+will take precedence over matching options set in the user config file.
 
 Combining Test Results
 ----------------------
