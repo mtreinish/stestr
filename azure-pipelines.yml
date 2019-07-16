@@ -25,6 +25,10 @@ steps:
     versionSpec: '$(python.version)'
   displayName: 'Use Python $(python.version)'
 
+- script: choco install vcpython27 --yes
+  condition: eq(variables['python.version'], '2.7')
+  displayName: 'Install vcpython27'
+
 - script: |
     python -m pip install --upgrade pip
     pip install -U tox
