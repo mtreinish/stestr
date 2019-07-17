@@ -6,33 +6,57 @@
 trigger:
 - master
 
-pool:
-  vmImage: 'vs2017-win2016'
-strategy:
-  matrix:
-    Python27:
-      python.version: '2.7'
-    Python35:
-      python.version: '3.5'
-    Python36:
-      python.version: '3.6'
-    Python37:
-      python.version: '3.7'
+jobs:
+- job: 'Windows_Tests'
+  pool: {vmImage: 'vs2017-win2016'}
+  strategy:
+    matrix:
+      Python27:
+        python.version: '2.7'
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
 
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(python.version)'
-  displayName: 'Use Python $(python.version)'
+  - script: choco install vcpython27 --yes
+    condition: eq(variables['python.version'], '2.7')
+    displayName: 'Install vcpython27'
 
-- script: choco install vcpython27 --yes
-  condition: eq(variables['python.version'], '2.7')
-  displayName: 'Install vcpython27'
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -U tox
+    displayName: 'Install dependencies'
+  - script: tox -e py
+    displayName: 'Run Tox'
 
-- script: |
-    python -m pip install --upgrade pip
-    pip install -U tox
-  displayName: 'Install dependencies'
+- job: 'macOS_Tests'
+  pool: {vmImage: 'macOS-10.14'}
+  strategy:
+    matrix:
+      Python27:
+        python.version: '2.7'
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
 
-- script: tox -e py
-  displayName: 'Run Tox'
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -U tox
+    displayName: 'Install dependencies'
+  - script: tox -e py
+    displayName: 'Run Tox'
