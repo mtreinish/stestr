@@ -5,9 +5,9 @@ stestr
     :target: https://travis-ci.org/mtreinish/stestr
     :alt: Build status
 
-.. image:: https://img.shields.io/appveyor/ci/mtreinish/stestr/master.svg?logo=appveyor&style=flat-square
-    :target: https://ci.appveyor.com/project/mtreinish/stestr
-    :alt: Appveyor build status
+.. image:: https://dev.azure.com/stestr/stestr/_apis/build/status/mtreinish.stestr?branchName=master
+    :target: https://dev.azure.com/stestr/stestr/_build/latest?definitionId=1&branchName=master
+    :alt: Azure DevOps build status
 
 .. image:: https://img.shields.io/coveralls/github/mtreinish/stestr/master.svg?style=flat-square
     :target: https://coveralls.io/github/mtreinish/stestr?branch=master
