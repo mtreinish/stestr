@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
 import re
 import sys
 
@@ -38,7 +39,7 @@ class TestrConf(object):
                         serial=False, worker_path=None,
                         concurrency=0, blacklist_file=None,
                         whitelist_file=None, black_regex=None,
-                        randomize=False):
+                        randomize=False, parallel_class=None):
         """Get a test_processor.TestProcessorFixture for this config file
 
         Any parameters about running tests will be used for initialize the
@@ -81,6 +82,10 @@ class TestrConf(object):
             test list.
         :param bool randomize: Randomize the test order after they are
             partitioned into separate workers
+        :param bool parallel_class: Set the flag to group tests together in the
+            stestr scheduler by class. If both this and the corresponding
+            config file option which includes `group-regex` are set, this value
+            will be used.
 
         :returns: a TestProcessorFixture object for the specified config file
             and any arguments passed into this function
@@ -90,23 +95,43 @@ class TestrConf(object):
         if not test_path and self.parser.has_option('DEFAULT', 'test_path'):
             test_path = self.parser.get('DEFAULT', 'test_path')
         elif not test_path:
-            print("No test_path can be found in either the command line "
-                  "options nor in the specified config file {0}.  Please "
-                  "specify a test path either in the config file or via the "
-                  "--test-path argument".format(self.config_file))
-            sys.exit(1)
+            sys.exit("No test_path can be found in either the command line "
+                     "options nor in the specified config file {0}.  Please "
+                     "specify a test path either in the config file or via "
+                     "the --test-path argument".format(self.config_file))
         if not top_dir and self.parser.has_option('DEFAULT', 'top_dir'):
             top_dir = self.parser.get('DEFAULT', 'top_dir')
         elif not top_dir:
             top_dir = './'
 
-        python = 'python' if sys.platform == 'win32' else '${PYTHON:-python}'
-        command = "%s -m subunit.run discover -t" \
-                  " %s %s $LISTOPT $IDOPTION" % (python, top_dir, test_path)
+        stestr_python = sys.executable
+        # let's try to be explicit, even if it means a longer set of ifs
+        if sys.platform == 'win32':
+            # it may happen, albeit rarely
+            if not stestr_python:
+                raise RuntimeError("The Python interpreter was not found")
+            python = stestr_python
+        else:
+            if os.environ.get('PYTHON'):
+                python = '${PYTHON}'
+            elif stestr_python:
+                python = stestr_python
+            else:
+                raise RuntimeError("The Python interpreter was not found and "
+                                   "PYTHON is not set")
+
+        command = '%s -m subunit.run discover -t "%s" "%s" ' \
+                  '$LISTOPT $IDOPTION' % (python, top_dir, test_path)
         listopt = "--list"
         idoption = "--load-list $IDFILE"
         # If the command contains $IDOPTION read that command from config
         # Use a group regex if one is defined
+        if parallel_class:
+            group_regex = '([^\.]*\.)*'
+        if not group_regex \
+                and self.parser.has_option('DEFAULT', 'parallel_class') \
+                and self.parser.getboolean('DEFAULT', 'parallel_class'):
+            group_regex = '([^\.]*\.)*'
         if not group_regex and self.parser.has_option('DEFAULT',
                                                       'group_regex'):
             group_regex = self.parser.get('DEFAULT', 'group_regex')
@@ -117,7 +142,6 @@ class TestrConf(object):
                     return match.group(0)
         else:
             group_callback = None
-
         # Handle the results repository
         repository = util.get_repo_open(repo_type, repo_url)
         return test_processor.TestProcessorFixture(

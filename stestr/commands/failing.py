@@ -24,8 +24,18 @@ from stestr import user_config
 
 
 class Failing(command.Command):
-    def get_description(self):
-        return "Show the current failures known by the repository"
+    """Show the current failures known by the repository.
+
+    Without --subunit, the process exit code will be non-zero if the
+    previous test run was not successful and test failures are shown. But,
+    with --subunit, the process exit code is non-zero only if the subunit
+    stream could not be generated successfully from any failures. The test
+    results and run status are included in the subunit stream emitted for
+    the failed tests, so the stream should be used for interpretting the
+    failing tests. If no subunit stream is emitted with --subunit and a
+    zero exit code then there were no failures in the most recent run in
+    the repository.
+    """
 
     def get_parser(self, prog_name):
         parser = super(Failing, self).get_parser(prog_name)
@@ -113,7 +123,7 @@ def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False,
         case.run(result)
     finally:
         result.stopTestRun()
-    failed = not summary.wasSuccessful()
+    failed = not results.wasSuccessful(summary)
     if failed:
         result = 1
     else:

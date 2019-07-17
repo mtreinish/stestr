@@ -25,17 +25,18 @@ from stestr import user_config
 
 
 class Last(command.Command):
-    def get_description(self):
-        help_str = """Show the last run loaded into a repository.
+    """Show the last run loaded into a repository.
 
-        Failing tests are shown on the console and a summary of the run is
-        printed at the end.
+    Failing tests are shown on the console and a summary of the run is
+    printed at the end.
 
-        Without --subunit, the process exit code will be non-zero if the test
-        run was not successful. With --subunit, the process exit code is
-        non-zero if the subunit stream could not be generated successfully.
-        """
-        return help_str
+    Without --subunit, the process exit code will be non-zero if the test
+    run was not successful. With --subunit, the process exit code is
+    non-zero only if the subunit stream could not be generated
+    successfully. The test results and run status are included in the
+    subunit stream, so the stream should be used to determining the result
+    of the run instead of the exit code when using the --subunit flag.
+    """
 
     def get_parser(self, prog_name):
         parser = super(Last, self).get_parser(prog_name)
@@ -60,11 +61,21 @@ class Last(command.Command):
                             help='If set do not print stdout or stderr '
                             'attachment contents on a successful test '
                             'execution')
+        parser.add_argument('--all-attachments', action='store_true',
+                            dest='all_attachments',
+                            help='If set print all text attachment contents on'
+                            ' a successful test execution')
         return parser
 
     def take_action(self, parsed_args):
         user_conf = user_config.get_user_config(self.app_args.user_config)
         args = parsed_args
+        if args.suppress_attachments and args.all_attachments:
+            msg = ("The --suppress-attachments and --all-attachments "
+                   "options are mutually exclusive, you can not use both "
+                   "at the same time")
+            print(msg)
+            sys.exit(1)
         if getattr(user_conf, 'last', False):
             if not user_conf.last.get('no-subunit-trace'):
                 if not args.no_subunit_trace:
@@ -75,22 +86,34 @@ class Last(command.Command):
                 pretty_out = False
             pretty_out = args.force_subunit_trace or pretty_out
             color = args.color or user_conf.last.get('color', False)
-            suppress_attachments = (
-                args.suppress_attachments or user_conf.last.get(
-                    'suppress-attachments', False))
-
+            suppress_attachments_conf = user_conf.run.get(
+                'suppress-attachments', False)
+            all_attachments_conf = user_conf.run.get(
+                'all-attachments', False)
+            if not args.suppress_attachments and not args.all_attachments:
+                suppress_attachments = suppress_attachments_conf
+                all_attachments = all_attachments_conf
+            elif args.suppress_attachments:
+                all_attachments = False
+                suppress_attachments = args.suppress_attachments
+            elif args.all_attachments:
+                suppress_attachments = False
+                all_attachments = args.all_attachments
         else:
             pretty_out = args.force_subunit_trace or not args.no_subunit_trace
             color = args.color
             suppress_attachments = args.suppress_attachments
+            all_attachments = args.all_attachments
         return last(repo_type=self.app_args.repo_type,
                     repo_url=self.app_args.repo_url,
                     subunit_out=args.subunit, pretty_out=pretty_out,
-                    color=color, suppress_attachments=suppress_attachments)
+                    color=color, suppress_attachments=suppress_attachments,
+                    all_attachments=all_attachments)
 
 
 def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
-         color=False, stdout=sys.stdout, suppress_attachments=False):
+         color=False, stdout=sys.stdout, suppress_attachments=False,
+         all_attachments=False):
     """Show the last run loaded into a a repository
 
     This function will print the results from the last run in the repository
@@ -112,6 +135,8 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
          this is sys.stdout
     :param bool suppress_attachments: When set true attachments subunit_trace
         will not print attachments on successful test execution.
+    :param bool all_attachments: When set true subunit_trace will print all
+        text attachments on successful test execution.
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -154,12 +179,13 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
             case.run(output_result)
         finally:
             output_result.stopTestRun()
-        failed = not summary.wasSuccessful()
+        failed = not results.wasSuccessful(summary)
     else:
         stream = latest_run.get_subunit_stream()
         failed = subunit_trace.trace(stream, stdout, post_fails=True,
                                      color=color,
-                                     suppress_attachments=suppress_attachments)
+                                     suppress_attachments=suppress_attachments,
+                                     all_attachments=all_attachments)
     if failed:
         return 1
     else:

@@ -2,10 +2,10 @@
 
 Internal API Reference
 ======================
-This document serves as a reference for the python API used in stestr. It should
-serve as a guide for both internal and external use of stestr components via
-python. The majority of the contents here are built from internal docstrings
-in the actual code.
+This document serves as a reference for the python API used in stestr. It
+should serve as a guide for both internal and external use of stestr components
+via python. The majority of the contents here are built from internal
+docstrings in the actual code.
 
 Repository
 ----------
@@ -54,8 +54,8 @@ However, to make the commands externally consumable each module also contains
 another public function which performs the real work for the command. Each one
 of these functions has a defined stable Python API signature with args and
 kwargs so that people can easily call the functions from other python programs.
-This function is what can be expected to be used outside of stestr as the stable
-interface.
+This function is what can be expected to be used outside of stestr as the
+stable interface.
 All the stable functions can be imported the command module directly::
 
   from stestr import command

@@ -29,11 +29,33 @@ from stestr import config_file
 from stestr import output
 from stestr.repository import abstract as repository
 from stestr.repository import util
+from stestr import results
 from stestr.testlist import parse_list
 from stestr import user_config
 
 
+def _to_int(possible, default=0, out=sys.stderr):
+    try:
+        i = int(possible)
+    except (ValueError, TypeError):
+        i = default
+        msg = ('Unable to convert "%s" to an integer.  Using %d.\n' %
+               (possible, default))
+        out.write(six.text_type(msg))
+    return i
+
+
 class Run(command.Command):
+    """Run the tests for a project and store them into the repository.
+
+    Without --subunit, the process exit code will be non-zero if the test
+    run was not successful. However, with --subunit, the process exit code
+    is non-zero only if the subunit stream could not be generated
+    successfully. The test results and run status are included in the
+    subunit stream, so the stream should be used to determining the result
+    of the run instead of the exit code when using the --subunit flag.
+    """
+
     def get_parser(self, prog_name):
         parser = super(Run, self).get_parser(prog_name)
         parser.add_argument("filters", nargs="*", default=None,
@@ -130,17 +152,22 @@ class Run(command.Command):
                             help='If set do not print stdout or stderr '
                             'attachment contents on a successful test '
                             'execution')
+        parser.add_argument('--all-attachments', action='store_true',
+                            dest='all_attachments',
+                            help='If set print all text attachment contents on'
+                            ' a successful test execution')
         return parser
-
-    def get_description(self):
-        help_str = "Run the tests for a project and load them into a "
-        "repository."
-        return help_str
 
     def take_action(self, parsed_args):
         user_conf = user_config.get_user_config(self.app_args.user_config)
         filters = parsed_args.filters
         args = parsed_args
+        if args.suppress_attachments and args.all_attachments:
+            msg = ("The --suppress-attachments and --all-attachments "
+                   "options are mutually exclusive, you can not use both "
+                   "at the same time")
+            print(msg)
+            sys.exit(1)
         if getattr(user_conf, 'run', False):
             if not user_conf.run.get('no-subunit-trace'):
                 if not args.no_subunit_trace:
@@ -159,9 +186,19 @@ class Run(command.Command):
             color = args.color or user_conf.run.get('color', False)
             abbreviate = args.abbreviate or user_conf.run.get(
                 'abbreviate', False)
-            suppress_attachments = (
-                args.suppress_attachments or user_conf.run.get(
-                    'suppress-attachments', False))
+            suppress_attachments_conf = user_conf.run.get(
+                'suppress-attachments', False)
+            all_attachments_conf = user_conf.run.get(
+                'all-attachments', False)
+            if not args.suppress_attachments and not args.all_attachments:
+                suppress_attachments = suppress_attachments_conf
+                all_attachments = all_attachments_conf
+            elif args.suppress_attachments:
+                all_attachments = False
+                suppress_attachments = args.suppress_attachments
+            elif args.all_attachments:
+                suppress_attachments = False
+                all_attachments = args.all_attachments
         else:
             pretty_out = args.force_subunit_trace or not args.no_subunit_trace
             concurrency = args.concurrency or 0
@@ -169,8 +206,16 @@ class Run(command.Command):
             color = args.color
             abbreviate = args.abbreviate
             suppress_attachments = args.suppress_attachments
+            all_attachments = args.all_attachments
         verbose_level = self.app.options.verbose_level
         stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
+        # Make sure all (python) callers have provided an int()
+        concurrency = _to_int(concurrency)
+        if concurrency and concurrency < 0:
+            msg = ("The provided concurrency value: %s is not valid. An "
+                   "integer >= 0 must be used.\n" % concurrency)
+            stdout.write(msg)
+            return 2
         result = run_command(
             config=self.app_args.config, repo_type=self.app_args.repo_type,
             repo_url=self.app_args.repo_url,
@@ -186,7 +231,8 @@ class Run(command.Command):
             combine=args.combine,
             filters=filters, pretty_out=pretty_out, color=color,
             stdout=stdout, abbreviate=abbreviate,
-            suppress_attachments=suppress_attachments)
+            suppress_attachments=suppress_attachments,
+            all_attachments=all_attachments)
 
         # Always output slowest test info if requested, regardless of other
         # test run options
@@ -226,7 +272,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                 blacklist_file=None, whitelist_file=None, black_regex=None,
                 no_discover=False, random=False, combine=False, filters=None,
                 pretty_out=True, color=False, stdout=sys.stdout,
-                abbreviate=False, suppress_attachments=False):
+                abbreviate=False, suppress_attachments=False,
+                all_attachments=False):
     """Function to execute the run command
 
     This function implements the run command. It will run the tests specified
@@ -287,6 +334,8 @@ def run_command(config='.stestr.conf', repo_type='file',
     :param bool abbreviate: Use abbreviated output if set true
     :param bool suppress_attachments: When set true attachments subunit_trace
         will not print attachments on successful test execution.
+    :param bool all_attachments: When set true subunit_trace will print all
+        text attachments on successful test execution.
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -307,15 +356,32 @@ def run_command(config='.stestr.conf', repo_type='file',
             exit(1)
         repo = util.get_repo_initialise(repo_type, repo_url)
     combine_id = None
+    concurrency = _to_int(concurrency)
+
+    if concurrency and concurrency < 0:
+        msg = ("The provided concurrency value: %s is not valid. An integer "
+               ">= 0 must be used.\n" % concurrency)
+        stdout.write(msg)
+        return 2
     if combine:
         latest_id = repo.latest_id()
         combine_id = six.text_type(latest_id)
     if no_discover:
         ids = no_discover
+        if '::' in ids:
+            ids = ids.replace('::', '.')
         if ids.find('/') != -1:
-            root, _ = os.path.splitext(ids)
+            root = ids.replace('.py', '')
             ids = root.replace('/', '.')
-        run_cmd = 'python -m subunit.run ' + ids
+        stestr_python = sys.executable
+        if os.environ.get('PYTHON'):
+            python_bin = os.environ.get('PYTHON')
+        elif stestr_python:
+            python_bin = stestr_python
+        else:
+            raise RuntimeError("The Python interpreter was not found and "
+                               "PYTHON is not set")
+        run_cmd = python_bin + ' -m subunit.run ' + ids
 
         def run_tests():
             run_proc = [('subunit', output.ReturnCodeToSubunit(
@@ -327,7 +393,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                              repo_url=repo_url, run_id=combine_id,
                              pretty_out=pretty_out,
                              color=color, stdout=stdout, abbreviate=abbreviate,
-                             suppress_attachments=suppress_attachments)
+                             suppress_attachments=suppress_attachments,
+                             all_attachments=all_attachments)
 
         if not until_failure:
             return run_tests()
@@ -346,7 +413,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                         stream.run(summary)
                     finally:
                         summary.stopTestRun()
-                    if not summary.wasSuccessful():
+                    if not results.wasSuccessful(summary):
                         result = 1
                 if result:
                     return result
@@ -394,17 +461,17 @@ def run_command(config='.stestr.conf', repo_type='file',
                     randomize=random, test_path=test_path, top_dir=top_dir)
 
                 run_result = _run_tests(
-                    cmd, failing, analyze_isolation, isolated, until_failure,
+                    cmd, until_failure,
                     subunit_out=subunit_out, combine_id=combine_id,
                     repo_type=repo_type, repo_url=repo_url,
                     pretty_out=pretty_out, color=color, abbreviate=abbreviate,
-                    stdout=stdout, suppress_attachments=suppress_attachments)
+                    stdout=stdout, suppress_attachments=suppress_attachments,
+                    all_attachments=all_attachments)
                 if run_result > result:
                     result = run_result
             return result
         else:
-            return _run_tests(cmd, failing, analyze_isolation,
-                              isolated, until_failure,
+            return _run_tests(cmd, until_failure,
                               subunit_out=subunit_out,
                               combine_id=combine_id,
                               repo_type=repo_type,
@@ -413,7 +480,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                               color=color,
                               stdout=stdout,
                               abbreviate=abbreviate,
-                              suppress_attachments=suppress_attachments)
+                              suppress_attachments=suppress_attachments,
+                              all_attachments=all_attachments)
     else:
         # Where do we source data about the cause of conflicts.
         latest_run = repo.get_latest_run()
@@ -429,8 +497,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                 whitelist_file=whitelist_file, black_regex=black_regex,
                 randomize=random, test_path=test_path,
                 top_dir=top_dir)
-            if not _run_tests(cmd, failing, analyze_isolation, isolated,
-                              until_failure):
+            if not _run_tests(cmd, until_failure):
                 # If the test was filtered, it won't have been run.
                 if test_id in repo.get_test_ids(repo.latest_id()):
                     spurious_failures.add(test_id)
@@ -455,10 +522,11 @@ def run_command(config='.stestr.conf', repo_type='file',
         return bisect_runner.bisect_tests(spurious_failures)
 
 
-def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
+def _run_tests(cmd, until_failure,
                subunit_out=False, combine_id=None, repo_type='file',
                repo_url=None, pretty_out=True, color=False, stdout=sys.stdout,
-               abbreviate=False, suppress_attachments=False):
+               abbreviate=False, suppress_attachments=False,
+               all_attachments=False):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
@@ -475,7 +543,8 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                              repo_url=repo_url, run_id=combine_id,
                              pretty_out=pretty_out, color=color, stdout=stdout,
                              abbreviate=abbreviate,
-                             suppress_attachments=suppress_attachments)
+                             suppress_attachments=suppress_attachments,
+                             all_attachments=all_attachments)
 
         if not until_failure:
             return run_tests()
@@ -495,7 +564,7 @@ def _run_tests(cmd, failing, analyze_isolation, isolated, until_failure,
                         stream.run(summary)
                     finally:
                         summary.stopTestRun()
-                    if not summary.wasSuccessful():
+                    if not results.wasSuccessful(summary):
                         result = 1
                 if result:
                     return result

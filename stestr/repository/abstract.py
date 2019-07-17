@@ -67,7 +67,7 @@ class AbstractRepository(object):
         """
         raise NotImplementedError(self.get_failing)
 
-    def get_inserter(self, partial=False, run_id=None):
+    def get_inserter(self, partial=False, run_id=None, metadata=None):
         """Get an inserter that will insert a test run into the repository.
 
         Repository implementations should implement _get_inserter.
@@ -83,9 +83,9 @@ class AbstractRepository(object):
             that testtools 0.9.2 and above offer. The startTestRun and
             stopTestRun methods in particular must be called.
         """
-        return self._get_inserter(partial, run_id)
+        return self._get_inserter(partial, run_id, metadata)
 
-    def _get_inserter(self, partial=False, run_id=None):
+    def _get_inserter(self, partial=False, run_id=None, metadata=None):
         """Get an inserter for get_inserter.
 
         The result is decorated with an AutoTimingTestResultDecorator.
@@ -156,6 +156,14 @@ class AbstractRepository(object):
             result.stopTestRun()
         return ids
 
+    def find_metadata(self, metadata):
+        """Return the list of run_ids for a given metadata string.
+
+        :param: metadata: the metadata string to search for.
+        :return: a list of any test_ids that have that metadata value.
+        """
+        raise NotImplementedError(self.find_metadata)
+
 
 class AbstractTestRun(object):
     """A test run that has been stored in a repository.
@@ -185,6 +193,13 @@ class AbstractTestRun(object):
             decorator to permit either API to be used).
         """
         raise NotImplementedError(self.get_test)
+
+    def get_metadata(self):
+        """Get the metadata value for the test run.
+
+        :return: A string of the metadata or None if it doesn't exist.
+        """
+        raise NotImplementedError(self.get_metadata)
 
 
 class RepositoryNotFound(Exception):

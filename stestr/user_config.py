@@ -31,8 +31,7 @@ def get_user_config(path=None):
     else:
         if not os.path.isfile(path):
             msg = 'The specified stestr user config is not a valid path'
-            print(msg)
-            sys.exit(1)
+            sys.exit(msg)
 
     return UserConfig(path)
 
@@ -49,6 +48,7 @@ class UserConfig(object):
                 vp.Optional('abbreviate'): bool,
                 vp.Optional('slowest'): bool,
                 vp.Optional('suppress-attachments'): bool,
+                vp.Optional('all-attachments'): bool,
             },
             vp.Optional('failing'): {
                 vp.Optional('list'): bool,
@@ -57,6 +57,7 @@ class UserConfig(object):
                 vp.Optional('no-subunit-trace'): bool,
                 vp.Optional('color'): bool,
                 vp.Optional('suppress-attachments'): bool,
+                vp.Optional('all-attachments'): bool,
             },
             vp.Optional('load'): {
                 vp.Optional('force-init'): bool,
@@ -64,10 +65,11 @@ class UserConfig(object):
                 vp.Optional('color'): bool,
                 vp.Optional('abbreviate'): bool,
                 vp.Optional('suppress-attachments'): bool,
+                vp.Optional('all-attachments'): bool,
             }
         })
         with open(path, 'r') as fd:
-            self.config = yaml.load(fd.read())
+            self.config = yaml.safe_load(fd.read())
         if self.config is None:
             self.config = {}
         try:
@@ -75,8 +77,7 @@ class UserConfig(object):
         except vp.MultipleInvalid as e:
             msg = 'Provided user config file %s is invalid because:\n%s' % (
                 path, str(e))
-            print(msg)
-            sys.exit(1)
+            sys.exit(msg)
 
     @property
     def run(self):

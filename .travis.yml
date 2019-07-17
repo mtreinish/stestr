@@ -6,6 +6,11 @@ matrix:
       env: TOXENV=py35
     - python: "3.6"
       env: TOXENV=py36
+    - os: linux
+      dist: xenial
+      python: 3.7
+      env: TOXENV=py37
+      sudo: true
     - python: "3.6"
       env: TOXENV=cover
     - python: "3.6"
@@ -14,6 +19,15 @@ matrix:
       env: TOXENV=docs
     - python: "2.7"
       env: TOXENV=py27
+    - if: tag IS present
+      python: "3.6"
+      env:
+        - TWINE_USERNAME=stestr-release
+      install: pip install -U twine
+      script:
+        - python3 setup.py sdist bdist_wheel --universal
+        - twine upload dist/stestr*
+
 cache:
   directories:
     - $HOME/.cache/pip

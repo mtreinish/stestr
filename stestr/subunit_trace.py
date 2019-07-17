@@ -16,9 +16,9 @@
 
 """Trace a subunit stream in reasonable detail and high accuracy."""
 from __future__ import absolute_import
+from __future__ import print_function
 
 import argparse
-import datetime
 import functools
 import os
 import re
@@ -29,6 +29,7 @@ import subunit
 import testtools
 
 from stestr import colorizer
+from stestr import results
 
 # NOTE(mtreinish) on python3 anydbm was renamed dbm and the python2 dbm module
 # was renamed to dbm.ndbm, this block takes that into account
@@ -151,7 +152,8 @@ def find_test_run_time_diff(test_id, run_time):
 
 def show_outcome(stream, test, print_failures=False, failonly=False,
                  enable_diff=False, threshold='0', abbreviate=False,
-                 enable_color=False, suppress_attachments=False):
+                 enable_color=False, suppress_attachments=False,
+                 all_attachments=False):
     global RESULTS
     status = test['status']
     # TODO(sdague): ask lifeless why on this?
@@ -206,7 +208,10 @@ def show_outcome(stream, test, print_failures=False, failonly=False,
                 color.write('ok', 'green')
                 stream.write('\n')
                 if not suppress_attachments:
-                    print_attachments(stream, test)
+                    if not all_attachments:
+                        print_attachments(stream, test)
+                    else:
+                        print_attachments(stream, test, all_channels=True)
         elif status == 'skip':
             if abbreviate:
                 color.write('S', 'blue')
@@ -350,7 +355,7 @@ def parse_args():
 
 def trace(stdin, stdout, print_failures=False, failonly=False,
           enable_diff=False, abbreviate=False, color=False, post_fails=False,
-          no_summary=False, suppress_attachments=False):
+          no_summary=False, suppress_attachments=False, all_attachments=False):
     stream = subunit.ByteStreamToStreamResult(
         stdin, non_subunit_name='stdout')
     outcomes = testtools.StreamToDict(
@@ -360,23 +365,29 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
                           enable_diff=enable_diff,
                           abbreviate=abbreviate,
                           enable_color=color,
-                          suppress_attachments=suppress_attachments))
+                          suppress_attachments=suppress_attachments,
+                          all_attachments=all_attachments))
     summary = testtools.StreamSummary()
     result = testtools.CopyStreamResult([outcomes, summary])
     result = testtools.StreamResultRouter(result)
     cat = subunit.test_results.CatFiles(stdout)
     result.add_rule(cat, 'test_id', test_id=None)
-    start_time = datetime.datetime.utcnow()
     result.startTestRun()
     try:
         stream.run(result)
     finally:
         result.stopTestRun()
-    stop_time = datetime.datetime.utcnow()
+    start_times = []
+    stop_times = []
+    for worker in RESULTS:
+        start_times += [x['timestamps'][0] for x in RESULTS[worker]]
+        stop_times += [x['timestamps'][1] for x in RESULTS[worker]]
+    start_time = min(start_times)
+    stop_time = max(stop_times)
     elapsed_time = stop_time - start_time
 
     if count_tests('status', '.*') == 0:
-        print("The test run didn't actually run any tests")
+        print("The test run didn't actually run any tests", file=sys.stderr)
         return 1
     if post_fails:
         print_fails(stdout)
@@ -386,9 +397,9 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
     # NOTE(mtreinish): Ideally this should live in testtools streamSummary
     # this is just in place until the behavior lands there (if it ever does)
     if count_tests('status', '^success$') == 0:
-        print("\nNo tests were successful during the run")
+        print("\nNo tests were successful during the run", file=sys.stderr)
         return 1
-    return 0 if summary.wasSuccessful() else 1
+    return 0 if results.wasSuccessful(summary) else 1
 
 
 def main():

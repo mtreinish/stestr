@@ -5,9 +5,9 @@ Test Processor Module
 
 This module contains the definition of the ``TestProcessorFixture`` fixture
 class. This fixture is used for handling the actual spawning of worker
-processes for running tests, or listing tests. It is constructed as a `fixture`_
-to handle the lifecycle of the test id list files which are used to pass test
-ids to the workers processes running the tests.
+processes for running tests, or listing tests. It is constructed as a
+`fixture`_ to handle the lifecycle of the test id list files which are used to
+pass test ids to the workers processes running the tests.
 
 .. _fixture: https://pypi.python.org/pypi/fixtures
 

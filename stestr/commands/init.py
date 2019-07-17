@@ -20,12 +20,10 @@ from stestr.repository import util
 
 
 class Init(command.Command):
+    """Create a new repository."""
+
     def take_action(self, parsed_args):
         init(self.app_args.repo_type, self.app_args.repo_url)
-
-    def get_description(self):
-        help_str = "Create a new repository."
-        return help_str
 
 
 def init(repo_type='file', repo_url=None, stdout=sys.stdout):
