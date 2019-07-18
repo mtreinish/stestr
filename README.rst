@@ -137,3 +137,12 @@ This will run the test suite and also the automated style rule checks just as
 they will in CI. If CI fails on your change it will not be able to merge.
 
 .. _github pull requests: https://help.github.com/articles/about-pull-requests/
+
+Community
+---------
+
+Besides Github interactions there is also a stestr IRC channel:
+
+#stestr on Freenode
+
+feel free to join to ask questions, or just discuss stestr.
