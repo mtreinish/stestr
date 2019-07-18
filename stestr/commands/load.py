@@ -275,6 +275,9 @@ def _load_case(inserter, repo, case, subunit_out, pretty_out,
                 x['timestamps'][0] for x in subunit_trace.RESULTS[worker]]
             stop_times += [
                 x['timestamps'][1] for x in subunit_trace.RESULTS[worker]]
+        if not start_times or not stop_times:
+            sys.stderr.write("\nNo tests were successful during the run")
+            return 1
         start_time = min(start_times)
         stop_time = max(stop_times)
         elapsed_time = stop_time - start_time
