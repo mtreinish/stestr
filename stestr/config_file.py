@@ -120,7 +120,7 @@ class TestrConf(object):
                 raise RuntimeError("The Python interpreter was not found and "
                                    "PYTHON is not set")
 
-        command = '%s -m subunit.run discover -t "%s" "%s" ' \
+        command = '%s -m stestr.subunit_runner.run discover -t "%s" "%s" ' \
                   '$LISTOPT $IDOPTION' % (python, top_dir, test_path)
         listopt = "--list"
         idoption = "--load-list $IDFILE"
