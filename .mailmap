@@ -1,0 +1,15 @@
+# Entries in this file are made for two reasons:
+# 1) to merge multiple git commit authors that correspond to a single author
+# 2) to change the canonical name and/or email address of an author.
+#
+# Format is:
+#     Canonical Name <Canonical@email> commit name <commit@email>
+#     \--------------+---------------/ \----------+-------------/
+#                 replace                       find
+# See also: 'git shortlog --help' and 'git check-mailmap --help'.
+Andrea Frittoli <andrea.frittoli@gmail.com> <afrittoli@users.noreply.github.com>
+Jonathan Lange <jml@mumak.net> <jml@canonical.com>
+Masayuki Igawa <masayuki@igawa.io> <masayuki.igawa@gmail.com>
+Masayuki Igawa <masayuki@igawa.io> <masayuki@igawa.me>
+Matthew Treinish <mtreinish@kortar.org> <treinish@linux.vnet.ibm.com>
+
