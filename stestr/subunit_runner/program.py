@@ -20,16 +20,6 @@ import unittest
 
 import extras
 
-defaultTestLoader = unittest.defaultTestLoader
-defaultTestLoaderCls = unittest.TestLoader
-have_discover = True
-
-# Kept for API compatibility, but no longer used.
-BUFFEROUTPUT = ""
-CATCHBREAK = ""
-FAILFAST = ""
-USAGE_AS_MAIN = ""
-
 
 def filter_by_ids(suite_or_case, test_ids):
     """Remove tests from suite_or_case where their id is not in test_ids.
@@ -139,8 +129,8 @@ class TestProgram(unittest.TestProgram):
     _discovery_parser = None
 
     def __init__(self, module='__main__', defaultTest=None, argv=None,
-                 testRunner=None, testLoader=defaultTestLoader,
-                 exit=True, verbosity=1, failfast=None, catchbreak=None,
+                 testRunner=None, testLoader=unittest.defaultTestLoader,
+                 exit=False, verbosity=1, failfast=None, catchbreak=None,
                  buffer=None, warnings=None, tb_locals=False):
         if isinstance(module, str):
             self.module = __import__(module)
@@ -216,25 +206,20 @@ class TestProgram(unittest.TestProgram):
                  'those ids are executed')
         return parser
 
+    def usageExit(self, msg=None):
+        if msg is None:
+            msg = "Internal stestr test runner"
+        super(TestProgram, self).usageExit(msg)
+
     def _get_runner(self):
         testRunner = self.testRunner
-        if isinstance(self.testRunner, type):
-            try:
-                try:
-                    testRunner = self.testRunner(verbosity=self.verbosity,
-                                                 failfast=self.failfast,
-                                                 buffer=self.buffer,
-                                                 warnings=self.warnings,
-                                                 tb_locals=self.tb_locals)
-                except TypeError:
-                    # didn't accept the tb_locals argument
-                    testRunner = self.testRunner(verbosity=self.verbosity,
-                                                 failfast=self.failfast,
-                                                 buffer=self.buffer,
-                                                 warnings=self.warnings)
-            except TypeError:
-                # didn't accept the verbosity, buffer or failfast arguments
-                testRunner = self.testRunner()
+        try:
+            testRunner = self.testRunner(failfast=self.failfast,
+                                         tb_locals=self.tb_locals)
+        except TypeError:
+            testRunner = self.testRunner()
+        # If for some reason we failed to initialize the runner initialize
+        # with defaults
         if isinstance(testRunner, functools.partial):
             testRunner = self.testRunner()
         return testRunner
@@ -244,5 +229,3 @@ class TestProgram(unittest.TestProgram):
             unittest.installHandler()
         testRunner = self._get_runner()
         self.result = testRunner.run(self.test)
-        if self.exit:
-            sys.exit(not self.result.wasSuccessful())

@@ -25,22 +25,18 @@ from stestr.subunit_runner import program
 
 
 class SubunitTestRunner(object):
-    def __init__(self, verbosity=None, failfast=None, buffer=None,
-                 stream=None, stdout=None, tb_locals=False):
+    def __init__(self, failfast=False, tb_locals=False, stdout=sys.stdout):
         """Create a Test Runner.
 
-        :param verbosity: Ignored.
         :param failfast: Stop running tests at the first failure.
-        :param buffer: Ignored.
-        :param stream: Upstream unittest stream parameter.
-        :param stdout: Testtools stream parameter.
-        :param tb_locals: Testtools traceback in locals parameter.
+        :param stdout: Output stream parameter, defaults to sys.stdout
+        :param tb_locals: If set true local variables will be shown
 
         Either stream or stdout can be supplied, and stream will take
         precedence.
         """
         self.failfast = failfast
-        self.stream = stream or stdout or sys.stdout
+        self.stream = stdout
         self.tb_locals = tb_locals
 
     def run(self, test):
@@ -86,36 +82,12 @@ class SubunitTestRunner(object):
         return result, errors
 
 
-class SubunitTestProgram(program.TestProgram):
-
-    USAGE = program.USAGE_AS_MAIN
-
-    def usageExit(self, msg=None):
-        if msg:
-            print(msg)
-        usage = {'progName': self.progName, 'catchbreak': '', 'failfast': '',
-                 'buffer': ''}
-        if self.failfast is not False:
-            usage['failfast'] = program.FAILFAST
-        if self.catchbreak is not False:
-            usage['catchbreak'] = program.CATCHBREAK
-        if self.buffer is not False:
-            usage['buffer'] = program.BUFFEROUTPUT
-        usage_text = self.USAGE % usage
-        usage_lines = usage_text.split('\n')
-        usage_lines.insert(2, "Run a test suite with a subunit reporter.")
-        usage_lines.insert(3, "")
-        print('\n'.join(usage_lines))
-        sys.exit(2)
-
-
 def main():
     runner = SubunitTestRunner
     if sys.version_info[0] >= 3:
-        SubunitTestProgram(
+        program.TestProgram(
             module=None, argv=sys.argv,
-            testRunner=partial(runner, stdout=sys.stdout),
-            exit=False)
+            testRunner=partial(runner, stdout=sys.stdout))
     else:
         from testtools import run as testtools_run
         testtools_run.TestProgram(module=None, argv=sys.argv,
