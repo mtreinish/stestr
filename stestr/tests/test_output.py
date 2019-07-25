@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import tempfile
+import io
 
 from stestr import output
 from stestr.tests import base
@@ -27,10 +27,9 @@ class TestOutput(base.TestCase):
             "--------  ----------  ------------------\n" \
             "1         0000000002  foo\n" \
             "bar       6           This is a content.\n"
-        with tempfile.TemporaryFile('w+t') as f:
+        with io.StringIO() as f:
             output.output_table(table, f)
-            f.seek(0)
-            actual = f.read()
+            actual = f.getvalue()
             self.assertEqual(expected, actual)
 
     def test_output_tests(self):
@@ -43,34 +42,31 @@ class TestOutput(base.TestCase):
 
         tests = [Test('a'), Test('b'), Test('foo')]
         expected = "a\nb\nfoo\n"
-        with tempfile.TemporaryFile('w+t') as f:
+        with io.StringIO() as f:
             output.output_tests(tests, f)
-            f.seek(0)
-            actual = f. read()
+            actual = f.getvalue()
             self.assertEqual(expected, actual)
 
     def test_output_summary_passed(self):
         expected = 'Ran 10 (+5) tests in 1.100s (+0.100s)\n' \
             'PASSED (id=99 (+1), id=100 (+2))\n'
-        with tempfile.TemporaryFile('w+t') as f:
+        with io.StringIO() as f:
             output.output_summary(
                 successful=True, tests=10, tests_delta=5,
                 time=1.1, time_delta=0.1,
                 values=[('id', 99, 1), ('id', '100', 2)],
                 output=f)
-            f.seek(0)
-            actual = f.read()
+            actual = f.getvalue()
             self.assertEqual(expected, actual)
 
     def test_output_summary_failed(self):
         expected = 'Ran 10 (+5) tests in 1.100s (+0.100s)\n' \
             'FAILED (id=99 (+1), id=100 (+2))\n'
-        with tempfile.TemporaryFile('w+t') as f:
+        with io.StringIO() as f:
             output.output_summary(
                 successful=False, tests=10, tests_delta=5,
                 time=1.1, time_delta=0.1,
                 values=[('id', 99, 1), ('id', '100', 2)],
                 output=f)
-            f.seek(0)
-            actual = f.read()
+            actual = f.getvalue()
             self.assertEqual(expected, actual)
