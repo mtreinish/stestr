@@ -213,11 +213,15 @@ class TestProgram(unittest.TestProgram):
 
     def _get_runner(self):
         testRunner = self.testRunner
-        try:
-            testRunner = self.testRunner(failfast=self.failfast,
-                                         tb_locals=self.tb_locals)
-        except TypeError:
-            testRunner = self.testRunner()
+        if isinstance(self.testRunner, type):
+            try:
+                try:
+                    testRunner = self.testRunner(failfast=self.failfast,
+                                                 tb_locals=self.tb_locals)
+                except TypeError:
+                    testRunner = self.testRunner(failfast=self.failfast)
+            except TypeError:
+                testRunner = self.testRunner()
         # If for some reason we failed to initialize the runner initialize
         # with defaults
         if isinstance(testRunner, functools.partial):
