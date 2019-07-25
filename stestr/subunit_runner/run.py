@@ -25,8 +25,7 @@ from stestr.subunit_runner import program
 
 
 class SubunitTestRunner(object):
-    def __init__(self, failfast=False, stream=None, tb_locals=False,
-                 stdout=None):
+    def __init__(self, failfast=False, tb_locals=False, stdout=sys.stdout):
         """Create a Test Runner.
 
         :param failfast: Stop running tests at the first failure.
@@ -37,7 +36,7 @@ class SubunitTestRunner(object):
         precedence.
         """
         self.failfast = failfast
-        self.stream = stream or stdout or sys.stdout
+        self.stream = stdout
         self.tb_locals = tb_locals
 
     def run(self, test):
