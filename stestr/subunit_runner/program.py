@@ -206,11 +206,6 @@ class TestProgram(unittest.TestProgram):
                  'those ids are executed')
         return parser
 
-    def usageExit(self, msg=None):
-        if msg is None:
-            msg = "Internal stestr test runner"
-        super(TestProgram, self).usageExit(msg)
-
     def _get_runner(self):
         testRunner = self.testRunner
         try:
