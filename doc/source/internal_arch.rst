@@ -72,12 +72,12 @@ Operations for Running Tests
 
 The basic flow when stestr run is called at a high level is fairly straight
 forward. In the default case when run is called the first operation performed
-is unittest discovery (via ``subunit.run --discover``) which is used to get a
-complete list of tests present. This list is then filtered by any user provided
-selection mechanisms. (for example a cli regex filter) This is used to select
-which tests the user actually intends to run. For more details on test
-selection see: :ref:`api_selection` which defines the functions which are used
-to actually perform the filtering.
+is unittest discovery which is used to get a complete list of tests present.
+This list is then filtered by any user provided selection mechanisms. (for
+example a cli regex filter) This is used to select which tests the user
+actually intends to run. For more details on test selection see:
+:ref:`api_selection` which defines the functions which are used to actually
+perform the filtering.
 
 Once there is complete list of tests that will be run the list gets passed
 to the scheduler/partitioner. The scheduler takes the list of tests and splits
@@ -89,7 +89,7 @@ For the full details on how the partitioning is performed see:
 
 With the tests split into multiple groups for each worker process we're
 ready to start executing the tests. Each group of tests is used to launch a
-subunit.run worker subprocess. As the name implies this is a test runner that
+test runner worker subprocess. As the name implies this is a test runner that
 emits a subunit stream to stdout. These stdout streams are combined in real
 time and stored in the repository at the end of the run (using the load
 command). The combined stream is also used for the CLI output either in a

@@ -102,7 +102,7 @@ import paths) For example::
 
   $ stestr run --no-discover project/tests/test_foo.py
 
-will also bypass discovery and directly call subunit.run on the module
+will also bypass discovery and directly call the test runner on the module
 specified.
 
 Additionally you can specify a specific class or method within that file using
@@ -110,7 +110,7 @@ Additionally you can specify a specific class or method within that file using
 
   $ stestr run --no-discover project/tests/test_foo.py::TestFoo::test_method
 
-will skip discovery and directly call subunit.run on the test method in the
+will skip discovery and directly call the test runner on the test method in the
 specified test class.
 
 Test Selection
