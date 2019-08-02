@@ -17,8 +17,12 @@ stestr（日本語訳）
     :target: https://pypi.python.org/pypi/stestr
     :alt: Latest Version
 
+* 他の言語で読む場合はこちら: `English`_, `日本語`_
 * フルレンダリングされたドキュメントはこちら: http://stestr.readthedocs.io/en/latest/
 * プロジェクトのコードは GitHub にあります: https://github.com/mtreinish/stestr
+
+.. _English: https://github.com/mtreinish/stestr/blob/master/README.rst
+.. _日本語: https://github.com/mtreinish/stestr/blob/master/README_ja.rst
 
 .. note:: stestr v2.x.x リリースシリーズは、Python 2 をサポートする最後のシリ
     ーズとなります。Python 2.7のサポートは、2020年の早い時期に予定されている、
