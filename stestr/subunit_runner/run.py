@@ -84,7 +84,7 @@ class SubunitTestRunner(object):
 
 def main():
     runner = SubunitTestRunner
-    if sys.version_info[0] >= 3:
+    if sys.version_info[0] >= 3 and sys.version_info[1] >= 5:
         program.TestProgram(
             module=None, argv=sys.argv,
             testRunner=partial(runner, stdout=sys.stdout))
