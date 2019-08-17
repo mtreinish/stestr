@@ -271,10 +271,11 @@ def _load_case(inserter, repo, case, subunit_out, pretty_out,
         start_times = []
         stop_times = []
         for worker in subunit_trace.RESULTS:
-            start_times += [
-                x['timestamps'][0] for x in subunit_trace.RESULTS[worker]]
-            stop_times += [
-                x['timestamps'][1] for x in subunit_trace.RESULTS[worker]]
+            for test in subunit_trace.RESULTS[worker]:
+                if not test['timestamps'][0] or not test['timestamps'][1]:
+                    continue
+                start_times.append(test['timestamps'][0])
+                stop_times.append(test['timestamps'][1])
         if not start_times or not stop_times:
             sys.stderr.write("\nNo tests were successful during the run")
             return 1
