@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    README
+   README_ja
    MANUAL
    CONTRIBUTING
    developer_guidelines
