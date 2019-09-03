@@ -121,7 +121,7 @@ class Run(command.Command):
                             help="Takes in a single test to bypasses test "
                             "discover and just execute the test specified. A "
                             "file may be used in place of a test name.")
-        parser.add_argument('--random', '-r', action="store_true",
+        parser.add_argument('--random', action="store_true",
                             default=False,
                             help="Randomize the test order after they are "
                             "partitioned into separate workers")
