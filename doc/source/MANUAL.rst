@@ -430,7 +430,7 @@ tests will be partitioned across those workers with the normal scheduler. This
 includes respecting the other scheduler options, like ``group_regex`` or
 ``--random``.
 
-There is also an option on ``stestr run``, ``--random``/``-r`` to randomize the
+There is also an option on ``stestr run``, ``--random`` to randomize the
 order of tests as they are passed to the workers. This is useful in certain
 use cases, especially when you want to test isolation between test cases.
 
