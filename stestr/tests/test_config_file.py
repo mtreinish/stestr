@@ -10,12 +10,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import ddt
 import mock
 
 from stestr import config_file
 from stestr.tests import base
 
 
+@ddt.ddt
 class TestTestrConf(base.TestCase):
 
     @mock.patch.object(config_file.configparser, 'ConfigParser')
@@ -27,6 +29,7 @@ class TestTestrConf(base.TestCase):
     @mock.patch.object(config_file.util, 'get_repo_open')
     @mock.patch.object(config_file.test_processor, 'TestProcessorFixture')
     @mock.patch.object(config_file, 'sys')
+    @mock.patch('os.path.exists', new=lambda x: True)
     def _check_get_run_command(self, mock_sys, mock_TestProcessorFixture,
                                mock_get_repo_open, platform='win32',
                                group_regex='.*', parallel_class=False,
@@ -49,7 +52,7 @@ class TestTestrConf(base.TestCase):
         self.assertEqual(mock_TestProcessorFixture.return_value, fixture)
         mock_get_repo_open.assert_called_once_with('file',
                                                    None)
-        command = '%s -m stestr.subunit_runner.run discover -t "%s" "%s" ' \
+        command = '"%s" -m stestr.subunit_runner.run discover -t "%s" "%s" ' \
                   '$LISTOPT $IDOPTION' % (expected_python, 'fake_top_dir',
                                           'fake_test_path')
         # Ensure TestProcessorFixture is created with defaults except for where
@@ -107,3 +110,12 @@ class TestTestrConf(base.TestCase):
         self._testr_conf.parser.has_option.return_value = False
         self._check_get_run_command(group_regex='',
                                     expected_group_callback=None)
+
+    @ddt.data(('.\\', '.\\\\'),
+              ('a\\b\\', 'a\\b\\\\'),
+              ('a\\b', 'a\\b'))
+    @ddt.unpack
+    @mock.patch('os.sep', new='\\')
+    def test_sanitize_dir_win32(self, path, expected):
+        sanitized = self._testr_conf._sanitize_path(path)
+        self.assertEqual(expected, sanitized)

@@ -28,10 +28,20 @@ class TestrConf(object):
     :param str config_file: The path to the config file to use
     """
 
+    _escape_trailing_backslash_re = re.compile(r'(?<=[^\\])\\$')
+
     def __init__(self, config_file):
         self.parser = configparser.ConfigParser()
         self.parser.read(config_file)
         self.config_file = config_file
+
+    def _sanitize_path(self, path):
+        if os.sep == '\\':
+            # Trailing backslashes have to be escaped. Othwerise, the
+            # command we're issuing will be incorrectly interpreted on
+            # Windows.
+            path = self._escape_trailing_backslash_re.sub(r'\\\\', path)
+        return path
 
     def get_run_command(self, test_ids=None, regexes=None,
                         test_path=None, top_dir=None, group_regex=None,
@@ -104,6 +114,9 @@ class TestrConf(object):
         elif not top_dir:
             top_dir = './'
 
+        test_path = self._sanitize_path(test_path)
+        top_dir = self._sanitize_path(top_dir)
+
         stestr_python = sys.executable
         # let's try to be explicit, even if it means a longer set of ifs
         if sys.platform == 'win32':
@@ -119,6 +132,10 @@ class TestrConf(object):
             else:
                 raise RuntimeError("The Python interpreter was not found and "
                                    "PYTHON is not set")
+
+        # The python binary path may contain whitespaces.
+        if os.path.exists('"%s"' % python):
+            python = '"%s"' % python
 
         command = '%s -m stestr.subunit_runner.run discover -t "%s" "%s" ' \
                   '$LISTOPT $IDOPTION' % (python, top_dir, test_path)
