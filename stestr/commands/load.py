@@ -13,6 +13,7 @@
 """Load data into a repository."""
 
 
+import errno
 import functools
 import os
 import sys
@@ -148,7 +149,7 @@ def load(force_init=False, in_streams=None,
     used by the run command to both output the results as well as store the
     result in the repository.
 
-    :param bool force_init: Initialize the specifiedrepository if it hasn't
+    :param bool force_init: Initialize the specified repository if it hasn't
         been created.
     :param list in_streams: A list of file objects that will be saved into the
         repository
@@ -184,7 +185,17 @@ def load(force_init=False, in_streams=None,
         repo = util.get_repo_open(repo_type, repo_url)
     except repository.RepositoryNotFound:
         if force_init:
-            repo = util.get_repo_initialise(repo_type, repo_url)
+            try:
+                repo = util.get_repo_initialise(repo_type, repo_url)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
+                repo_path = repo_url or './stestr'
+                stdout.write('The specified repository directory %s already '
+                             'exists. Please check if the repository already '
+                             'exists or select a different path\n'
+                             % repo_path)
+                exit(1)
         else:
             raise
     # Not a full implementation of TestCase, but we only need to iterate
