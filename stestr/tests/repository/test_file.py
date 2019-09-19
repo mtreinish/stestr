@@ -26,9 +26,10 @@ from stestr.tests import base
 
 class FileRepositoryFixture(fixtures.Fixture):
 
-    def __init__(self, path=None):
+    def __init__(self, path=None, initialise=True):
         super(FileRepositoryFixture, self).__init__()
         self.path = path
+        self.initialise = initialise
 
     def setUp(self):
         super(FileRepositoryFixture, self).setUp()
@@ -37,7 +38,8 @@ class FileRepositoryFixture(fixtures.Fixture):
         else:
             self.tempdir = tempfile.mkdtemp()
             self.addCleanup(shutil.rmtree, self.tempdir)
-        self.repo = file.RepositoryFactory().initialise(self.tempdir)
+        if self.initialise:
+            self.repo = file.RepositoryFactory().initialise(self.tempdir)
 
 
 class HomeDirTempDir(fixtures.Fixture):
@@ -69,6 +71,32 @@ class TestFileRepository(base.TestCase):
         with open(os.path.join(base, 'next-stream'), 'rt') as stream:
             contents = stream.read()
         self.assertEqual("0\n", contents)
+
+    def test_initialise_empty_dir(self):
+        self.useFixture(FileRepositoryFixture(path=self.tempdir,
+                                              initialise=False))
+        base = os.path.join(self.tempdir, '.stestr')
+        os.mkdir(base)
+        self.assertFalse(os.path.isfile(os.path.join(base, 'format')))
+        self.repo = file.RepositoryFactory().initialise(self.tempdir)
+        self.assertTrue(os.path.isdir(base))
+        self.assertTrue(os.path.isfile(os.path.join(base, 'format')))
+        with open(os.path.join(base, 'format'), 'rt') as stream:
+            contents = stream.read()
+        self.assertEqual("1\n", contents)
+        with open(os.path.join(base, 'next-stream'), 'rt') as stream:
+            contents = stream.read()
+        self.assertEqual("0\n", contents)
+
+    def test_initialise_non_empty_dir(self):
+        self.useFixture(FileRepositoryFixture(path=self.tempdir,
+                                              initialise=False))
+        base = os.path.join(self.tempdir, '.stestr')
+        os.mkdir(base)
+        with open(os.path.join(base, 'foo'), 'wt') as stream:
+            stream.write('1\n')
+        factory = file.RepositoryFactory()
+        self.assertRaises(OSError, factory.initialise, self.tempdir)
 
     # Skip if windows since ~ in a path doesn't work there
     @testtools.skipIf(os.name == 'nt', "Windows doesn't support '~' expand")

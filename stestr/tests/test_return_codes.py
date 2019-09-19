@@ -209,6 +209,28 @@ class TestReturnCodes(base.TestCase):
         # test from a command line based test.
         self.assertRunExit('stestr --parallel-class run passing', 0)
 
+    def test_no_repo_dir(self):
+        stestr_repo_dir = os.path.join(self.directory, '.stestr')
+        shutil.rmtree(stestr_repo_dir, ignore_errors=True)
+        # We can use stestr run even if there's no repo directory.
+        self.assertRunExit('stestr run passing', 0)
+
+    def test_empty_repo_dir(self):
+        stestr_repo_dir = os.path.join(self.directory, '.stestr')
+        shutil.rmtree(stestr_repo_dir, ignore_errors=True)
+        os.mkdir(stestr_repo_dir)
+        # We can initialize an empty repo directory.
+        self.assertRunExit('stestr run passing', 0)
+
+    def test_non_empty_repo_dir(self):
+        stestr_repo_dir = os.path.join(self.directory, '.stestr')
+        shutil.rmtree(stestr_repo_dir, ignore_errors=True)
+        os.mkdir(stestr_repo_dir)
+        with open(os.path.join(stestr_repo_dir, 'foo'), 'wt') as stream:
+            stream.write('1\n')
+        # We can't initialize a non-empty repo directory.
+        self.assertRunExit('stestr run passing', 1)
+
     def test_list(self):
         self.assertRunExit('stestr list', 0)
 
@@ -248,6 +270,23 @@ class TestReturnCodes(base.TestCase):
         stream = self._get_cmd_stdout(
             'stestr last --subunit')[0]
         self.assertRunExit('stestr load', 0, stdin=stream)
+
+    def test_load_force_init(self):
+        self.assertRunExit('stestr run passing', 0)
+        stream = self._get_cmd_stdout(
+            'stestr last --subunit')[0]
+        # NOTE: --force-init should work here because there is an properly
+        # initialized repository.
+        self.assertRunExit('stestr load --force-init', 0, stdin=stream)
+
+    def test_load_force_init_invalid(self):
+        self.assertRunExit('stestr run passing', 0)
+        stream = self._get_cmd_stdout(
+            'stestr last --subunit')[0]
+        os.remove(os.path.join(self.directory, '.stestr', 'format'))
+        # NOTE: --force-init should fail here because there is an invalid
+        # repository.
+        self.assertRunExit('stestr load --force-init', 1, stdin=stream)
 
     def test_load_from_stdin_quiet(self):
         out, err = self.assertRunExit('stestr --user-config stestr.yaml -q '
