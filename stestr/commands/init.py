@@ -12,6 +12,7 @@
 
 """Initialise a new repository."""
 
+import errno
 import sys
 
 from cliff import command
@@ -47,7 +48,7 @@ def init(repo_type='file', repo_url=None, stdout=sys.stdout):
     try:
         util.get_repo_initialise(repo_type, repo_url)
     except OSError as e:
-        if e.errno != 17:
+        if e.errno != errno.EEXIST:
             raise
         repo_path = repo_url or './stestr'
         stdout.write('The specified repository directory %s already exists. '

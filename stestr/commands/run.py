@@ -12,6 +12,7 @@
 
 """Run a projects tests and load them into stestr."""
 
+import errno
 import os
 import subprocess
 import sys
@@ -354,7 +355,17 @@ def run_command(config='.stestr.conf', repo_type='file',
                    "--test-path ")
             stdout.write(msg)
             exit(1)
-        repo = util.get_repo_initialise(repo_type, repo_url)
+        try:
+            repo = util.get_repo_initialise(repo_type, repo_url)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+            repo_path = repo_url or './stestr'
+            stdout.write('The specified repository directory %s already '
+                         'exists. Please check if the repository already '
+                         'exists or select a different path\n' % repo_path)
+            return 1
+
     combine_id = None
     concurrency = _to_int(concurrency)
 

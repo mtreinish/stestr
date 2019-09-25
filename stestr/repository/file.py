@@ -40,7 +40,14 @@ class RepositoryFactory(repository.AbstractRepositoryFactory):
     def initialise(klass, url):
         """Create a repository at url/path."""
         base = os.path.join(os.path.expanduser(url), '.stestr')
-        os.mkdir(base)
+        try:
+            os.mkdir(base)
+        except OSError as e:
+            if e.errno == errno.EEXIST and not os.listdir(base):
+                # It shouldn't be harmful initializing an empty dir
+                pass
+            else:
+                raise
         with open(os.path.join(base, 'format'), 'wt') as stream:
             stream.write('1\n')
         result = Repository(base)
