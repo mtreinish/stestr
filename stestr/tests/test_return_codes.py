@@ -94,8 +94,9 @@ class TestReturnCodes(base.TestCase):
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 env=env)
             out, err = p.communicate()
-
         if not subunit:
+            out = out.decode('utf8')
+            err = err.decode('utf8')
             self.assertEqual(
                 p.returncode, expected,
                 "Stdout: %s; Stderr: %s" % (out, err))
@@ -296,14 +297,14 @@ class TestReturnCodes(base.TestCase):
     def test_load_from_stdin_quiet(self):
         out, err = self.assertRunExit('stestr --user-config stestr.yaml -q '
                                       'run passing', 0)
-        self.assertEqual(out.decode('utf-8'), '')
+        self.assertEqual(out, '')
         # FIXME(masayukig): We get some warnings when we run a coverage job.
         # So, just ignore 'err' here.
         stream = self._get_cmd_stdout('stestr last --subunit')[0]
         out, err = self.assertRunExit('stestr --user-config stestr.yaml -q '
                                       'load', 0, stdin=stream)
-        self.assertEqual(out.decode('utf-8'), '')
-        self.assertEqual(err.decode('utf-8'), '')
+        self.assertEqual(out, '')
+        self.assertEqual(err, '')
 
     def test_no_subunit_trace_force_subunit_trace(self):
         out, err = self.assertRunExit(
@@ -393,21 +394,21 @@ class TestReturnCodes(base.TestCase):
     def test_run_no_discover_pytest_path(self):
         passing_string = 'tests/test_passing.py::FakeTestClass::test_pass_list'
         out, err = self.assertRunExit('stestr run -n %s' % passing_string, 0)
-        lines = out.decode('utf8').splitlines()
+        lines = out.splitlines()
         self.assertIn(' - Passed: 1', lines)
         self.assertIn(' - Failed: 0', lines)
 
     def test_run_no_discover_pytest_path_failing(self):
         passing_string = 'tests/test_failing.py::FakeTestClass::test_pass_list'
         out, err = self.assertRunExit('stestr run -n %s' % passing_string, 1)
-        lines = out.decode('utf8').splitlines()
+        lines = out.splitlines()
         self.assertIn(' - Passed: 0', lines)
         self.assertIn(' - Failed: 1', lines)
 
     def test_run_no_discover_file_path(self):
         passing_string = 'tests/test_passing.py'
         out, err = self.assertRunExit('stestr run -n %s' % passing_string, 0)
-        lines = out.decode('utf8').splitlines()
+        lines = out.splitlines()
         self.assertIn(' - Passed: 2', lines)
         self.assertIn(' - Failed: 0', lines)
         self.assertIn(' - Expected Fail: 1', lines)
@@ -415,7 +416,7 @@ class TestReturnCodes(base.TestCase):
     def test_run_no_discover_file_path_failing(self):
         passing_string = 'tests/test_failing.py'
         out, err = self.assertRunExit('stestr run -n %s' % passing_string, 1)
-        lines = out.decode('utf8').splitlines()
+        lines = out.splitlines()
         self.assertIn(' - Passed: 0', lines)
         self.assertIn(' - Failed: 2', lines)
         self.assertIn(' - Unexpected Success: 1', lines)

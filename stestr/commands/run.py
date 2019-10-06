@@ -433,7 +433,9 @@ def run_command(config='.stestr.conf', repo_type='file',
         def run_tests():
             run_proc = [('subunit', output.ReturnCodeToSubunit(
                 subprocess.Popen(run_cmd, shell=True,
-                                 stdout=subprocess.PIPE)))]
+                                 stdout=subprocess.PIPE),
+                dynamic=False))]
+
             return load.load(in_streams=run_proc,
                              subunit_out=subunit_out,
                              repo_type=repo_type,
