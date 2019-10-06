@@ -113,6 +113,21 @@ Additionally you can specify a specific class or method within that file using
 will skip discovery and directly call the test runner on the test method in the
 specified test class.
 
+Running with pdb
+''''''''''''''''
+
+If you'd like to run pdb during the execution of the tests you should use the
+``--pdb`` flag on ``stestr run``. This flag behaves the same way as the
+``--no-discover`` flag except that it does not launch an external process to
+run the tests. This enables pdb to work as expected without any issues with the
+tradeoff that output from the test runner will occur after tests have finished
+execution.
+
+It's also worth noting that if you are using a fixture to capture stdout (which
+is a common practice for parallel test excecution) you'll likely want to
+disable that fixture when running with pdb. Those fixtures can often interfere
+with pdb's output and will sometimes capture output from pdb.
+
 Test Selection
 --------------
 

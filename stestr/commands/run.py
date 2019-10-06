@@ -13,6 +13,8 @@
 """Run a projects tests and load them into stestr."""
 
 import errno
+import functools
+import io
 import os
 import subprocess
 import sys
@@ -31,6 +33,8 @@ from stestr import output
 from stestr.repository import abstract as repository
 from stestr.repository import util
 from stestr import results
+from stestr.subunit_runner import program
+from stestr.subunit_runner import run as subunit_run
 from stestr.testlist import parse_list
 from stestr import user_config
 
@@ -122,6 +126,13 @@ class Run(command.Command):
                             help="Takes in a single test to bypasses test "
                             "discover and just execute the test specified. A "
                             "file may be used in place of a test name.")
+        parser.add_argument('--pdb', default=None, metavar='TEST_ID',
+                            help="Run a single test id with the intent of "
+                            "using pdb. This does not launch any separate "
+                            "processes to ensure pdb works as expected. It "
+                            "will bypass test discovery and just execute the "
+                            "test specified. A file may be used in place of a "
+                            "test name.")
         parser.add_argument('--random', action="store_true",
                             default=False,
                             help="Randomize the test order after they are "
@@ -233,7 +244,7 @@ class Run(command.Command):
             filters=filters, pretty_out=pretty_out, color=color,
             stdout=stdout, abbreviate=abbreviate,
             suppress_attachments=suppress_attachments,
-            all_attachments=all_attachments)
+            all_attachments=all_attachments, pdb=args.pdb)
 
         # Always output slowest test info if requested, regardless of other
         # test run options
@@ -274,7 +285,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                 no_discover=False, random=False, combine=False, filters=None,
                 pretty_out=True, color=False, stdout=sys.stdout,
                 abbreviate=False, suppress_attachments=False,
-                all_attachments=False):
+                all_attachments=False, pdb=False):
     """Function to execute the run command
 
     This function implements the run command. It will run the tests specified
@@ -337,6 +348,9 @@ def run_command(config='.stestr.conf', repo_type='file',
         will not print attachments on successful test execution.
     :param bool all_attachments: When set true subunit_trace will print all
         text attachments on successful test execution.
+    :param str pdb: Takes in a single test_id to bypasses test
+        discover and just execute the test specified without launching any
+        additional processes. A file name may be used in place of a test name.
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -377,6 +391,17 @@ def run_command(config='.stestr.conf', repo_type='file',
     if combine:
         latest_id = repo.latest_id()
         combine_id = six.text_type(latest_id)
+    if no_discover and pdb:
+        msg = ("--no-discover and --pdb are mutually exclusive options, "
+               "only specify one at a time")
+        stdout.write(msg)
+        return 2
+    if pdb and until_failure:
+        msg = ("pdb mode does not function with the --until-failure flag, "
+               "only specify one at a time")
+        stdout.write(msg)
+        return 2
+
     if no_discover:
         ids = no_discover
         if '::' in ids:
@@ -428,6 +453,29 @@ def run_command(config='.stestr.conf', repo_type='file',
                         result = 1
                 if result:
                     return result
+
+    if pdb:
+        ids = pdb
+        if '::' in ids:
+            ids = ids.replace('::', '.')
+        if ids.find('/') != -1:
+            root = ids.replace('.py', '')
+            ids = root.replace('/', '.')
+        runner = subunit_run.SubunitTestRunner
+        stream = io.BytesIO()
+        program.TestProgram(module=None, argv=['stestr', ids],
+                            testRunner=functools.partial(runner,
+                                                         stdout=stream))
+        stream.seek(0)
+        run_proc = [('subunit', stream)]
+        return load.load(in_streams=run_proc,
+                         subunit_out=subunit_out,
+                         repo_type=repo_type,
+                         repo_url=repo_url, run_id=combine_id,
+                         pretty_out=pretty_out,
+                         color=color, stdout=stdout, abbreviate=abbreviate,
+                         suppress_attachments=suppress_attachments,
+                         all_attachments=all_attachments)
 
     if failing or analyze_isolation:
         ids = _find_failing(repo)
