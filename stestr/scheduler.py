@@ -46,6 +46,9 @@ def partition_tests(test_ids, concurrency, repository, group_callback,
         :return: A list where each element is a distinct subset of test_ids,
             and the union of all the elements is equal to set(test_ids).
         """
+        def noop():
+            return None
+
         _group_callback = group_callback
         partitions = [list() for i in range(concurrency)]
         timed_partitions = [[0.0, partition] for partition in partitions]
@@ -60,7 +63,7 @@ def partition_tests(test_ids, concurrency, repository, group_callback,
         # Group tests: generate group_id -> test_ids.
         group_ids = collections.defaultdict(list)
         if _group_callback is None:
-            group_callback = lambda _: None
+            group_callback = noop
         else:
             group_callback = _group_callback
         for test_id in test_ids:
