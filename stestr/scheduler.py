@@ -46,7 +46,7 @@ def partition_tests(test_ids, concurrency, repository, group_callback,
         :return: A list where each element is a distinct subset of test_ids,
             and the union of all the elements is equal to set(test_ids).
         """
-        def noop():
+        def noop(_):
             return None
 
         _group_callback = group_callback
