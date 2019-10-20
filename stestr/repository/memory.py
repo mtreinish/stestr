@@ -14,7 +14,6 @@
 
 from extras import try_import
 
-OrderedDict = try_import('collections.OrderedDict', dict)
 from io import BytesIO
 from operator import methodcaller
 
@@ -22,6 +21,8 @@ import subunit
 import testtools
 
 from stestr.repository import abstract as repository
+
+OrderedDict = try_import('collections.OrderedDict', dict)
 
 
 class RepositoryFactory(repository.AbstractRepositoryFactory):
@@ -152,8 +153,8 @@ class _Inserter(repository.AbstractTestRun):
         duration_delta = stop - start
         duration_seconds = (
             (duration_delta.microseconds + (
-                duration_delta.seconds + duration_delta.days
-                * 24 * 3600) * 10 ** 6) / 10.0 ** 6)
+                duration_delta.seconds +
+                duration_delta.days * 24 * 3600) * 10 ** 6) / 10.0 ** 6)
         self._repository._times[test_dict['id']] = duration_seconds
 
     def stopTestRun(self):
