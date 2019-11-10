@@ -36,7 +36,7 @@ class StestrCLI(app.App):
 
     def prepare_to_run_command(self, cmd):
         self.LOG.debug('prepare_to_run_command %s', cmd.__class__.__name__)
-        group_regex = '([^\.]*\.)*' \
+        group_regex = r'([^\.]*\.)*' \
             if cmd.app_args.parallel_class else cmd.app_args.group_regex
         cmd.app_args.group_regex = group_regex
 
