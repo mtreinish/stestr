@@ -104,7 +104,7 @@ class TestProcessorFixture(fixtures.Fixture):
 
     def setUp(self):
         super(TestProcessorFixture, self).setUp()
-        variable_regex = '\$(IDOPTION|IDFILE|IDLIST|LISTOPT)'
+        variable_regex = r'\$(IDOPTION|IDFILE|IDLIST|LISTOPT)'
         variables = {}
         list_variables = {'LISTOPT': self.listopt}
         cmd = self.template
