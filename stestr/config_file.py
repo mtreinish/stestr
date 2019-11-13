@@ -144,11 +144,11 @@ class TestrConf(object):
         # If the command contains $IDOPTION read that command from config
         # Use a group regex if one is defined
         if parallel_class:
-            group_regex = '([^\.]*\.)*'
+            group_regex = r'([^\.]*\.)*'
         if not group_regex \
                 and self.parser.has_option('DEFAULT', 'parallel_class') \
                 and self.parser.getboolean('DEFAULT', 'parallel_class'):
-            group_regex = '([^\.]*\.)*'
+            group_regex = r'([^\.]*\.)*'
         if not group_regex and self.parser.has_option('DEFAULT',
                                                       'group_regex'):
             group_regex = self.parser.get('DEFAULT', 'group_regex')
