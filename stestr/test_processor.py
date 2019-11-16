@@ -201,7 +201,9 @@ class TestProcessorFixture(fixtures.Fixture):
         """
         run_proc = self._start_process(self.list_cmd)
         out, err = run_proc.communicate()
-        if run_proc.returncode != 0:
+        
+        # see https://bugs.python.org/issue29130        
+        if run_proc.returncode not in [0, 120]:
             sys.stdout.write("\n=========================\n"
                              "Failures during discovery"
                              "\n=========================\n")
