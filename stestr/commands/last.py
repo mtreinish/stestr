@@ -65,6 +65,10 @@ class Last(command.Command):
                             dest='all_attachments',
                             help='If set print all text attachment contents on'
                             ' a successful test execution')
+        parser.add_argument('--show-binary-attachments', action='store_true',
+                            dest='show_binary_attachments',
+                            help='If set, show non-text attachments. This is '
+                            'generally only useful for debug purposes.')
         return parser
 
     def take_action(self, parsed_args):
@@ -108,12 +112,13 @@ class Last(command.Command):
                     repo_url=self.app_args.repo_url,
                     subunit_out=args.subunit, pretty_out=pretty_out,
                     color=color, suppress_attachments=suppress_attachments,
-                    all_attachments=all_attachments)
+                    all_attachments=all_attachments,
+                    show_binary_attachments=args.show_binary_attachments)
 
 
 def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
          color=False, stdout=sys.stdout, suppress_attachments=False,
-         all_attachments=False):
+         all_attachments=False, show_binary_attachments=False):
     """Show the last run loaded into a a repository
 
     This function will print the results from the last run in the repository
@@ -137,6 +142,8 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
         will not print attachments on successful test execution.
     :param bool all_attachments: When set true subunit_trace will print all
         text attachments on successful test execution.
+    :param bool show_binary_attachments: When set to true, subunit_trace will
+        print binary attachments in addition to text attachments.
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -182,10 +189,11 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
         failed = not results.wasSuccessful(summary)
     else:
         stream = latest_run.get_subunit_stream()
-        failed = subunit_trace.trace(stream, stdout, post_fails=True,
-                                     color=color,
-                                     suppress_attachments=suppress_attachments,
-                                     all_attachments=all_attachments)
+        failed = subunit_trace.trace(
+            stream, stdout, post_fails=True, color=color,
+            suppress_attachments=suppress_attachments,
+            all_attachments=all_attachments,
+            show_binary_attachments=show_binary_attachments)
     if failed:
         return 1
     else:
