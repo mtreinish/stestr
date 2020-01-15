@@ -217,7 +217,7 @@ class TestProcessorFixture(fixtures.Fixture):
                     sys.stdout.write(out)
             if err:
                 if six.PY3:
-                    sys.stdout.write(out.decode('utf8'))
+                    sys.stderr.write(err.decode('utf8'))
                 else:
                     sys.stderr.write(err)
             sys.stdout.write("\n" + "=" * 80 + "\n"
