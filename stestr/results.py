@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import six
 import subunit
 import testtools
 
@@ -98,10 +97,10 @@ class CLITestResult(testtools.StreamResult):
         test_tags = test_tags or ()
         tags = ' '.join(test_tags)
         if tags:
-            tags = six.text_type(('tags: %s\n' % tags))
-        return six.text_type(''.join([
+            tags = str(('tags: %s\n' % tags))
+        return str(''.join([
             self.sep1,
-            six.text_type('%s: %s\n' % (label, test.id())),
+            str('%s: %s\n' % (label, test.id())),
             tags,
             self.sep2,
             error_text,
@@ -114,7 +113,7 @@ class CLITestResult(testtools.StreamResult):
         test_tags = kwargs.get('test_tags')
         if test_status == 'fail':
             self.stream.write(
-                self._format_error(six.text_type('FAIL'),
+                self._format_error(str('FAIL'),
                                    *(self._summary.errors[-1]),
                                    test_tags=test_tags))
         if test_status not in self.filterable_states:

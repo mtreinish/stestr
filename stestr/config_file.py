@@ -14,7 +14,7 @@ import os
 import re
 import sys
 
-from six.moves import configparser
+import configparser
 
 from stestr.repository import util
 from stestr import test_processor

@@ -12,7 +12,6 @@
 
 import sys
 
-import six
 import subunit
 import testtools
 
@@ -62,7 +61,7 @@ def output_table(table, output=sys.stdout):
         outputs.append('  ')
     for row in contents[1:]:
         show_row(row)
-    output.write(six.text_type('').join(outputs))
+    output.write(''.join(outputs))
 
 
 def output_tests(tests, output=sys.stdout):
@@ -75,8 +74,8 @@ def output_tests(tests, output=sys.stdout):
 
     for test in tests:
         id_str = test.id()
-        output.write(six.text_type(id_str))
-        output.write(six.text_type('\n'))
+        output.write(str(id_str))
+        output.write('\n')
 
 
 def make_result(get_id, output=sys.stdout):
@@ -135,7 +134,7 @@ def output_summary(successful, tests, tests_delta, time, time_delta, values,
             values_strings.append(value_str)
         a(', '.join(values_strings))
         a(')')
-    output.write(six.text_type(''.join(summary)) + six.text_type('\n'))
+    output.write(''.join(summary) + '\n')
 
 
 def output_stream(stream, output=sys.stdout):
@@ -169,20 +168,20 @@ class ReturnCodeToSubunit(object):
         self.proc = process
         self.done = False
         self.source = self.proc.stdout
-        self.lastoutput = six.binary_type(('\n').encode('utf8')[0])
+        self.lastoutput = bytes(('\n').encode('utf8')[0])
 
     def _append_return_code_as_test(self):
         if self.done is True:
             return
-        self.source = six.BytesIO()
+        self.source = io.BytesIO()
         returncode = self.proc.wait()
         if returncode != 0:
-            if self.lastoutput != six.binary_type(('\n').encode('utf8')[0]):
+            if self.lastoutput != bytes(('\n').encode('utf8')[0]):
                 # Subunit V1 is line orientated, it has to start on a fresh
                 # line. V2 needs to start on any fresh utf8 character border
                 # - which is not guaranteed in an arbitrary stream endpoint, so
                 # injecting a \n gives us such a guarantee.
-                self.source.write(six.binary_type('\n'))
+                self.source.write(bytes('\n'))
             stream = subunit.StreamResultToBytes(self.source)
             stream.status(test_id='process-returncode', test_status='fail',
                           file_name='traceback',
@@ -194,7 +193,7 @@ class ReturnCodeToSubunit(object):
 
     def read(self, count=-1):
         if count == 0:
-            return six.text_type('')
+            return ''
         result = self.source.read(count)
         if result:
             self.lastoutput = result[-1]
