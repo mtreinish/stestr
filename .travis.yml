@@ -20,8 +20,6 @@ matrix:
       env: TOXENV=pep8
     - python: "3.6"
       env: TOXENV=docs
-    - python: "2.7"
-      env: TOXENV=py27
     - if: tag IS present
       python: "3.6"
       env:
