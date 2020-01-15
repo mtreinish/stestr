@@ -108,12 +108,6 @@ class StestrCLI(app.App):
 
 
 def main(argv=sys.argv[1:]):
-    if sys.version_info[:2] == (2, 7):
-        msg = (
-            "Python 2.7 will reach the end of its life on January 1st, 2020. "
-            "Support for using python 2.7 with stestr will be removed in the "
-            "3.0.0 release in early 2020")
-        warnings.warn(msg, DeprecationWarning, stacklevel=2)
     cli = StestrCLI()
     return cli.run(argv)
 
