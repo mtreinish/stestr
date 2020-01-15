@@ -11,7 +11,6 @@
 # under the License.
 
 import sys
-import warnings
 
 from cliff import app
 from cliff import commandmanager
