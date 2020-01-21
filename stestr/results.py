@@ -90,17 +90,17 @@ class CLITestResult(testtools.StreamResult):
         self.stream = testtools.compat.unicode_output_stream(stream)
         self.sep1 = testtools.compat._u('=' * 70 + '\n')
         self.sep2 = testtools.compat._u('-' * 70 + '\n')
-        self.filterable_states = set(['success', 'uxsuccess', 'xfail', 'skip'])
+        self.filterable_states = {'success', 'uxsuccess', 'xfail', 'skip'}
         self.get_id = get_id
 
     def _format_error(self, label, test, error_text, test_tags=None):
         test_tags = test_tags or ()
         tags = ' '.join(test_tags)
         if tags:
-            tags = str(('tags: %s\n' % tags))
+            tags = str('tags: %s\n' % tags)
         return str(''.join([
             self.sep1,
-            str('%s: %s\n' % (label, test.id())),
+            str('{}: {}\n'.format(label, test.id())),
             tags,
             self.sep2,
             error_text,

@@ -254,7 +254,7 @@ class _SqlInserter(repository.AbstractTestRun):
         return db_test
 
     def _get_attrs(self, test_id):
-        attr_regex = re.compile('\[(.*)\]')
+        attr_regex = re.compile(r'\[(.*)\]')
         matches = attr_regex.search(test_id)
         attrs = None
         if matches:

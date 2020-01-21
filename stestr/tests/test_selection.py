@@ -108,7 +108,7 @@ class TestConstructList(base.TestCase):
             result = selection.construct_list(test_lists,
                                               whitelist_file='file')
         self.assertEqual(set(result),
-                         set(('fake_test1[tg]', 'fake_test2[tg]')))
+                         {'fake_test1[tg]', 'fake_test2[tg]'})
 
     def test_whitelist_invalid_regex(self):
         whitelist_file = six.StringIO()
@@ -133,7 +133,7 @@ class TestConstructList(base.TestCase):
                 result = selection.construct_list(test_lists, 'black_file',
                                                   'white_file', ['foo'])
         self.assertEqual(set(result),
-                         set(('fake_test1[tg]', 'fake_test3[tg,foo]')))
+                         {'fake_test1[tg]', 'fake_test3[tg,foo]'})
 
     def test_overlapping_black_regex(self):
 

@@ -82,7 +82,7 @@ class AnsiColorizer(object):
         @param color: A string label for a color. e.g. 'red', 'white'.
         """
         color = self._colors[color]
-        self.stream.write('\x1b[%s;1m%s\x1b[0m' % (color, text))
+        self.stream.write('\x1b[{};1m{}\x1b[0m'.format(color, text))
 
 
 class NullColorizer(object):

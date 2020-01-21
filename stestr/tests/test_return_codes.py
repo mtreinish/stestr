@@ -95,7 +95,7 @@ class TestReturnCodes(base.TestCase):
         if not subunit:
             self.assertEqual(
                 p.returncode, expected,
-                "Stdout: %s; Stderr: %s" % (out, err))
+                "Stdout: {}; Stderr: {}".format(out, err))
             return (out, err)
         else:
             self.assertEqual(p.returncode, expected,
@@ -249,7 +249,7 @@ class TestReturnCodes(base.TestCase):
         test_count_split = stdout.split(' ')
         test_count = test_count_split[1]
         test_count = int(test_count)
-        id_regex = re.compile('\(id=(.*?)\)')
+        id_regex = re.compile(r'\(id=(.*?)\)')
         test_id = id_regex.search(stdout).group(0)
         self.assertRunExit('stestr run --combine passing', 0)
         combine_stdout = self._get_cmd_stdout(

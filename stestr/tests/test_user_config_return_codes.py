@@ -77,7 +77,7 @@ class TestReturnCodes(base.TestCase):
         if not subunit:
             self.assertEqual(
                 p.returncode, expected,
-                "Stdout: %s; Stderr: %s" % (out, err))
+                "Stdout: {}; Stderr: {}".format(out, err))
             return (out, err)
         else:
             self.assertEqual(p.returncode, expected,

@@ -75,7 +75,7 @@ class UserConfig(object):
         try:
             self.schema(self.config)
         except vp.MultipleInvalid as e:
-            msg = 'Provided user config file %s is invalid because:\n%s' % (
+            msg = 'Provided user config file {} is invalid because:\n{}'.format(
                 path, str(e))
             sys.exit(msg)
 
