@@ -10,10 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import io
 import re
 
 import mock
-import six
 
 from stestr import selection
 from stestr.tests import base
@@ -41,12 +41,12 @@ class TestSelection(base.TestCase):
 
 class TestBlackReader(base.TestCase):
     def test_black_reader(self):
-        blacklist_file = six.StringIO()
+        blacklist_file = io.StringIO()
         for i in range(4):
             blacklist_file.write('fake_regex_%s\n' % i)
             blacklist_file.write('fake_regex_with_note_%s # note\n' % i)
         blacklist_file.seek(0)
-        with mock.patch('six.moves.builtins.open',
+        with mock.patch('builtins.open',
                         return_value=blacklist_file):
             result = selection.black_reader('fake_path')
         self.assertEqual(2 * 4, len(result))
@@ -60,10 +60,10 @@ class TestBlackReader(base.TestCase):
         self.assertEqual(note_cnt, 4)
 
     def test_invalid_regex(self):
-        blacklist_file = six.StringIO()
+        blacklist_file = io.StringIO()
         blacklist_file.write("fake_regex_with_bad_part[The-BAD-part]")
         blacklist_file.seek(0)
-        with mock.patch('six.moves.builtins.open',
+        with mock.patch('builtins.open',
                         return_value=blacklist_file):
             with mock.patch('sys.exit') as mock_exit:
                 selection.black_reader('fake_path')
@@ -111,10 +111,10 @@ class TestConstructList(base.TestCase):
                          {'fake_test1[tg]', 'fake_test2[tg]'})
 
     def test_whitelist_invalid_regex(self):
-        whitelist_file = six.StringIO()
+        whitelist_file = io.StringIO()
         whitelist_file.write("fake_regex_with_bad_part[The-BAD-part]")
         whitelist_file.seek(0)
-        with mock.patch('six.moves.builtins.open',
+        with mock.patch('builtins.open',
                         return_value=whitelist_file):
             with mock.patch('sys.exit') as mock_exit:
                 selection._get_regex_from_whitelist_file('fake_path')

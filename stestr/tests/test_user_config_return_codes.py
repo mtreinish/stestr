@@ -17,8 +17,6 @@ import shutil
 import subprocess
 import tempfile
 
-import six
-from six import StringIO
 import subunit as subunit_lib
 import testtools
 import yaml
@@ -48,8 +46,8 @@ class TestReturnCodes(base.TestCase):
         shutil.copy('stestr/tests/files/setup.cfg', self.setup_cfg_file)
         shutil.copy('stestr/tests/files/__init__.py', self.init_file)
 
-        self.stdout = StringIO()
-        self.stderr = StringIO()
+        self.stdout = io.StringIO()
+        self.stderr = io.StringIO()
         # Change directory, run wrapper and check result
         self.addCleanup(os.chdir, os.path.abspath(os.curdir))
         os.chdir(self.directory)
@@ -123,7 +121,7 @@ class TestReturnCodes(base.TestCase):
         self.addCleanup(os.remove, path)
         conf_file = os.fdopen(fd, 'wb', 0)
         self.addCleanup(conf_file.close)
-        contents = six.text_type(
+        contents = str(
             yaml.dump({
                 'run': {
                     'no-subunit-trace': True,
@@ -132,7 +130,7 @@ class TestReturnCodes(base.TestCase):
         conf_file.write(contents.encode('utf-8'))
         out, err = self.assertRunExit(
             'stestr --user-config=%s run passing' % path, 0)
-        out = six.text_type(out)
+        out = str(out)
         self.assertIn('PASSED (id=0)', out)
         self.assertNotIn('Totals', out)
         self.assertNotIn('Worker Balance', out)
@@ -144,7 +142,7 @@ class TestReturnCodes(base.TestCase):
         self.addCleanup(os.remove, path)
         conf_file = os.fdopen(fd, 'wb', 0)
         self.addCleanup(conf_file.close)
-        contents = six.text_type(
+        contents = str(
             yaml.dump({
                 'run': {
                     'no-subunit-trace': True,
@@ -153,7 +151,7 @@ class TestReturnCodes(base.TestCase):
         conf_file.write(contents.encode('utf-8'))
         out, err = self.assertRunExit(
             'stestr --user-config=%s run' % path, 1)
-        out = six.text_type(out)
+        out = str(out)
         self.assertIn('FAILED (id=0, failures=2)', out)
         self.assertNotIn('Totals', out)
         self.assertNotIn('Worker Balance', out)
@@ -164,7 +162,7 @@ class TestReturnCodes(base.TestCase):
         self.addCleanup(os.remove, path)
         conf_file = os.fdopen(fd, 'wb', 0)
         self.addCleanup(conf_file.close)
-        contents = six.text_type(
+        contents = str(
             yaml.dump({
                 'run': {
                     'no-subunit-trace': True,
@@ -174,7 +172,7 @@ class TestReturnCodes(base.TestCase):
         out, err = self.assertRunExit(
             'stestr --user-config=%s run --force-subunit-trace passing' % path,
             0)
-        out = six.text_type(out)
+        out = str(out)
         self.assertNotIn('PASSED (id=0)', out)
         self.assertIn('Totals', out)
         self.assertIn('Worker Balance', out)
@@ -185,7 +183,7 @@ class TestReturnCodes(base.TestCase):
         self.addCleanup(os.remove, path)
         conf_file = os.fdopen(fd, 'wb', 0)
         self.addCleanup(conf_file.close)
-        contents = six.text_type(
+        contents = str(
             yaml.dump({
                 'run': {
                     'abbreviate': True,
@@ -194,7 +192,7 @@ class TestReturnCodes(base.TestCase):
         conf_file.write(contents.encode('utf-8'))
         out, err = self.assertRunExit(
             'stestr --user-config=%s run passing' % path, 0)
-        out = six.text_type(out)
+        out = str(out)
         self.assertIn('..', out)
         self.assertNotIn('PASSED (id=0)', out)
         self.assertIn('Totals', out)
@@ -206,7 +204,7 @@ class TestReturnCodes(base.TestCase):
         self.addCleanup(os.remove, path)
         conf_file = os.fdopen(fd, 'wb', 0)
         self.addCleanup(conf_file.close)
-        contents = six.text_type(
+        contents = str(
             yaml.dump({
                 'run': {
                     'abbreviate': True,
@@ -217,7 +215,7 @@ class TestReturnCodes(base.TestCase):
         # execution order for confirming the abbreviated output.
         out, err = self.assertRunExit(
             'stestr --user-config=%s run --serial' % path, 1)
-        out = six.text_type(out)
+        out = str(out)
         self.assertIn('FF..', out)
         self.assertNotIn('FAILED (id=0, failures=2)', out)
         self.assertIn('Totals', out)
@@ -229,7 +227,7 @@ class TestReturnCodes(base.TestCase):
         self.addCleanup(os.remove, path)
         conf_file = os.fdopen(fd, 'wb', 0)
         self.addCleanup(conf_file.close)
-        contents = six.text_type(
+        contents = str(
             yaml.dump({
                 'run': {
                     'no-subunit-trace': True,
@@ -239,7 +237,7 @@ class TestReturnCodes(base.TestCase):
         conf_file.write(contents.encode('utf-8'))
         out, err = self.assertRunExit(
             'stestr --user-config=%s run passing' % path, 0)
-        out = six.text_type(out)
+        out = str(out)
         self.assertIn('PASSED (id=0)', out)
         self.assertNotIn('Totals', out)
         self.assertNotIn('Worker Balance', out)
@@ -251,7 +249,7 @@ class TestReturnCodes(base.TestCase):
         self.addCleanup(os.remove, path)
         conf_file = os.fdopen(fd, 'wb', 0)
         self.addCleanup(conf_file.close)
-        contents = six.text_type(
+        contents = str(
             yaml.dump({
                 'run': {
                     'no-subunit-trace': True,
@@ -265,7 +263,7 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit('stestr --user-config=%s run' % path, 1)
         out, err = self.assertRunExit('stestr --user-config=%s failing' % path,
                                       1)
-        out = six.text_type(out)
+        out = str(out)
         self.assertNotIn('FAILED (id=0, failures=2)', out)
         self.assertNotIn('FAIL:', out)
         self.assertIn('tests.test_failing.FakeTestClass.test_pass', out)
@@ -276,7 +274,7 @@ class TestReturnCodes(base.TestCase):
         self.addCleanup(os.remove, path)
         conf_file = os.fdopen(fd, 'wb', 0)
         self.addCleanup(conf_file.close)
-        contents = six.text_type(
+        contents = str(
             yaml.dump({
                 'run': {
                     'slowest': True,
@@ -293,8 +291,8 @@ class TestReturnCodes(base.TestCase):
             'stestr --user-config=%s run passing' % path, 0)
         out, err = self.assertRunExit('stestr --user-config=%s last' % path,
                                       0)
-        run_out = six.text_type(run_out)
-        out = six.text_type(out)
+        run_out = str(run_out)
+        out = str(out)
         self.assertIn('PASSED (id=0)', out)
         self.assertNotIn('Totals', out)
         self.assertNotIn('Worker Balance', out)
@@ -310,7 +308,7 @@ class TestReturnCodes(base.TestCase):
         self.addCleanup(os.remove, path)
         conf_file = os.fdopen(fd, 'wb', 0)
         self.addCleanup(conf_file.close)
-        contents = six.text_type(
+        contents = str(
             yaml.dump({
                 'run': {
                     'slowest': True,
@@ -332,7 +330,7 @@ class TestReturnCodes(base.TestCase):
             'stestr --user-config=%s last --subunit' % path)[0]
         out, err = self.assertRunExit('stestr --user-config=%s load' % path,
                                       0, stdin=stream)
-        out = six.text_type(out)
+        out = str(out)
         self.assertNotIn('PASSED (id=0)', out)
         self.assertIn('Totals', out)
         self.assertIn('Worker Balance', out)
@@ -343,7 +341,7 @@ class TestReturnCodes(base.TestCase):
         self.addCleanup(os.remove, path)
         conf_file = os.fdopen(fd, 'wb', 0)
         self.addCleanup(conf_file.close)
-        contents = six.text_type(
+        contents = str(
             yaml.dump({
                 'run': {
                     'slowest': True,
@@ -365,7 +363,7 @@ class TestReturnCodes(base.TestCase):
             'stestr --user-config=%s last --subunit' % path)[0]
         out, err = self.assertRunExit('stestr --user-config=%s load' % path,
                                       0, stdin=stream)
-        out = six.text_type(out)
+        out = str(out)
         self.assertNotIn('FAILED (id=0, failures=2)', out)
         self.assertNotIn('FF..', out)
         self.assertIn('Totals', out)
@@ -378,7 +376,7 @@ class TestReturnCodes(base.TestCase):
         self.addCleanup(os.remove, path)
         conf_file = os.fdopen(fd, 'wb', 0)
         self.addCleanup(conf_file.close)
-        contents = six.text_type(
+        contents = str(
             yaml.dump({
                 'run': {
                     'slowest': True,
@@ -400,7 +398,7 @@ class TestReturnCodes(base.TestCase):
             'stestr --user-config=%s last --subunit' % path)[0]
         out, err = self.assertRunExit('stestr --user-config=%s load' % path,
                                       0, stdin=stream)
-        out = six.text_type(out)
+        out = str(out)
         self.assertNotIn('PASSED (id=0)', out)
         self.assertIn('..', out)
         self.assertIn('Totals', out)
@@ -413,7 +411,7 @@ class TestReturnCodes(base.TestCase):
         self.addCleanup(os.remove, path)
         conf_file = os.fdopen(fd, 'wb', 0)
         self.addCleanup(conf_file.close)
-        contents = six.text_type(
+        contents = str(
             yaml.dump({
                 'run': {
                     'slowest': True,
@@ -436,7 +434,7 @@ class TestReturnCodes(base.TestCase):
             'stestr --user-config=%s last --subunit' % path)[0]
         out, err = self.assertRunExit('stestr --user-config=%s load' % path,
                                       0, stdin=stream)
-        out = six.text_type(out)
+        out = str(out)
         self.assertNotIn('FAILED (id=0, failures=2)', out)
         self.assertIn('FF..', out)
         self.assertIn('Totals', out)

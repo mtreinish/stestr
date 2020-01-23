@@ -14,7 +14,6 @@ import io
 import operator
 
 import mock
-import six
 import subunit
 import testtools
 
@@ -80,7 +79,7 @@ class FakeNoFailing(FakeTestRun):
 
     def __init__(self, failure=True):
         # Generate a subunit stream
-        stream_buf = io.BytesIO(six.binary_type(b''))
+        stream_buf = io.BytesIO(bytes(b''))
         self._content = stream_buf.getvalue()
         self.id = None
 

@@ -100,7 +100,7 @@ class TestUserConfig(base.TestCase):
         user_mock.assert_called_once_with(self.home_path)
 
     @mock.patch('yaml.safe_load', return_value={})
-    @mock.patch('six.moves.builtins.open', mock.mock_open())
+    @mock.patch('builtins.open', mock.mock_open())
     def test_user_config_empty_schema(self, yaml_mock):
         user_conf = user_config.UserConfig('/path')
         self.assertEqual({}, user_conf.config)
@@ -108,7 +108,7 @@ class TestUserConfig(base.TestCase):
     @mock.patch('yaml.safe_load',
                 return_value={'init': {'subunit-trace': True}})
     @mock.patch('sys.exit')
-    @mock.patch('six.moves.builtins.open', mock.mock_open())
+    @mock.patch('builtins.open', mock.mock_open())
     def test_user_config_invalid_command(self, exit_mock, yaml_mock):
         user_config.UserConfig('/path')
         error_string = ("Provided user config file /path is invalid because:\n"
@@ -118,7 +118,7 @@ class TestUserConfig(base.TestCase):
     @mock.patch('yaml.safe_load',
                 return_value={'run': {'subunit-trace': True}})
     @mock.patch('sys.exit')
-    @mock.patch('six.moves.builtins.open', mock.mock_open())
+    @mock.patch('builtins.open', mock.mock_open())
     def test_user_config_invalid_option(self, exit_mock, yaml_mock):
         user_config.UserConfig('/path')
         error_string = ("Provided user config file /path is invalid because:\n"
@@ -126,7 +126,7 @@ class TestUserConfig(base.TestCase):
                         "data['run']['subunit-trace']")
         exit_mock.assert_called_once_with(error_string)
 
-    @mock.patch('six.moves.builtins.open',
+    @mock.patch('builtins.open',
                 return_value=io.BytesIO(FULL_YAML.encode('utf-8')))
     def test_user_config_full_config(self, open_mock):
         user_conf = user_config.UserConfig('/path')
@@ -158,7 +158,7 @@ class TestUserConfig(base.TestCase):
         self.assertEqual(full_dict, user_conf.config)
 
     @mock.patch('sys.exit')
-    @mock.patch('six.moves.builtins.open',
+    @mock.patch('builtins.open',
                 return_value=io.BytesIO(INVALID_YAML_FIELD.encode('utf-8')))
     def test_user_config_invalid_value_type(self, open_mock, exit_mock):
         user_config.UserConfig('/path')
@@ -168,7 +168,7 @@ class TestUserConfig(base.TestCase):
         exit_mock.assert_called_once_with(error_string)
 
     @mock.patch('sys.exit')
-    @mock.patch('six.moves.builtins.open',
+    @mock.patch('builtins.open',
                 return_value=io.BytesIO(YAML_NOT_INT.encode('utf-8')))
     def test_user_config_invalid_integer(self, open_mock, exit_mock):
         user_config.UserConfig('/path')

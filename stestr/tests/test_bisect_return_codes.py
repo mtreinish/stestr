@@ -15,8 +15,6 @@ import shutil
 import subprocess
 import tempfile
 
-import six
-
 from stestr.tests import base
 
 
@@ -65,7 +63,7 @@ class TestBisectReturnCodes(base.TestCase):
         out, err = p_analyze.communicate()
         out = out.decode('utf-8')
         # For debugging potential failures
-        lines = six.text_type(out.rstrip()).splitlines()
+        lines = str(out.rstrip()).splitlines()
         self.assertEqual(3, p_analyze.returncode,
                          'Analyze isolation returned an unexpected return code'
                          '\nStdout: %s\nStderr: %s' % (out, err))
