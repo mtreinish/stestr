@@ -12,8 +12,8 @@
 
 import io
 import operator
+from unittest import mock
 
-import mock
 import subunit
 import testtools
 

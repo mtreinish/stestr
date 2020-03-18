@@ -12,8 +12,7 @@
 
 import io
 import os
-
-import mock
+from unittest import mock
 
 from stestr.tests import base
 from stestr import user_config

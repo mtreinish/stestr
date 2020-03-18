@@ -11,8 +11,7 @@
 # under the License.
 
 import subprocess
-
-import mock
+from unittest import mock
 
 from stestr import test_processor
 from stestr.tests import base

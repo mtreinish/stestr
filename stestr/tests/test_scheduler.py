@@ -12,8 +12,8 @@
 
 import datetime
 import re
+from unittest import mock
 
-import mock
 from subunit import iso8601
 
 from stestr.repository import memory

@@ -12,8 +12,7 @@
 
 import io
 import re
-
-import mock
+from unittest import mock
 
 from stestr import selection
 from stestr.tests import base

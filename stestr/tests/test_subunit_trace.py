@@ -17,11 +17,11 @@ from datetime import datetime as dt
 import io
 import os
 import sys
+from unittest.mock import patch
 
 from ddt import data
 from ddt import ddt
 from ddt import unpack
-from mock import patch
 
 from stestr import subunit_trace
 from stestr.tests import base
