@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import six
 import subunit
 import testtools
 
@@ -91,17 +90,17 @@ class CLITestResult(testtools.StreamResult):
         self.stream = testtools.compat.unicode_output_stream(stream)
         self.sep1 = testtools.compat._u('=' * 70 + '\n')
         self.sep2 = testtools.compat._u('-' * 70 + '\n')
-        self.filterable_states = set(['success', 'uxsuccess', 'xfail', 'skip'])
+        self.filterable_states = {'success', 'uxsuccess', 'xfail', 'skip'}
         self.get_id = get_id
 
     def _format_error(self, label, test, error_text, test_tags=None):
         test_tags = test_tags or ()
         tags = ' '.join(test_tags)
         if tags:
-            tags = six.text_type(('tags: %s\n' % tags))
-        return six.text_type(''.join([
+            tags = str('tags: %s\n' % tags)
+        return str(''.join([
             self.sep1,
-            six.text_type('%s: %s\n' % (label, test.id())),
+            str('{}: {}\n'.format(label, test.id())),
             tags,
             self.sep2,
             error_text,
@@ -114,7 +113,7 @@ class CLITestResult(testtools.StreamResult):
         test_tags = kwargs.get('test_tags')
         if test_status == 'fail':
             self.stream.write(
-                self._format_error(six.text_type('FAIL'),
+                self._format_error(str('FAIL'),
                                    *(self._summary.errors[-1]),
                                    test_tags=test_tags))
         if test_status not in self.filterable_states:

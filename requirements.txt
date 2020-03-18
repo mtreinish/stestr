@@ -6,7 +6,6 @@ pbr!=2.1.0,>=2.0.0,!=4.0.0,!=4.0.1,!=4.0.2,!=4.0.3 # Apache-2.0
 cliff>=2.8.0 # Apache-2.0
 python-subunit>=1.4.0 # Apache-2.0/BSD
 fixtures>=3.0.0 # Apache-2.0/BSD
-six>=1.10.0 # MIT
 testtools>=2.2.0 # MIT
 PyYAML>=3.10.0 # MIT
 voluptuous>=0.8.9 # BSD License

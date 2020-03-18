@@ -20,7 +20,6 @@ import re
 import subprocess
 import sys
 
-import six
 import sqlalchemy
 from sqlalchemy import orm
 import subunit.v2
@@ -55,8 +54,8 @@ class RepositoryFactory(repository.AbstractRepositoryFactory):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         out, err = proc.communicate()
-        sys.stdout.write(six.text_type(out))
-        sys.stderr.write(six.text_type(err))
+        sys.stdout.write(str(out))
+        sys.stderr.write(str(err))
 
         return result
 
@@ -255,7 +254,7 @@ class _SqlInserter(repository.AbstractTestRun):
         return db_test
 
     def _get_attrs(self, test_id):
-        attr_regex = re.compile('\[(.*)\]')
+        attr_regex = re.compile(r'\[(.*)\]')
         matches = attr_regex.search(test_id)
         attrs = None
         if matches:

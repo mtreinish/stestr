@@ -17,12 +17,11 @@ from datetime import datetime as dt
 import io
 import os
 import sys
+from unittest.mock import patch
 
 from ddt import data
 from ddt import ddt
 from ddt import unpack
-from mock import patch
-import six
 
 from stestr import subunit_trace
 from stestr.tests import base
@@ -79,7 +78,7 @@ class TestSubunitTrace(base.TestCase):
             'sample_streams/successful.subunit')
         bytes_ = io.BytesIO()
         with open(regular_stream, 'rb') as stream:
-            bytes_.write(six.binary_type(stream.read()))
+            bytes_.write(bytes(stream.read()))
         bytes_.seek(0)
         stdin = io.TextIOWrapper(io.BufferedReader(bytes_))
         returncode = subunit_trace.trace(stdin, sys.stdout)
@@ -91,7 +90,7 @@ class TestSubunitTrace(base.TestCase):
             'sample_streams/all_skips.subunit')
         bytes_ = io.BytesIO()
         with open(regular_stream, 'rb') as stream:
-            bytes_.write(six.binary_type(stream.read()))
+            bytes_.write(bytes(stream.read()))
         bytes_.seek(0)
         stdin = io.TextIOWrapper(io.BufferedReader(bytes_))
         returncode = subunit_trace.trace(stdin, sys.stdout)
@@ -103,7 +102,7 @@ class TestSubunitTrace(base.TestCase):
             'sample_streams/failure.subunit')
         bytes_ = io.BytesIO()
         with open(regular_stream, 'rb') as stream:
-            bytes_.write(six.binary_type(stream.read()))
+            bytes_.write(bytes(stream.read()))
         bytes_.seek(0)
         stdin = io.TextIOWrapper(io.BufferedReader(bytes_))
         returncode = subunit_trace.trace(stdin, sys.stdout)

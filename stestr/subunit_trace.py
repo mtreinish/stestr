@@ -120,7 +120,7 @@ def print_attachments(stream, test, all_channels=False,
             detail.content_type.type = 'text'
         if all_channels or name in channels:
             title = "Captured %s:" % name
-            stream.write("\n%s\n%s\n" % (title, ('~' * len(title))))
+            stream.write("\n{}\n{}\n".format(title, ('~' * len(title))))
 
             # indent attachment lines 4 spaces to make them visually
             # offset
@@ -190,7 +190,7 @@ def show_outcome(stream, test, print_failures=False, failonly=False,
         if abbreviate:
             color.write('F', 'red')
         else:
-            stream.write('{%s} %s [%s] ... ' % (
+            stream.write('{{{}}} {} [{}] ... '.format(
                 worker, name, duration))
             color.write('FAILED', 'red')
             stream.write('\n')
@@ -203,7 +203,7 @@ def show_outcome(stream, test, print_failures=False, failonly=False,
             if abbreviate:
                 color.write('.', 'green')
             else:
-                out_string = '{%s} %s [%s' % (worker, name, duration)
+                out_string = '{{{}}} {} [{}'.format(worker, name, duration)
                 perc_diff = find_test_run_time_diff(test['id'], duration)
                 if enable_diff:
                     if perc_diff and abs(perc_diff) >= abs(float(threshold)):
@@ -225,7 +225,7 @@ def show_outcome(stream, test, print_failures=False, failonly=False,
                 reason = test['details'].get('reason', '')
                 if reason:
                     reason = ': ' + reason.as_text()
-                stream.write('{%s} %s ... ' % (
+                stream.write('{{{}}} {} ... '.format(
                     worker, name))
                 color.write('SKIPPED', 'blue')
                 stream.write('%s' % (reason))
@@ -234,7 +234,7 @@ def show_outcome(stream, test, print_failures=False, failonly=False,
             if abbreviate:
                 stream.write('%s' % test['status'][0])
             else:
-                stream.write('{%s} %s [%s] ... %s\n' % (
+                stream.write('{{{}}} {} [{}] ... {}\n'.format(
                     worker, name, duration, test['status']))
                 if not print_failures:
                     print_attachments(
@@ -298,7 +298,7 @@ def worker_stats(worker):
 
 def print_summary(stream, elapsed_time):
     stream.write("\n======\nTotals\n======\n")
-    stream.write("Ran: %s tests in %.4f sec.\n" % (
+    stream.write("Ran: {} tests in {:.4f} sec.\n".format(
         count_tests('status', '.*'), total_seconds(elapsed_time)))
     stream.write(" - Passed: %s\n" % count_tests('status', '^success$'))
     stream.write(" - Skipped: %s\n" % count_tests('status', '^skip$'))
@@ -318,7 +318,7 @@ def print_summary(stream, elapsed_time):
                     " - WARNING: missing Worker %s!\n" % w)
             else:
                 num, time = worker_stats(w)
-                out_str = " - Worker %s (%s tests) => %s" % (w, num, time)
+                out_str = " - Worker {} ({} tests) => {}".format(w, num, time)
                 if time.isdigit():
                     out_str += 's'
                 out_str += '\n'

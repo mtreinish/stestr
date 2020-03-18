@@ -21,7 +21,6 @@ import sys
 import warnings
 
 from cliff import command
-import six
 import subunit
 import testtools
 
@@ -46,7 +45,7 @@ def _to_int(possible, default=0, out=sys.stderr):
         i = default
         msg = ('Unable to convert "%s" to an integer.  Using %d.\n' %
                (possible, default))
-        out.write(six.text_type(msg))
+        out.write(str(msg))
     return i
 
 
@@ -399,7 +398,7 @@ def run_command(config='.stestr.conf', repo_type='file',
         return 2
     if combine:
         latest_id = repo.latest_id()
-        combine_id = six.text_type(latest_id)
+        combine_id = str(latest_id)
     if no_discover and pdb:
         msg = ("--no-discover and --pdb are mutually exclusive options, "
                "only specify one at a time")
