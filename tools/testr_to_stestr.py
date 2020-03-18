@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import configparser
 import os
 import sys
 
-import six
 
 if not os.path.isfile('.testr.conf'):
     sys.exit("Testr config file not found")
 
 with open('.testr.conf', 'r') as testr_conf_file:
-    config = six.moves.configparser.ConfigParser()
+    config = configparser.ConfigParser()
     config.readfp(testr_conf_file)
 
     test_command = config.get('DEFAULT', 'test_command')
