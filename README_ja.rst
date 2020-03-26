@@ -25,8 +25,8 @@ stestr（日本語訳）
 .. _日本語: https://github.com/mtreinish/stestr/blob/master/README_ja.rst
 
 .. note:: stestr v2.x.x リリースシリーズは、Python 2 をサポートする最後のシリ
-    ーズとなります。Python 2.7のサポートは、2020年の早い時期に予定されている、
-    「stestr リリース 3.0.0」にて打ち切られる予定です。
+    ーズとなります。Python 2.7のサポートは「stestr リリース 3.0.0」
+    にて打ち切られるでました。
 
 概要
 ----
