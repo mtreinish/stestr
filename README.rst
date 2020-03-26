@@ -25,8 +25,7 @@ stestr
 .. _日本語: https://github.com/mtreinish/stestr/blob/master/README_ja.rst
 
 .. note:: stestr v2.x.x release series will be the last series that supports
-    Python 2. Support for Python 2.7 will be dropped in stestr release 3.0.0
-    which is being planned for early 2020.
+    Python 2. Support for Python 2.7 was dropped in stestr release 3.0.0.
 
 Overview
 --------
