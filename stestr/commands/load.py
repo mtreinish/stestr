@@ -86,6 +86,10 @@ class Load(command.Command):
                             dest='all_attachments',
                             help='If set print all text attachment contents on'
                             ' a successful test execution')
+        parser.add_argument('--show-binary-attachments', action='store_true',
+                            dest='show_binary_attachments',
+                            help='If set, show non-text attachments. This is '
+                            'generally only useful for debug purposes.')
         return parser
 
     def take_action(self, parsed_args):
@@ -134,14 +138,15 @@ class Load(command.Command):
              pretty_out=pretty_out, color=color,
              stdout=stdout, abbreviate=abbreviate,
              suppress_attachments=suppress_attachments, serial=True,
-             all_attachments=all_attachments)
+             all_attachments=all_attachments,
+             show_binary_attachments=args.show_binary_attachments)
 
 
 def load(force_init=False, in_streams=None,
          partial=False, subunit_out=False, repo_type='file', repo_url=None,
          run_id=None, streams=None, pretty_out=False, color=False,
          stdout=sys.stdout, abbreviate=False, suppress_attachments=False,
-         serial=False, all_attachments=False):
+         serial=False, all_attachments=False, show_binary_attachments=False):
     """Load subunit streams into a repository
 
     This function will load subunit streams into the repository. It will
@@ -172,6 +177,8 @@ def load(force_init=False, in_streams=None,
         will not print attachments on successful test execution.
     :param bool all_attachments: When set true subunit_trace will print all
         text attachments on successful test execution.
+    :param bool show_binary_attachments: When set to true, subunit_trace will
+        print binary attachments in addition to text attachments.
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -233,7 +240,8 @@ def load(force_init=False, in_streams=None,
                 stream, non_subunit_name='stdout')
             result = _load_case(inserter, repo, case, subunit_out, pretty_out,
                                 color, stdout, abbreviate,
-                                suppress_attachments, all_attachments)
+                                suppress_attachments, all_attachments,
+                                show_binary_attachments)
             if result or retval:
                 retval = 1
             else:
@@ -242,14 +250,14 @@ def load(force_init=False, in_streams=None,
         case = testtools.ConcurrentStreamTestSuite(make_tests)
         retval = _load_case(inserter, repo, case, subunit_out, pretty_out,
                             color, stdout, abbreviate, suppress_attachments,
-                            all_attachments)
+                            all_attachments, show_binary_attachments)
 
     return retval
 
 
 def _load_case(inserter, repo, case, subunit_out, pretty_out,
                color, stdout, abbreviate, suppress_attachments,
-               all_attachments):
+               all_attachments, show_binary_attachments):
     if subunit_out:
         output_result, summary_result = output.make_result(inserter.get_id,
                                                            output=stdout)
@@ -258,7 +266,8 @@ def _load_case(inserter, repo, case, subunit_out, pretty_out,
             functools.partial(subunit_trace.show_outcome, stdout,
                               enable_color=color, abbreviate=abbreviate,
                               suppress_attachments=suppress_attachments,
-                              all_attachments=all_attachments))
+                              all_attachments=all_attachments,
+                              show_binary_attachments=show_binary_attachments))
         summary_result = testtools.StreamSummary()
         output_result = testtools.CopyStreamResult([outcomes, summary_result])
         output_result = testtools.StreamResultRouter(output_result)

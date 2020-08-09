@@ -21,7 +21,6 @@ import sys
 import warnings
 
 from cliff import command
-import six
 import subunit
 import testtools
 
@@ -46,7 +45,7 @@ def _to_int(possible, default=0, out=sys.stderr):
         i = default
         msg = ('Unable to convert "%s" to an integer.  Using %d.\n' %
                (possible, default))
-        out.write(six.text_type(msg))
+        out.write(str(msg))
     return i
 
 
@@ -170,6 +169,10 @@ class Run(command.Command):
                             ' a successful test execution')
         parser.add_argument('--dynamic', action='store_true', default=False,
                             help='Enable the EXPERIMENTAL dynamic scheduler')
+        parser.add_argument('--show-binary-attachments', action='store_true',
+                            dest='show_binary_attachments',
+                            help='If set, show non-text attachments. This is '
+                            'generally only useful for debug purposes.')
         return parser
 
     def take_action(self, parsed_args):
@@ -246,8 +249,9 @@ class Run(command.Command):
             filters=filters, pretty_out=pretty_out, color=color,
             stdout=stdout, abbreviate=abbreviate,
             suppress_attachments=suppress_attachments,
-            all_attachments=all_attachments, pdb=args.pdb,
-            dynamic=args.dynamic)
+            all_attachments=all_attachments,
+            show_binary_attachments=args.show_binary_attachments,
+            pdb=args.pdb, dynamic=args.dynamic)
 
         # Always output slowest test info if requested, regardless of other
         # test run options
@@ -288,7 +292,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                 no_discover=False, random=False, combine=False, filters=None,
                 pretty_out=True, color=False, stdout=sys.stdout,
                 abbreviate=False, suppress_attachments=False,
-                all_attachments=False, pdb=False, dynamic=False):
+                all_attachments=False, show_binary_attachments=True,
+                pdb=False, dynamic=False):
     """Function to execute the run command
 
     This function implements the run command. It will run the tests specified
@@ -351,6 +356,8 @@ def run_command(config='.stestr.conf', repo_type='file',
         will not print attachments on successful test execution.
     :param bool all_attachments: When set true subunit_trace will print all
         text attachments on successful test execution.
+    :param bool show_binary_attachments: When set to true, subunit_trace will
+        print binary attachments in addition to text attachments.
     :param str pdb: Takes in a single test_id to bypasses test
         discover and just execute the test specified without launching any
         additional processes. A file name may be used in place of a test name.
@@ -401,7 +408,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                       "You might encounter issues while using it")
     if combine:
         latest_id = repo.latest_id()
-        combine_id = six.text_type(latest_id)
+        combine_id = str(latest_id)
     if no_discover and pdb:
         msg = ("--no-discover and --pdb are mutually exclusive options, "
                "only specify one at a time")
@@ -443,7 +450,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                              pretty_out=pretty_out,
                              color=color, stdout=stdout, abbreviate=abbreviate,
                              suppress_attachments=suppress_attachments,
-                             all_attachments=all_attachments)
+                             all_attachments=all_attachments,
+                             show_binary_attachments=show_binary_attachments)
 
         if not until_failure:
             return run_tests()
@@ -488,7 +496,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                          pretty_out=pretty_out,
                          color=color, stdout=stdout, abbreviate=abbreviate,
                          suppress_attachments=suppress_attachments,
-                         all_attachments=all_attachments)
+                         all_attachments=all_attachments,
+                         show_binary_attachments=show_binary_attachments)
 
     if failing or analyze_isolation:
         ids = _find_failing(repo)
@@ -539,8 +548,9 @@ def run_command(config='.stestr.conf', repo_type='file',
                     repo_type=repo_type, repo_url=repo_url,
                     pretty_out=pretty_out, color=color, abbreviate=abbreviate,
                     stdout=stdout, suppress_attachments=suppress_attachments,
-                    all_attachments=all_attachments, dynamic=dynamic)
-
+                    all_attachments=all_attachments,
+                    show_binary_attachments=show_binary_attachments,
+                    dynamic=dynamic)
                 if run_result > result:
                     result = run_result
             return result
@@ -556,6 +566,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                               abbreviate=abbreviate,
                               suppress_attachments=suppress_attachments,
                               all_attachments=all_attachments,
+                              show_binary_attachments=show_binary_attachments,
                               dynamic=dynamic)
     else:
         # Where do we source data about the cause of conflicts.
@@ -601,7 +612,8 @@ def _run_tests(cmd, until_failure,
                subunit_out=False, combine_id=None, repo_type='file',
                repo_url=None, pretty_out=True, color=False, stdout=sys.stdout,
                abbreviate=False, suppress_attachments=False,
-               all_attachments=False, dynamic=False):
+               all_attachments=False, show_binary_attachments=False,
+               dynamic=False):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
@@ -626,7 +638,8 @@ def _run_tests(cmd, until_failure,
                              pretty_out=pretty_out, color=color, stdout=stdout,
                              abbreviate=abbreviate,
                              suppress_attachments=suppress_attachments,
-                             all_attachments=all_attachments)
+                             all_attachments=all_attachments,
+                             show_binary_attachments=show_binary_attachments)
 
         if not until_failure:
             return run_tests()

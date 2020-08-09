@@ -11,6 +11,7 @@
 # under the License.
 
 import functools
+import io
 import multiprocessing
 import os
 import re
@@ -20,7 +21,6 @@ import sys
 import tempfile
 
 import fixtures
-import six
 from subunit import v2
 
 from stestr import results
@@ -211,21 +211,15 @@ class TestProcessorFixture(fixtures.Fixture):
             sys.stdout.write("\n=========================\n"
                              "Failures during discovery"
                              "\n=========================\n")
-            new_out = six.BytesIO()
+            new_out = io.BytesIO()
             v2.ByteStreamToStreamResult(
-                six.BytesIO(out), 'stdout').run(
+                io.BytesIO(out), 'stdout').run(
                     results.CatFiles(new_out))
             out = new_out.getvalue()
             if out:
-                if six.PY3:
-                    sys.stdout.write(out.decode('utf8'))
-                else:
-                    sys.stdout.write(out)
+                sys.stdout.write(out.decode('utf8'))
             if err:
-                if six.PY3:
-                    sys.stdout.write(out.decode('utf8'))
-                else:
-                    sys.stderr.write(err)
+                sys.stderr.write(err.decode('utf8'))
             sys.stdout.write("\n" + "=" * 80 + "\n"
                              "The above traceback was encountered during "
                              "test discovery which imports all the found test"

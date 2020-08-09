@@ -103,7 +103,8 @@ def find_worker(test):
 
 
 # Print out stdout/stderr if it exists, always
-def print_attachments(stream, test, all_channels=False):
+def print_attachments(stream, test, all_channels=False,
+                      show_binary_attachments=False):
     """Print out subunit attachments.
 
     Print out subunit attachments that contain content. This
@@ -117,13 +118,18 @@ def print_attachments(stream, test, all_channels=False):
         name = name.split(':')[0]
         if detail.content_type.type == 'test':
             detail.content_type.type = 'text'
-        if (all_channels or name in channels) and detail.as_text():
+        if all_channels or name in channels:
             title = "Captured %s:" % name
-            stream.write("\n%s\n%s\n" % (title, ('~' * len(title))))
+            stream.write("\n{}\n{}\n".format(title, ('~' * len(title))))
+
             # indent attachment lines 4 spaces to make them visually
             # offset
-            for line in detail.as_text().split('\n'):
-                stream.write("    %s\n" % line)
+            if detail.content_type.type == 'text':
+                for line in detail.iter_text():
+                    stream.write("    %s\n" % line)
+            elif show_binary_attachments:  # binary
+                for line in detail.iter_bytes():
+                    stream.write("    %s\n" % line)
 
 
 def find_test_run_time_diff(test_id, run_time):
@@ -152,7 +158,7 @@ def find_test_run_time_diff(test_id, run_time):
 def show_outcome(stream, test, print_failures=False, failonly=False,
                  enable_diff=False, threshold='0', abbreviate=False,
                  enable_color=False, suppress_attachments=False,
-                 all_attachments=False):
+                 all_attachments=False, show_binary_attachments=True):
     global RESULTS
     status = test['status']
     # TODO(sdague): ask lifeless why on this?
@@ -184,18 +190,20 @@ def show_outcome(stream, test, print_failures=False, failonly=False,
         if abbreviate:
             color.write('F', 'red')
         else:
-            stream.write('{%s} %s [%s] ... ' % (
+            stream.write('{{{}}} {} [{}] ... '.format(
                 worker, name, duration))
             color.write('FAILED', 'red')
             stream.write('\n')
             if not print_failures:
-                print_attachments(stream, test, all_channels=True)
+                print_attachments(
+                    stream, test, all_channels=True,
+                    show_binary_attachments=show_binary_attachments)
     elif not failonly:
         if status == 'success' or status == 'xfail':
             if abbreviate:
                 color.write('.', 'green')
             else:
-                out_string = '{%s} %s [%s' % (worker, name, duration)
+                out_string = '{{{}}} {} [{}'.format(worker, name, duration)
                 perc_diff = find_test_run_time_diff(test['id'], duration)
                 if enable_diff:
                     if perc_diff and abs(perc_diff) >= abs(float(threshold)):
@@ -207,10 +215,9 @@ def show_outcome(stream, test, print_failures=False, failonly=False,
                 color.write('ok', 'green')
                 stream.write('\n')
                 if not suppress_attachments:
-                    if not all_attachments:
-                        print_attachments(stream, test)
-                    else:
-                        print_attachments(stream, test, all_channels=True)
+                    print_attachments(
+                        stream, test, all_channels=all_attachments,
+                        show_binary_attachments=show_binary_attachments)
         elif status == 'skip':
             if abbreviate:
                 color.write('S', 'blue')
@@ -218,7 +225,7 @@ def show_outcome(stream, test, print_failures=False, failonly=False,
                 reason = test['details'].get('reason', '')
                 if reason:
                     reason = ': ' + reason.as_text()
-                stream.write('{%s} %s ... ' % (
+                stream.write('{{{}}} {} ... '.format(
                     worker, name))
                 color.write('SKIPPED', 'blue')
                 stream.write('%s' % (reason))
@@ -227,10 +234,12 @@ def show_outcome(stream, test, print_failures=False, failonly=False,
             if abbreviate:
                 stream.write('%s' % test['status'][0])
             else:
-                stream.write('{%s} %s [%s] ... %s\n' % (
+                stream.write('{{{}}} {} [{}] ... {}\n'.format(
                     worker, name, duration, test['status']))
                 if not print_failures:
-                    print_attachments(stream, test, all_channels=True)
+                    print_attachments(
+                        stream, test, all_channels=True,
+                        show_binary_attachments=show_binary_attachments)
 
     stream.flush()
 
@@ -289,7 +298,7 @@ def worker_stats(worker):
 
 def print_summary(stream, elapsed_time):
     stream.write("\n======\nTotals\n======\n")
-    stream.write("Ran: %s tests in %.4f sec.\n" % (
+    stream.write("Ran: {} tests in {:.4f} sec.\n".format(
         count_tests('status', '.*'), total_seconds(elapsed_time)))
     stream.write(" - Passed: %s\n" % count_tests('status', '^success$'))
     stream.write(" - Skipped: %s\n" % count_tests('status', '^skip$'))
@@ -309,7 +318,7 @@ def print_summary(stream, elapsed_time):
                     " - WARNING: missing Worker %s!\n" % w)
             else:
                 num, time = worker_stats(w)
-                out_str = " - Worker %s (%s tests) => %s" % (w, num, time)
+                out_str = " - Worker {} ({} tests) => {}".format(w, num, time)
                 if time.isdigit():
                     out_str += 's'
                 out_str += '\n'
@@ -354,7 +363,8 @@ def parse_args():
 
 def trace(stdin, stdout, print_failures=False, failonly=False,
           enable_diff=False, abbreviate=False, color=False, post_fails=False,
-          no_summary=False, suppress_attachments=False, all_attachments=False):
+          no_summary=False, suppress_attachments=False, all_attachments=False,
+          show_binary_attachments=False):
     stream = subunit.ByteStreamToStreamResult(
         stdin, non_subunit_name='stdout')
     outcomes = testtools.StreamToDict(
@@ -365,7 +375,8 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
                           abbreviate=abbreviate,
                           enable_color=color,
                           suppress_attachments=suppress_attachments,
-                          all_attachments=all_attachments))
+                          all_attachments=all_attachments,
+                          show_binary_attachments=show_binary_attachments))
     summary = testtools.StreamSummary()
     result = testtools.CopyStreamResult([outcomes, summary])
     result = testtools.StreamResultRouter(result)

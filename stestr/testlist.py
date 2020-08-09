@@ -12,7 +12,7 @@
 
 """Handling of lists of tests - common code to --load-list etc."""
 
-import six
+import io
 
 from extras import try_import
 bytestream_to_streamresult = try_import('subunit.ByteStreamToStreamResult')
@@ -26,7 +26,7 @@ def write_list(stream, test_ids):
     :param test_ids: An iterable of test ids.
     """
     # May need utf8 explicitly?
-    stream.write(six.binary_type((
+    stream.write(bytes((
         '\n'.join(list(test_ids) + [''])).encode('utf8')))
 
 
@@ -46,11 +46,11 @@ def parse_enumeration(enumeration_bytes):
 
 def _v1(list_bytes):
     return [id.strip() for id in list_bytes.decode('utf8').split(
-        six.text_type('\n')) if id.strip()]
+        str('\n')) if id.strip()]
 
 
 def _v2(list_bytes):
-    parser = bytestream_to_streamresult(six.BytesIO(list_bytes),
+    parser = bytestream_to_streamresult(io.BytesIO(list_bytes),
                                         non_subunit_name='stdout')
     result = stream_result()
     parser.run(result)

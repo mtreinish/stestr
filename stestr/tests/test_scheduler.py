@@ -12,8 +12,8 @@
 
 import datetime
 import re
+from unittest import mock
 
-import mock
 from subunit import iso8601
 
 from stestr.repository import memory
@@ -117,7 +117,7 @@ class TestScheduler(base.TestCase):
         if 'testdir.testfile.TestCase5.test' not in partitions[0]:
             self.assertTrue('testdir.testfile.TestCase5.test' in partitions[1])
 
-    @mock.patch('six.moves.builtins.open', mock.mock_open(), create=True)
+    @mock.patch('builtins.open', mock.mock_open(), create=True)
     def test_generate_worker_partitions(self):
         test_ids = ['test_a', 'test_b', 'your_test']
         fake_worker_yaml = [
@@ -132,7 +132,7 @@ class TestScheduler(base.TestCase):
         ]
         self.assertEqual(expected_grouping, groups)
 
-    @mock.patch('six.moves.builtins.open', mock.mock_open(), create=True)
+    @mock.patch('builtins.open', mock.mock_open(), create=True)
     def test_generate_worker_partitions_group_without_list(self):
         test_ids = ['test_a', 'test_b', 'your_test']
         fake_worker_yaml = [
@@ -143,7 +143,7 @@ class TestScheduler(base.TestCase):
             self.assertRaises(TypeError, scheduler.generate_worker_partitions,
                               test_ids, 'fakepath')
 
-    @mock.patch('six.moves.builtins.open', mock.mock_open(), create=True)
+    @mock.patch('builtins.open', mock.mock_open(), create=True)
     def test_generate_worker_partitions_no_worker_tag(self):
         test_ids = ['test_a', 'test_b', 'your_test']
         fake_worker_yaml = [
@@ -154,7 +154,7 @@ class TestScheduler(base.TestCase):
             self.assertRaises(TypeError, scheduler.generate_worker_partitions,
                               test_ids, 'fakepath')
 
-    @mock.patch('six.moves.builtins.open', mock.mock_open(), create=True)
+    @mock.patch('builtins.open', mock.mock_open(), create=True)
     def test_generate_worker_partitions_group_without_match(self):
         test_ids = ['test_a', 'test_b', 'your_test']
         fake_worker_yaml = [
@@ -170,7 +170,7 @@ class TestScheduler(base.TestCase):
         ]
         self.assertEqual(expected_grouping, groups)
 
-    @mock.patch('six.moves.builtins.open', mock.mock_open(), create=True)
+    @mock.patch('builtins.open', mock.mock_open(), create=True)
     def test_generate_worker_partitions_with_count(self):
         test_ids = ['test_a', 'test_b', 'your_test', 'a_thing1', 'a_thing2']
         fake_worker_yaml = [
@@ -189,7 +189,7 @@ class TestScheduler(base.TestCase):
         for worker in expected_grouping:
             self.assertIn(worker, groups)
 
-    @mock.patch('six.moves.builtins.open', mock.mock_open(), create=True)
+    @mock.patch('builtins.open', mock.mock_open(), create=True)
     def test_generate_worker_partitions_with_count_1(self):
         test_ids = ['test_a', 'test_b', 'your_test']
         fake_worker_yaml = [

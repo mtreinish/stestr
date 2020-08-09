@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import six
+import io
 
 from stestr import output
 
@@ -70,7 +70,7 @@ def _iter_internal_streams(input_streams, stream_type):
         elif getattr(stream_value, 'read', None):
             yield stream_value
         else:
-            yield six.BytesIO(stream_value)
+            yield io.BytesIO(stream_value)
 
 
 def iter_streams(input_streams, stream_type):
