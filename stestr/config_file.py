@@ -48,7 +48,8 @@ class TestrConf(object):
                         repo_type='file', repo_url=None,
                         serial=False, worker_path=None,
                         concurrency=0, blacklist_file=None,
-                        whitelist_file=None, black_regex=None,
+                        whitelist_file=None,
+                        inclusion_list_file=None, black_regex=None,
                         randomize=False, parallel_class=None):
         """Get a test_processor.TestProcessorFixture for this config file
 
@@ -85,8 +86,10 @@ class TestrConf(object):
             autodetects your CPU count and uses that.
         :param str blacklist_file: Path to a blacklist file, this file contains
             a separate regex exclude on each newline.
-        :param str whitelist_file: Path to a whitelist file, this file contains
-            a separate regex on each newline.
+        :param str whitelist_file: DEPRECATED: soon to be replaced by the new
+            option inclusion_list_file below.
+        :param str inclusion_list_file: Path to an inclusion list file, this
+            file contains a separate regex on each newline.
         :param str black_regex: Test rejection regex. If a test cases name
             matches on re.search() operation, it will be removed from the final
             test list.
@@ -166,4 +169,5 @@ class TestrConf(object):
             test_filters=regexes, group_callback=group_callback, serial=serial,
             worker_path=worker_path, concurrency=concurrency,
             blacklist_file=blacklist_file, black_regex=black_regex,
-            whitelist_file=whitelist_file, randomize=randomize)
+            whitelist_file=whitelist_file,
+            inclusion_list_file=inclusion_list_file, randomize=randomize)

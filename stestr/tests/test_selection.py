@@ -101,11 +101,22 @@ class TestConstructList(base.TestCase):
     def test_whitelist(self):
         white_list = [re.compile('fake_test1'), re.compile('fake_test2')]
         test_lists = ['fake_test1[tg]', 'fake_test2[tg]', 'fake_test3[tg]']
-        white_getter = 'stestr.selection._get_regex_from_whitelist_file'
+        white_getter = 'stestr.selection._get_regex_from_inclusion_list_file'
         with mock.patch(white_getter,
                         return_value=white_list):
             result = selection.construct_list(test_lists,
                                               whitelist_file='file')
+        self.assertEqual(set(result),
+                         {'fake_test1[tg]', 'fake_test2[tg]'})
+
+    def test_inclusion_list(self):
+        include_list = [re.compile('fake_test1'), re.compile('fake_test2')]
+        test_lists = ['fake_test1[tg]', 'fake_test2[tg]', 'fake_test3[tg]']
+        include_getter = 'stestr.selection._get_regex_from_inclusion_list_file'
+        with mock.patch(include_getter,
+                        return_value=include_list):
+            result = selection.construct_list(test_lists,
+                                              inclusion_list_file='file')
         self.assertEqual(set(result),
                          {'fake_test1[tg]', 'fake_test2[tg]'})
 
@@ -116,7 +127,17 @@ class TestConstructList(base.TestCase):
         with mock.patch('builtins.open',
                         return_value=whitelist_file):
             with mock.patch('sys.exit') as mock_exit:
-                selection._get_regex_from_whitelist_file('fake_path')
+                selection._get_regex_from_inclusion_list_file('fake_path')
+                mock_exit.assert_called_once_with(5)
+
+    def test_inclusion_list_invalid_regex(self):
+        inclusion_list_file = io.StringIO()
+        inclusion_list_file.write("fake_regex_with_bad_part[The-BAD-part]")
+        inclusion_list_file.seek(0)
+        with mock.patch('builtins.open',
+                        return_value=inclusion_list_file):
+            with mock.patch('sys.exit') as mock_exit:
+                selection._get_regex_from_inclusion_list_file('fake_path')
                 mock_exit.assert_called_once_with(5)
 
     def test_whitelist_blacklist_re(self):
@@ -124,13 +145,29 @@ class TestConstructList(base.TestCase):
         test_lists = ['fake_test1[tg]', 'fake_test2[spam]',
                       'fake_test3[tg,foo]', 'fake_test4[spam]']
         black_list = [(re.compile('spam'), 'spam not liked', [])]
-        white_getter = 'stestr.selection._get_regex_from_whitelist_file'
+        white_getter = 'stestr.selection._get_regex_from_inclusion_list_file'
         with mock.patch(white_getter,
                         return_value=white_list):
             with mock.patch('stestr.selection.black_reader',
                             return_value=black_list):
                 result = selection.construct_list(test_lists, 'black_file',
                                                   'white_file', ['foo'])
+        self.assertEqual(set(result),
+                         {'fake_test1[tg]', 'fake_test3[tg,foo]'})
+
+    def test_inclusion_list_blacklist_re(self):
+        include_list = [re.compile('fake_test1'), re.compile('fake_test2')]
+        test_lists = ['fake_test1[tg]', 'fake_test2[spam]',
+                      'fake_test3[tg,foo]', 'fake_test4[spam]']
+        black_list = [(re.compile('spam'), 'spam not liked', [])]
+        include_getter = 'stestr.selection._get_regex_from_inclusion_list_file'
+        with mock.patch(include_getter,
+                        return_value=include_list):
+            with mock.patch('stestr.selection.black_reader',
+                            return_value=black_list):
+                result = selection.construct_list(
+                    test_lists, 'black_file',
+                    inclusion_list_file='include_file', regexes=['foo'])
         self.assertEqual(set(result),
                          {'fake_test1[tg]', 'fake_test3[tg,foo]'})
 

@@ -42,7 +42,12 @@ class List(command.Command):
                                  'newline')
         parser.add_argument('--whitelist-file', '-w',
                             default=None, dest='whitelist_file',
-                            help='Path to a whitelist file, this file '
+                            help='DEPRECATED: This option will soon be  '
+                                 'replaced by --include-list which is '
+                                 'functionally equivalent.')
+        parser.add_argument('--include-list', '-i',
+                            default=None, dest='inclusion_list_file',
+                            help='Path to an inclusion list file, this file '
                                  'contains a separate regex on each newline.')
         parser.add_argument('--black-regex', '-B',
                             default=None, dest='black_regex',
@@ -52,7 +57,7 @@ class List(command.Command):
                             'Effectively the black-regexp is added to '
                             ' black regexp list, but you do need to edit a '
                             'file. The black filtering happens after the '
-                            'initial white selection, which by default is '
+                            'initial safe list selection, which by default is '
                             'everything.')
         return parser
 
@@ -67,14 +72,16 @@ class List(command.Command):
                             top_dir=self.app_args.top_dir,
                             blacklist_file=args.blacklist_file,
                             whitelist_file=args.whitelist_file,
+                            inclusion_list_file=args.inclusion_list_file,
                             black_regex=args.black_regex,
                             filters=filters)
 
 
 def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
                  test_path=None, top_dir=None, group_regex=None,
-                 blacklist_file=None, whitelist_file=None, black_regex=None,
-                 filters=None, stdout=sys.stdout):
+                 blacklist_file=None, whitelist_file=None,
+                 inclusion_list_file=None,
+                 black_regex=None, filters=None, stdout=sys.stdout):
     """Print a list of test_ids for a project
 
     This function will print the test_ids for tests in a project. You can
@@ -96,8 +103,10 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
         config file option are set this value will be used.
     :param str blacklist_file: Path to a blacklist file, this file contains a
         separate regex exclude on each newline.
-    :param str whitelist_file: Path to a whitelist file, this file contains a
-        separate regex on each newline.
+    :param str whitelist_file: DEPRECATED: soon to be replaced by the new
+        option inclusion_list_file below.
+    :param str inclusion_list_file: Path to an inclusion list file, this file
+        contains a separate regex on each newline.
     :param str black_regex: Test rejection regex. If a test cases name matches
         on re.search() operation, it will be removed from the final test list.
     :param list filters: A list of string regex filters to initially apply on
@@ -113,9 +122,11 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
         regexes=filters, repo_type=repo_type,
         repo_url=repo_url, group_regex=group_regex,
         blacklist_file=blacklist_file, whitelist_file=whitelist_file,
+        inclusion_list_file=inclusion_list_file,
         black_regex=black_regex, test_path=test_path, top_dir=top_dir)
     not_filtered = filters is None and blacklist_file is None\
-        and whitelist_file is None and black_regex is None
+        and whitelist_file is None and black_regex is None\
+        and inclusion_list_file is None
     try:
         cmd.setUp()
         # List tests if the fixture has not already needed to to filter.

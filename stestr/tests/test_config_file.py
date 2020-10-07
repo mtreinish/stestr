@@ -64,7 +64,7 @@ class TestTestrConf(base.TestCase):
             blacklist_file=None, concurrency=0,
             group_callback=expected_group_callback,
             test_filters=None, randomize=False, serial=False,
-            whitelist_file=None, worker_path=None)
+            whitelist_file=None, inclusion_list_file=None, worker_path=None)
 
     @mock.patch.object(config_file, 'sys')
     def _check_get_run_command_exception(self, mock_sys, platform='win32',

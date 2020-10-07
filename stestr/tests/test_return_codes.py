@@ -149,6 +149,14 @@ class TestReturnCodes(base.TestCase):
         cmd = 'stestr run --whitelist-file %s' % path
         self.assertRunExit(cmd, 0)
 
+    def test_parallel_inclusion_list(self):
+        fd, path = tempfile.mkstemp()
+        self.addCleanup(os.remove, path)
+        with os.fdopen(fd, 'w') as inclusion_list:
+            inclusion_list.write('passing')
+        cmd = 'stestr run --include-list %s' % path
+        self.assertRunExit(cmd, 0)
+
     def test_serial_passing(self):
         self.assertRunExit('stestr run --serial passing', 0)
 
@@ -169,6 +177,14 @@ class TestReturnCodes(base.TestCase):
         with os.fdopen(fd, 'w') as whitelist:
             whitelist.write('passing')
         cmd = 'stestr run --serial --whitelist-file %s' % path
+        self.assertRunExit(cmd, 0)
+
+    def test_serial_inclusion_list(self):
+        fd, path = tempfile.mkstemp()
+        self.addCleanup(os.remove, path)
+        with os.fdopen(fd, 'w') as inclusion_list:
+            inclusion_list.write('passing')
+        cmd = 'stestr run --serial --include-list %s' % path
         self.assertRunExit(cmd, 0)
 
     def test_serial_subunit_passing(self):

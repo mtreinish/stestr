@@ -73,7 +73,7 @@ def black_reader(blacklist_file):
     return regex_comment_lst
 
 
-def _get_regex_from_whitelist_file(file_path):
+def _get_regex_from_inclusion_list_file(file_path):
     lines = []
     for line in open(file_path).read().splitlines():
         split_line = line.strip().split('#')
@@ -83,19 +83,20 @@ def _get_regex_from_whitelist_file(file_path):
             try:
                 lines.append(re.compile(line_regex))
             except re.error:
-                print("Invalid regex: %s in provided whitelist file" %
+                print("Invalid regex: %s in provided inclusion_list file" %
                       line_regex, file=sys.stderr)
                 sys.exit(5)
     return lines
 
 
 def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
-                   regexes=None, black_regex=None):
+                   regexes=None, black_regex=None, inclusion_list_file=None):
     """Filters the discovered test cases
 
     :param list test_ids: The set of test_ids to be filtered
     :param str blacklist_file: The path to a blacklist file
-    :param str whitelist_file: The path to a whitelist file
+    :param str whitelist_file: DEPRECATED: Replaced by inclusion_list_file
+    :param str inclusion_list_file: The path to a inclusion_list file
     :param list regexes: A list of regex filters to apply to the test_ids. The
         output will contain any test_ids which have a re.search() match for any
         of the regexes in this list. If this is None all test_ids will be
@@ -110,14 +111,16 @@ def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
     if not regexes:
         regexes = None  # handle the other false things
 
-    white_re = None
-    if whitelist_file:
-        white_re = _get_regex_from_whitelist_file(whitelist_file)
+    safe_re = None
+    if inclusion_list_file:
+        safe_re = _get_regex_from_inclusion_list_file(inclusion_list_file)
+    elif whitelist_file:
+        safe_re = _get_regex_from_inclusion_list_file(whitelist_file)
 
-    if not regexes and white_re:
-        regexes = white_re
-    elif regexes and white_re:
-        regexes += white_re
+    if not regexes and safe_re:
+        regexes = safe_re
+    elif regexes and safe_re:
+        regexes += safe_re
 
     if blacklist_file:
         black_data = black_reader(blacklist_file)
