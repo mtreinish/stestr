@@ -108,7 +108,12 @@ class Run(command.Command):
                             'newline')
         parser.add_argument('--whitelist-file', '-w',
                             default=None, dest='whitelist_file',
-                            help='Path to a whitelist file, this file '
+                            help='DEPRECATED: This option will soon be  '
+                            'replaced by --include-list which is functionally '
+                            'equivalent.')
+        parser.add_argument('--include-list', '-i',
+                            default=None, dest='inclusion_list_file',
+                            help='Path to an inclusion list file, this file '
                             'contains a separate regex on each newline.')
         parser.add_argument('--black-regex', '-B', default=None,
                             dest='black_regex',
@@ -118,7 +123,7 @@ class Run(command.Command):
                             'Effectively the black-regexp is added to '
                             ' black regexp list, but you do need to edit a '
                             'file. The black filtering happens after the '
-                            'initial white selection, which by default is '
+                            'initial safe list selection, which by default is '
                             'everything.')
         parser.add_argument('--no-discover', '-n', default=None,
                             metavar='TEST_ID',
@@ -241,9 +246,10 @@ class Run(command.Command):
             subunit_out=args.subunit, until_failure=args.until_failure,
             analyze_isolation=args.analyze_isolation, isolated=args.isolated,
             worker_path=args.worker_path, blacklist_file=args.blacklist_file,
-            whitelist_file=args.whitelist_file, black_regex=args.black_regex,
-            no_discover=args.no_discover, random=random,
-            combine=args.combine,
+            whitelist_file=args.whitelist_file,
+            inclusion_list_file=args.inclusion_list_file,
+            black_regex=args.black_regex, no_discover=args.no_discover,
+            random=random, combine=args.combine,
             filters=filters, pretty_out=pretty_out, color=color,
             stdout=stdout, abbreviate=abbreviate,
             suppress_attachments=suppress_attachments,
@@ -286,7 +292,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                 failing=False, serial=False, concurrency=0, load_list=None,
                 partial=False, subunit_out=False, until_failure=False,
                 analyze_isolation=False, isolated=False, worker_path=None,
-                blacklist_file=None, whitelist_file=None, black_regex=None,
+                blacklist_file=None, whitelist_file=None,
+                inclusion_list_file=None, black_regex=None,
                 no_discover=False, random=False, combine=False, filters=None,
                 pretty_out=True, color=False, stdout=sys.stdout,
                 abbreviate=False, suppress_attachments=False,
@@ -331,8 +338,10 @@ def run_command(config='.stestr.conf', repo_type='file',
         to use for the run.
     :param str blacklist_file: Path to a blacklist file, this file contains a
         separate regex exclude on each newline.
-    :param str whitelist_file: Path to a whitelist file, this file contains a
-        separate regex on each newline.
+    :param str whitelist_file: DEPRECATED: soon to be replaced by the new
+        option inclusion_list_file below.
+    :param str inclusion_list_file: Path to a inclusion list file, this file
+        contains a separate regex on each newline.
     :param str black_regex: Test rejection regex. If a test cases name matches
         on re.search() operation, it will be removed from the final test list.
     :param str no_discover: Takes in a single test_id to bypasses test
@@ -510,7 +519,8 @@ def run_command(config='.stestr.conf', repo_type='file',
             ids, regexes=filters, group_regex=group_regex, repo_type=repo_type,
             repo_url=repo_url, serial=serial, worker_path=worker_path,
             concurrency=concurrency, blacklist_file=blacklist_file,
-            whitelist_file=whitelist_file, black_regex=black_regex,
+            whitelist_file=whitelist_file,
+            inclusion_list_file=inclusion_list_file, black_regex=black_regex,
             top_dir=top_dir, test_path=test_path, randomize=random)
         if isolated:
             result = 0
@@ -526,7 +536,9 @@ def run_command(config='.stestr.conf', repo_type='file',
                     repo_type=repo_type, repo_url=repo_url, serial=serial,
                     worker_path=worker_path, concurrency=concurrency,
                     blacklist_file=blacklist_file,
-                    whitelist_file=whitelist_file, black_regex=black_regex,
+                    whitelist_file=whitelist_file,
+                    inclusion_list_file=inclusion_list_file,
+                    black_regex=black_regex,
                     randomize=random, test_path=test_path, top_dir=top_dir)
 
                 run_result = _run_tests(
@@ -565,8 +577,9 @@ def run_command(config='.stestr.conf', repo_type='file',
                 [test_id], group_regex=group_regex, repo_type=repo_type,
                 repo_url=repo_url, serial=serial, worker_path=worker_path,
                 concurrency=concurrency, blacklist_file=blacklist_file,
-                whitelist_file=whitelist_file, black_regex=black_regex,
-                randomize=random, test_path=test_path,
+                whitelist_file=whitelist_file,
+                inclusion_list_file=inclusion_list_file,
+                black_regex=black_regex, randomize=random, test_path=test_path,
                 top_dir=top_dir)
             if not _run_tests(cmd, until_failure):
                 # If the test was filtered, it won't have been run.
