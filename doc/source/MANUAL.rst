@@ -165,9 +165,9 @@ start of a comment on a line. For example::
   .*regex2 # exclude those tests
 
 The regexp used in the exclusion list file or passed as argument, will be used
-to drop tests from the initial selection list. It will generate a list which will
-exclude any tests matching ``^regex1`` or ``.*regex2``. If an exclusion list
-file is used in conjunction with the normal filters then the regex filters
+to drop tests from the initial selection list. It will generate a list which
+will exclude any tests matching ``^regex1`` or ``.*regex2``. If an exclusion
+list file is used in conjunction with the normal filters then the regex filters
 passed in as an argument regex will be used for the initial test selection, and
 the exclusion regexes from the exclusion list file on top of that.
 
