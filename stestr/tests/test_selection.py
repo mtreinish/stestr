@@ -99,12 +99,25 @@ class TestConstructList(base.TestCase):
         result = selection.construct_list(test_lists, black_regex='foo')
         self.assertEqual(list(result), ['fake_test(scen)[tag,bar])'])
 
+    def test_simple_exclusion_re(self):
+        test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])']
+        result = selection.construct_list(test_lists, exclusion_regex='foo')
+        self.assertEqual(list(result), ['fake_test(scen)[tag,bar])'])
+
     def test_invalid_black_re(self):
         test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])']
         invalid_regex = "fake_regex_with_bad_part[The-BAD-part]"
         with mock.patch('sys.exit', side_effect=ImportError) as exit_mock:
             self.assertRaises(ImportError, selection.construct_list,
                               test_lists, black_regex=invalid_regex)
+            exit_mock.assert_called_once_with(5)
+
+    def test_invalid_exclusion_re(self):
+        test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])']
+        invalid_regex = "fake_regex_with_bad_part[The-BAD-part]"
+        with mock.patch('sys.exit', side_effect=ImportError) as exit_mock:
+            self.assertRaises(ImportError, selection.construct_list,
+                              test_lists, exclusion_regex=invalid_regex)
             exit_mock.assert_called_once_with(5)
 
     def test_blacklist(self):

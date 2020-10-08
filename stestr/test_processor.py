@@ -85,8 +85,8 @@ class TestProcessorFixture(fixtures.Fixture):
                  test_filters=None, group_callback=None, serial=False,
                  worker_path=None, concurrency=0, blacklist_file=None,
                  exclusion_list_file=None, black_regex=None,
-                 whitelist_file=None, inclusion_list_file=None,
-                 randomize=False):
+                 exclusion_regex=None, whitelist_file=None,
+                 inclusion_list_file=None, randomize=False):
         """Create a TestProcessorFixture."""
 
         self.test_ids = test_ids
@@ -108,6 +108,7 @@ class TestProcessorFixture(fixtures.Fixture):
         self.whitelist_file = whitelist_file
         self.inclusion_list_file = inclusion_list_file
         self.black_regex = black_regex
+        self.exclusion_regex = exclusion_regex
         self.randomize = randomize
 
     def setUp(self):
@@ -125,7 +126,8 @@ class TestProcessorFixture(fixtures.Fixture):
         nonparallel = not self.parallel
         selection_logic = (self.test_filters or self.blacklist_file or
                            self.exclusion_list_file or self.whitelist_file or
-                           self.inclusion_list_file or self.black_regex)
+                           self.inclusion_list_file or self.black_regex or
+                           self.exclusion_regex)
         if nonparallel:
             self.concurrency = 1
         else:
@@ -156,7 +158,8 @@ class TestProcessorFixture(fixtures.Fixture):
                 whitelist_file=self.whitelist_file,
                 inclusion_list_file=self.inclusion_list_file,
                 regexes=self.test_filters,
-                black_regex=self.black_regex)
+                black_regex=self.black_regex,
+                exclusion_regex=self.exclusion_regex)
             name = self.make_listfile()
             variables['IDFILE'] = name
             idlist = ' '.join(self.test_ids)

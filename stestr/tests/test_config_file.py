@@ -61,6 +61,7 @@ class TestTestrConf(base.TestCase):
         mock_TestProcessorFixture.assert_called_once_with(
             None, command, "--list", "--load-list $IDFILE",
             mock_get_repo_open.return_value, black_regex=None,
+            exclusion_regex=None,
             blacklist_file=None, exclusion_list_file=None, concurrency=0,
             group_callback=expected_group_callback,
             test_filters=None, randomize=False, serial=False,

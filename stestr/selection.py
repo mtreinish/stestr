@@ -91,7 +91,7 @@ def _get_regex_from_inclusion_list_file(file_path):
 
 def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
                    regexes=None, black_regex=None, exclusion_list_file=None,
-                   inclusion_list_file=None):
+                   inclusion_list_file=None, exclusion_regex=None):
     """Filters the discovered test cases
 
     :param list test_ids: The set of test_ids to be filtered
@@ -101,9 +101,10 @@ def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
         output will contain any test_ids which have a re.search() match for any
         of the regexes in this list. If this is None all test_ids will be
         returned
-    :param str black_regex:
+    :param str black_regex: DEPRECATED: Replaced by exclusion_regex
     :param str exclusion_list_file: The path to an exclusion_list file
     :param str inclusion_list_file: The path to an inclusion_list file
+    :param str exclusion_regex: regex pattern to exclude tests
 
     :return: iterable of strings. The strings are full
         test_ids
@@ -131,7 +132,19 @@ def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
     else:
         exclude_data = None
 
-    if black_regex:
+    if exclusion_regex:
+        msg = "Skipped because of regexp provided as a command line argument:"
+        try:
+            record = (re.compile(exclusion_regex), msg, [])
+        except re.error:
+            print("Invalid regex: %s used for exclusion_regex" %
+                  exclusion_regex, file=sys.stderr)
+            sys.exit(5)
+        if exclude_data:
+            exclude_data.append(record)
+        else:
+            exclude_data = [record]
+    elif black_regex:
         msg = "Skipped because of regexp provided as a command line argument:"
         try:
             record = (re.compile(black_regex), msg, [])

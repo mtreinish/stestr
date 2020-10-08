@@ -122,11 +122,16 @@ class Run(command.Command):
                             'contains a separate regex on each newline.')
         parser.add_argument('--black-regex', '-B', default=None,
                             dest='black_regex',
+                            help='DEPRECATED: This option will soon be '
+                            'replaced by --exclusion-regex which is '
+                            'functionally equivalent.')
+        parser.add_argument('--exclusion-regex', '-E', default=None,
+                            dest='exclusion_regex',
                             help='Test rejection regex. If a test cases name '
                             'matches on re.search() operation , '
                             'it will be removed from the final test list. '
-                            'Effectively the black-regexp is added to '
-                            ' black regexp list, but you do need to edit a '
+                            'Effectively the exclusion-regexp is added to '
+                            'exclusion regexp list, but you do need to edit a '
                             'file. The exclusion filtering happens after the '
                             'initial safe list selection, which by default is '
                             'everything.')
@@ -254,8 +259,8 @@ class Run(command.Command):
             exclusion_list_file=args.exclusion_list_file,
             whitelist_file=args.whitelist_file,
             inclusion_list_file=args.inclusion_list_file,
-            black_regex=args.black_regex, no_discover=args.no_discover,
-            random=random, combine=args.combine,
+            black_regex=args.black_regex, exclusion_regex=args.exclusion_regex,
+            no_discover=args.no_discover, random=random, combine=args.combine,
             filters=filters, pretty_out=pretty_out, color=color,
             stdout=stdout, abbreviate=abbreviate,
             suppress_attachments=suppress_attachments,
@@ -300,9 +305,9 @@ def run_command(config='.stestr.conf', repo_type='file',
                 analyze_isolation=False, isolated=False, worker_path=None,
                 blacklist_file=None, exclusion_list_file=None,
                 whitelist_file=None, inclusion_list_file=None,
-                black_regex=None, no_discover=False, random=False,
-                combine=False, filters=None, pretty_out=True, color=False,
-                stdout=sys.stdout, abbreviate=False,
+                black_regex=None, exclusion_regex=None, no_discover=False,
+                random=False, combine=False, filters=None, pretty_out=True,
+                color=False, stdout=sys.stdout, abbreviate=False,
                 suppress_attachments=False, all_attachments=False,
                 show_binary_attachments=True, pdb=False):
     """Function to execute the run command
@@ -350,8 +355,11 @@ def run_command(config='.stestr.conf', repo_type='file',
         option inclusion_list_file below.
     :param str inclusion_list_file: Path to a inclusion list file, this file
         contains a separate regex on each newline.
-    :param str black_regex: Test rejection regex. If a test cases name matches
-        on re.search() operation, it will be removed from the final test list.
+    :param str black_regex: DEPRECATED: soon to be replaced by the new
+        option exclusion_regex below.
+    :param str exclusion_regex: Test rejection regex. If a test cases name
+        matches on re.search() operation, it will be removed from the final
+        test list.
     :param str no_discover: Takes in a single test_id to bypasses test
         discover and just execute the test specified. A file name may be used
         in place of a test name.
@@ -530,6 +538,7 @@ def run_command(config='.stestr.conf', repo_type='file',
             exclusion_list_file=exclusion_list_file,
             whitelist_file=whitelist_file,
             inclusion_list_file=inclusion_list_file, black_regex=black_regex,
+            exclusion_regex=exclusion_regex,
             top_dir=top_dir, test_path=test_path, randomize=random)
         if isolated:
             result = 0
@@ -548,7 +557,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                     exclusion_list_file=exclusion_list_file,
                     whitelist_file=whitelist_file,
                     inclusion_list_file=inclusion_list_file,
-                    black_regex=black_regex,
+                    black_regex=black_regex, exclusion_regex=exclusion_regex,
                     randomize=random, test_path=test_path, top_dir=top_dir)
 
                 run_result = _run_tests(
@@ -590,8 +599,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                 exclusion_list_file=exclusion_list_file,
                 whitelist_file=whitelist_file,
                 inclusion_list_file=inclusion_list_file,
-                black_regex=black_regex, randomize=random, test_path=test_path,
-                top_dir=top_dir)
+                black_regex=black_regex, exclusion_regex=exclusion_regex,
+                randomize=random, test_path=test_path, top_dir=top_dir)
             if not _run_tests(cmd, until_failure):
                 # If the test was filtered, it won't have been run.
                 if test_id in repo.get_test_ids(repo.latest_id()):

@@ -56,11 +56,16 @@ class List(command.Command):
                                  'contains a separate regex on each newline.')
         parser.add_argument('--black-regex', '-B',
                             default=None, dest='black_regex',
+                            help='DEPRECATED: This option will soon be  '
+                            'replaced by --exclusion-regex which is '
+                            'functionally equivalent.')
+        parser.add_argument('--exclusion-regex', '-E',
+                            default=None, dest='exclusion_regex',
                             help='Test rejection regex. If a test cases name '
                             'matches on re.search() operation , '
                             'it will be removed from the final test list. '
-                            'Effectively the black-regexp is added to '
-                            ' black regexp list, but you do need to edit a '
+                            'Effectively the exclusion-regexp is added to '
+                            'exclusion regexp list, but you do need to edit a '
                             'file. The exclusion filtering happens after the '
                             'initial safe list selection, which by default is '
                             'everything.')
@@ -80,6 +85,7 @@ class List(command.Command):
                             whitelist_file=args.whitelist_file,
                             inclusion_list_file=args.inclusion_list_file,
                             black_regex=args.black_regex,
+                            exclusion_regex=args.exclusion_regex,
                             filters=filters)
 
 
@@ -87,7 +93,8 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
                  test_path=None, top_dir=None, group_regex=None,
                  blacklist_file=None, exclusion_list_file=None,
                  whitelist_file=None, inclusion_list_file=None,
-                 black_regex=None, filters=None, stdout=sys.stdout):
+                 black_regex=None, exclusion_regex=None, filters=None,
+                 stdout=sys.stdout):
     """Print a list of test_ids for a project
 
     This function will print the test_ids for tests in a project. You can
@@ -115,8 +122,11 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
         option inclusion_list_file below.
     :param str inclusion_list_file: Path to an inclusion list file, this file
         contains a separate regex on each newline.
-    :param str black_regex: Test rejection regex. If a test cases name matches
-        on re.search() operation, it will be removed from the final test list.
+    :param str black_regex: DEPRECATED: soon to be replaced by the new
+        option exclusion_regex below.
+    :param str exclusion_regex: Test rejection regex. If a test cases name
+        matches on re.search() operation, it will be removed from the final
+        test list.
     :param list filters: A list of string regex filters to initially apply on
         the test list. Tests that match any of the regexes will be used.
         (assuming any other filtering specified also uses it)
@@ -131,10 +141,12 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
         repo_url=repo_url, group_regex=group_regex,
         blacklist_file=blacklist_file, exclusion_list_file=exclusion_list_file,
         whitelist_file=whitelist_file, inclusion_list_file=inclusion_list_file,
-        black_regex=black_regex, test_path=test_path, top_dir=top_dir)
+        black_regex=black_regex, exclusion_regex=exclusion_regex,
+        test_path=test_path, top_dir=top_dir)
     not_filtered = filters is None and blacklist_file is None\
         and whitelist_file is None and black_regex is None\
-        and inclusion_list_file is None and exclusion_list_file is None
+        and inclusion_list_file is None and exclusion_list_file is None\
+        and exclusion_regex is None
     try:
         cmd.setUp()
         # List tests if the fixture has not already needed to to filter.
