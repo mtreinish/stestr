@@ -38,7 +38,7 @@ class TestSelection(base.TestCase):
             mock_exit.assert_called_once_with(5)
 
 
-class TestBlackReader(base.TestCase):
+class TestExclusionReader(base.TestCase):
     def test_black_reader(self):
         blacklist_file = io.StringIO()
         for i in range(4):
@@ -47,7 +47,26 @@ class TestBlackReader(base.TestCase):
         blacklist_file.seek(0)
         with mock.patch('builtins.open',
                         return_value=blacklist_file):
-            result = selection.black_reader('fake_path')
+            result = selection.exclusion_reader('fake_path')
+        self.assertEqual(2 * 4, len(result))
+        note_cnt = 0
+        # not assuming ordering, mainly just testing the type
+        for r in result:
+            self.assertEqual(r[2], [])
+            if r[1] == 'note':
+                note_cnt += 1
+            self.assertIn('search', dir(r[0]))  # like a compiled regexp
+        self.assertEqual(note_cnt, 4)
+
+    def test_exclusion_reader(self):
+        exclusion_list_file = io.StringIO()
+        for i in range(4):
+            exclusion_list_file.write('fake_regex_%s\n' % i)
+            exclusion_list_file.write('fake_regex_with_note_%s # note\n' % i)
+        exclusion_list_file.seek(0)
+        with mock.patch('builtins.open',
+                        return_value=exclusion_list_file):
+            result = selection.exclusion_reader('fake_path')
         self.assertEqual(2 * 4, len(result))
         note_cnt = 0
         # not assuming ordering, mainly just testing the type
@@ -59,13 +78,13 @@ class TestBlackReader(base.TestCase):
         self.assertEqual(note_cnt, 4)
 
     def test_invalid_regex(self):
-        blacklist_file = io.StringIO()
-        blacklist_file.write("fake_regex_with_bad_part[The-BAD-part]")
-        blacklist_file.seek(0)
+        exclusion_list_file = io.StringIO()
+        exclusion_list_file.write("fake_regex_with_bad_part[The-BAD-part]")
+        exclusion_list_file.seek(0)
         with mock.patch('builtins.open',
-                        return_value=blacklist_file):
+                        return_value=exclusion_list_file):
             with mock.patch('sys.exit') as mock_exit:
-                selection.black_reader('fake_path')
+                selection.exclusion_reader('fake_path')
                 mock_exit.assert_called_once_with(5)
 
 
@@ -91,10 +110,20 @@ class TestConstructList(base.TestCase):
     def test_blacklist(self):
         black_list = [(re.compile('foo'), 'foo not liked', [])]
         test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])']
-        with mock.patch('stestr.selection.black_reader',
+        with mock.patch('stestr.selection.exclusion_reader',
                         return_value=black_list):
             result = selection.construct_list(test_lists,
                                               blacklist_file='file',
+                                              regexes=['fake_test'])
+        self.assertEqual(list(result), ['fake_test(scen)[tag,bar])'])
+
+    def test_exclusion_list(self):
+        exclude_list = [(re.compile('foo'), 'foo not liked', [])]
+        test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])']
+        with mock.patch('stestr.selection.exclusion_reader',
+                        return_value=exclude_list):
+            result = selection.construct_list(test_lists,
+                                              exclusion_list_file='file',
                                               regexes=['fake_test'])
         self.assertEqual(list(result), ['fake_test(scen)[tag,bar])'])
 
@@ -148,25 +177,25 @@ class TestConstructList(base.TestCase):
         white_getter = 'stestr.selection._get_regex_from_inclusion_list_file'
         with mock.patch(white_getter,
                         return_value=white_list):
-            with mock.patch('stestr.selection.black_reader',
+            with mock.patch('stestr.selection.exclusion_reader',
                             return_value=black_list):
                 result = selection.construct_list(test_lists, 'black_file',
                                                   'white_file', ['foo'])
         self.assertEqual(set(result),
                          {'fake_test1[tg]', 'fake_test3[tg,foo]'})
 
-    def test_inclusion_list_blacklist_re(self):
+    def test_inclusion_exclusion_list_re(self):
         include_list = [re.compile('fake_test1'), re.compile('fake_test2')]
         test_lists = ['fake_test1[tg]', 'fake_test2[spam]',
                       'fake_test3[tg,foo]', 'fake_test4[spam]']
-        black_list = [(re.compile('spam'), 'spam not liked', [])]
+        exclude_list = [(re.compile('spam'), 'spam not liked', [])]
         include_getter = 'stestr.selection._get_regex_from_inclusion_list_file'
         with mock.patch(include_getter,
                         return_value=include_list):
-            with mock.patch('stestr.selection.black_reader',
-                            return_value=black_list):
+            with mock.patch('stestr.selection.exclusion_reader',
+                            return_value=exclude_list):
                 result = selection.construct_list(
-                    test_lists, 'black_file',
+                    test_lists, 'exclude_file',
                     inclusion_list_file='include_file', regexes=['foo'])
         self.assertEqual(set(result),
                          {'fake_test1[tg]', 'fake_test3[tg,foo]'})
@@ -181,10 +210,28 @@ class TestConstructList(base.TestCase):
             'compute.test_keypairs.KeypairsTestV210.test_create_keypair',
             'compute.test_keypairs.KeypairsTestV21.test_create_keypair',
             'compute.test_fake.FakeTest.test_fake_test']
-        with mock.patch('stestr.selection.black_reader',
+        with mock.patch('stestr.selection.exclusion_reader',
                         return_value=black_list):
             result = selection.construct_list(test_lists,
                                               blacklist_file='file',
+                                              regexes=['fake_test'])
+        self.assertEqual(
+            list(result), ['compute.test_fake.FakeTest.test_fake_test'])
+
+    def test_overlapping_exclusion_regex(self):
+
+        exclude_list = [(re.compile('compute.test_keypairs.KeypairsTestV210'),
+                         '', []),
+                        (re.compile('compute.test_keypairs.KeypairsTestV21'),
+                         '', [])]
+        test_lists = [
+            'compute.test_keypairs.KeypairsTestV210.test_create_keypair',
+            'compute.test_keypairs.KeypairsTestV21.test_create_keypair',
+            'compute.test_fake.FakeTest.test_fake_test']
+        with mock.patch('stestr.selection.exclusion_reader',
+                        return_value=exclude_list):
+            result = selection.construct_list(test_lists,
+                                              exclusion_list_file='file',
                                               regexes=['fake_test'])
         self.assertEqual(
             list(result), ['compute.test_fake.FakeTest.test_fake_test'])

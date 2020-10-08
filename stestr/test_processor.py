@@ -68,8 +68,10 @@ class TestProcessorFixture(fixtures.Fixture):
         to use for the run
     :param int concurrency: How many processes to use. The default (0)
         autodetects your CPU count and uses that.
-    :param path blacklist_file: Path to a blacklist file, this file contains a
-        separate regex exclude on each newline.
+    :param path blacklist_file: DEPRECATED: soon to be replaced by the new
+        option exclusion_list_file below.
+    :param path exclusion_list_file: Path to an exclusion list file, this file
+        contains a separate regex exclude on each newline.
     :param str whitelist_file: DEPRECATED: soon to be replaced by the new
         option inclusion_list_file below.
     :param path inclusion_list_file: Path to an inclusion list file, this file
@@ -82,8 +84,9 @@ class TestProcessorFixture(fixtures.Fixture):
                  repository, parallel=True, listpath=None,
                  test_filters=None, group_callback=None, serial=False,
                  worker_path=None, concurrency=0, blacklist_file=None,
-                 black_regex=None, whitelist_file=None,
-                 inclusion_list_file=None, randomize=False):
+                 exclusion_list_file=None, black_regex=None,
+                 whitelist_file=None, inclusion_list_file=None,
+                 randomize=False):
         """Create a TestProcessorFixture."""
 
         self.test_ids = test_ids
@@ -101,6 +104,7 @@ class TestProcessorFixture(fixtures.Fixture):
         self.worker_path = worker_path
         self.concurrency_value = concurrency
         self.blacklist_file = blacklist_file
+        self.exclusion_list_file = exclusion_list_file
         self.whitelist_file = whitelist_file
         self.inclusion_list_file = inclusion_list_file
         self.black_regex = black_regex
@@ -120,8 +124,8 @@ class TestProcessorFixture(fixtures.Fixture):
         self.list_cmd = re.sub(variable_regex, list_subst, cmd)
         nonparallel = not self.parallel
         selection_logic = (self.test_filters or self.blacklist_file or
-                           self.whitelist_file or self.inclusion_list_file or
-                           self.black_regex)
+                           self.exclusion_list_file or self.whitelist_file or
+                           self.inclusion_list_file or self.black_regex)
         if nonparallel:
             self.concurrency = 1
         else:
@@ -148,6 +152,7 @@ class TestProcessorFixture(fixtures.Fixture):
         else:
             self.test_ids = selection.construct_list(
                 self.test_ids, blacklist_file=self.blacklist_file,
+                exclusion_list_file=self.exclusion_list_file,
                 whitelist_file=self.whitelist_file,
                 inclusion_list_file=self.inclusion_list_file,
                 regexes=self.test_filters,

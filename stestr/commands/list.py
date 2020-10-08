@@ -37,7 +37,12 @@ class List(command.Command):
                             "filtering specified also uses it)")
         parser.add_argument('--blacklist-file', '-b',
                             default=None, dest='blacklist_file',
-                            help='Path to a blacklist file, this file '
+                            help='DEPRECATED: This option will soon be  '
+                                 'replaced by --exclude-list which is '
+                                 'functionally equivalent.')
+        parser.add_argument('--exclude-list', '-e',
+                            default=None, dest='exclusion_list_file',
+                            help='Path to an exclusion list file, this file '
                                  'contains a separate regex exclude on each '
                                  'newline')
         parser.add_argument('--whitelist-file', '-w',
@@ -56,7 +61,7 @@ class List(command.Command):
                             'it will be removed from the final test list. '
                             'Effectively the black-regexp is added to '
                             ' black regexp list, but you do need to edit a '
-                            'file. The black filtering happens after the '
+                            'file. The exclusion filtering happens after the '
                             'initial safe list selection, which by default is '
                             'everything.')
         return parser
@@ -71,6 +76,7 @@ class List(command.Command):
                             test_path=self.app_args.test_path,
                             top_dir=self.app_args.top_dir,
                             blacklist_file=args.blacklist_file,
+                            exclusion_list_file=args.exclusion_list_file,
                             whitelist_file=args.whitelist_file,
                             inclusion_list_file=args.inclusion_list_file,
                             black_regex=args.black_regex,
@@ -79,8 +85,8 @@ class List(command.Command):
 
 def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
                  test_path=None, top_dir=None, group_regex=None,
-                 blacklist_file=None, whitelist_file=None,
-                 inclusion_list_file=None,
+                 blacklist_file=None, exclusion_list_file=None,
+                 whitelist_file=None, inclusion_list_file=None,
                  black_regex=None, filters=None, stdout=sys.stdout):
     """Print a list of test_ids for a project
 
@@ -101,8 +107,10 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
     :param str group_regex: Set a group regex to use for grouping tests
         together in the stestr scheduler. If both this and the corresponding
         config file option are set this value will be used.
-    :param str blacklist_file: Path to a blacklist file, this file contains a
-        separate regex exclude on each newline.
+    :param str blacklist_file: DEPRECATED: soon to be replaced by the new
+        option exclusion_list_file below.
+    :param str exclusion_list_file: Path to an exclusion list file, this file
+        contains a separate regex exclude on each newline.
     :param str whitelist_file: DEPRECATED: soon to be replaced by the new
         option inclusion_list_file below.
     :param str inclusion_list_file: Path to an inclusion list file, this file
@@ -121,12 +129,12 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
     cmd = conf.get_run_command(
         regexes=filters, repo_type=repo_type,
         repo_url=repo_url, group_regex=group_regex,
-        blacklist_file=blacklist_file, whitelist_file=whitelist_file,
-        inclusion_list_file=inclusion_list_file,
+        blacklist_file=blacklist_file, exclusion_list_file=exclusion_list_file,
+        whitelist_file=whitelist_file, inclusion_list_file=inclusion_list_file,
         black_regex=black_regex, test_path=test_path, top_dir=top_dir)
     not_filtered = filters is None and blacklist_file is None\
         and whitelist_file is None and black_regex is None\
-        and inclusion_list_file is None
+        and inclusion_list_file is None and exclusion_list_file is None
     try:
         cmd.setUp()
         # List tests if the fixture has not already needed to to filter.

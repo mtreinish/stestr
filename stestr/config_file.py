@@ -48,7 +48,7 @@ class TestrConf(object):
                         repo_type='file', repo_url=None,
                         serial=False, worker_path=None,
                         concurrency=0, blacklist_file=None,
-                        whitelist_file=None,
+                        exclusion_list_file=None, whitelist_file=None,
                         inclusion_list_file=None, black_regex=None,
                         randomize=False, parallel_class=None):
         """Get a test_processor.TestProcessorFixture for this config file
@@ -84,8 +84,10 @@ class TestrConf(object):
             to use for the run.
         :param int concurrency: How many processes to use. The default (0)
             autodetects your CPU count and uses that.
-        :param str blacklist_file: Path to a blacklist file, this file contains
-            a separate regex exclude on each newline.
+        :param str blacklist_file: DEPRECATED: soon to be replaced by the new
+            option exclusion_list_file below.
+        :param str exclusion_list_file: Path to an exclusion list file, this
+            file contains a separate regex exclude on each newline.
         :param str whitelist_file: DEPRECATED: soon to be replaced by the new
             option inclusion_list_file below.
         :param str inclusion_list_file: Path to an inclusion list file, this
@@ -168,6 +170,7 @@ class TestrConf(object):
             test_ids, command, listopt, idoption, repository,
             test_filters=regexes, group_callback=group_callback, serial=serial,
             worker_path=worker_path, concurrency=concurrency,
-            blacklist_file=blacklist_file, black_regex=black_regex,
-            whitelist_file=whitelist_file,
+            blacklist_file=blacklist_file,
+            exclusion_list_file=exclusion_list_file,
+            black_regex=black_regex, whitelist_file=whitelist_file,
             inclusion_list_file=inclusion_list_file, randomize=randomize)

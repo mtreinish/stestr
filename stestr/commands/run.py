@@ -103,12 +103,17 @@ class Run(command.Command):
                             "file to use for the run")
         parser.add_argument('--blacklist-file', '-b',
                             default=None, dest='blacklist_file',
-                            help='Path to a blacklist file, this file '
+                            help='DEPRECATED: This option will soon be '
+                            'replaced by --exclude-list which is functionally '
+                            'equivalent.')
+        parser.add_argument('--exclude-list', '-e',
+                            default=None, dest='exclusion_list_file',
+                            help='Path to an exclusion list file, this file '
                             'contains a separate regex exclude on each '
                             'newline')
         parser.add_argument('--whitelist-file', '-w',
                             default=None, dest='whitelist_file',
-                            help='DEPRECATED: This option will soon be  '
+                            help='DEPRECATED: This option will soon be '
                             'replaced by --include-list which is functionally '
                             'equivalent.')
         parser.add_argument('--include-list', '-i',
@@ -122,7 +127,7 @@ class Run(command.Command):
                             'it will be removed from the final test list. '
                             'Effectively the black-regexp is added to '
                             ' black regexp list, but you do need to edit a '
-                            'file. The black filtering happens after the '
+                            'file. The exclusion filtering happens after the '
                             'initial safe list selection, which by default is '
                             'everything.')
         parser.add_argument('--no-discover', '-n', default=None,
@@ -246,6 +251,7 @@ class Run(command.Command):
             subunit_out=args.subunit, until_failure=args.until_failure,
             analyze_isolation=args.analyze_isolation, isolated=args.isolated,
             worker_path=args.worker_path, blacklist_file=args.blacklist_file,
+            exclusion_list_file=args.exclusion_list_file,
             whitelist_file=args.whitelist_file,
             inclusion_list_file=args.inclusion_list_file,
             black_regex=args.black_regex, no_discover=args.no_discover,
@@ -292,13 +298,13 @@ def run_command(config='.stestr.conf', repo_type='file',
                 failing=False, serial=False, concurrency=0, load_list=None,
                 partial=False, subunit_out=False, until_failure=False,
                 analyze_isolation=False, isolated=False, worker_path=None,
-                blacklist_file=None, whitelist_file=None,
-                inclusion_list_file=None, black_regex=None,
-                no_discover=False, random=False, combine=False, filters=None,
-                pretty_out=True, color=False, stdout=sys.stdout,
-                abbreviate=False, suppress_attachments=False,
-                all_attachments=False, show_binary_attachments=True,
-                pdb=False):
+                blacklist_file=None, exclusion_list_file=None,
+                whitelist_file=None, inclusion_list_file=None,
+                black_regex=None, no_discover=False, random=False,
+                combine=False, filters=None, pretty_out=True, color=False,
+                stdout=sys.stdout, abbreviate=False,
+                suppress_attachments=False, all_attachments=False,
+                show_binary_attachments=True, pdb=False):
     """Function to execute the run command
 
     This function implements the run command. It will run the tests specified
@@ -336,8 +342,10 @@ def run_command(config='.stestr.conf', repo_type='file',
     :param bool isolated: Run each test id in a separate test runner.
     :param str worker_path: Optional path of a manual worker grouping file
         to use for the run.
-    :param str blacklist_file: Path to a blacklist file, this file contains a
-        separate regex exclude on each newline.
+    :param str blacklist_file: DEPRECATED: soon to be replaced by the new
+        option exclusion_list_file below.
+    :param str exclusion_list_file: Path to an exclusion list file, this file
+        contains a separate regex exclude on each newline.
     :param str whitelist_file: DEPRECATED: soon to be replaced by the new
         option inclusion_list_file below.
     :param str inclusion_list_file: Path to a inclusion list file, this file
@@ -519,6 +527,7 @@ def run_command(config='.stestr.conf', repo_type='file',
             ids, regexes=filters, group_regex=group_regex, repo_type=repo_type,
             repo_url=repo_url, serial=serial, worker_path=worker_path,
             concurrency=concurrency, blacklist_file=blacklist_file,
+            exclusion_list_file=exclusion_list_file,
             whitelist_file=whitelist_file,
             inclusion_list_file=inclusion_list_file, black_regex=black_regex,
             top_dir=top_dir, test_path=test_path, randomize=random)
@@ -536,6 +545,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                     repo_type=repo_type, repo_url=repo_url, serial=serial,
                     worker_path=worker_path, concurrency=concurrency,
                     blacklist_file=blacklist_file,
+                    exclusion_list_file=exclusion_list_file,
                     whitelist_file=whitelist_file,
                     inclusion_list_file=inclusion_list_file,
                     black_regex=black_regex,
@@ -577,6 +587,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                 [test_id], group_regex=group_regex, repo_type=repo_type,
                 repo_url=repo_url, serial=serial, worker_path=worker_path,
                 concurrency=concurrency, blacklist_file=blacklist_file,
+                exclusion_list_file=exclusion_list_file,
                 whitelist_file=whitelist_file,
                 inclusion_list_file=inclusion_list_file,
                 black_regex=black_regex, randomize=random, test_path=test_path,

@@ -151,33 +151,39 @@ Here first we selected all tests which matches to ``ui\.interface``, then we
 are dropping all test which matches ``slow_tests|bad_tests`` from the final
 list.
 
-stestr also allows you to specify a blacklist file to define a set of regexes
-to exclude. You can specify a blacklist file with the
-``--blacklist-file``/``-b`` option, for example::
+stestr also allows you to specify an exclusion list file to define a set of
+regexes to exclude. You can specify an exclusion list file with the
+``--exclude-list``/``-e`` option, for example::
 
-  $ stestr run --blacklist-file $path_to_file
+  $ stestr run --exclude-list $path_to_file
 
 The format for the file is line separated regex, with ``#`` used to signify the
 start of a comment on a line. For example::
 
-  # Blacklist File
+  # Exclusion list File
   ^regex1 # Excludes these tests
   .*regex2 # exclude those tests
 
-The regexp used in the blacklist file or passed as argument, will be used to
-drop tests from the initial selection list. It will generate a list which will
-exclude any tests matching ``^regex1`` or ``.*regex2``. If a blacklist file is
-used in conjunction with the normal filters then the regex filters passed in as
-an argument regex will be used for the initial test selection, and the
-exclusion regexes from the blacklist file on top of that.
+The regexp used in the exclusion list file or passed as argument, will be used
+to drop tests from the initial selection list. It will generate a list which will
+exclude any tests matching ``^regex1`` or ``.*regex2``. If an exclusion list
+file is used in conjunction with the normal filters then the regex filters
+passed in as an argument regex will be used for the initial test selection, and
+the exclusion regexes from the exclusion list file on top of that.
 
-The dual of the blacklist file is the inclusion list file which will include
-any tests matching the regexes in the file. You can specify the path to the
-file with ``--include-list``/``-i``, for example::
+.. note::
+    DEPRACATION WARNING:
+    Previously the option ``--blacklist-file``/``-b`` was available for this
+    functionality. While it is still available at this time, it is soon to be
+    replaced by the new (equivalent) option ``--exclude-list``/``-e``.
+
+The dual of the exclusion list file is the inclusion list file which will
+include any tests matching the regexes in the file. You can specify the path to
+the file with ``--include-list``/``-i``, for example::
 
   $ stestr run --include-list $path_to_file
 
-The format for the file is more or less identical to the blacklist file::
+The format for the file is more or less identical to the exclusion list file::
 
   # Inclusion list File
   ^regex1 # Include these tests
@@ -195,7 +201,7 @@ It's also worth noting that you can use the test list option to dry run any
 selection arguments you are using. You just need to use ``stestr list``
 with your selection options to do this, for example::
 
-  $ stestr list 'regex3.*' --blacklist-file blacklist.txt
+  $ stestr list 'regex3.*' --exclude-list exclusion_list.txt
 
 This will list all the tests which will be run by stestr using that combination
 of arguments.
