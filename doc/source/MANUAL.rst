@@ -138,7 +138,7 @@ filters will be run. For example, if you called ``stestr run foo bar`` this
 will only run the tests that have a regex match with foo **or** a regex match
 with bar.
 
-stestr allows you do to do simple test exclusion via passing a rejection or
+stestr allows you do to do simple test exclusion via passing a
 exclusion regexp::
 
   $ stestr run --exclusion-regex 'slow_tests|bad_tests'
