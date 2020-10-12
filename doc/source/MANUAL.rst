@@ -172,7 +172,7 @@ passed in as an argument regex will be used for the initial test selection, and
 the exclusion regexes from the exclusion list file on top of that.
 
 .. note::
-    DEPRACATION WARNING:
+    DEPRECATION WARNING:
     Previously the option ``--blacklist-file``/``-b`` was available for this
     functionality. While it is still available at this time, it is soon to be
     replaced by the new (equivalent) option ``--exclude-list``/``-e``.
@@ -192,7 +192,7 @@ The format for the file is more or less identical to the exclusion list file::
 However, instead of excluding the matches it will include them.
 
 .. note::
-    DEPRACATION WARNING:
+    DEPRECATION WARNING:
     Previously the option ``--whitelist-file``/``-w`` was available for this
     functionality. While it is still available at this time, it is soon to be
     replaced by the new (equivalent) option ``--include-list``/``-i``.
