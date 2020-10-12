@@ -107,7 +107,7 @@ class Run(command.Command):
                             'replaced by --exclude-list which is functionally '
                             'equivalent.')
         parser.add_argument('--exclude-list', '-e',
-                            default=None, dest='exclusion_list_file',
+                            default=None, dest='exclude_list',
                             help='Path to an exclusion list file, this file '
                             'contains a separate regex exclude on each '
                             'newline')
@@ -117,16 +117,16 @@ class Run(command.Command):
                             'replaced by --include-list which is functionally '
                             'equivalent.')
         parser.add_argument('--include-list', '-i',
-                            default=None, dest='inclusion_list_file',
+                            default=None, dest='include_list',
                             help='Path to an inclusion list file, this file '
                             'contains a separate regex on each newline.')
         parser.add_argument('--black-regex', '-B', default=None,
                             dest='black_regex',
                             help='DEPRECATED: This option will soon be '
-                            'replaced by --exclusion-regex which is '
+                            'replaced by --exclude-regex which is '
                             'functionally equivalent.')
-        parser.add_argument('--exclusion-regex', '-E', default=None,
-                            dest='exclusion_regex',
+        parser.add_argument('--exclude-regex', '-E', default=None,
+                            dest='exclude_regex',
                             help='Test rejection regex. If a test cases name '
                             'matches on re.search() operation , '
                             'it will be removed from the final test list. '
@@ -256,10 +256,9 @@ class Run(command.Command):
             subunit_out=args.subunit, until_failure=args.until_failure,
             analyze_isolation=args.analyze_isolation, isolated=args.isolated,
             worker_path=args.worker_path, blacklist_file=args.blacklist_file,
-            exclusion_list_file=args.exclusion_list_file,
-            whitelist_file=args.whitelist_file,
-            inclusion_list_file=args.inclusion_list_file,
-            black_regex=args.black_regex, exclusion_regex=args.exclusion_regex,
+            exclude_list=args.exclude_list, whitelist_file=args.whitelist_file,
+            include_list=args.include_list,
+            black_regex=args.black_regex, exclude_regex=args.exclude_regex,
             no_discover=args.no_discover, random=random, combine=args.combine,
             filters=filters, pretty_out=pretty_out, color=color,
             stdout=stdout, abbreviate=abbreviate,
@@ -303,9 +302,9 @@ def run_command(config='.stestr.conf', repo_type='file',
                 failing=False, serial=False, concurrency=0, load_list=None,
                 partial=False, subunit_out=False, until_failure=False,
                 analyze_isolation=False, isolated=False, worker_path=None,
-                blacklist_file=None, exclusion_list_file=None,
-                whitelist_file=None, inclusion_list_file=None,
-                black_regex=None, exclusion_regex=None, no_discover=False,
+                blacklist_file=None, exclude_list=None,
+                whitelist_file=None, include_list=None,
+                black_regex=None, exclude_regex=None, no_discover=False,
                 random=False, combine=False, filters=None, pretty_out=True,
                 color=False, stdout=sys.stdout, abbreviate=False,
                 suppress_attachments=False, all_attachments=False,
@@ -348,16 +347,16 @@ def run_command(config='.stestr.conf', repo_type='file',
     :param str worker_path: Optional path of a manual worker grouping file
         to use for the run.
     :param str blacklist_file: DEPRECATED: soon to be replaced by the new
-        option exclusion_list_file below.
-    :param str exclusion_list_file: Path to an exclusion list file, this file
+        option exclude_list below.
+    :param str exclude_list: Path to an exclusion list file, this file
         contains a separate regex exclude on each newline.
     :param str whitelist_file: DEPRECATED: soon to be replaced by the new
-        option inclusion_list_file below.
-    :param str inclusion_list_file: Path to a inclusion list file, this file
+        option include_list below.
+    :param str include_list: Path to a inclusion list file, this file
         contains a separate regex on each newline.
     :param str black_regex: DEPRECATED: soon to be replaced by the new
-        option exclusion_regex below.
-    :param str exclusion_regex: Test rejection regex. If a test cases name
+        option exclude_regex below.
+    :param str exclude_regex: Test rejection regex. If a test cases name
         matches on re.search() operation, it will be removed from the final
         test list.
     :param str no_discover: Takes in a single test_id to bypasses test
@@ -392,6 +391,21 @@ def run_command(config='.stestr.conf', repo_type='file',
     if partial:
         warnings.warn('The partial flag is deprecated and has no effect '
                       'anymore')
+    if blacklist_file is not None:
+        warnings.warn("The blacklist-file argument is deprecated and will be "
+                      "removed in a future release. Instead you should use "
+                      "exclude-list which is functionally equivalent",
+                      DeprecationWarning)
+    if whitelist_file is not None:
+        warnings.warn("The whitelist-file argument is deprecated and will be "
+                      "removed in a future release. Instead you should use "
+                      "include-list which is functionally equivalent",
+                      DeprecationWarning)
+    if black_regex is not None:
+        warnings.warn("The black-regex argument is deprecated and will be "
+                      "removed in a future release. Instead you should use "
+                      "exclude-regex which is functionally equivalent",
+                      DeprecationWarning)
     try:
         repo = util.get_repo_open(repo_type, repo_url)
     # If a repo is not found, and there a testr config exists just create it
@@ -535,10 +549,9 @@ def run_command(config='.stestr.conf', repo_type='file',
             ids, regexes=filters, group_regex=group_regex, repo_type=repo_type,
             repo_url=repo_url, serial=serial, worker_path=worker_path,
             concurrency=concurrency, blacklist_file=blacklist_file,
-            exclusion_list_file=exclusion_list_file,
-            whitelist_file=whitelist_file,
-            inclusion_list_file=inclusion_list_file, black_regex=black_regex,
-            exclusion_regex=exclusion_regex,
+            exclude_list=exclude_list, whitelist_file=whitelist_file,
+            include_list=include_list, black_regex=black_regex,
+            exclude_regex=exclude_regex,
             top_dir=top_dir, test_path=test_path, randomize=random)
         if isolated:
             result = 0
@@ -553,11 +566,9 @@ def run_command(config='.stestr.conf', repo_type='file',
                     [test_id], filters, group_regex=group_regex,
                     repo_type=repo_type, repo_url=repo_url, serial=serial,
                     worker_path=worker_path, concurrency=concurrency,
-                    blacklist_file=blacklist_file,
-                    exclusion_list_file=exclusion_list_file,
-                    whitelist_file=whitelist_file,
-                    inclusion_list_file=inclusion_list_file,
-                    black_regex=black_regex, exclusion_regex=exclusion_regex,
+                    blacklist_file=blacklist_file, exclude_list=exclude_list,
+                    whitelist_file=whitelist_file, include_list=include_list,
+                    black_regex=black_regex, exclude_regex=exclude_regex,
                     randomize=random, test_path=test_path, top_dir=top_dir)
 
                 run_result = _run_tests(
@@ -596,10 +607,9 @@ def run_command(config='.stestr.conf', repo_type='file',
                 [test_id], group_regex=group_regex, repo_type=repo_type,
                 repo_url=repo_url, serial=serial, worker_path=worker_path,
                 concurrency=concurrency, blacklist_file=blacklist_file,
-                exclusion_list_file=exclusion_list_file,
-                whitelist_file=whitelist_file,
-                inclusion_list_file=inclusion_list_file,
-                black_regex=black_regex, exclusion_regex=exclusion_regex,
+                exclude_list=exclude_list, whitelist_file=whitelist_file,
+                include_list=include_list,
+                black_regex=black_regex, exclude_regex=exclude_regex,
                 randomize=random, test_path=test_path, top_dir=top_dir)
             if not _run_tests(cmd, until_failure):
                 # If the test was filtered, it won't have been run.

@@ -68,13 +68,13 @@ class TestProcessorFixture(fixtures.Fixture):
         to use for the run
     :param int concurrency: How many processes to use. The default (0)
         autodetects your CPU count and uses that.
-    :param path blacklist_file: DEPRECATED: soon to be replaced by the new
-        option exclusion_list_file below.
-    :param path exclusion_list_file: Path to an exclusion list file, this file
+    :param path blacklist_file: Available now but soon to be replaced by the
+        new option exclude_list below.
+    :param path exclude_list: Path to an exclusion list file, this file
         contains a separate regex exclude on each newline.
-    :param str whitelist_file: DEPRECATED: soon to be replaced by the new
-        option inclusion_list_file below.
-    :param path inclusion_list_file: Path to an inclusion list file, this file
+    :param str whitelist_file: Available now but soon to be replaced by the
+        new option include_list below.
+    :param path include_list: Path to an inclusion list file, this file
          contains a separate regex on each newline.
     :param boolean randomize: Randomize the test order after they are
         partitioned into separate workers
@@ -84,9 +84,9 @@ class TestProcessorFixture(fixtures.Fixture):
                  repository, parallel=True, listpath=None,
                  test_filters=None, group_callback=None, serial=False,
                  worker_path=None, concurrency=0, blacklist_file=None,
-                 exclusion_list_file=None, black_regex=None,
-                 exclusion_regex=None, whitelist_file=None,
-                 inclusion_list_file=None, randomize=False):
+                 exclude_list=None, black_regex=None,
+                 exclude_regex=None, whitelist_file=None,
+                 include_list=None, randomize=False):
         """Create a TestProcessorFixture."""
 
         self.test_ids = test_ids
@@ -104,11 +104,11 @@ class TestProcessorFixture(fixtures.Fixture):
         self.worker_path = worker_path
         self.concurrency_value = concurrency
         self.blacklist_file = blacklist_file
-        self.exclusion_list_file = exclusion_list_file
+        self.exclude_list = exclude_list
         self.whitelist_file = whitelist_file
-        self.inclusion_list_file = inclusion_list_file
+        self.include_list = include_list
         self.black_regex = black_regex
-        self.exclusion_regex = exclusion_regex
+        self.exclude_regex = exclude_regex
         self.randomize = randomize
 
     def setUp(self):
@@ -125,9 +125,9 @@ class TestProcessorFixture(fixtures.Fixture):
         self.list_cmd = re.sub(variable_regex, list_subst, cmd)
         nonparallel = not self.parallel
         selection_logic = (self.test_filters or self.blacklist_file or
-                           self.exclusion_list_file or self.whitelist_file or
-                           self.inclusion_list_file or self.black_regex or
-                           self.exclusion_regex)
+                           self.exclude_list or self.whitelist_file or
+                           self.include_list or self.black_regex or
+                           self.exclude_regex)
         if nonparallel:
             self.concurrency = 1
         else:
@@ -154,12 +154,12 @@ class TestProcessorFixture(fixtures.Fixture):
         else:
             self.test_ids = selection.construct_list(
                 self.test_ids, blacklist_file=self.blacklist_file,
-                exclusion_list_file=self.exclusion_list_file,
+                exclude_list=self.exclude_list,
                 whitelist_file=self.whitelist_file,
-                inclusion_list_file=self.inclusion_list_file,
+                include_list=self.include_list,
                 regexes=self.test_filters,
                 black_regex=self.black_regex,
-                exclusion_regex=self.exclusion_regex)
+                exclude_regex=self.exclude_regex)
             name = self.make_listfile()
             variables['IDFILE'] = name
             idlist = ' '.join(self.test_ids)

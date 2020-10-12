@@ -141,11 +141,11 @@ with bar.
 stestr allows you do to do simple test exclusion via passing a
 exclusion regexp::
 
-  $ stestr run --exclusion-regex 'slow_tests|bad_tests'
+  $ stestr run --exclude-regex 'slow_tests|bad_tests'
 
 stestr also allow you to combine these arguments::
 
-  $ stestr run --exclusion-regex 'slow_tests|bad_tests' ui\.interface
+  $ stestr run --exclude-regex 'slow_tests|bad_tests' ui\.interface
 
 Here first we selected all tests which matches to ``ui\.interface``, then we
 are dropping all test which matches ``slow_tests|bad_tests`` from the final
