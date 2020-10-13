@@ -204,8 +204,8 @@ class TestConstructList(base.TestCase):
         whitelist_file.close()
 
         result = selection.construct_list(test_lists,
-                                          include_list = 'include_file.txt',
-                                          whitelist_file = 'whitelist_file.txt')
+                                          include_list='include_file.txt',
+                                          whitelist_file='whitelist_file.txt')
         self.assertEqual({'fake_test1[tg]', 'fake_test2[tg]'}, set(result))
         # Cleanup
         os.remove('include_file.txt')
