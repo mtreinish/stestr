@@ -105,7 +105,9 @@ class Run(command.Command):
                             default=None, dest='blacklist_file',
                             help='DEPRECATED: This option will soon be '
                             'replaced by --exclude-list which is functionally '
-                            'equivalent.')
+                            'equivalent. If this is specified at the same '
+                            'time as --exclude-list, this flag will be '
+                            'ignored and --exclude-list will be used.')
         parser.add_argument('--exclude-list', '-e',
                             default=None, dest='exclude_list',
                             help='Path to an exclusion list file, this file '
@@ -115,7 +117,9 @@ class Run(command.Command):
                             default=None, dest='whitelist_file',
                             help='DEPRECATED: This option will soon be '
                             'replaced by --include-list which is functionally '
-                            'equivalent.')
+                            'equivalent. If this is specified at the same '
+                            'time as --include-list, this flag will be '
+                            'ignored and --include-list will be used.')
         parser.add_argument('--include-list', '-i',
                             default=None, dest='include_list',
                             help='Path to an inclusion list file, this file '
@@ -123,8 +127,10 @@ class Run(command.Command):
         parser.add_argument('--black-regex', '-B', default=None,
                             dest='black_regex',
                             help='DEPRECATED: This option will soon be '
-                            'replaced by --exclude-regex which is '
-                            'functionally equivalent.')
+                            'replaced by --exclude-regex which is functionally'
+                            ' equivalent. If this is specified at the same '
+                            'time as --exclude-regex, this flag will be '
+                            'ignored and --exclude-regex will be used.')
         parser.add_argument('--exclude-regex', '-E', default=None,
                             dest='exclude_regex',
                             help='Test rejection regex. If a test cases name '
@@ -347,15 +353,18 @@ def run_command(config='.stestr.conf', repo_type='file',
     :param str worker_path: Optional path of a manual worker grouping file
         to use for the run.
     :param str blacklist_file: DEPRECATED: soon to be replaced by the new
-        option exclude_list below.
+        option exclude_list below. If this is specified at the same time as
+        exclude_list, this flag will be ignored and exclude_list will be used
     :param str exclude_list: Path to an exclusion list file, this file
         contains a separate regex exclude on each newline.
     :param str whitelist_file: DEPRECATED: soon to be replaced by the new
-        option include_list below.
+        option include_list below. If this is specified at the same time as
+        include_list, this flag will be ignored and include_list will be used
     :param str include_list: Path to a inclusion list file, this file
         contains a separate regex on each newline.
     :param str black_regex: DEPRECATED: soon to be replaced by the new
-        option exclude_regex below.
+        option exclude_regex below. If this is specified at the same time as
+        exclude_regex, this flag will be ignored and exclude_regex will be used
     :param str exclude_regex: Test rejection regex. If a test cases name
         matches on re.search() operation, it will be removed from the final
         test list.

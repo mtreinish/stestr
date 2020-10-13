@@ -104,6 +104,15 @@ class TestConstructList(base.TestCase):
         result = selection.construct_list(test_lists, exclude_regex='foo')
         self.assertEqual(list(result), ['fake_test(scen)[tag,bar])'])
 
+    def test_precedence_black_re_vs_exclude_re(self):
+        test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])']
+        result = selection.construct_list(test_lists,
+                                          exclude_regex='foo',
+                                          black_regex='bar')
+        # When both options are used together, 'exclude_regex'
+        # is respected while 'black_regex' is ignored!
+        self.assertEqual(list(result), ['fake_test(scen)[tag,bar])'])
+
     def test_invalid_black_re(self):
         test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])']
         invalid_regex = "fake_regex_with_bad_part[The-BAD-part]"
@@ -140,6 +149,26 @@ class TestConstructList(base.TestCase):
                                               regexes=['fake_test'])
         self.assertEqual(list(result), ['fake_test(scen)[tag,bar])'])
 
+    def test_precedence_blacklist_vs_exclude_list(self):
+        test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])']
+        # New option --exclude-list to be passed -> should be used
+        exclude_file = open('exclude_file.txt', 'w')
+        exclude_file.write("foo\nfoo not liked")
+        exclude_file.close()
+        # Old option --blacklist-file to be passed -> should be ignored
+        black_file = open('black_file.txt', 'w')
+        black_file.write("bar\nbar not liked")
+        black_file.close()
+
+        result = selection.construct_list(test_lists,
+                                          exclude_list='exclude_file.txt',
+                                          blacklist_file='black_file.txt',
+                                          regexes=['fake_test'])
+        self.assertEqual(list(result), ['fake_test(scen)[tag,bar])'])
+        # Cleanup
+        os.remove('exclude_file.txt')
+        os.remove('black_file.txt')
+
     def test_whitelist(self):
         white_list = [re.compile('fake_test1'), re.compile('fake_test2')]
         test_lists = ['fake_test1[tg]', 'fake_test2[tg]', 'fake_test3[tg]']
@@ -161,6 +190,25 @@ class TestConstructList(base.TestCase):
                                               include_list='file')
         self.assertEqual(set(result),
                          {'fake_test1[tg]', 'fake_test2[tg]'})
+
+    def test_precedence_whitelist_vs_include_list(self):
+        test_lists = ['fake_test1[tg]', 'fake_test2[tg]', 'fake_test3[tg]']
+        # New option --include-list to be passed -> should be used
+        include_file = open('include_file.txt', 'w')
+        include_file.write('fake_test1\nfake_test2')
+        include_file.close()
+        # Old option --whitelist-file to be passed -> should be ignored
+        whitelist_file = open('whitelist_file.txt', 'w')
+        whitelist_file.write('fake_test3')
+        whitelist_file.close()
+
+        result = selection.construct_list(test_lists,
+                                          include_list = 'include_file.txt',
+                                          whitelist_file = 'whitelist_file.txt')
+        self.assertEqual({'fake_test1[tg]', 'fake_test2[tg]'}, set(result))
+        # Cleanup
+        os.remove('include_file.txt')
+        os.remove('whitelist_file.txt')
 
     def test_whitelist_invalid_regex(self):
         whitelist_file = io.StringIO()
