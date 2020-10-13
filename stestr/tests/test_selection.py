@@ -11,6 +11,7 @@
 # under the License.
 
 import io
+import os
 import re
 from unittest import mock
 
