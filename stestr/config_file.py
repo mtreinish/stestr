@@ -48,7 +48,9 @@ class TestrConf(object):
                         repo_type='file', repo_url=None,
                         serial=False, worker_path=None,
                         concurrency=0, blacklist_file=None,
-                        whitelist_file=None, black_regex=None,
+                        exclude_list=None, whitelist_file=None,
+                        include_list=None, black_regex=None,
+                        exclude_regex=None,
                         randomize=False, parallel_class=None):
         """Get a test_processor.TestProcessorFixture for this config file
 
@@ -83,11 +85,17 @@ class TestrConf(object):
             to use for the run.
         :param int concurrency: How many processes to use. The default (0)
             autodetects your CPU count and uses that.
-        :param str blacklist_file: Path to a blacklist file, this file contains
-            a separate regex exclude on each newline.
-        :param str whitelist_file: Path to a whitelist file, this file contains
-            a separate regex on each newline.
-        :param str black_regex: Test rejection regex. If a test cases name
+        :param str blacklist_file: Available now but soon to be replaced by the
+            new option exclude_list below.
+        :param str exclude_list: Path to an exclusion list file, this
+            file contains a separate regex exclude on each newline.
+        :param str whitelist_file: Available now but soon to be replaced by the
+            new option include_list below.
+        :param str include_list: Path to an inclusion list file, this
+            file contains a separate regex on each newline.
+        :param str black_regex: Available now but soon to be replaced by the
+            new option exclude_regex below.
+        :param str exclude_regex: Test rejection regex. If a test cases name
             matches on re.search() operation, it will be removed from the final
             test list.
         :param bool randomize: Randomize the test order after they are
@@ -165,5 +173,7 @@ class TestrConf(object):
             test_ids, command, listopt, idoption, repository,
             test_filters=regexes, group_callback=group_callback, serial=serial,
             worker_path=worker_path, concurrency=concurrency,
-            blacklist_file=blacklist_file, black_regex=black_regex,
-            whitelist_file=whitelist_file, randomize=randomize)
+            blacklist_file=blacklist_file,
+            exclude_list=exclude_list, black_regex=black_regex,
+            exclude_regex=exclude_regex, whitelist_file=whitelist_file,
+            include_list=include_list, randomize=randomize)

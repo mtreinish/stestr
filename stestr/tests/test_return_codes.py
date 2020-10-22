@@ -141,12 +141,28 @@ class TestReturnCodes(base.TestCase):
         cmd = 'stestr run --blacklist-file %s' % path
         self.assertRunExit(cmd, 0)
 
+    def test_parallel_exclusion_list(self):
+        fd, path = tempfile.mkstemp()
+        self.addCleanup(os.remove, path)
+        with os.fdopen(fd, 'w') as exclusion_list:
+            exclusion_list.write('fail')
+        cmd = 'stestr run --exclude-list %s' % path
+        self.assertRunExit(cmd, 0)
+
     def test_parallel_whitelist(self):
         fd, path = tempfile.mkstemp()
         self.addCleanup(os.remove, path)
         with os.fdopen(fd, 'w') as whitelist:
             whitelist.write('passing')
         cmd = 'stestr run --whitelist-file %s' % path
+        self.assertRunExit(cmd, 0)
+
+    def test_parallel_inclusion_list(self):
+        fd, path = tempfile.mkstemp()
+        self.addCleanup(os.remove, path)
+        with os.fdopen(fd, 'w') as inclusion_list:
+            inclusion_list.write('passing')
+        cmd = 'stestr run --include-list %s' % path
         self.assertRunExit(cmd, 0)
 
     def test_serial_passing(self):
@@ -163,12 +179,28 @@ class TestReturnCodes(base.TestCase):
         cmd = 'stestr run --serial --blacklist-file %s' % path
         self.assertRunExit(cmd, 0)
 
+    def test_serial_exclusion_list(self):
+        fd, path = tempfile.mkstemp()
+        self.addCleanup(os.remove, path)
+        with os.fdopen(fd, 'w') as exclusion_list:
+            exclusion_list.write('fail')
+        cmd = 'stestr run --serial --exclude-list %s' % path
+        self.assertRunExit(cmd, 0)
+
     def test_serial_whitelist(self):
         fd, path = tempfile.mkstemp()
         self.addCleanup(os.remove, path)
         with os.fdopen(fd, 'w') as whitelist:
             whitelist.write('passing')
         cmd = 'stestr run --serial --whitelist-file %s' % path
+        self.assertRunExit(cmd, 0)
+
+    def test_serial_inclusion_list(self):
+        fd, path = tempfile.mkstemp()
+        self.addCleanup(os.remove, path)
+        with os.fdopen(fd, 'w') as inclusion_list:
+            inclusion_list.write('passing')
+        cmd = 'stestr run --serial --include-list %s' % path
         self.assertRunExit(cmd, 0)
 
     def test_serial_subunit_passing(self):
