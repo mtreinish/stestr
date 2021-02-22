@@ -64,7 +64,7 @@ class SubunitTestRunner(object):
             result.status(file_name="import errors", runnable=False,
                           file_bytes=failed_descr,
                           mime_type="text/plain;charset=utf8")
-            sys.exit(2)
+            raise Exception("listing test %s errored" % test)
 
     def _list(self, test):
         test_ids, errors = program.list_test(test)
