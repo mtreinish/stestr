@@ -61,6 +61,7 @@ class SubunitTestRunner(object):
             errors = loader.errors
         if errors:
             failed_descr = '\n'.join(errors).encode('utf8')
+            print(failed_descr)
             result.status(file_name="import errors", runnable=False,
                           file_bytes=failed_descr,
                           mime_type="text/plain;charset=utf8")
