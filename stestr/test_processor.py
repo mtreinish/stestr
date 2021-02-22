@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from functools import partial
 import io
 import os
 import re
@@ -24,6 +25,8 @@ from subunit import v2
 from stestr import results
 from stestr import scheduler
 from stestr import selection
+from stestr.subunit_runner import program as sub_prog
+from stestr.subunit_runner import run as sub_run
 from stestr import testlist
 
 
@@ -213,27 +216,30 @@ class TestProcessorFixture(fixtures.Fixture):
 
         :return: A list of test ids.
         """
-        run_proc = self._start_process(self.list_cmd)
-        out, err = run_proc.communicate()
-        if run_proc.returncode != 0:
+        discovery_buffer = io.BytesIO()
+        runner = sub_run.SubunitTestRunner
+        list_cmd = [x.strip('"') for x in self.list_cmd.split(' ')[2:-1] if x]
+        try:
+            sub_prog.TestProgram(module=None, argv=list_cmd,
+                                 testRunner=partial(runner,
+                                                    stdout=discovery_buffer))
+        except Exception:
             sys.stdout.write("\n=========================\n"
                              "Failures during discovery"
                              "\n=========================\n")
             new_out = io.BytesIO()
             v2.ByteStreamToStreamResult(
-                io.BytesIO(out), 'stdout').run(
-                    results.CatFiles(new_out))
+                discovery_buffer, 'stdout').run(results.CatFiles(new_out))
             out = new_out.getvalue()
             if out:
                 sys.stdout.write(out.decode('utf8'))
-            if err:
-                sys.stderr.write(err.decode('utf8'))
             sys.stdout.write("\n" + "=" * 80 + "\n"
                              "The above traceback was encountered during "
                              "test discovery which imports all the found test"
                              " modules in the specified test_path.\n")
             exit(100)
-        ids = testlist.parse_enumeration(out)
+        ids = testlist.parse_enumeration(discovery_buffer.getvalue())
+        discovery_buffer.close()
         return ids
 
     def run_tests(self):
