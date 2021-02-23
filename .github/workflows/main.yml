@@ -20,7 +20,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install readline
         run: brew install readline
-        if: {matrix.os} == "macOS-latest"
+        if: runner.os == 'macOS'
       - name: Pip cache
         uses: actions/cache@v2
         with:
