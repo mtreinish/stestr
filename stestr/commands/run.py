@@ -61,7 +61,7 @@ class Run(command.Command):
     """
 
     def get_parser(self, prog_name):
-        parser = super(Run, self).get_parser(prog_name)
+        parser = super().get_parser(prog_name)
         parser.add_argument("filters", nargs="*", default=None,
                             help="A list of string regex filters to initially "
                             "apply on the test list. Tests that match any of "

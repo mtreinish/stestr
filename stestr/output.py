@@ -151,7 +151,7 @@ def output_stream(stream, output=sys.stdout):
     _binary_stdout.flush()
 
 
-class ReturnCodeToSubunit(object):
+class ReturnCodeToSubunit:
     """Converts a process return code to a subunit error on the process stdout.
 
     The ReturnCodeToSubunit object behaves as a read-only stream, supplying

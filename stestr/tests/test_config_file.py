@@ -23,7 +23,7 @@ class TestTestrConf(base.TestCase):
 
     @mock.patch.object(config_file.configparser, 'ConfigParser')
     def setUp(self, mock_ConfigParser):
-        super(TestTestrConf, self).setUp()
+        super().setUp()
         self._testr_conf = config_file.TestrConf(mock.sentinel.config_file)
         self._testr_conf.parser = mock.Mock()
 

@@ -11,7 +11,6 @@
 # under the License.
 
 """Persistent storage of test results."""
-from __future__ import print_function
 
 import datetime
 import io
@@ -91,7 +90,7 @@ class Repository(repository.AbstractRepository):
 
     # TODO(mtreinish): We need to add a subunit2sql api to get the count
     def count(self):
-        super(Repository, self).count()
+        super().count()
 
     def _get_latest_run(self):
         session = self.session_factory()

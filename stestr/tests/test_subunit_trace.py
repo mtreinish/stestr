@@ -31,7 +31,7 @@ from stestr.tests import base
 class TestSubunitTrace(base.TestCase):
 
     def setUp(self):
-        super(TestSubunitTrace, self).setUp()
+        super().setUp()
         # NOTE(mtreinish): subunit-trace relies on a global to track results
         # with the expectation that it's run once per python interpreter
         # (like per stestr run or other command). Make sure to clear those on

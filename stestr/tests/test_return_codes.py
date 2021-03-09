@@ -31,7 +31,7 @@ from stestr.tests import base
 
 class TestReturnCodes(base.TestCase):
     def setUp(self):
-        super(TestReturnCodes, self).setUp()
+        super().setUp()
         # Setup test dirs
         self.directory = tempfile.mkdtemp(prefix='stestr-unit')
         self.addCleanup(shutil.rmtree, self.directory, ignore_errors=True)

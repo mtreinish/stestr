@@ -9,7 +9,6 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-from __future__ import print_function
 
 import contextlib
 import re
@@ -50,7 +49,7 @@ def filter_tests(filters, test_ids):
 
 
 def exclusion_reader(exclude_list):
-    with contextlib.closing(open(exclude_list, 'r')) as exclude_file:
+    with contextlib.closing(open(exclude_list)) as exclude_file:
         regex_comment_lst = []  # tuple of (regex_compiled, msg, skipped_lst)
         for line in exclude_file:
             raw_line = line.strip()

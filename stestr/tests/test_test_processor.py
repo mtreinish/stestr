@@ -20,7 +20,7 @@ from stestr.tests import base
 class TestTestProcessorFixture(base.TestCase):
 
     def setUp(self):
-        super(TestTestProcessorFixture, self).setUp()
+        super().setUp()
         self._fixture = test_processor.TestProcessorFixture(
             mock.sentinel.test_ids, mock.sentinel.options,
             mock.sentinel.cmd_template, mock.sentinel.listopt,

@@ -57,7 +57,7 @@ run:
 class TestUserConfig(base.TestCase):
 
     def setUp(self):
-        super(TestUserConfig, self).setUp()
+        super().setUp()
         home_dir = os.path.expanduser("~")
         self.xdg_path = os.path.join(os.path.join(home_dir, '.config'),
                                      'stestr.yaml')
