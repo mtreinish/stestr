@@ -27,18 +27,18 @@ from stestr.tests import base
 class SqlRepositoryFixture(fixtures.Fixture):
 
     def __init__(self, url=None):
-        super(SqlRepositoryFixture, self).__init__()
+        super().__init__()
         self.url = url
 
     def setUp(self):
-        super(SqlRepositoryFixture, self).setUp()
+        super().setUp()
         self.repo = sql.RepositoryFactory().initialise(self.url)
 
 
 class TestSqlRepository(base.TestCase):
 
     def setUp(self):
-        super(TestSqlRepository, self).setUp()
+        super().setUp()
         # NOTE(mtreinish): Windows likes to fail if the file is already open
         # when we access it later, so lets explicitly close it before we move
         # forward

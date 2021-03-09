@@ -36,7 +36,7 @@ def get_user_config(path=None):
     return UserConfig(path)
 
 
-class UserConfig(object):
+class UserConfig:
 
     def __init__(self, path):
         self.schema = vp.Schema({
@@ -68,7 +68,7 @@ class UserConfig(object):
                 vp.Optional('all-attachments'): bool,
             }
         })
-        with open(path, 'r') as fd:
+        with open(path) as fd:
             self.config = yaml.safe_load(fd.read())
         if self.config is None:
             self.config = {}

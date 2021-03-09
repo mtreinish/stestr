@@ -58,8 +58,8 @@ class RepositoryFactory(repository.AbstractRepositoryFactory):
         path = os.path.expanduser(url)
         base = os.path.join(path, '.stestr')
         try:
-            stream = open(os.path.join(base, 'format'), 'rt')
-        except (IOError, OSError) as e:
+            stream = open(os.path.join(base, 'format'))
+        except OSError as e:
             if e.errno == errno.ENOENT:
                 raise repository.RepositoryNotFound(url)
             raise
@@ -94,7 +94,7 @@ class Repository(repository.AbstractRepository):
         return value
 
     def _next_stream(self):
-        with open(os.path.join(self.base, 'next-stream'), 'rt') as fp:
+        with open(os.path.join(self.base, 'next-stream')) as fp:
             next_content = fp.read()
         try:
             return int(next_content)
@@ -114,7 +114,7 @@ class Repository(repository.AbstractRepository):
         try:
             with open(os.path.join(self.base, "failing"), 'rb') as fp:
                 run_subunit_content = fp.read()
-        except IOError:
+        except OSError:
             err = sys.exc_info()[1]
             if err.errno == errno.ENOENT:
                 run_subunit_content = _b('')
@@ -134,7 +134,7 @@ class Repository(repository.AbstractRepository):
         try:
             with open(os.path.join(self.base, str(run_id)), 'rb') as fp:
                 run_subunit_content = fp.read()
-        except IOError as e:
+        except OSError as e:
             if e.errno == errno.ENOENT:
                 raise KeyError("No such run.")
             else:
@@ -243,7 +243,7 @@ class _DiskRun(repository.AbstractTestRun):
         return self._metadata
 
 
-class _SafeInserter(object):
+class _SafeInserter:
 
     def __init__(self, repository, partial=False, run_id=None, metadata=None):
         # XXX: Perhaps should factor into a decorator and use an unaltered
@@ -342,7 +342,7 @@ class _Inserter(_SafeInserter):
             return self._run_id
 
     def stopTestRun(self):
-        super(_Inserter, self).stopTestRun()
+        super().stopTestRun()
         # XXX: locking (other inserts may happen while we update the failing
         # file).
         # Combine failing + this run : strip passed tests, add failures.

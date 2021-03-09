@@ -46,7 +46,7 @@ def parse_enumeration(enumeration_bytes):
 
 def _v1(list_bytes):
     return [id.strip() for id in list_bytes.decode('utf8').split(
-        str('\n')) if id.strip()]
+        '\n') if id.strip()]
 
 
 def _v2(list_bytes):

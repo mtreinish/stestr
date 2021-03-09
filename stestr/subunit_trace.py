@@ -15,9 +15,6 @@
 # under the License.
 
 """Trace a subunit stream in reasonable detail and high accuracy."""
-from __future__ import absolute_import
-from __future__ import print_function
-
 import argparse
 import functools
 import os

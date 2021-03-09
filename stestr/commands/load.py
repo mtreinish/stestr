@@ -47,7 +47,7 @@ class Load(command.Command):
     """
 
     def get_parser(self, prog_name):
-        parser = super(Load, self).get_parser(prog_name)
+        parser = super().get_parser(prog_name)
         parser.add_argument("files", nargs="*", default=False,
                             help="The subunit v2 stream files to load into the"
                             " repository")

@@ -15,7 +15,7 @@ import io
 from stestr import output
 
 
-class CallWhenProcFinishes(object):
+class CallWhenProcFinishes:
     """Convert a process object to trigger a callback when returncode is set.
 
     This just wraps the entire object and when the returncode attribute access

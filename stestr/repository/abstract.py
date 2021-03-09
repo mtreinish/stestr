@@ -29,7 +29,7 @@ the initialize function in the appropriate repository module.
 from testtools import StreamToDict
 
 
-class AbstractRepositoryFactory(object):
+class AbstractRepositoryFactory:
     """Interface for making or opening repositories."""
 
     def initialise(self, url):
@@ -47,7 +47,7 @@ class AbstractRepositoryFactory(object):
         raise NotImplementedError(self.open)
 
 
-class AbstractRepository(object):
+class AbstractRepository:
     """The base class for Repository implementations.
 
     There are no interesting attributes or methods as yet.
@@ -165,7 +165,7 @@ class AbstractRepository(object):
         raise NotImplementedError(self.find_metadata)
 
 
-class AbstractTestRun(object):
+class AbstractTestRun:
     """A test run that has been stored in a repository.
 
     Should implement the StreamResult protocol as well

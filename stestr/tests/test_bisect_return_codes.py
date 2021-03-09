@@ -20,7 +20,7 @@ from stestr.tests import base
 
 class TestBisectReturnCodes(base.TestCase):
     def setUp(self):
-        super(TestBisectReturnCodes, self).setUp()
+        super().setUp()
         # Setup test dirs
         self.directory = tempfile.mkdtemp(prefix='stestr-unit')
         self.addCleanup(shutil.rmtree, self.directory)

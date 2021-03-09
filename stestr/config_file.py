@@ -20,7 +20,7 @@ from stestr.repository import util
 from stestr import test_processor
 
 
-class TestrConf(object):
+class TestrConf:
     """Create a TestrConf object to represent a specified config file
 
     This class is used to represent an stestr config file. It
