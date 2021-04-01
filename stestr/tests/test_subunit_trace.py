@@ -22,6 +22,8 @@ from unittest.mock import patch
 from ddt import data
 from ddt import ddt
 from ddt import unpack
+from subunit.iso8601 import UTC
+from subunit.v2 import StreamResultToBytes
 
 from stestr import subunit_trace
 from stestr.tests import base
@@ -105,5 +107,21 @@ class TestSubunitTrace(base.TestCase):
             bytes_.write(bytes(stream.read()))
         bytes_.seek(0)
         stdin = io.TextIOWrapper(io.BufferedReader(bytes_))
+        returncode = subunit_trace.trace(stdin, sys.stdout)
+        self.assertEqual(1, returncode)
+
+    def test_trace_with_stuck_inprogress(self):
+        output = io.BytesIO()
+        stream = StreamResultToBytes(output)
+        stream.startTestRun()
+        stream.status(test_id='test_passes', test_status='inprogress',
+                      timestamp=dt.now(UTC))
+        stream.status(test_id='test_segfault', test_status='inprogress',
+                      timestamp=dt.now(UTC))
+        stream.status(test_id='test_passes', test_status='success',
+                      timestamp=dt.now(UTC))
+        stream.stopTestRun()
+        output.seek(0)
+        stdin = io.TextIOWrapper(io.BufferedReader(output))
         returncode = subunit_trace.trace(stdin, sys.stdout)
         self.assertEqual(1, returncode)
