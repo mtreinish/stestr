@@ -110,6 +110,22 @@ class Repository(repository.AbstractRepository):
             raise KeyError("No tests in repository")
         return result
 
+    def get_run_ids(self):
+        result = []
+        max_id = self._next_stream()
+        if max_id < 0:
+            raise KeyError("No tests in repository")
+        for i in range(max_id):
+            if os.path.isfile(os.path.join(self.base, str(i))):
+                result.append(str(i))
+        return result
+
+    def remove_run_id(self, run_id):
+        run_path = os.path.join(self.base, run_id)
+        if not os.path.isfile(run_path):
+            raise KeyError("No run %s in repository" % run_id)
+        os.remove(run_path)
+
     def get_failing(self):
         try:
             with open(os.path.join(self.base, "failing"), 'rb') as fp:

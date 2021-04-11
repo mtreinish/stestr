@@ -103,3 +103,55 @@ class TestSqlRepository(base.TestCase):
         run_ids = repo.find_metadata('fun')
         self.assertIn(result.get_id(), run_ids)
         self.assertNotIn(result_bad.get_id(), run_ids)
+
+    def test_get_run_ids(self):
+        repo = self.useFixture(SqlRepositoryFixture(url=self.url)).repo
+        result = repo.get_inserter(metadata='fun')
+        result.startTestRun()
+        result.stopTestRun()
+        result_bad = repo.get_inserter(metadata='not_fun')
+        result_bad.startTestRun()
+        result_bad.stopTestRun()
+        run_ids = repo.get_run_ids()
+        # Run ids are uuids so just assert there are 2 since we can't expect
+        # what the id will be for each run
+        self.assertEqual(2, len(run_ids))
+
+    def test_get_run_ids_empty(self):
+        repo = self.useFixture(SqlRepositoryFixture(url=self.url)).repo
+        run_ids = repo.get_run_ids()
+        self.assertEqual([], run_ids)
+
+    def test_get_run_ids_with_hole(self):
+        repo = self.useFixture(SqlRepositoryFixture(url=self.url)).repo
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        run_ids = repo.get_run_ids()
+        repo.remove_run_id(run_ids[1])
+        # Run ids are uuids so just assert there are 2 since we can't expect
+        # what the id will be for each run
+        self.assertEqual(2, len(repo.get_run_ids()))
+
+    def test_remove_ids(self):
+        repo = self.useFixture(SqlRepositoryFixture(url=self.url)).repo
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        run_ids = repo.get_run_ids()
+        repo.remove_run_id(run_ids[0])
+        self.assertEqual([], repo.get_run_ids())
+
+    def test_remove_ids_id_not_in_repo(self):
+        repo = self.useFixture(SqlRepositoryFixture(url=self.url)).repo
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        invalid_id = str(uuid.uuid4())
+        self.assertRaises(KeyError, repo.remove_run_id, invalid_id)

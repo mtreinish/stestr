@@ -330,6 +330,82 @@ class TestReturnCodes(base.TestCase):
         self.assertEqual(out.decode('utf-8'), '')
         self.assertEqual(err.decode('utf-8'), '')
 
+    def test_history_list(self):
+        self.assertRunExit('stestr run passing', 0)
+        self.assertRunExit('stestr run', 1)
+        self.assertRunExit('stestr run passing', 0)
+        table = self.assertRunExit(
+            'stestr history list', 0)[0].decode('utf8')
+        self.assertIn("|   0    |  True  |", table.split('\n')[3].rstrip())
+        self.assertIn("|   1    | False  |", table.split('\n')[4].rstrip())
+        self.assertIn("|   2    |  True  |", table.split('\n')[5].rstrip())
+        expected = """
++--------+--------+-----------+----------------------------------+
+| Run ID | Passed |  Runtime  |               Date               |
++--------+--------+-----------+----------------------------------+
+""".rstrip()
+        self.assertEqual(expected.strip(), '\n'.join(
+            [x.rstrip() for x in table.split('\n')[:3]]).strip())
+
+    def test_history_empty(self):
+        table = self.assertRunExit(
+            'stestr history list', 0)[0].decode('utf8')
+        expected = """
++--------+--------+---------+------+
+| Run ID | Passed | Runtime | Date |
++--------+--------+---------+------+
++--------+--------+---------+------+
+"""
+        self.assertEqual(expected.strip(),
+                         '\n'.join(
+                             [x.rstrip() for x in table.split('\n')]).strip())
+
+    def test_history_show_passing(self):
+        self.assertRunExit('stestr run passing', 0)
+        self.assertRunExit('stestr run', 1)
+        self.assertRunExit('stestr run passing', 0)
+        output, _ = self.assertRunExit('stestr history show 0', 0)
+        lines = [x.rstrip() for x in output.decode('utf8').split('\n')]
+        self.assertIn(' - Passed: 2', lines)
+        self.assertIn(' - Failed: 0', lines)
+        self.assertIn(' - Expected Fail: 1', lines)
+
+    def test_history_show_failing(self):
+        self.assertRunExit('stestr run passing', 0)
+        self.assertRunExit('stestr run', 1)
+        self.assertRunExit('stestr run passing', 0)
+        output, _ = self.assertRunExit('stestr history show 1', 1)
+        lines = [x.rstrip() for x in output.decode('utf8').split('\n')]
+        self.assertIn(' - Passed: 2', lines)
+        self.assertIn(' - Failed: 2', lines)
+        self.assertIn(' - Expected Fail: 1', lines)
+        self.assertIn(' - Unexpected Success: 1', lines)
+
+    def test_history_show_invalid_id(self):
+        self.assertRunExit('stestr run passing', 0)
+        self.assertRunExit('stestr run', 1)
+        self.assertRunExit('stestr run passing', 0)
+        output, _ = self.assertRunExit('stestr history show 42', 1)
+        self.assertEqual(output.decode('utf8').rstrip(), "'No such run.'")
+
+    def test_history_remove(self):
+        self.assertRunExit('stestr run passing', 0)
+        self.assertRunExit('stestr run', 1)
+        self.assertRunExit('stestr run passing', 0)
+        self.assertRunExit('stestr history remove 1', 0)
+        table = self.assertRunExit(
+            'stestr history list', 0)[0].decode('utf8')
+        self.assertIn("|   0    |  True  |", table.split('\n')[3].rstrip())
+        self.assertNotIn("|   1    | False  |", table.split('\n')[4].strip())
+        self.assertIn("|   2    |  True  |", table.split('\n')[4].rstrip())
+        expected = """
++--------+--------+-----------+----------------------------------+
+| Run ID | Passed |  Runtime  |               Date               |
++--------+--------+-----------+----------------------------------+
+""".strip()
+        self.assertEqual(expected, '\n'.join(
+            [x.rstrip() for x in table.split('\n')[:3]]))
+
     def test_no_subunit_trace_force_subunit_trace(self):
         out, err = self.assertRunExit(
             'stestr run --no-subunit-trace --force-subunit-trace passing', 0)

@@ -499,6 +499,13 @@ that changes the default on all available options in the config file is::
       abbreviate: True
       suppress-attachments: True
       all-attachments: True
+    history-list:
+      show-metadata: True
+    history-show:
+      no-subunit-trace: True
+      color: True
+      suppress-attachments: True
+      all-attachments: True
 
 If you choose to use a user config file you can specify any subset of the
 options and commands you choose.
@@ -559,6 +566,23 @@ using the failing set, or a user supplied load-list), and then spawns one test
 runner per test it runs. To avoid cross-test-runner interactions concurrency
 is disabled in this mode. ``--analyze-isolation`` supersedes ``--isolated`` if
 they are both supplied.
+
+History
+-------
+
+stestr keeps a history of all test runs in a local repository. the
+``stestr history`` command is used for interacting with those old runs. The
+history command has 3 sub-commands, ``list``, ``show``, and ``remove``. The
+``list`` sub-command will generate a list of the previous runs in the data
+repository and show some basic stats for each run. The ``show`` sub-command is
+used to retreive the record of a previous run, it behaves identically to
+``stestr last``, except that it takes an optional run id to show any run in the
+stestr history. If a run id is not specified it will use the most recent
+result. The ``remove`` sub-command will delete a specified run from the data
+repository. Additionally, the keyword ``all`` can be used to remove all runs
+from the repository. For example::
+
+  $ stestr history remove all
 
 Repositories
 ------------

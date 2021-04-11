@@ -11,6 +11,9 @@
 # under the License.
 
 from stestr.commands.failing import failing as failing_command
+from stestr.commands.history import history_list as history_list_command
+from stestr.commands.history import history_remove as history_remove_command
+from stestr.commands.history import history_show as history_show_command
 from stestr.commands.init import init as init_command
 from stestr.commands.last import last as last_command
 from stestr.commands.list import list_command
@@ -18,5 +21,8 @@ from stestr.commands.load import load as load_command
 from stestr.commands.run import run_command
 from stestr.commands.slowest import slowest as slowest_command
 
+
 __all__ = ['failing_command', 'init_command', 'last_command',
-           'list_command', 'load_command', 'run_command', 'slowest_command']
+           'list_command', 'load_command', 'run_command', 'slowest_command',
+           'history_show_command', 'history_list_command',
+           'history_remove_command']
