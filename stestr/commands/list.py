@@ -13,6 +13,7 @@
 """List the tests from a project and show them."""
 
 from io import BytesIO
+import os
 import sys
 import warnings
 
@@ -162,7 +163,12 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
                       "exclude-regex which is functionally equivalent",
                       DeprecationWarning)
     ids = None
-    conf = config_file.TestrConf(config)
+    if config and os.path.isfile(config):
+        conf = config_file.TestrConf(config)
+    elif os.path.isfile('tox.ini'):
+        conf = config_file.TestrConf('tox.ini', section='stestr')
+    else:
+        conf = config_file.TestrConf(config)
     cmd = conf.get_run_command(
         regexes=filters, repo_type=repo_type,
         repo_url=repo_url, group_regex=group_regex,
