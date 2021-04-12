@@ -84,8 +84,15 @@ test discovery. This is the same as ``--start-directory`` in the standard
 
 .. _unittest discovery: https://docs.python.org/3/library/unittest.html#test-discovery
 
-After this file is created you should be all set to start using stestr to run
-tests. To run tests just use::
+Alternatively, if you're using stestr with
+`tox <https://tox.readthedocs.io/en/latest/>`__ you can integrate your stestr
+config in a ``stestr`` section in the tox.ini file, for example::
+
+  [stestr]
+  test_path=./project_source_dir/tests
+
+After stestr is configured you should be all set to start using stestr
+to run tests. To run tests just use::
 
     stestr run
 

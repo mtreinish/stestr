@@ -38,6 +38,7 @@ class TestReturnCodes(base.TestCase):
         self.test_dir = os.path.join(self.directory, 'tests')
         os.mkdir(self.test_dir)
         # Setup Test files
+        self.repo_root = os.path.abspath(os.curdir)
         self.testr_conf_file = os.path.join(self.directory, '.stestr.conf')
         self.setup_cfg_file = os.path.join(self.directory, 'setup.cfg')
         self.passing_file = os.path.join(self.test_dir, 'test_passing.py')
@@ -56,7 +57,7 @@ class TestReturnCodes(base.TestCase):
         self.stdout = io.StringIO()
         self.stderr = io.StringIO()
         # Change directory, run wrapper and check result
-        self.addCleanup(os.chdir, os.path.abspath(os.curdir))
+        self.addCleanup(os.chdir, self.repo_root)
         os.chdir(self.directory)
         subprocess.call('stestr init', shell=True)
 
@@ -520,3 +521,12 @@ class TestReturnCodes(base.TestCase):
         self.assertIn(' - Passed: 0', lines)
         self.assertIn(' - Failed: 2', lines)
         self.assertIn(' - Unexpected Success: 1', lines)
+
+
+class TestReturnCodesToxIni(TestReturnCodes):
+    def setUp(self):
+        super().setUp()
+        self.tox_ini_dir = os.path.join(self.directory, 'tox.ini')
+        tox_file = os.path.join(self.repo_root, 'stestr/tests/files/tox.ini')
+        shutil.copy(tox_file, self.tox_ini_dir)
+        os.remove(self.testr_conf_file)

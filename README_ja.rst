@@ -85,8 +85,15 @@ stestr のインストール後、テスト実行のために使う方法は、�
 
 .. _unittest discovery: https://docs.python.org/3/library/unittest.html#test-discovery
 
-このファイルを作成すれば、stestr を使い始めるためにやるべきことはすべて完了
-です。テストを実行するためには、単に次のように使うだけです::
+あるいは、`tox <https://tox.readthedocs.io/en/latest/>`__
+を使用している場合は、tox.ini ファイルを使用してstestrを構成できます。
+たとえば::
+
+  [stestr]
+  test_path=./project_source_dir/tests
+
+と設定すれば、stestr を使い始めるためにやるべきことはすべて完了です。テストを実行するためには、
+単に次のように使うだけです::
 
     stestr run
 
