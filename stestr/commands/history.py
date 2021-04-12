@@ -28,27 +28,37 @@ from stestr import subunit_trace
 from stestr import user_config
 
 
-class History(command.Command):
-    """Interact with the run history in a repository."""
+class HistoryList(command.Command):
+    """List the the run history in a repository."""
 
     def get_parser(self, prog_name):
-        parser = super().get_parser(prog_name)
-        cmd_parser = parser.add_subparsers()
-        list_parser = cmd_parser.add_parser('list',
-                                            help='list runs in repository')
-        list_parser.set_defaults(func='list')
+        list_parser = super().get_parser(prog_name)
         list_parser.add_argument('--show-metadata', '-m', action='store_true',
                                  help="Show metadata associated with runs in "
                                       "output table")
+        return list_parser
 
-        # Configure show subcommand:
-        show_parser = cmd_parser.add_parser('show',
-                                            help='Show the contents of a '
-                                                 'single run in the history')
+    def take_action(self, parsed_args):
+        args = parsed_args
+        user_conf = user_config.get_user_config(self.app_args.user_config)
+        show_metadata = args.show_metadata
+        if getattr(user_conf, 'history_list', False):
+            if user_conf.history_show.get('show-metadata',
+                                          None) is not None:
+                show_metadata = args.show_metadata
+        return history_list(repo_type=self.app_args.repo_type,
+                            repo_url=self.app_args.repo_url,
+                            show_metadata=show_metadata)
+
+
+class HistoryShow(command.Command):
+    """Show the contents of a single run in the history"""
+
+    def get_parser(self, prog_name):
+        show_parser = super().get_parser(prog_name)
         show_parser.add_argument(
             "--subunit", action="store_true",
             default=False, help="Show output as a subunit stream.")
-        show_parser.set_defaults(func='show')
         show_parser.add_argument("--no-subunit-trace", action='store_true',
                                  default=False,
                                  help="Disable output with the subunit-trace "
@@ -85,78 +95,74 @@ class History(command.Command):
                                       'if not specified the last run will be '
                                       'shown (which is equivalent to '
                                       "'stestr last')")
-        remove_parser = cmd_parser.add_parser('remove',
-                                              help='Remove runs from a '
-                                                   'repository')
-        remove_parser.set_defaults(func='remove')
+        return show_parser
+
+    def take_action(self, parsed_args):
+        args = parsed_args
+        user_conf = user_config.get_user_config(self.app_args.user_config)
+        if args.suppress_attachments and args.all_attachments:
+            msg = ("The --suppress-attachments and --all-attachments "
+                   "options are mutually exclusive, you can not use both "
+                   "at the same time")
+            print(msg)
+            sys.exit(1)
+        if getattr(user_conf, 'history_show', False):
+            if not user_conf.history_show.get('no-subunit-trace'):
+                if not args.no_subunit_trace:
+                    pretty_out = True
+                else:
+                    pretty_out = False
+            else:
+                pretty_out = False
+            pretty_out = args.force_subunit_trace or pretty_out
+            color = args.color or user_conf.history_show.get('color',
+                                                             False)
+            suppress_attachments_conf = user_conf.history_show.get(
+                'suppress-attachments', False)
+            all_attachments_conf = user_conf.history_show.get(
+                'all-attachments', False)
+            if not args.suppress_attachments and not args.all_attachments:
+                suppress_attachments = suppress_attachments_conf
+                all_attachments = all_attachments_conf
+            elif args.suppress_attachments:
+                all_attachments = False
+                suppress_attachments = args.suppress_attachments
+            elif args.all_attachments:
+                suppress_attachments = False
+                all_attachments = args.all_attachments
+        else:
+            pretty_out = args.force_subunit_trace or not \
+                args.no_subunit_trace
+            color = args.color
+            suppress_attachments = args.suppress_attachments
+            all_attachments = args.all_attachments
+        return history_show(
+            args.run_id,
+            repo_type=self.app_args.repo_type,
+            repo_url=self.app_args.repo_url,
+            subunit_out=args.subunit,
+            pretty_out=pretty_out, color=color,
+            suppress_attachments=suppress_attachments,
+            all_attachments=all_attachments,
+            show_binary_attachments=args.show_binary_attachments)
+
+
+class HistoryRemove(command.Command):
+    """Remove a run from the history"""
+
+    def get_parser(self, prog_name):
+        remove_parser = super().get_parser(prog_name)
         remove_parser.add_argument('run_id',
                                    help='The run id to remove from the '
                                         'repository. Also the string "all" '
                                         'can be used to remove all runs in '
                                         'the history')
-        return parser
+        return remove_parser
 
     def take_action(self, parsed_args):
         args = parsed_args
-        user_conf = user_config.get_user_config(self.app_args.user_config)
-        if args.func == 'list':
-            show_metadata = args.show_metadata
-            if getattr(user_conf, 'history_list', False):
-                if user_conf.history_show.get('show-metadata',
-                                              None) is not None:
-                    show_metadata = args.show_metadata
-            return history_list(repo_type=self.app_args.repo_type,
-                                repo_url=self.app_args.repo_url,
-                                show_metadata=show_metadata)
-        elif args.func == 'show':
-            if args.suppress_attachments and args.all_attachments:
-                msg = ("The --suppress-attachments and --all-attachments "
-                       "options are mutually exclusive, you can not use both "
-                       "at the same time")
-                print(msg)
-                sys.exit(1)
-            if getattr(user_conf, 'history_show', False):
-                if not user_conf.history_show.get('no-subunit-trace'):
-                    if not args.no_subunit_trace:
-                        pretty_out = True
-                    else:
-                        pretty_out = False
-                else:
-                    pretty_out = False
-                pretty_out = args.force_subunit_trace or pretty_out
-                color = args.color or user_conf.history_show.get('color',
-                                                                 False)
-                suppress_attachments_conf = user_conf.history_show.get(
-                    'suppress-attachments', False)
-                all_attachments_conf = user_conf.history_show.get(
-                    'all-attachments', False)
-                if not args.suppress_attachments and not args.all_attachments:
-                    suppress_attachments = suppress_attachments_conf
-                    all_attachments = all_attachments_conf
-                elif args.suppress_attachments:
-                    all_attachments = False
-                    suppress_attachments = args.suppress_attachments
-                elif args.all_attachments:
-                    suppress_attachments = False
-                    all_attachments = args.all_attachments
-            else:
-                pretty_out = args.force_subunit_trace or not \
-                    args.no_subunit_trace
-                color = args.color
-                suppress_attachments = args.suppress_attachments
-                all_attachments = args.all_attachments
-            return history_show(
-                args.run_id,
-                repo_type=self.app_args.repo_type,
-                repo_url=self.app_args.repo_url,
-                subunit_out=args.subunit,
-                pretty_out=pretty_out, color=color,
-                suppress_attachments=suppress_attachments,
-                all_attachments=all_attachments,
-                show_binary_attachments=args.show_binary_attachments)
-        elif args.func == 'remove':
-            history_remove(args.run_id, repo_type=self.app_args.repo_type,
-                           repo_url=self.app_args.repo_url)
+        history_remove(args.run_id, repo_type=self.app_args.repo_type,
+                       repo_url=self.app_args.repo_url)
 
 
 start_times = None
