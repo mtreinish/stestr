@@ -1,28 +1,28 @@
 stestr（日本語訳）
 ===================
 
-.. image:: https://img.shields.io/travis/mtreinish/stestr/master.svg?style=flat-square
-    :target: https://travis-ci.org/mtreinish/stestr
-    :alt: Build status
+.. image:: https://github.com/Qiskit/qiskit/actions/workflows/main.yml/badge.svg?branch=main
+    :target: https://github.com/mtreinish/stestr/actions/workflows/main.yml
+    :alt: CI Testing status
 
-.. image:: https://dev.azure.com/stestr/stestr/_apis/build/status/mtreinish.stestr?branchName=master
-    :target: https://dev.azure.com/stestr/stestr/_build/latest?definitionId=1&branchName=master
-    :alt: Azure DevOps build status
-
-.. image:: https://img.shields.io/coveralls/github/mtreinish/stestr/master.svg?style=flat-square
-    :target: https://coveralls.io/github/mtreinish/stestr?branch=master
+.. image:: https://img.shields.io/coveralls/github/mtreinish/stestr/main.svg?style=flat-square
+    :target: https://coveralls.io/github/mtreinish/stestr?branch=main
     :alt: Code coverage
 
 .. image:: https://img.shields.io/pypi/v/stestr.svg?style=flat-square
     :target: https://pypi.python.org/pypi/stestr
     :alt: Latest Version
 
+.. image:: https://img.shields.io/github/license/mtreinish/stestr.svg?style=flat-square
+    :target: https://opensource.org/licenses/Apache-2.0
+    :alt: License
+
 * 他の言語で読む場合はこちら: `English`_, `日本語`_
 * フルレンダリングされたドキュメントはこちら: http://stestr.readthedocs.io/en/latest/
 * プロジェクトのコードは GitHub にあります: https://github.com/mtreinish/stestr
 
-.. _English: https://github.com/mtreinish/stestr/blob/master/README.rst
-.. _日本語: https://github.com/mtreinish/stestr/blob/master/README_ja.rst
+.. _English: https://github.com/mtreinish/stestr/blob/main/README.rst
+.. _日本語: https://github.com/mtreinish/stestr/blob/main/README_ja.rst
 
 .. note:: stestr v2.x.x リリースシリーズは、Python 2 をサポートする最後のシリ
     ーズとなります。Python 2.7のサポートは「stestr リリース 3.0.0」
