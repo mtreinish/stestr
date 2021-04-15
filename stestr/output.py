@@ -179,7 +179,7 @@ class ReturnCodeToSubunit:
     def _append_return_code_as_test(self):
         if self.done is True:
             return
-        self.source = six.BytesIO()
+        self.source = io.BytesIO()
         if not self.dynamic:
             returncode = self.proc.wait()
         else:

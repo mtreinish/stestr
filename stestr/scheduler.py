@@ -38,7 +38,10 @@ def get_dynamic_test_list(test_ids, repository=None, group_callback=None,
     # Group tests: generate group_id -> test_ids.
     group_ids = collections.defaultdict(list)
     if _group_callback is None:
-        group_callback = lambda _: None
+
+        def group_callback(_):
+            return None
+
     else:
         group_callback = _group_callback
     for test_id in test_ids:
