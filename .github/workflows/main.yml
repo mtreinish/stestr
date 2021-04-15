@@ -35,7 +35,7 @@ jobs:
       - name: Install and run tests macOS
         run: |
           tox -epy --notest
-          .tox/py/bin/pip install gnureadline
+          .tox/py/bin/pip install gnureadline subunit2sql
           tox -epy
         if: runner.os == 'macOS'
   lint:

@@ -20,8 +20,13 @@ import uuid
 import fixtures
 import testtools
 
-from stestr.repository import sql
 from stestr.tests import base
+
+try:
+    from stestr.repository import sql
+    HAS_SQL = True
+except ImportError:
+    HAS_SQL = False
 
 
 class SqlRepositoryFixture(fixtures.Fixture):
@@ -36,7 +41,7 @@ class SqlRepositoryFixture(fixtures.Fixture):
 
 
 class TestSqlRepository(base.TestCase):
-
+    @testtools.skipUnless(HAS_SQL, 'subunit2sql is required for tests')
     def setUp(self):
         super().setUp()
         # NOTE(mtreinish): Windows likes to fail if the file is already open

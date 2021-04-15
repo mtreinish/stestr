@@ -73,7 +73,7 @@ class RepositoryFactory(repository.AbstractRepositoryFactory):
 
 
 class Repository(repository.AbstractRepository):
-    """subunit2sql based storage of test results.
+    """DEPRECATED: subunit2sql based storage of test results.
 
     This repository stores each stream in a subunit2sql DB. Refer to the
     subunit2sql documentation for
