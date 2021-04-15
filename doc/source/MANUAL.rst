@@ -621,12 +621,13 @@ contains the following files:
 SQL
 '''
 This is an experimental repository backend, that is based on the `subunit2sql`_
-library. It's currently still under development and should be considered
-experimental for the time being. Eventually it'll replace the File repository
-type
+library.
 
 .. note:: The sql repository type requirements are not installed by default.
     They are listed under the 'sql' setuptools extras. You can install them
     with pip by running: ``pip install 'stestr[sql]'``
+
+.. warning:: The sql repository type is deprecated and will be removed in the
+   4.0.0 release.
 
 .. _subunit2sql:

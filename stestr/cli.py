@@ -70,7 +70,7 @@ class StestrCLI(app.App):
                                  " is running from is used")
         parser.add_argument('--repo-type', '-r', dest='repo_type',
                             choices=['file', 'sql'], default='file',
-                            help="Select the repo backend to use")
+                            help="DEPRECATED: Select the repo backend to use")
         parser.add_argument('--repo-url', '-u', dest='repo_url',
                             default=None,
                             help="Set the repo url to use. An acceptable value"
