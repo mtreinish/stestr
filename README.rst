@@ -1,7 +1,7 @@
 stestr
 ======
 
-.. image:: https://github.com/Qiskit/qiskit/actions/workflows/main.yml/badge.svg?branch=main
+.. image:: https://github.com/mtreinish/stestr/actions/workflows/main.yml/badge.svg?branch=main
     :target: https://github.com/mtreinish/stestr/actions/workflows/main.yml
     :alt: CI Testing status
 
