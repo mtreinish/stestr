@@ -20,20 +20,24 @@ from stestr.repository import util
 from stestr import test_processor
 
 
-class TestrConf(object):
+class TestrConf:
     """Create a TestrConf object to represent a specified config file
 
-    This class is used to represent an stestr config file. It
+    This class is used to represent an stestr config file. Or in the case
+    of a tox.ini file the stestr section in the tox.ini file
 
     :param str config_file: The path to the config file to use
+    :param str section: The section to use for the stestr config. By default
+        this is DEFATULT.
     """
 
     _escape_trailing_backslash_re = re.compile(r'(?<=[^\\])\\$')
 
-    def __init__(self, config_file):
+    def __init__(self, config_file, section='DEFAULT'):
         self.parser = configparser.ConfigParser()
         self.parser.read(config_file)
         self.config_file = config_file
+        self.section = section
 
     def _sanitize_path(self, path):
         if os.sep == '\\':
@@ -48,7 +52,9 @@ class TestrConf(object):
                         repo_type='file', repo_url=None,
                         serial=False, worker_path=None,
                         concurrency=0, blacklist_file=None,
-                        whitelist_file=None, black_regex=None,
+                        exclude_list=None, whitelist_file=None,
+                        include_list=None, black_regex=None,
+                        exclude_regex=None,
                         randomize=False, parallel_class=None,
                         dynamic=False):
         """Get a test_processor.TestProcessorFixture for this config file
@@ -84,11 +90,17 @@ class TestrConf(object):
             to use for the run.
         :param int concurrency: How many processes to use. The default (0)
             autodetects your CPU count and uses that.
-        :param str blacklist_file: Path to a blacklist file, this file contains
-            a separate regex exclude on each newline.
-        :param str whitelist_file: Path to a whitelist file, this file contains
-            a separate regex on each newline.
-        :param str black_regex: Test rejection regex. If a test cases name
+        :param str blacklist_file: Available now but soon to be replaced by the
+            new option exclude_list below.
+        :param str exclude_list: Path to an exclusion list file, this
+            file contains a separate regex exclude on each newline.
+        :param str whitelist_file: Available now but soon to be replaced by the
+            new option include_list below.
+        :param str include_list: Path to an inclusion list file, this
+            file contains a separate regex on each newline.
+        :param str black_regex: Available now but soon to be replaced by the
+            new option exclude_regex below.
+        :param str exclude_regex: Test rejection regex. If a test cases name
             matches on re.search() operation, it will be removed from the final
             test list.
         :param bool randomize: Randomize the test order after they are
@@ -104,15 +116,15 @@ class TestrConf(object):
         :rtype: test_processor.TestProcessorFixture
         """
 
-        if not test_path and self.parser.has_option('DEFAULT', 'test_path'):
-            test_path = self.parser.get('DEFAULT', 'test_path')
+        if not test_path and self.parser.has_option(self.section, 'test_path'):
+            test_path = self.parser.get(self.section, 'test_path')
         elif not test_path:
             sys.exit("No test_path can be found in either the command line "
                      "options nor in the specified config file {}.  Please "
                      "specify a test path either in the config file or via "
                      "the --test-path argument".format(self.config_file))
-        if not top_dir and self.parser.has_option('DEFAULT', 'top_dir'):
-            top_dir = self.parser.get('DEFAULT', 'top_dir')
+        if not top_dir and self.parser.has_option(self.section, 'top_dir'):
+            top_dir = self.parser.get(self.section, 'top_dir')
         elif not top_dir:
             top_dir = './'
 
@@ -148,12 +160,12 @@ class TestrConf(object):
         if parallel_class:
             group_regex = r'([^\.]*\.)*'
         if not group_regex \
-                and self.parser.has_option('DEFAULT', 'parallel_class') \
-                and self.parser.getboolean('DEFAULT', 'parallel_class'):
+                and self.parser.has_option(self.section, 'parallel_class') \
+                and self.parser.getboolean(self.section, 'parallel_class'):
             group_regex = r'([^\.]*\.)*'
-        if not group_regex and self.parser.has_option('DEFAULT',
+        if not group_regex and self.parser.has_option(self.section,
                                                       'group_regex'):
-            group_regex = self.parser.get('DEFAULT', 'group_regex')
+            group_regex = self.parser.get(self.section, 'group_regex')
         if group_regex:
             def group_callback(test_id, regex=re.compile(group_regex)):
                 match = regex.match(test_id)
@@ -167,6 +179,7 @@ class TestrConf(object):
             test_ids, command, listopt, idoption, repository,
             test_filters=regexes, group_callback=group_callback, serial=serial,
             worker_path=worker_path, concurrency=concurrency,
-            blacklist_file=blacklist_file, black_regex=black_regex,
-            whitelist_file=whitelist_file, randomize=randomize,
-            dynamic=dynamic)
+            blacklist_file=blacklist_file,
+            exclude_list=exclude_list, black_regex=black_regex,
+            exclude_regex=exclude_regex, whitelist_file=whitelist_file,
+            include_list=include_list, randomize=randomize, dynamic=dynamic)

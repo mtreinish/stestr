@@ -9,7 +9,6 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-from __future__ import print_function
 
 import contextlib
 import re
@@ -49,10 +48,10 @@ def filter_tests(filters, test_ids):
     return list(filter(include, test_ids))
 
 
-def black_reader(blacklist_file):
-    with contextlib.closing(open(blacklist_file, 'r')) as black_file:
+def exclusion_reader(exclude_list):
+    with contextlib.closing(open(exclude_list)) as exclude_file:
         regex_comment_lst = []  # tuple of (regex_compiled, msg, skipped_lst)
-        for line in black_file:
+        for line in exclude_file:
             raw_line = line.strip()
             split_line = raw_line.split('#')
             # Before the # is the regex
@@ -67,13 +66,13 @@ def black_reader(blacklist_file):
             try:
                 regex_comment_lst.append((re.compile(line_regex), comment, []))
             except re.error:
-                print("Invalid regex: %s in provided blacklist file" %
+                print("Invalid regex: %s in provided exclusion list file" %
                       line_regex, file=sys.stderr)
                 sys.exit(5)
     return regex_comment_lst
 
 
-def _get_regex_from_whitelist_file(file_path):
+def _get_regex_from_include_list(file_path):
     lines = []
     for line in open(file_path).read().splitlines():
         split_line = line.strip().split('#')
@@ -83,24 +82,28 @@ def _get_regex_from_whitelist_file(file_path):
             try:
                 lines.append(re.compile(line_regex))
             except re.error:
-                print("Invalid regex: %s in provided whitelist file" %
+                print("Invalid regex: %s in provided inclusion_list file" %
                       line_regex, file=sys.stderr)
                 sys.exit(5)
     return lines
 
 
 def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
-                   regexes=None, black_regex=None):
+                   regexes=None, black_regex=None, exclude_list=None,
+                   include_list=None, exclude_regex=None):
     """Filters the discovered test cases
 
     :param list test_ids: The set of test_ids to be filtered
-    :param str blacklist_file: The path to a blacklist file
-    :param str whitelist_file: The path to a whitelist file
+    :param str blacklist_file: Soon to be replaced by exclude_list
+    :param str whitelist_file: Soon to be replaced by include_list
     :param list regexes: A list of regex filters to apply to the test_ids. The
         output will contain any test_ids which have a re.search() match for any
         of the regexes in this list. If this is None all test_ids will be
         returned
-    :param str black_regex:
+    :param str black_regex: Soon to be replaced by exclude_regex
+    :param str exclude_list: The path to an exclusion_list file
+    :param str include_list: The path to an inclusion_list file
+    :param str exclude_regex: regex pattern to exclude tests
 
     :return: iterable of strings. The strings are full
         test_ids
@@ -110,21 +113,37 @@ def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
     if not regexes:
         regexes = None  # handle the other false things
 
-    white_re = None
-    if whitelist_file:
-        white_re = _get_regex_from_whitelist_file(whitelist_file)
+    safe_re = None
+    if include_list:
+        safe_re = _get_regex_from_include_list(include_list)
+    elif whitelist_file:
+        safe_re = _get_regex_from_include_list(whitelist_file)
 
-    if not regexes and white_re:
-        regexes = white_re
-    elif regexes and white_re:
-        regexes += white_re
+    if not regexes and safe_re:
+        regexes = safe_re
+    elif regexes and safe_re:
+        regexes += safe_re
 
-    if blacklist_file:
-        black_data = black_reader(blacklist_file)
+    if exclude_list:
+        exclude_data = exclusion_reader(exclude_list)
+    elif blacklist_file:
+        exclude_data = exclusion_reader(blacklist_file)
     else:
-        black_data = None
+        exclude_data = None
 
-    if black_regex:
+    if exclude_regex:
+        msg = "Skipped because of regexp provided as a command line argument:"
+        try:
+            record = (re.compile(exclude_regex), msg, [])
+        except re.error:
+            print("Invalid regex: %s used for exclude_regex" %
+                  exclude_regex, file=sys.stderr)
+            sys.exit(5)
+        if exclude_data:
+            exclude_data.append(record)
+        else:
+            exclude_data = [record]
+    elif black_regex:
         msg = "Skipped because of regexp provided as a command line argument:"
         try:
             record = (re.compile(black_regex), msg, [])
@@ -132,20 +151,20 @@ def construct_list(test_ids, blacklist_file=None, whitelist_file=None,
             print("Invalid regex: %s used for black_regex" % black_regex,
                   file=sys.stderr)
             sys.exit(5)
-        if black_data:
-            black_data.append(record)
+        if exclude_data:
+            exclude_data.append(record)
         else:
-            black_data = [record]
+            exclude_data = [record]
 
     list_of_test_cases = filter_tests(regexes, test_ids)
     set_of_test_cases = set(list_of_test_cases)
 
-    if not black_data:
+    if not exclude_data:
         return set_of_test_cases
 
     # NOTE(afazekas): We might use a faster logic when the
     # print option is not requested
-    for (rex, msg, s_list) in black_data:
+    for (rex, msg, s_list) in exclude_data:
         for test_case in list_of_test_cases:
             if rex.search(test_case):
                 # NOTE(mtreinish): In the case of overlapping regex the test

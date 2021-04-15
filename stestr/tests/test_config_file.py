@@ -23,7 +23,7 @@ class TestTestrConf(base.TestCase):
 
     @mock.patch.object(config_file.configparser, 'ConfigParser')
     def setUp(self, mock_ConfigParser):
-        super(TestTestrConf, self).setUp()
+        super().setUp()
         self._testr_conf = config_file.TestrConf(mock.sentinel.config_file)
         self._testr_conf.parser = mock.Mock()
 
@@ -61,10 +61,12 @@ class TestTestrConf(base.TestCase):
         mock_TestProcessorFixture.assert_called_once_with(
             None, command, "--list", "--load-list $IDFILE",
             mock_get_repo_open.return_value, black_regex=None,
-            blacklist_file=None, concurrency=0, dynamic=False,
+            exclude_regex=None,
+            blacklist_file=None, exclude_list=None, concurrency=0,
+            dynamic=False,
             group_callback=expected_group_callback,
             test_filters=None, randomize=False, serial=False,
-            whitelist_file=None, worker_path=None)
+            whitelist_file=None, include_list=None, worker_path=None)
 
     @mock.patch.object(config_file, 'sys')
     def _check_get_run_command_exception(self, mock_sys, platform='win32',

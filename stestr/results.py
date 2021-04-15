@@ -24,10 +24,10 @@ def wasSuccessful(summary):
 class SummarizingResult(testtools.StreamSummary):
 
     def __init__(self):
-        super(SummarizingResult, self).__init__()
+        super().__init__()
 
     def startTestRun(self):
-        super(SummarizingResult, self).startTestRun()
+        super().startTestRun()
         self._first_time = None
         self._last_time = None
 
@@ -41,7 +41,7 @@ class SummarizingResult(testtools.StreamSummary):
                 self._first_time = timestamp
             if timestamp > self._last_time:
                 self._last_time = timestamp
-        super(SummarizingResult, self).status(*args, **kwargs)
+        super().status(*args, **kwargs)
 
     def get_num_failures(self):
         return len(self.failures) + len(self.errors)
@@ -84,7 +84,7 @@ class CLITestResult(testtools.StreamResult):
         :param stream: The stream to use for result
         :param previous_run: The CLITestResult for the previous run
         """
-        super(CLITestResult, self).__init__()
+        super().__init__()
         self._previous_run = previous_run
         self._summary = SummarizingResult()
         self.stream = testtools.compat.unicode_output_stream(stream)
@@ -107,13 +107,13 @@ class CLITestResult(testtools.StreamResult):
             ]))
 
     def status(self, **kwargs):
-        super(CLITestResult, self).status(**kwargs)
+        super().status(**kwargs)
         self._summary.status(**kwargs)
         test_status = kwargs.get('test_status')
         test_tags = kwargs.get('test_tags')
         if test_status == 'fail':
             self.stream.write(
-                self._format_error(str('FAIL'),
+                self._format_error('FAIL',
                                    *(self._summary.errors[-1]),
                                    test_tags=test_tags))
         if test_status not in self.filterable_states:
@@ -161,11 +161,11 @@ class CLITestResult(testtools.StreamResult):
             time, time_delta, values, output=self.stream)
 
     def startTestRun(self):
-        super(CLITestResult, self).startTestRun()
+        super().startTestRun()
         self._summary.startTestRun()
 
     def stopTestRun(self):
-        super(CLITestResult, self).stopTestRun()
+        super().stopTestRun()
         run_id = self.get_id()
         self._summary.stopTestRun()
         self._output_summary(run_id)

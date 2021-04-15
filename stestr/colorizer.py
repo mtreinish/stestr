@@ -37,7 +37,7 @@
 import sys
 
 
-class AnsiColorizer(object):
+class AnsiColorizer:
     """A colorizer is an object that loosely wraps around a stream
 
     allowing callers to write text to the stream in a particular color.
@@ -85,7 +85,7 @@ class AnsiColorizer(object):
         self.stream.write('\x1b[{};1m{}\x1b[0m'.format(color, text))
 
 
-class NullColorizer(object):
+class NullColorizer:
     """See _AnsiColorizer docstring."""
     def __init__(self, stream):
         self.stream = stream

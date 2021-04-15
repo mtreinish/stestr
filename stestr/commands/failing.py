@@ -38,7 +38,7 @@ class Failing(command.Command):
     """
 
     def get_parser(self, prog_name):
-        parser = super(Failing, self).get_parser(prog_name)
+        parser = super().get_parser(prog_name)
         parser.add_argument(
             "--subunit", action="store_true",
             default=False, help="Show output as a subunit stream.")

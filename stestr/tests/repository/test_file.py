@@ -27,12 +27,12 @@ from stestr.tests import base
 class FileRepositoryFixture(fixtures.Fixture):
 
     def __init__(self, path=None, initialise=True):
-        super(FileRepositoryFixture, self).__init__()
+        super().__init__()
         self.path = path
         self.initialise = initialise
 
     def setUp(self):
-        super(FileRepositoryFixture, self).setUp()
+        super().setUp()
         if self.path and os.path.isdir(self.path):
             self.tempdir = self.path
         else:
@@ -46,7 +46,7 @@ class HomeDirTempDir(fixtures.Fixture):
     """Creates a temporary directory in ~."""
 
     def setUp(self):
-        super(HomeDirTempDir, self).setUp()
+        super().setUp()
         home_dir = os.path.expanduser('~')
         self.temp_dir = tempfile.mkdtemp(dir=home_dir)
         self.addCleanup(shutil.rmtree, self.temp_dir)
@@ -56,7 +56,7 @@ class HomeDirTempDir(fixtures.Fixture):
 class TestFileRepository(base.TestCase):
 
     def setUp(self):
-        super(TestFileRepository, self).setUp()
+        super().setUp()
         self.tempdir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.tempdir)
 
@@ -65,10 +65,10 @@ class TestFileRepository(base.TestCase):
         base = os.path.join(self.tempdir, '.stestr')
         self.assertTrue(os.path.isdir(base))
         self.assertTrue(os.path.isfile(os.path.join(base, 'format')))
-        with open(os.path.join(base, 'format'), 'rt') as stream:
+        with open(os.path.join(base, 'format')) as stream:
             contents = stream.read()
         self.assertEqual("1\n", contents)
-        with open(os.path.join(base, 'next-stream'), 'rt') as stream:
+        with open(os.path.join(base, 'next-stream')) as stream:
             contents = stream.read()
         self.assertEqual("0\n", contents)
 
@@ -81,10 +81,10 @@ class TestFileRepository(base.TestCase):
         self.repo = file.RepositoryFactory().initialise(self.tempdir)
         self.assertTrue(os.path.isdir(base))
         self.assertTrue(os.path.isfile(os.path.join(base, 'format')))
-        with open(os.path.join(base, 'format'), 'rt') as stream:
+        with open(os.path.join(base, 'format')) as stream:
             contents = stream.read()
         self.assertEqual("1\n", contents)
-        with open(os.path.join(base, 'next-stream'), 'rt') as stream:
+        with open(os.path.join(base, 'next-stream')) as stream:
             contents = stream.read()
         self.assertEqual("0\n", contents)
 

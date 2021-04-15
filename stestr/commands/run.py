@@ -12,6 +12,7 @@
 
 """Run a projects tests and load them into stestr."""
 
+import configparser
 import errno
 import functools
 import io
@@ -61,7 +62,7 @@ class Run(command.Command):
     """
 
     def get_parser(self, prog_name):
-        parser = super(Run, self).get_parser(prog_name)
+        parser = super().get_parser(prog_name)
         parser.add_argument("filters", nargs="*", default=None,
                             help="A list of string regex filters to initially "
                             "apply on the test list. Tests that match any of "
@@ -103,22 +104,43 @@ class Run(command.Command):
                             "file to use for the run")
         parser.add_argument('--blacklist-file', '-b',
                             default=None, dest='blacklist_file',
-                            help='Path to a blacklist file, this file '
+                            help='DEPRECATED: This option will soon be '
+                            'replaced by --exclude-list which is functionally '
+                            'equivalent. If this is specified at the same '
+                            'time as --exclude-list, this flag will be '
+                            'ignored and --exclude-list will be used.')
+        parser.add_argument('--exclude-list', '-e',
+                            default=None, dest='exclude_list',
+                            help='Path to an exclusion list file, this file '
                             'contains a separate regex exclude on each '
                             'newline')
         parser.add_argument('--whitelist-file', '-w',
                             default=None, dest='whitelist_file',
-                            help='Path to a whitelist file, this file '
+                            help='DEPRECATED: This option will soon be '
+                            'replaced by --include-list which is functionally '
+                            'equivalent. If this is specified at the same '
+                            'time as --include-list, this flag will be '
+                            'ignored and --include-list will be used.')
+        parser.add_argument('--include-list', '-i',
+                            default=None, dest='include_list',
+                            help='Path to an inclusion list file, this file '
                             'contains a separate regex on each newline.')
         parser.add_argument('--black-regex', '-B', default=None,
                             dest='black_regex',
+                            help='DEPRECATED: This option will soon be '
+                            'replaced by --exclude-regex which is functionally'
+                            ' equivalent. If this is specified at the same '
+                            'time as --exclude-regex, this flag will be '
+                            'ignored and --exclude-regex will be used.')
+        parser.add_argument('--exclude-regex', '-E', default=None,
+                            dest='exclude_regex',
                             help='Test rejection regex. If a test cases name '
                             'matches on re.search() operation , '
                             'it will be removed from the final test list. '
-                            'Effectively the black-regexp is added to '
-                            ' black regexp list, but you do need to edit a '
-                            'file. The black filtering happens after the '
-                            'initial white selection, which by default is '
+                            'Effectively the exclusion-regexp is added to '
+                            'exclusion regexp list, but you do need to edit a '
+                            'file. The exclusion filtering happens after the '
+                            'initial safe list selection, which by default is '
                             'everything.')
         parser.add_argument('--no-discover', '-n', default=None,
                             metavar='TEST_ID',
@@ -243,9 +265,10 @@ class Run(command.Command):
             subunit_out=args.subunit, until_failure=args.until_failure,
             analyze_isolation=args.analyze_isolation, isolated=args.isolated,
             worker_path=args.worker_path, blacklist_file=args.blacklist_file,
-            whitelist_file=args.whitelist_file, black_regex=args.black_regex,
-            no_discover=args.no_discover, random=random,
-            combine=args.combine,
+            exclude_list=args.exclude_list, whitelist_file=args.whitelist_file,
+            include_list=args.include_list,
+            black_regex=args.black_regex, exclude_regex=args.exclude_regex,
+            no_discover=args.no_discover, random=random, combine=args.combine,
             filters=filters, pretty_out=pretty_out, color=color,
             stdout=stdout, abbreviate=abbreviate,
             suppress_attachments=suppress_attachments,
@@ -288,12 +311,13 @@ def run_command(config='.stestr.conf', repo_type='file',
                 failing=False, serial=False, concurrency=0, load_list=None,
                 partial=False, subunit_out=False, until_failure=False,
                 analyze_isolation=False, isolated=False, worker_path=None,
-                blacklist_file=None, whitelist_file=None, black_regex=None,
-                no_discover=False, random=False, combine=False, filters=None,
-                pretty_out=True, color=False, stdout=sys.stdout,
-                abbreviate=False, suppress_attachments=False,
-                all_attachments=False, show_binary_attachments=True,
-                pdb=False, dynamic=False):
+                blacklist_file=None, exclude_list=None,
+                whitelist_file=None, include_list=None,
+                black_regex=None, exclude_regex=None, no_discover=False,
+                random=False, combine=False, filters=None, pretty_out=True,
+                color=False, stdout=sys.stdout, abbreviate=False,
+                suppress_attachments=False, all_attachments=False,
+                show_binary_attachments=True, pdb=False, dynamic=False):
     """Function to execute the run command
 
     This function implements the run command. It will run the tests specified
@@ -331,12 +355,22 @@ def run_command(config='.stestr.conf', repo_type='file',
     :param bool isolated: Run each test id in a separate test runner.
     :param str worker_path: Optional path of a manual worker grouping file
         to use for the run.
-    :param str blacklist_file: Path to a blacklist file, this file contains a
-        separate regex exclude on each newline.
-    :param str whitelist_file: Path to a whitelist file, this file contains a
-        separate regex on each newline.
-    :param str black_regex: Test rejection regex. If a test cases name matches
-        on re.search() operation, it will be removed from the final test list.
+    :param str blacklist_file: DEPRECATED: soon to be replaced by the new
+        option exclude_list below. If this is specified at the same time as
+        exclude_list, this flag will be ignored and exclude_list will be used
+    :param str exclude_list: Path to an exclusion list file, this file
+        contains a separate regex exclude on each newline.
+    :param str whitelist_file: DEPRECATED: soon to be replaced by the new
+        option include_list below. If this is specified at the same time as
+        include_list, this flag will be ignored and include_list will be used
+    :param str include_list: Path to a inclusion list file, this file
+        contains a separate regex on each newline.
+    :param str black_regex: DEPRECATED: soon to be replaced by the new
+        option exclude_regex below. If this is specified at the same time as
+        exclude_regex, this flag will be ignored and exclude_regex will be used
+    :param str exclude_regex: Test rejection regex. If a test cases name
+        matches on re.search() operation, it will be removed from the final
+        test list.
     :param str no_discover: Takes in a single test_id to bypasses test
         discover and just execute the test specified. A file name may be used
         in place of a test name.
@@ -370,16 +404,44 @@ def run_command(config='.stestr.conf', repo_type='file',
     if partial:
         warnings.warn('The partial flag is deprecated and has no effect '
                       'anymore')
+    if blacklist_file is not None:
+        warnings.warn("The blacklist-file argument is deprecated and will be "
+                      "removed in a future release. Instead you should use "
+                      "exclude-list which is functionally equivalent",
+                      DeprecationWarning)
+    if whitelist_file is not None:
+        warnings.warn("The whitelist-file argument is deprecated and will be "
+                      "removed in a future release. Instead you should use "
+                      "include-list which is functionally equivalent",
+                      DeprecationWarning)
+    if black_regex is not None:
+        warnings.warn("The black-regex argument is deprecated and will be "
+                      "removed in a future release. Instead you should use "
+                      "exclude-regex which is functionally equivalent",
+                      DeprecationWarning)
     try:
         repo = util.get_repo_open(repo_type, repo_url)
-    # If a repo is not found, and there a testr config exists just create it
+    # If a repo is not found, and there a stestr config exists just create it
     except repository.RepositoryNotFound:
         if not os.path.isfile(config) and not test_path:
-            msg = ("No config file found and --test-path not specified. "
-                   "Either create or specify a .stestr.conf or use "
-                   "--test-path ")
-            stdout.write(msg)
-            exit(1)
+            # If there is no config and no test-path
+            if os.path.isfile('tox.ini'):
+                tox_conf = configparser.SafeConfigParser()
+                tox_conf.read('tox.ini')
+                if not tox_conf.has_section('stestr'):
+                    msg = ("No file found, --test-path not specified, and "
+                           "stestr section not found in tox.ini. Either "
+                           "create or specify a .stestr.conf, use "
+                           "--test-path, or add an stestr section to the "
+                           "tox.ini")
+                    stdout.write(msg)
+                    exit(1)
+            else:
+                msg = ("No config file found and --test-path not specified. "
+                       "Either create or specify a .stestr.conf or use "
+                       "--test-path ")
+                stdout.write(msg)
+                exit(1)
         try:
             repo = util.get_repo_initialise(repo_type, repo_url)
         except OSError as e:
@@ -516,13 +578,20 @@ def run_command(config='.stestr.conf', repo_type='file',
             # that are both failing and listed.
             ids = list_ids.intersection(ids)
 
-    conf = config_file.TestrConf(config)
+    if config and os.path.isfile(config):
+        conf = config_file.TestrConf(config)
+    elif os.path.isfile('tox.ini'):
+        conf = config_file.TestrConf('tox.ini', section='stestr')
+    else:
+        conf = config_file.TestrConf(config)
     if not analyze_isolation:
         cmd = conf.get_run_command(
             ids, regexes=filters, group_regex=group_regex, repo_type=repo_type,
             repo_url=repo_url, serial=serial, worker_path=worker_path,
             concurrency=concurrency, blacklist_file=blacklist_file,
-            whitelist_file=whitelist_file, black_regex=black_regex,
+            exclude_list=exclude_list, whitelist_file=whitelist_file,
+            include_list=include_list, black_regex=black_regex,
+            exclude_regex=exclude_regex,
             top_dir=top_dir, test_path=test_path, randomize=random,
             dynamic=dynamic)
         if isolated:
@@ -538,8 +607,9 @@ def run_command(config='.stestr.conf', repo_type='file',
                     [test_id], filters, group_regex=group_regex,
                     repo_type=repo_type, repo_url=repo_url, serial=serial,
                     worker_path=worker_path, concurrency=concurrency,
-                    blacklist_file=blacklist_file,
-                    whitelist_file=whitelist_file, black_regex=black_regex,
+                    blacklist_file=blacklist_file, exclude_list=exclude_list,
+                    whitelist_file=whitelist_file, include_list=include_list,
+                    black_regex=black_regex, exclude_regex=exclude_regex,
                     randomize=random, test_path=test_path, top_dir=top_dir)
 
                 run_result = _run_tests(
@@ -580,9 +650,10 @@ def run_command(config='.stestr.conf', repo_type='file',
                 [test_id], group_regex=group_regex, repo_type=repo_type,
                 repo_url=repo_url, serial=serial, worker_path=worker_path,
                 concurrency=concurrency, blacklist_file=blacklist_file,
-                whitelist_file=whitelist_file, black_regex=black_regex,
-                randomize=random, test_path=test_path,
-                top_dir=top_dir)
+                exclude_list=exclude_list, whitelist_file=whitelist_file,
+                include_list=include_list,
+                black_regex=black_regex, exclude_regex=exclude_regex,
+                randomize=random, test_path=test_path, top_dir=top_dir)
             if not _run_tests(cmd, until_failure):
                 # If the test was filtered, it won't have been run.
                 if test_id in repo.get_test_ids(repo.latest_id()):

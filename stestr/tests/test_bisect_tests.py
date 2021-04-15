@@ -132,7 +132,7 @@ class FakeFailedMultiWorkerTestRunWithTags(FakeTestRun):
 
 class TestBisectTests(base.TestCase):
     def setUp(self):
-        super(TestBisectTests, self).setUp()
+        super().setUp()
         self.repo_mock = mock.create_autospec(
             'stestr.repository.file.Repository')
         self.conf_mock = mock.create_autospec('stestr.config_file.TestrConf')

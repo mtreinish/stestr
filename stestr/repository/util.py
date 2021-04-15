@@ -13,6 +13,7 @@
 import importlib
 import os
 import sys
+import warnings
 
 
 def _get_default_repo_url(repo_type):
@@ -33,6 +34,12 @@ def get_repo_open(repo_type, repo_url=None):
     :param str repo_url: An optional repo url, if one is not specified the
         default $CWD/.stestr will be used.
     """
+    if repo_type == 'sql':
+        msg = ("WARNING: The sql repository type is deprecated and will be "
+               "removed in the 4.0.0 release. Instead use the file "
+               "repository type\n")
+        sys.stderr.write(msg)
+        warnings.warn(msg, DeprecationWarning, stacklevel=3)
     try:
         repo_module = importlib.import_module('stestr.repository.' + repo_type)
     except ImportError:

@@ -14,6 +14,7 @@
 
 import errno
 import sys
+import warnings
 
 from cliff import command
 
@@ -45,6 +46,12 @@ def init(repo_type='file', repo_url=None, stdout=sys.stdout):
         for failures.
     :rtype: int
     """
+    if repo_type == 'sql':
+        msg = ("WARNING: The sql repository type is deprecated and will be "
+               "removed in the 4.0.0 release. Instead use the file "
+               "repository type\n")
+        sys.stderr.write(msg)
+        warnings.warn(msg, DeprecationWarning, stacklevel=2)
     try:
         util.get_repo_initialise(repo_type, repo_url)
     except OSError as e:

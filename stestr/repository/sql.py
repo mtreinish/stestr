@@ -11,7 +11,6 @@
 # under the License.
 
 """Persistent storage of test results."""
-from __future__ import print_function
 
 import datetime
 import io
@@ -74,7 +73,7 @@ class RepositoryFactory(repository.AbstractRepositoryFactory):
 
 
 class Repository(repository.AbstractRepository):
-    """subunit2sql based storage of test results.
+    """DEPRECATED: subunit2sql based storage of test results.
 
     This repository stores each stream in a subunit2sql DB. Refer to the
     subunit2sql documentation for
@@ -91,7 +90,7 @@ class Repository(repository.AbstractRepository):
 
     # TODO(mtreinish): We need to add a subunit2sql api to get the count
     def count(self):
-        super(Repository, self).count()
+        super().count()
 
     def _get_latest_run(self):
         session = self.session_factory()
