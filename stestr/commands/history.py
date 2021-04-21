@@ -16,7 +16,7 @@ import functools
 import sys
 
 from cliff import command
-import prettytable
+from cliff import lister
 import subunit
 import testtools
 
@@ -28,7 +28,7 @@ from stestr import subunit_trace
 from stestr import user_config
 
 
-class HistoryList(command.Command):
+class HistoryList(lister.Lister):
     """List the the run history in a repository."""
 
     def get_parser(self, prog_name):
@@ -227,11 +227,11 @@ def history_list(repo_type='file', repo_url=None, show_metadata=False,
     :rtype: int
     """
 
-    table = prettytable.PrettyTable()
+    field_names = ()
     if show_metadata:
-        table.field_names = ['Run ID', 'Passed', 'Runtime', 'Date', 'Metadata']
+        field_names = ('Run ID', 'Passed', 'Runtime', 'Date', 'Metadata')
     else:
-        table.field_names = ['Run ID', 'Passed', 'Runtime', 'Date']
+        field_names = ('Run ID', 'Passed', 'Runtime', 'Date')
     try:
         repo = util.get_repo_open(repo_type, repo_url)
     except abstract.RepositoryNotFound as e:
@@ -242,19 +242,19 @@ def history_list(repo_type='file', repo_url=None, show_metadata=False,
     except KeyError as e:
         stdout.write(str(e) + '\n')
         return 1
-
+    rows = []
     for run_id in run_ids:
         run = repo.get_test_run(run_id)
         stream = run.get_subunit_stream()
         data = _get_run_details(stream, stdout)
         if show_metadata:
-            table.add_row([run_id, data['passed'], data['runtime'],
-                           data['start'], run.get_metadata()])
+            rows.append((run_id, data['passed'], data['runtime'],
+                         data['start'], run.get_metadata()))
         else:
-            table.add_row([run_id, data['passed'], data['runtime'],
-                           data['start']])
-    stdout.write(table.get_string() + '\n')
-    return 0
+            rows.append((run_id, data['passed'], data['runtime'],
+                         data['start']))
+
+    return (field_names, rows)
 
 
 def history_show(run_id, repo_type='file', repo_url=None, subunit_out=False,

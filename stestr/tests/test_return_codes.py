@@ -337,12 +337,12 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit('stestr run passing', 0)
         table = self.assertRunExit(
             'stestr history list', 0)[0].decode('utf8')
-        self.assertIn("|   0    |  True  |", table.split('\n')[3].rstrip())
-        self.assertIn("|   1    | False  |", table.split('\n')[4].rstrip())
-        self.assertIn("|   2    |  True  |", table.split('\n')[5].rstrip())
+        self.assertIn("| 0      | True   |", table.split('\n')[3].rstrip())
+        self.assertIn("| 1      | False  |", table.split('\n')[4].rstrip())
+        self.assertIn("| 2      | True   |", table.split('\n')[5].rstrip())
         expected = """
 +--------+--------+-----------+----------------------------------+
-| Run ID | Passed |  Runtime  |               Date               |
+| Run ID | Passed | Runtime   | Date                             |
 +--------+--------+-----------+----------------------------------+
 """.rstrip()
         self.assertEqual(expected.strip(), '\n'.join(
@@ -351,13 +351,7 @@ class TestReturnCodes(base.TestCase):
     def test_history_empty(self):
         table = self.assertRunExit(
             'stestr history list', 0)[0].decode('utf8')
-        expected = """
-+--------+--------+---------+------+
-| Run ID | Passed | Runtime | Date |
-+--------+--------+---------+------+
-+--------+--------+---------+------+
-"""
-        self.assertEqual(expected.strip(),
+        self.assertEqual("",
                          '\n'.join(
                              [x.rstrip() for x in table.split('\n')]).strip())
 
@@ -396,12 +390,12 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit('stestr history remove 1', 0)
         table = self.assertRunExit(
             'stestr history list', 0)[0].decode('utf8')
-        self.assertIn("|   0    |  True  |", table.split('\n')[3].rstrip())
-        self.assertNotIn("|   1    | False  |", table.split('\n')[4].strip())
-        self.assertIn("|   2    |  True  |", table.split('\n')[4].rstrip())
+        self.assertIn("| 0      | True   |", table.split('\n')[3].rstrip())
+        self.assertNotIn("| 1      | False  |", table.split('\n')[4].strip())
+        self.assertIn("| 2      | True   |", table.split('\n')[4].rstrip())
         expected = """
 +--------+--------+-----------+----------------------------------+
-| Run ID | Passed |  Runtime  |               Date               |
+| Run ID | Passed | Runtime   | Date                             |
 +--------+--------+-----------+----------------------------------+
 """.strip()
         self.assertEqual(expected, '\n'.join(
