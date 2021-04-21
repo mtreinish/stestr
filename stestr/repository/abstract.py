@@ -67,6 +67,17 @@ class AbstractRepository:
         """
         raise NotImplementedError(self.get_failing)
 
+    def get_run_ids(self):
+        """Get a list of test ids in the repository
+
+        :return: a list of test ids
+        """
+        raise NotImplementedError(self.get_run_ids)
+
+    def remove_run_id(self, run_id):
+        """Remove a run from the repository"""
+        raise NotImplementedError(self.remove_run_id)
+
     def get_inserter(self, partial=False, run_id=None, metadata=None):
         """Get an inserter that will insert a test run into the repository.
 

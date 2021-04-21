@@ -166,3 +166,48 @@ class TestFileRepository(base.TestCase):
         run_ids_int = [int(x) for x in run_ids]
         self.assertIn(result.get_id(), run_ids_int)
         self.assertNotIn(result_bad.get_id(), run_ids_int)
+
+    def test_get_run_ids(self):
+        repo = self.useFixture(FileRepositoryFixture()).repo
+        result = repo.get_inserter(metadata='fun')
+        result.startTestRun()
+        result.stopTestRun()
+        result_bad = repo.get_inserter(metadata='not_fun')
+        result_bad.startTestRun()
+        result_bad.stopTestRun()
+        run_ids = repo.get_run_ids()
+        self.assertEqual(['0', '1'], run_ids)
+
+    def test_get_run_ids_empty(self):
+        repo = self.useFixture(FileRepositoryFixture()).repo
+        run_ids = repo.get_run_ids()
+        self.assertEqual([], run_ids)
+
+    def test_get_run_ids_with_hole(self):
+        repo = self.useFixture(FileRepositoryFixture()).repo
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        repo.remove_run_id('1')
+        self.assertEqual(['0', '2'], repo.get_run_ids())
+
+    def test_remove_ids(self):
+        repo = self.useFixture(FileRepositoryFixture()).repo
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        repo.remove_run_id('0')
+        self.assertEqual([], repo.get_run_ids())
+
+    def test_remove_ids_id_not_in_repo(self):
+        repo = self.useFixture(FileRepositoryFixture()).repo
+        result = repo.get_inserter()
+        result.startTestRun()
+        result.stopTestRun()
+        self.assertRaises(KeyError, repo.remove_run_id, '3')

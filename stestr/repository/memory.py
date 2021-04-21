@@ -66,6 +66,14 @@ class Repository(repository.AbstractRepository):
             raise KeyError("No such run.")
         return self._runs[run_id]
 
+    def get_run_ids(self):
+        return list(self._runs.keys())
+
+    def remove_run_id(self, run_id):
+        if run_id not in self._runs:
+            raise KeyError("No run %s in repository" % run_id)
+        del self._run[run_id]
+
     def latest_id(self):
         result = self.count() - 1
         if result < 0:

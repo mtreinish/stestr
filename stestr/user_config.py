@@ -66,6 +66,15 @@ class UserConfig:
                 vp.Optional('abbreviate'): bool,
                 vp.Optional('suppress-attachments'): bool,
                 vp.Optional('all-attachments'): bool,
+            },
+            vp.Optional('history-list'): {
+                vp.Optional('show-metadata'): bool,
+            },
+            vp.Optional('history-show'): {
+                vp.Optional('no-subunit-trace'): bool,
+                vp.Optional('color'): bool,
+                vp.Optional('suppress-attachments'): bool,
+                vp.Optional('all-attachments'): bool,
             }
         })
         with open(path) as fd:
@@ -94,3 +103,11 @@ class UserConfig:
     @property
     def load(self):
         return self.config.get('load')
+
+    @property
+    def history_list(self):
+        return self.config.get('history-list')
+
+    @property
+    def history_show(self):
+        return self.config.get('history-show')

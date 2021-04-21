@@ -111,6 +111,22 @@ class Repository(repository.AbstractRepository):
         session.close()
         return _Subunit2SqlRun(self.base, None, test_runs=failed_test_runs)
 
+    def get_run_ids(self):
+        session = self.session_factory()
+        res = [run.uuid for run in db_api.get_all_runs(
+            session=self.session_factory())]
+        session.close()
+        return res
+
+    def remove_run_id(self, run_id):
+        session = self.session_factory()
+        try:
+            db_api.delete_run_by_uuid(run_id, session=session)
+        except TypeError:
+            raise KeyError("run_id %s not in repository")
+        session.commit()
+        session.close()
+
     def get_test_run(self, run_id):
         return _Subunit2SqlRun(self.base, run_id)
 

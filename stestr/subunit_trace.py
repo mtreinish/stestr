@@ -405,6 +405,9 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
         stop_times += [
             x['timestamps'][1] for x in RESULTS[worker] if
             x['timestamps'][1] is not None]
+    if not start_times:
+        print("The test run didn't actually run any tests", file=sys.stderr)
+        return 1
     start_time = min(start_times)
     stop_time = max(stop_times)
     elapsed_time = stop_time - start_time
