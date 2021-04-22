@@ -189,6 +189,8 @@ class Run(command.Command):
                             dest='all_attachments',
                             help='If set print all text attachment contents on'
                             ' a successful test execution')
+        parser.add_argument('--dynamic', action='store_true', default=False,
+                            help='Enable the EXPERIMENTAL dynamic scheduler')
         parser.add_argument('--show-binary-attachments', action='store_true',
                             dest='show_binary_attachments',
                             help='If set, show non-text attachments. This is '
@@ -272,7 +274,7 @@ class Run(command.Command):
             suppress_attachments=suppress_attachments,
             all_attachments=all_attachments,
             show_binary_attachments=args.show_binary_attachments,
-            pdb=args.pdb)
+            pdb=args.pdb, dynamic=args.dynamic)
 
         # Always output slowest test info if requested, regardless of other
         # test run options
@@ -315,7 +317,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                 random=False, combine=False, filters=None, pretty_out=True,
                 color=False, stdout=sys.stdout, abbreviate=False,
                 suppress_attachments=False, all_attachments=False,
-                show_binary_attachments=True, pdb=False):
+                show_binary_attachments=True, pdb=False, dynamic=False):
     """Function to execute the run command
 
     This function implements the run command. It will run the tests specified
@@ -393,6 +395,7 @@ def run_command(config='.stestr.conf', repo_type='file',
     :param str pdb: Takes in a single test_id to bypasses test
         discover and just execute the test specified without launching any
         additional processes. A file name may be used in place of a test name.
+    :param bool dynamic: Enable dynamic scheduling
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -458,6 +461,13 @@ def run_command(config='.stestr.conf', repo_type='file',
                ">= 0 must be used.\n" % concurrency)
         stdout.write(msg)
         return 2
+    if dynamic:
+        if sys.version_info[0] < 3 or sys.version_info[1] < 5:
+            msg = 'Dynamic mode requires python 3.5 or newer.'
+            exit(1)
+
+        warnings.warn("WARNING: The dynamic scheduler is still experimental. "
+                      "You might encounter issues while using it")
     if combine:
         latest_id = repo.latest_id()
         combine_id = str(latest_id)
@@ -492,7 +502,9 @@ def run_command(config='.stestr.conf', repo_type='file',
         def run_tests():
             run_proc = [('subunit', output.ReturnCodeToSubunit(
                 subprocess.Popen(run_cmd, shell=True,
-                                 stdout=subprocess.PIPE)))]
+                                 stdout=subprocess.PIPE),
+                dynamic=False))]
+
             return load.load(in_streams=run_proc,
                              subunit_out=subunit_out,
                              repo_type=repo_type,
@@ -580,7 +592,8 @@ def run_command(config='.stestr.conf', repo_type='file',
             exclude_list=exclude_list, whitelist_file=whitelist_file,
             include_list=include_list, black_regex=black_regex,
             exclude_regex=exclude_regex,
-            top_dir=top_dir, test_path=test_path, randomize=random)
+            top_dir=top_dir, test_path=test_path, randomize=random,
+            dynamic=dynamic)
         if isolated:
             result = 0
             cmd.setUp()
@@ -606,7 +619,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                     pretty_out=pretty_out, color=color, abbreviate=abbreviate,
                     stdout=stdout, suppress_attachments=suppress_attachments,
                     all_attachments=all_attachments,
-                    show_binary_attachments=show_binary_attachments)
+                    show_binary_attachments=show_binary_attachments,
+                    dynamic=dynamic)
                 if run_result > result:
                     result = run_result
             return result
@@ -622,7 +636,8 @@ def run_command(config='.stestr.conf', repo_type='file',
                               abbreviate=abbreviate,
                               suppress_attachments=suppress_attachments,
                               all_attachments=all_attachments,
-                              show_binary_attachments=show_binary_attachments)
+                              show_binary_attachments=show_binary_attachments,
+                              dynamic=dynamic)
     else:
         # Where do we source data about the cause of conflicts.
         latest_run = repo.get_latest_run()
@@ -668,14 +683,22 @@ def _run_tests(cmd, until_failure,
                subunit_out=False, combine_id=None, repo_type='file',
                repo_url=None, pretty_out=True, color=False, stdout=sys.stdout,
                abbreviate=False, suppress_attachments=False,
-               all_attachments=False, show_binary_attachments=False):
+               all_attachments=False, show_binary_attachments=False,
+               dynamic=False):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
         def run_tests():
-            run_procs = [('subunit',
-                          output.ReturnCodeToSubunit(
-                              proc)) for proc in cmd.run_tests()]
+            if not dynamic or cmd.concurrency == 1:
+                run_procs = [('subunit',
+                              output.ReturnCodeToSubunit(
+                                  proc,
+                                  dynamic=False)) for proc in cmd.run_tests()]
+            else:
+                run_procs = [('subunit',
+                              output.ReturnCodeToSubunit(
+                                  os.fdopen(proc['stream']),
+                                  proc['proc'])) for proc in cmd.run_tests()]
             if not run_procs:
                 stdout.write("The specified regex doesn't match with anything")
                 return 1

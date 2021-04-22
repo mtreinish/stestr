@@ -7,7 +7,7 @@ install: pip install -U tox coveralls
 language: python
 cache: pip
 script:
-  - tox
+  - 'tox -- --dynamic'
 after_success: .travis/coveralls.sh
 notifications:
   email: false

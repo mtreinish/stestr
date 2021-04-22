@@ -90,7 +90,6 @@ class TestReturnCodes(base.TestCase):
                 "%s" % cmd, shell=True,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             out, err = p.communicate()
-
         if not subunit:
             self.assertEqual(
                 p.returncode, expected,
@@ -322,7 +321,7 @@ class TestReturnCodes(base.TestCase):
     def test_load_from_stdin_quiet(self):
         out, err = self.assertRunExit('stestr --user-config stestr.yaml -q '
                                       'run passing', 0)
-        self.assertEqual(out.decode('utf-8'), '')
+        self.assertEqual('', out.decode('utf-8'))
         # FIXME(masayukig): We get some warnings when we run a coverage job.
         # So, just ignore 'err' here.
         stream = self._get_cmd_stdout('stestr last --subunit')[0]

@@ -63,6 +63,7 @@ class TestTestrConf(base.TestCase):
             mock_get_repo_open.return_value, black_regex=None,
             exclude_regex=None,
             blacklist_file=None, exclude_list=None, concurrency=0,
+            dynamic=False,
             group_callback=expected_group_callback,
             test_filters=None, randomize=False, serial=False,
             whitelist_file=None, include_list=None, worker_path=None)
