@@ -41,6 +41,13 @@ load:
   abbreviate: True
   suppress-attachments: True
   all-attachments: True
+history-list:
+  show-metadata: True
+history-show:
+  no-subunit-trace: True
+  color: True
+  suppress-attachments: True
+  all-attachments: True
 """
 
 INVALID_YAML_FIELD = """
@@ -152,7 +159,14 @@ class TestUserConfig(base.TestCase):
                 'color': True,
                 'abbreviate': True,
                 'suppress-attachments': True,
-                'all-attachments': True}
+                'all-attachments': True},
+            'history-list': {
+                'show-metadata': True},
+            'history-show': {
+                'no-subunit-trace': True,
+                'color': True,
+                'suppress-attachments': True,
+                'all-attachments': True},
         }
         self.assertEqual(full_dict, user_conf.config)
 
