@@ -36,7 +36,7 @@ def get_user_config(path=None):
     return UserConfig(path)
 
 
-class UserConfig(object):
+class UserConfig:
 
     def __init__(self, path):
         self.schema = vp.Schema({
@@ -66,9 +66,18 @@ class UserConfig(object):
                 vp.Optional('abbreviate'): bool,
                 vp.Optional('suppress-attachments'): bool,
                 vp.Optional('all-attachments'): bool,
+            },
+            vp.Optional('history-list'): {
+                vp.Optional('show-metadata'): bool,
+            },
+            vp.Optional('history-show'): {
+                vp.Optional('no-subunit-trace'): bool,
+                vp.Optional('color'): bool,
+                vp.Optional('suppress-attachments'): bool,
+                vp.Optional('all-attachments'): bool,
             }
         })
-        with open(path, 'r') as fd:
+        with open(path) as fd:
             self.config = yaml.safe_load(fd.read())
         if self.config is None:
             self.config = {}
@@ -94,3 +103,11 @@ class UserConfig(object):
     @property
     def load(self):
         return self.config.get('load')
+
+    @property
+    def history_list(self):
+        return self.config.get('history-list')
+
+    @property
+    def history_show(self):
+        return self.config.get('history-show')

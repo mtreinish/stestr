@@ -115,7 +115,7 @@ class TestProcessorFixture(fixtures.Fixture):
         self.randomize = randomize
 
     def setUp(self):
-        super(TestProcessorFixture, self).setUp()
+        super().setUp()
         variable_regex = r'\$(IDOPTION|IDFILE|IDLIST|LISTOPT)'
         variables = {}
         list_variables = {'LISTOPT': self.listopt}

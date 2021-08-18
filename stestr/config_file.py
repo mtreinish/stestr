@@ -20,20 +20,24 @@ from stestr.repository import util
 from stestr import test_processor
 
 
-class TestrConf(object):
+class TestrConf:
     """Create a TestrConf object to represent a specified config file
 
-    This class is used to represent an stestr config file. It
+    This class is used to represent an stestr config file. Or in the case
+    of a tox.ini file the stestr section in the tox.ini file
 
     :param str config_file: The path to the config file to use
+    :param str section: The section to use for the stestr config. By default
+        this is DEFATULT.
     """
 
     _escape_trailing_backslash_re = re.compile(r'(?<=[^\\])\\$')
 
-    def __init__(self, config_file):
+    def __init__(self, config_file, section='DEFAULT'):
         self.parser = configparser.ConfigParser()
         self.parser.read(config_file)
         self.config_file = config_file
+        self.section = section
 
     def _sanitize_path(self, path):
         if os.sep == '\\':
@@ -110,15 +114,15 @@ class TestrConf(object):
         :rtype: test_processor.TestProcessorFixture
         """
 
-        if not test_path and self.parser.has_option('DEFAULT', 'test_path'):
-            test_path = self.parser.get('DEFAULT', 'test_path')
+        if not test_path and self.parser.has_option(self.section, 'test_path'):
+            test_path = self.parser.get(self.section, 'test_path')
         elif not test_path:
             sys.exit("No test_path can be found in either the command line "
                      "options nor in the specified config file {}.  Please "
                      "specify a test path either in the config file or via "
                      "the --test-path argument".format(self.config_file))
-        if not top_dir and self.parser.has_option('DEFAULT', 'top_dir'):
-            top_dir = self.parser.get('DEFAULT', 'top_dir')
+        if not top_dir and self.parser.has_option(self.section, 'top_dir'):
+            top_dir = self.parser.get(self.section, 'top_dir')
         elif not top_dir:
             top_dir = './'
 
@@ -154,12 +158,12 @@ class TestrConf(object):
         if parallel_class:
             group_regex = r'([^\.]*\.)*'
         if not group_regex \
-                and self.parser.has_option('DEFAULT', 'parallel_class') \
-                and self.parser.getboolean('DEFAULT', 'parallel_class'):
+                and self.parser.has_option(self.section, 'parallel_class') \
+                and self.parser.getboolean(self.section, 'parallel_class'):
             group_regex = r'([^\.]*\.)*'
-        if not group_regex and self.parser.has_option('DEFAULT',
+        if not group_regex and self.parser.has_option(self.section,
                                                       'group_regex'):
-            group_regex = self.parser.get('DEFAULT', 'group_regex')
+            group_regex = self.parser.get(self.section, 'group_regex')
         if group_regex:
             def group_callback(test_id, regex=re.compile(group_regex)):
                 match = regex.match(test_id)

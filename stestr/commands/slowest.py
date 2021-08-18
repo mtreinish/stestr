@@ -29,7 +29,7 @@ class Slowest(command.Command):
     """
 
     def get_parser(self, prog_name):
-        parser = super(Slowest, self).get_parser(prog_name)
+        parser = super().get_parser(prog_name)
         parser.add_argument(
             "--all", action="store_true",
             default=False, help="Show timing for all tests.")

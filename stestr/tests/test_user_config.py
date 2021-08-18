@@ -41,6 +41,13 @@ load:
   abbreviate: True
   suppress-attachments: True
   all-attachments: True
+history-list:
+  show-metadata: True
+history-show:
+  no-subunit-trace: True
+  color: True
+  suppress-attachments: True
+  all-attachments: True
 """
 
 INVALID_YAML_FIELD = """
@@ -57,7 +64,7 @@ run:
 class TestUserConfig(base.TestCase):
 
     def setUp(self):
-        super(TestUserConfig, self).setUp()
+        super().setUp()
         home_dir = os.path.expanduser("~")
         self.xdg_path = os.path.join(os.path.join(home_dir, '.config'),
                                      'stestr.yaml')
@@ -152,7 +159,14 @@ class TestUserConfig(base.TestCase):
                 'color': True,
                 'abbreviate': True,
                 'suppress-attachments': True,
-                'all-attachments': True}
+                'all-attachments': True},
+            'history-list': {
+                'show-metadata': True},
+            'history-show': {
+                'no-subunit-trace': True,
+                'color': True,
+                'suppress-attachments': True,
+                'all-attachments': True},
         }
         self.assertEqual(full_dict, user_conf.config)
 

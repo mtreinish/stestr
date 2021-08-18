@@ -12,6 +12,7 @@
 
 """Run a projects tests and load them into stestr."""
 
+import configparser
 import errno
 import functools
 import io
@@ -61,7 +62,7 @@ class Run(command.Command):
     """
 
     def get_parser(self, prog_name):
-        parser = super(Run, self).get_parser(prog_name)
+        parser = super().get_parser(prog_name)
         parser.add_argument("filters", nargs="*", default=None,
                             help="A list of string regex filters to initially "
                             "apply on the test list. Tests that match any of "
@@ -417,14 +418,27 @@ def run_command(config='.stestr.conf', repo_type='file',
                       DeprecationWarning)
     try:
         repo = util.get_repo_open(repo_type, repo_url)
-    # If a repo is not found, and there a testr config exists just create it
+    # If a repo is not found, and there a stestr config exists just create it
     except repository.RepositoryNotFound:
         if not os.path.isfile(config) and not test_path:
-            msg = ("No config file found and --test-path not specified. "
-                   "Either create or specify a .stestr.conf or use "
-                   "--test-path ")
-            stdout.write(msg)
-            exit(1)
+            # If there is no config and no test-path
+            if os.path.isfile('tox.ini'):
+                tox_conf = configparser.SafeConfigParser()
+                tox_conf.read('tox.ini')
+                if not tox_conf.has_section('stestr'):
+                    msg = ("No file found, --test-path not specified, and "
+                           "stestr section not found in tox.ini. Either "
+                           "create or specify a .stestr.conf, use "
+                           "--test-path, or add an stestr section to the "
+                           "tox.ini")
+                    stdout.write(msg)
+                    exit(1)
+            else:
+                msg = ("No config file found and --test-path not specified. "
+                       "Either create or specify a .stestr.conf or use "
+                       "--test-path ")
+                stdout.write(msg)
+                exit(1)
         try:
             repo = util.get_repo_initialise(repo_type, repo_url)
         except OSError as e:
@@ -552,7 +566,12 @@ def run_command(config='.stestr.conf', repo_type='file',
             # that are both failing and listed.
             ids = list_ids.intersection(ids)
 
-    conf = config_file.TestrConf(config)
+    if config and os.path.isfile(config):
+        conf = config_file.TestrConf(config)
+    elif os.path.isfile('tox.ini'):
+        conf = config_file.TestrConf('tox.ini', section='stestr')
+    else:
+        conf = config_file.TestrConf(config)
     if not analyze_isolation:
         cmd = conf.get_run_command(
             ids, regexes=filters, group_regex=group_regex, repo_type=repo_type,

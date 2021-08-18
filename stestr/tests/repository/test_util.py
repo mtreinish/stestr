@@ -22,7 +22,7 @@ from stestr.tests import base
 class TestUtil(base.TestCase):
 
     def setUp(self):
-        super(TestUtil, self).setUp()
+        super().setUp()
         self.temp_dir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.temp_dir)
         cwd = os.getcwd()

@@ -15,9 +15,6 @@
 # under the License.
 
 """Trace a subunit stream in reasonable detail and high accuracy."""
-from __future__ import absolute_import
-from __future__ import print_function
-
 import argparse
 import functools
 import os
@@ -272,6 +269,18 @@ def count_tests(key, value):
     return count
 
 
+def get_stuck_in_progress():
+    key = 'status'
+    match = re.compile('^inprogress$')
+    in_progress = []
+    for k, v in RESULTS.items():
+        for item in v:
+            if key in item:
+                if match.search(item[key]):
+                    in_progress.append(item['id'])
+    return in_progress
+
+
 def run_time():
     runtime = 0.0
     for k, v in RESULTS.items():
@@ -390,8 +399,15 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
     start_times = []
     stop_times = []
     for worker in RESULTS:
-        start_times += [x['timestamps'][0] for x in RESULTS[worker]]
-        stop_times += [x['timestamps'][1] for x in RESULTS[worker]]
+        start_times += [
+            x['timestamps'][0] for x in RESULTS[worker] if
+            x['timestamps'][0] is not None]
+        stop_times += [
+            x['timestamps'][1] for x in RESULTS[worker] if
+            x['timestamps'][1] is not None]
+    if not start_times:
+        print("The test run didn't actually run any tests", file=sys.stderr)
+        return 1
     start_time = min(start_times)
     stop_time = max(stop_times)
     elapsed_time = stop_time - start_time
@@ -408,6 +424,13 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
     # this is just in place until the behavior lands there (if it ever does)
     if count_tests('status', '^success$') == 0:
         print("\nNo tests were successful during the run", file=sys.stderr)
+        return 1
+    in_progress = get_stuck_in_progress()
+    if count_tests('status', '^inprogress$') > 0:
+        print("\nThe following tests exited without returning a status \n"
+              "and likely segfaulted or crashed Python:", file=sys.stderr)
+        for test in in_progress:
+            print("\n\t* %s" % test, file=sys.stderr)
         return 1
     return 0 if results.wasSuccessful(summary) else 1
 

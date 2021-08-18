@@ -84,6 +84,25 @@ CLI. This way you can run stestr directly without having to write a config file
 and manually specify the test_path like above with the ``--test-path``/``-t``
 CLI argument.
 
+Tox
+'''
+
+If you are also using `tox <https://tox.readthedocs.io/en/latest/>`__ with your
+project then it is not necessary to create separate stestr config file, instead
+you can embed the necessary configuration in the existing ``tox.ini`` file with
+an ``stestr`` section. For example a full configuration section would be::
+
+  [stestr]
+  test_path=./project/tests
+  top_dir=./
+  group_regex=([^\.]*\.)*
+
+It's important to note that if either the ``--config``/``-c`` CLI argument is
+specified and pointing to an existing file or the default location
+``.stestr.conf`` file is present then any configuration in the ``tox.ini`` will
+be ignored. Configuration embedded in a ``tox.ini`` will only be used if other
+configuration files are not present.
+
 Running tests
 -------------
 
@@ -499,6 +518,13 @@ that changes the default on all available options in the config file is::
       abbreviate: True
       suppress-attachments: True
       all-attachments: True
+    history-list:
+      show-metadata: True
+    history-show:
+      no-subunit-trace: True
+      color: True
+      suppress-attachments: True
+      all-attachments: True
 
 If you choose to use a user config file you can specify any subset of the
 options and commands you choose.
@@ -560,6 +586,23 @@ runner per test it runs. To avoid cross-test-runner interactions concurrency
 is disabled in this mode. ``--analyze-isolation`` supersedes ``--isolated`` if
 they are both supplied.
 
+History
+-------
+
+stestr keeps a history of all test runs in a local repository. the
+``stestr history`` command is used for interacting with those old runs. The
+history command has 3 sub-commands, ``list``, ``show``, and ``remove``. The
+``list`` sub-command will generate a list of the previous runs in the data
+repository and show some basic stats for each run. The ``show`` sub-command is
+used to retreive the record of a previous run, it behaves identically to
+``stestr last``, except that it takes an optional run id to show any run in the
+stestr history. If a run id is not specified it will use the most recent
+result. The ``remove`` sub-command will delete a specified run from the data
+repository. Additionally, the keyword ``all`` can be used to remove all runs
+from the repository. For example::
+
+  $ stestr history remove all
+
 Repositories
 ------------
 
@@ -602,12 +645,13 @@ contains the following files:
 SQL
 '''
 This is an experimental repository backend, that is based on the `subunit2sql`_
-library. It's currently still under development and should be considered
-experimental for the time being. Eventually it'll replace the File repository
-type
+library.
 
 .. note:: The sql repository type requirements are not installed by default.
     They are listed under the 'sql' setuptools extras. You can install them
     with pip by running: ``pip install 'stestr[sql]'``
+
+.. warning:: The sql repository type is deprecated and will be removed in the
+   4.0.0 release.
 
 .. _subunit2sql:

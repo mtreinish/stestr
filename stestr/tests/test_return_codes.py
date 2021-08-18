@@ -31,13 +31,14 @@ from stestr.tests import base
 
 class TestReturnCodes(base.TestCase):
     def setUp(self):
-        super(TestReturnCodes, self).setUp()
+        super().setUp()
         # Setup test dirs
         self.directory = tempfile.mkdtemp(prefix='stestr-unit')
         self.addCleanup(shutil.rmtree, self.directory, ignore_errors=True)
         self.test_dir = os.path.join(self.directory, 'tests')
         os.mkdir(self.test_dir)
         # Setup Test files
+        self.repo_root = os.path.abspath(os.curdir)
         self.testr_conf_file = os.path.join(self.directory, '.stestr.conf')
         self.setup_cfg_file = os.path.join(self.directory, 'setup.cfg')
         self.passing_file = os.path.join(self.test_dir, 'test_passing.py')
@@ -56,7 +57,7 @@ class TestReturnCodes(base.TestCase):
         self.stdout = io.StringIO()
         self.stderr = io.StringIO()
         # Change directory, run wrapper and check result
-        self.addCleanup(os.chdir, os.path.abspath(os.curdir))
+        self.addCleanup(os.chdir, self.repo_root)
         os.chdir(self.directory)
         subprocess.call('stestr init', shell=True)
 
@@ -330,6 +331,76 @@ class TestReturnCodes(base.TestCase):
         self.assertEqual(out.decode('utf-8'), '')
         self.assertEqual(err.decode('utf-8'), '')
 
+    def test_history_list(self):
+        self.assertRunExit('stestr run passing', 0)
+        self.assertRunExit('stestr run', 1)
+        self.assertRunExit('stestr run passing', 0)
+        table = self.assertRunExit(
+            'stestr history list', 0)[0].decode('utf8')
+        self.assertIn("| 0      | True   |", table.split('\n')[3].rstrip())
+        self.assertIn("| 1      | False  |", table.split('\n')[4].rstrip())
+        self.assertIn("| 2      | True   |", table.split('\n')[5].rstrip())
+        expected = """
++--------+--------+-----------+----------------------------------+
+| Run ID | Passed | Runtime   | Date                             |
++--------+--------+-----------+----------------------------------+
+""".rstrip()
+        self.assertEqual(expected.strip(), '\n'.join(
+            [x.rstrip() for x in table.split('\n')[:3]]).strip())
+
+    def test_history_empty(self):
+        table = self.assertRunExit(
+            'stestr history list', 0)[0].decode('utf8')
+        self.assertEqual("",
+                         '\n'.join(
+                             [x.rstrip() for x in table.split('\n')]).strip())
+
+    def test_history_show_passing(self):
+        self.assertRunExit('stestr run passing', 0)
+        self.assertRunExit('stestr run', 1)
+        self.assertRunExit('stestr run passing', 0)
+        output, _ = self.assertRunExit('stestr history show 0', 0)
+        lines = [x.rstrip() for x in output.decode('utf8').split('\n')]
+        self.assertIn(' - Passed: 2', lines)
+        self.assertIn(' - Failed: 0', lines)
+        self.assertIn(' - Expected Fail: 1', lines)
+
+    def test_history_show_failing(self):
+        self.assertRunExit('stestr run passing', 0)
+        self.assertRunExit('stestr run', 1)
+        self.assertRunExit('stestr run passing', 0)
+        output, _ = self.assertRunExit('stestr history show 1', 1)
+        lines = [x.rstrip() for x in output.decode('utf8').split('\n')]
+        self.assertIn(' - Passed: 2', lines)
+        self.assertIn(' - Failed: 2', lines)
+        self.assertIn(' - Expected Fail: 1', lines)
+        self.assertIn(' - Unexpected Success: 1', lines)
+
+    def test_history_show_invalid_id(self):
+        self.assertRunExit('stestr run passing', 0)
+        self.assertRunExit('stestr run', 1)
+        self.assertRunExit('stestr run passing', 0)
+        output, _ = self.assertRunExit('stestr history show 42', 1)
+        self.assertEqual(output.decode('utf8').rstrip(), "'No such run.'")
+
+    def test_history_remove(self):
+        self.assertRunExit('stestr run passing', 0)
+        self.assertRunExit('stestr run', 1)
+        self.assertRunExit('stestr run passing', 0)
+        self.assertRunExit('stestr history remove 1', 0)
+        table = self.assertRunExit(
+            'stestr history list', 0)[0].decode('utf8')
+        self.assertIn("| 0      | True   |", table.split('\n')[3].rstrip())
+        self.assertNotIn("| 1      | False  |", table.split('\n')[4].strip())
+        self.assertIn("| 2      | True   |", table.split('\n')[4].rstrip())
+        expected = """
++--------+--------+-----------+----------------------------------+
+| Run ID | Passed | Runtime   | Date                             |
++--------+--------+-----------+----------------------------------+
+""".strip()
+        self.assertEqual(expected, '\n'.join(
+            [x.rstrip() for x in table.split('\n')[:3]]))
+
     def test_no_subunit_trace_force_subunit_trace(self):
         out, err = self.assertRunExit(
             'stestr run --no-subunit-trace --force-subunit-trace passing', 0)
@@ -444,3 +515,12 @@ class TestReturnCodes(base.TestCase):
         self.assertIn(' - Passed: 0', lines)
         self.assertIn(' - Failed: 2', lines)
         self.assertIn(' - Unexpected Success: 1', lines)
+
+
+class TestReturnCodesToxIni(TestReturnCodes):
+    def setUp(self):
+        super().setUp()
+        self.tox_ini_dir = os.path.join(self.directory, 'tox.ini')
+        tox_file = os.path.join(self.repo_root, 'stestr/tests/files/tox.ini')
+        shutil.copy(tox_file, self.tox_ini_dir)
+        os.remove(self.testr_conf_file)

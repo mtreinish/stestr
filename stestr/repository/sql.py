@@ -11,7 +11,6 @@
 # under the License.
 
 """Persistent storage of test results."""
-from __future__ import print_function
 
 import datetime
 import io
@@ -74,7 +73,7 @@ class RepositoryFactory(repository.AbstractRepositoryFactory):
 
 
 class Repository(repository.AbstractRepository):
-    """subunit2sql based storage of test results.
+    """DEPRECATED: subunit2sql based storage of test results.
 
     This repository stores each stream in a subunit2sql DB. Refer to the
     subunit2sql documentation for
@@ -91,7 +90,7 @@ class Repository(repository.AbstractRepository):
 
     # TODO(mtreinish): We need to add a subunit2sql api to get the count
     def count(self):
-        super(Repository, self).count()
+        super().count()
 
     def _get_latest_run(self):
         session = self.session_factory()
@@ -111,6 +110,22 @@ class Repository(repository.AbstractRepository):
             'fail', [latest_run.id], session=session)
         session.close()
         return _Subunit2SqlRun(self.base, None, test_runs=failed_test_runs)
+
+    def get_run_ids(self):
+        session = self.session_factory()
+        res = [run.uuid for run in db_api.get_all_runs(
+            session=self.session_factory())]
+        session.close()
+        return res
+
+    def remove_run_id(self, run_id):
+        session = self.session_factory()
+        try:
+            db_api.delete_run_by_uuid(run_id, session=session)
+        except TypeError:
+            raise KeyError("run_id %s not in repository")
+        session.commit()
+        session.close()
 
     def get_test_run(self, run_id):
         return _Subunit2SqlRun(self.base, run_id)

@@ -17,12 +17,12 @@ import testtools
 from stestr import output
 
 
-class IsolationAnalyzer(object):
+class IsolationAnalyzer:
 
     def __init__(self, latest_run, conf, run_func, repo, test_path=None,
                  top_dir=None, group_regex=None, repo_type='file',
                  repo_url=None, serial=False, concurrency=0):
-        super(IsolationAnalyzer, self).__init__()
+        super().__init__()
         self._worker_to_test = None
         self._test_to_worker = None
         self.latest_run = latest_run

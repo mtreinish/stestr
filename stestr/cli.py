@@ -22,7 +22,7 @@ __version__ = version.version_info.version_string_with_vcs()
 class StestrCLI(app.App):
 
     def __init__(self):
-        super(StestrCLI, self).__init__(
+        super().__init__(
             description="A parallel Python test runner built around subunit",
             version=__version__,
             command_manager=commandmanager.CommandManager('stestr.cm'),
@@ -45,9 +45,8 @@ class StestrCLI(app.App):
             self.LOG.debug('got an error: %s', err)
 
     def build_option_parser(self, description, version, argparse_kwargs=None):
-        parser = super(StestrCLI,
-                       self).build_option_parser(description, version,
-                                                 argparse_kwargs)
+        parser = super().build_option_parser(description, version,
+                                             argparse_kwargs)
         parser = self._set_common_opts(parser)
         return parser
 
@@ -71,7 +70,7 @@ class StestrCLI(app.App):
                                  " is running from is used")
         parser.add_argument('--repo-type', '-r', dest='repo_type',
                             choices=['file', 'sql'], default='file',
-                            help="Select the repo backend to use")
+                            help="DEPRECATED: Select the repo backend to use")
         parser.add_argument('--repo-url', '-u', dest='repo_url',
                             default=None,
                             help="Set the repo url to use. An acceptable value"

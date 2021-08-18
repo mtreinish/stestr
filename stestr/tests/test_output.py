@@ -33,7 +33,7 @@ class TestOutput(base.TestCase):
             self.assertEqual(expected, actual)
 
     def test_output_tests(self):
-        class Test(object):
+        class Test:
             def __init__(self, i):
                 self.i = i
 
