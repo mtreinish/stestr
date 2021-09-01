@@ -122,6 +122,23 @@ class TestSubunitTrace(base.TestCase):
                       timestamp=dt.now(UTC))
         stream.stopTestRun()
         output.seek(0)
+        # capture stderr for test
+        stderr = io.StringIO()
+        sys_err = sys.stderr
+        sys.stderr = stderr
+
+        def restore_stderr():
+            sys.stderr = sys_err
+
+        self.addCleanup(restore_stderr)
         stdin = io.TextIOWrapper(io.BufferedReader(output))
         returncode = subunit_trace.trace(stdin, sys.stdout)
         self.assertEqual(1, returncode)
+        stderr.seek(0)
+        expected = """
+The following tests exited without returning a status
+and likely segfaulted or crashed Python:
+
+\t* test_segfault
+"""
+        self.assertEqual(stderr.read(), expected)

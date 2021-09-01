@@ -426,8 +426,8 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
         print("\nNo tests were successful during the run", file=sys.stderr)
         return 1
     in_progress = get_stuck_in_progress()
-    if count_tests('status', '^inprogress$') > 0:
-        print("\nThe following tests exited without returning a status \n"
+    if in_progress:
+        print("\nThe following tests exited without returning a status\n"
               "and likely segfaulted or crashed Python:", file=sys.stderr)
         for test in in_progress:
             print("\n\t* %s" % test, file=sys.stderr)
