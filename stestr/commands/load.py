@@ -17,7 +17,6 @@ import errno
 import functools
 import os
 import sys
-import warnings
 
 from cliff import command
 import subunit
@@ -51,11 +50,6 @@ class Load(command.Command):
         parser.add_argument("files", nargs="*", default=False,
                             help="The subunit v2 stream files to load into the"
                             " repository")
-        parser.add_argument("--partial", action="store_true",
-                            default=False,
-                            help="DEPRECATED: The stream being loaded was a "
-                            "partial run. This option is deprecated and no "
-                            "does anything. It will be removed in the future")
         parser.add_argument("--force-init", action="store_true",
                             default=False,
                             help="Initialise the repository if it does not "
@@ -132,7 +126,7 @@ class Load(command.Command):
         verbose_level = self.app.options.verbose_level
         stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
         load(repo_url=self.app_args.repo_url,
-             partial=args.partial, subunit_out=args.subunit,
+             subunit_out=args.subunit,
              force_init=force_init, streams=args.files,
              pretty_out=pretty_out, color=color,
              stdout=stdout, abbreviate=abbreviate,
@@ -142,7 +136,7 @@ class Load(command.Command):
 
 
 def load(force_init=False, in_streams=None,
-         partial=False, subunit_out=False, repo_url=None,
+         subunit_out=False, repo_url=None,
          run_id=None, streams=None, pretty_out=False, color=False,
          stdout=sys.stdout, abbreviate=False, suppress_attachments=False,
          serial=False, all_attachments=False, show_binary_attachments=False):
@@ -157,9 +151,6 @@ def load(force_init=False, in_streams=None,
         been created.
     :param list in_streams: A list of file objects that will be saved into the
         repository
-    :param bool partial: DEPRECATED: Specify the input is a partial stream.
-        This option is deprecated and no longer does anything. It will be
-        removed in the future.
     :param bool subunit_out: Output the subunit stream to stdout
     :param str repo_url: The url of the repository to use.
     :param run_id: The optional run id to save the subunit stream to.
@@ -181,10 +172,6 @@ def load(force_init=False, in_streams=None,
         for failures.
     :rtype: int
     """
-    if partial:
-        warnings.warn('The partial flag is deprecated and has no effect '
-                      'anymore')
-
     try:
         repo = util.get_repo_open('file', repo_url)
     except repository.RepositoryNotFound:
