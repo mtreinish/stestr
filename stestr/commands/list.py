@@ -15,7 +15,6 @@
 from io import BytesIO
 import os
 import sys
-import warnings
 
 from cliff import command
 
@@ -37,38 +36,15 @@ class List(command.Command):
                             "apply on the test list. Tests that match any of "
                             "the regexes will be used. (assuming any other "
                             "filtering specified also uses it)")
-        parser.add_argument('--blacklist-file', '-b',
-                            default=None, dest='blacklist_file',
-                            help='DEPRECATED: This option will soon be  '
-                                 'replaced by --exclude-list which is '
-                                 'functionally equivalent. If this is '
-                                 'specified at the same time as '
-                                 '--exclude-list, this flag will be ignored '
-                                 'and --exclude-list will be used')
         parser.add_argument('--exclude-list', '-e',
                             default=None, dest='exclude_list',
                             help='Path to an exclusion list file, this file '
                                  'contains a separate regex exclude on each '
                                  'newline')
-        parser.add_argument('--whitelist-file', '-w',
-                            default=None, dest='whitelist_file',
-                            help='DEPRECATED: This option will soon be  '
-                                 'replaced by --include-list which is '
-                                 'functionally equivalent. If this is '
-                                 'specified at the same time as '
-                                 '--include-list, this flag will be ignored '
-                                 'and --include-list will be used')
         parser.add_argument('--include-list', '-i',
                             default=None, dest='include_list',
                             help='Path to an inclusion list file, this file '
                                  'contains a separate regex on each newline.')
-        parser.add_argument('--black-regex', '-B',
-                            default=None, dest='black_regex',
-                            help='DEPRECATED: This option will soon be  '
-                            'replaced by --exclude-regex which is '
-                            'functionally equivalent. If this is specified at '
-                            'the same time as --exclude-regex, this flag will '
-                            'be ignored and --exclude-regex will be used')
         parser.add_argument('--exclude-regex', '-E',
                             default=None, dest='exclude_regex',
                             help='Test rejection regex. If a test cases name '
@@ -90,20 +66,17 @@ class List(command.Command):
                             group_regex=self.app_args.group_regex,
                             test_path=self.app_args.test_path,
                             top_dir=self.app_args.top_dir,
-                            blacklist_file=args.blacklist_file,
                             exclude_list=args.exclude_list,
-                            whitelist_file=args.whitelist_file,
                             include_list=args.include_list,
-                            black_regex=args.black_regex,
                             exclude_regex=args.exclude_regex,
                             filters=filters)
 
 
 def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
                  test_path=None, top_dir=None, group_regex=None,
-                 blacklist_file=None, exclude_list=None,
-                 whitelist_file=None, include_list=None,
-                 black_regex=None, exclude_regex=None, filters=None,
+                 exclude_list=None,
+                 include_list=None,
+                 exclude_regex=None, filters=None,
                  stdout=sys.stdout):
     """Print a list of test_ids for a project
 
@@ -124,19 +97,10 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
     :param str group_regex: Set a group regex to use for grouping tests
         together in the stestr scheduler. If both this and the corresponding
         config file option are set this value will be used.
-    :param str blacklist_file: DEPRECATED: soon to be replaced by the new
-        option exclude_list below. If this is specified at the same time as
-        exclude_list , this flag will be ignored and exclude_list will be used
     :param str exclude_list: Path to an exclusion list file, this file
         contains a separate regex exclude on each newline.
-    :param str whitelist_file: DEPRECATED: soon to be replaced by the new
-        option include_list below. If this is specified at the same time as
-        include_list , this flag will be ignored and include_list will be used
     :param str include_list: Path to an inclusion list file, this file
         contains a separate regex on each newline.
-    :param str black_regex: DEPRECATED: soon to be replaced by the new
-        option exclude_regex below. If this is specified at the same time as
-        exclude_regex, this flag will be ignored and exclude_regex will be used
     :param str exclude_regex: Test rejection regex. If a test cases name
         matches on re.search() operation, it will be removed from the final
         test list.
@@ -147,21 +111,6 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
         this is sys.stdout
 
     """
-    if blacklist_file is not None:
-        warnings.warn("The blacklist-file argument is deprecated and will be "
-                      "removed in a future release. Instead you should use "
-                      "exclude-list which is functionally equivalent",
-                      DeprecationWarning)
-    if whitelist_file is not None:
-        warnings.warn("The whitelist-file argument is deprecated and will be "
-                      "removed in a future release. Instead you should use "
-                      "include-list which is functionally equivalent",
-                      DeprecationWarning)
-    if black_regex is not None:
-        warnings.warn("The black-regex argument is deprecated and will be "
-                      "removed in a future release. Instead you should use "
-                      "exclude-regex which is functionally equivalent",
-                      DeprecationWarning)
     ids = None
     if config and os.path.isfile(config):
         conf = config_file.TestrConf(config)
@@ -172,12 +121,11 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
     cmd = conf.get_run_command(
         regexes=filters, repo_type=repo_type,
         repo_url=repo_url, group_regex=group_regex,
-        blacklist_file=blacklist_file, exclude_list=exclude_list,
-        whitelist_file=whitelist_file, include_list=include_list,
-        black_regex=black_regex, exclude_regex=exclude_regex,
+        exclude_list=exclude_list,
+        include_list=include_list,
+        exclude_regex=exclude_regex,
         test_path=test_path, top_dir=top_dir)
-    not_filtered = filters is None and blacklist_file is None\
-        and whitelist_file is None and black_regex is None\
+    not_filtered = filters is None\
         and include_list is None and exclude_list is None\
         and exclude_regex is None
     try:

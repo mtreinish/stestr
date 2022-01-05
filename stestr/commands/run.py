@@ -19,7 +19,6 @@ import io
 import os
 import subprocess
 import sys
-import warnings
 
 from cliff import command
 import subunit
@@ -80,11 +79,6 @@ class Run(command.Command):
                             "autodetects your CPU count.")
         parser.add_argument("--load-list", default=None,
                             help="Only run tests listed in the named file."),
-        parser.add_argument("--partial", action="store_true", default=False,
-                            help="DEPRECATED: Only some tests will be run. "
-                            "Implied by --failing. This option is deprecated "
-                            "and no longer does anything. It will be removed "
-                            "in the future")
         parser.add_argument("--subunit", action="store_true", default=False,
                             help="Display results in subunit format.")
         parser.add_argument("--until-failure", action="store_true",
@@ -102,36 +96,15 @@ class Run(command.Command):
                             dest='worker_path',
                             help="Optional path of a manual worker grouping "
                             "file to use for the run")
-        parser.add_argument('--blacklist-file', '-b',
-                            default=None, dest='blacklist_file',
-                            help='DEPRECATED: This option will soon be '
-                            'replaced by --exclude-list which is functionally '
-                            'equivalent. If this is specified at the same '
-                            'time as --exclude-list, this flag will be '
-                            'ignored and --exclude-list will be used.')
         parser.add_argument('--exclude-list', '-e',
                             default=None, dest='exclude_list',
                             help='Path to an exclusion list file, this file '
                             'contains a separate regex exclude on each '
                             'newline')
-        parser.add_argument('--whitelist-file', '-w',
-                            default=None, dest='whitelist_file',
-                            help='DEPRECATED: This option will soon be '
-                            'replaced by --include-list which is functionally '
-                            'equivalent. If this is specified at the same '
-                            'time as --include-list, this flag will be '
-                            'ignored and --include-list will be used.')
         parser.add_argument('--include-list', '-i',
                             default=None, dest='include_list',
                             help='Path to an inclusion list file, this file '
                             'contains a separate regex on each newline.')
-        parser.add_argument('--black-regex', '-B', default=None,
-                            dest='black_regex',
-                            help='DEPRECATED: This option will soon be '
-                            'replaced by --exclude-regex which is functionally'
-                            ' equivalent. If this is specified at the same '
-                            'time as --exclude-regex, this flag will be '
-                            'ignored and --exclude-regex will be used.')
         parser.add_argument('--exclude-regex', '-E', default=None,
                             dest='exclude_regex',
                             help='Test rejection regex. If a test cases name '
@@ -259,13 +232,13 @@ class Run(command.Command):
             test_path=self.app_args.test_path, top_dir=self.app_args.top_dir,
             group_regex=self.app_args.group_regex, failing=args.failing,
             serial=args.serial, concurrency=concurrency,
-            load_list=args.load_list, partial=args.partial,
+            load_list=args.load_list,
             subunit_out=args.subunit, until_failure=args.until_failure,
             analyze_isolation=args.analyze_isolation, isolated=args.isolated,
-            worker_path=args.worker_path, blacklist_file=args.blacklist_file,
-            exclude_list=args.exclude_list, whitelist_file=args.whitelist_file,
+            worker_path=args.worker_path,
+            exclude_list=args.exclude_list,
             include_list=args.include_list,
-            black_regex=args.black_regex, exclude_regex=args.exclude_regex,
+            exclude_regex=args.exclude_regex,
             no_discover=args.no_discover, random=random, combine=args.combine,
             filters=filters, pretty_out=pretty_out, color=color,
             stdout=stdout, abbreviate=abbreviate,
@@ -307,11 +280,11 @@ def _find_failing(repo):
 def run_command(config='.stestr.conf', repo_type='file',
                 repo_url=None, test_path=None, top_dir=None, group_regex=None,
                 failing=False, serial=False, concurrency=0, load_list=None,
-                partial=False, subunit_out=False, until_failure=False,
+                subunit_out=False, until_failure=False,
                 analyze_isolation=False, isolated=False, worker_path=None,
-                blacklist_file=None, exclude_list=None,
-                whitelist_file=None, include_list=None,
-                black_regex=None, exclude_regex=None, no_discover=False,
+                exclude_list=None,
+                include_list=None,
+                exclude_regex=None, no_discover=False,
                 random=False, combine=False, filters=None, pretty_out=True,
                 color=False, stdout=sys.stdout, abbreviate=False,
                 suppress_attachments=False, all_attachments=False,
@@ -342,9 +315,6 @@ def run_command(config='.stestr.conf', repo_type='file',
         autodetects your CPU count and uses that.
     :param str load_list: The path to a list of test_ids. If specified only
         tests listed in the named file will be run.
-    :param bool partial: DEPRECATED: Only some tests will be run. Implied by
-        `--failing`. This flag is deprecated because and doesn't do anything
-        it will be removed in a future release.
     :param bool subunit_out: Display results in subunit format.
     :param bool until_failure: Repeat the run again and again until failure
         occurs.
@@ -353,19 +323,10 @@ def run_command(config='.stestr.conf', repo_type='file',
     :param bool isolated: Run each test id in a separate test runner.
     :param str worker_path: Optional path of a manual worker grouping file
         to use for the run.
-    :param str blacklist_file: DEPRECATED: soon to be replaced by the new
-        option exclude_list below. If this is specified at the same time as
-        exclude_list, this flag will be ignored and exclude_list will be used
     :param str exclude_list: Path to an exclusion list file, this file
         contains a separate regex exclude on each newline.
-    :param str whitelist_file: DEPRECATED: soon to be replaced by the new
-        option include_list below. If this is specified at the same time as
-        include_list, this flag will be ignored and include_list will be used
     :param str include_list: Path to a inclusion list file, this file
         contains a separate regex on each newline.
-    :param str black_regex: DEPRECATED: soon to be replaced by the new
-        option exclude_regex below. If this is specified at the same time as
-        exclude_regex, this flag will be ignored and exclude_regex will be used
     :param str exclude_regex: Test rejection regex. If a test cases name
         matches on re.search() operation, it will be removed from the final
         test list.
@@ -398,24 +359,6 @@ def run_command(config='.stestr.conf', repo_type='file',
         for failures.
     :rtype: int
     """
-    if partial:
-        warnings.warn('The partial flag is deprecated and has no effect '
-                      'anymore')
-    if blacklist_file is not None:
-        warnings.warn("The blacklist-file argument is deprecated and will be "
-                      "removed in a future release. Instead you should use "
-                      "exclude-list which is functionally equivalent",
-                      DeprecationWarning)
-    if whitelist_file is not None:
-        warnings.warn("The whitelist-file argument is deprecated and will be "
-                      "removed in a future release. Instead you should use "
-                      "include-list which is functionally equivalent",
-                      DeprecationWarning)
-    if black_regex is not None:
-        warnings.warn("The black-regex argument is deprecated and will be "
-                      "removed in a future release. Instead you should use "
-                      "exclude-regex which is functionally equivalent",
-                      DeprecationWarning)
     try:
         repo = util.get_repo_open(repo_type, repo_url)
     # If a repo is not found, and there a stestr config exists just create it
@@ -576,9 +519,9 @@ def run_command(config='.stestr.conf', repo_type='file',
         cmd = conf.get_run_command(
             ids, regexes=filters, group_regex=group_regex, repo_type=repo_type,
             repo_url=repo_url, serial=serial, worker_path=worker_path,
-            concurrency=concurrency, blacklist_file=blacklist_file,
-            exclude_list=exclude_list, whitelist_file=whitelist_file,
-            include_list=include_list, black_regex=black_regex,
+            concurrency=concurrency,
+            exclude_list=exclude_list,
+            include_list=include_list,
             exclude_regex=exclude_regex,
             top_dir=top_dir, test_path=test_path, randomize=random)
         if isolated:
@@ -594,9 +537,9 @@ def run_command(config='.stestr.conf', repo_type='file',
                     [test_id], filters, group_regex=group_regex,
                     repo_type=repo_type, repo_url=repo_url, serial=serial,
                     worker_path=worker_path, concurrency=concurrency,
-                    blacklist_file=blacklist_file, exclude_list=exclude_list,
-                    whitelist_file=whitelist_file, include_list=include_list,
-                    black_regex=black_regex, exclude_regex=exclude_regex,
+                    exclude_list=exclude_list,
+                    include_list=include_list,
+                    exclude_regex=exclude_regex,
                     randomize=random, test_path=test_path, top_dir=top_dir)
 
                 run_result = _run_tests(
@@ -634,10 +577,10 @@ def run_command(config='.stestr.conf', repo_type='file',
             cmd = conf.get_run_command(
                 [test_id], group_regex=group_regex, repo_type=repo_type,
                 repo_url=repo_url, serial=serial, worker_path=worker_path,
-                concurrency=concurrency, blacklist_file=blacklist_file,
-                exclude_list=exclude_list, whitelist_file=whitelist_file,
+                concurrency=concurrency,
+                exclude_list=exclude_list,
                 include_list=include_list,
-                black_regex=black_regex, exclude_regex=exclude_regex,
+                exclude_regex=exclude_regex,
                 randomize=random, test_path=test_path, top_dir=top_dir)
             if not _run_tests(cmd, until_failure):
                 # If the test was filtered, it won't have been run.
