@@ -37,8 +37,7 @@ class Slowest(command.Command):
 
     def take_action(self, parsed_args):
         args = parsed_args
-        return slowest(repo_type=self.app_args.repo_type,
-                       repo_url=self.app_args.repo_url,
+        return slowest(repo_url=self.app_args.repo_url,
                        show_all=args.all)
 
 
@@ -62,7 +61,7 @@ def format_times(times):
     return times
 
 
-def slowest(repo_type='file', repo_url=None, show_all=False,
+def slowest(repo_url=None, show_all=False,
             stdout=sys.stdout):
     """Print the slowest times from the last run in the repository
 
@@ -70,8 +69,6 @@ def slowest(repo_type='file', repo_url=None, show_all=False,
     Optionally, using the ``show_all`` argument, it will print all the tests,
     instead of just 10. sorted by time.
 
-    :param str repo_type: This is the type of repository to use. Valid choices
-        are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param bool show_all: Show timing for all tests.
     :param file stdout: The output file to write all output to. By default
@@ -82,7 +79,7 @@ def slowest(repo_type='file', repo_url=None, show_all=False,
     :rtype: int
     """
 
-    repo = util.get_repo_open(repo_type, repo_url)
+    repo = util.get_repo_open('file', repo_url)
     try:
         latest_id = repo.latest_id()
     except KeyError:

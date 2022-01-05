@@ -108,15 +108,14 @@ class Last(command.Command):
             color = args.color
             suppress_attachments = args.suppress_attachments
             all_attachments = args.all_attachments
-        return last(repo_type=self.app_args.repo_type,
-                    repo_url=self.app_args.repo_url,
+        return last(repo_url=self.app_args.repo_url,
                     subunit_out=args.subunit, pretty_out=pretty_out,
                     color=color, suppress_attachments=suppress_attachments,
                     all_attachments=all_attachments,
                     show_binary_attachments=args.show_binary_attachments)
 
 
-def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
+def last(repo_url=None, subunit_out=False, pretty_out=True,
          color=False, stdout=sys.stdout, suppress_attachments=False,
          all_attachments=False, show_binary_attachments=False):
     """Show the last run loaded into a a repository
@@ -125,12 +124,9 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
     to STDOUT. It can optionally print the subunit stream for the last run
     to STDOUT if the ``subunit`` option is set to true.
 
-    Note this function depends on the cwd for the repository if `repo_type` is
-    set to file and `repo_url` is not specified it will use the repository
-    located at CWD/.stestr
+    Note this function depends on the cwd for the repository if `repo_url` is
+    not specified it will use the repository located at CWD/.stestr
 
-    :param str repo_type: This is the type of repository to use. Valid choices
-        are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param bool subunit_out: Show output as a subunit stream.
     :param pretty_out: Use the subunit-trace output filter.
@@ -150,7 +146,7 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
     :rtype: int
     """
     try:
-        repo = util.get_repo_open(repo_type, repo_url)
+        repo = util.get_repo_open('file', repo_url)
     except abstract.RepositoryNotFound as e:
         stdout.write(str(e) + '\n')
         return 1
@@ -168,12 +164,7 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
         return 0
     case = latest_run.get_test()
     try:
-        if repo_type == 'file':
-            previous_run = repo.get_test_run(repo.latest_id() - 1)
-        # TODO(mtreinish): add a repository api to get the previous_run to
-        # unify this logic
-        else:
-            previous_run = None
+        previous_run = repo.get_test_run(repo.latest_id() - 1)
     except KeyError:
         previous_run = None
     failed = False

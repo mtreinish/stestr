@@ -606,29 +606,16 @@ from the repository. For example::
 Repositories
 ------------
 
-stestr uses a data repository to keep track of test previous test runs. There
-are different backend types that each offer different advantages. There are
-currently 2 repository types to choose from, **file** and **sql**.
-
-You can choose which repository type you want with the ``--repo-type``/``-r``
-cli flag. **file** is the current default.
+stestr uses a data repository to keep track of test previous test runs.
 
 You can also specify an alternative repository with the ``--repo-url``/``-u``
 cli flags. The default value for a **file** repository type is to use the
-directory: ``$CWD/.stestr``. For a **sql** repository type is to use a sqlite
-database located at: ``$CWD/.stestr.sqlite``.
+directory: ``$CWD/.stestr``.
 
 .. note:: Make sure you put these flags before the cli subcommand
 
-.. note:: Different repository types that use local storage will conflict with
-    each other in the same directory. If you initialize one repository type
-    and then try to use another in the same directory, it will not
-    work.
-
-File
-''''
-The default stestr repository type has a very simple disk structure. It
-contains the following files:
+The stestr repository has a very simple disk structure. It contains the
+following files:
 
 * format: This file identifies the precise layout of the repository, in case
   future changes are needed.
@@ -642,16 +629,11 @@ contains the following files:
 
 * #N - all the streams inserted in the repository are given a serial number.
 
-SQL
-'''
-This is an experimental repository backend, that is based on the `subunit2sql`_
-library.
+* times.dbm: A dbm database (using Python's
+  ```dbm.dumb`` <https://docs.python.org/3/library/dbm.html#module-dbm.dumb>`__
+  implementation) that stores the record of the last elapsed time for each test
+  executed.
 
-.. note:: The sql repository type requirements are not installed by default.
-    They are listed under the 'sql' setuptools extras. You can install them
-    with pip by running: ``pip install 'stestr[sql]'``
-
-.. warning:: The sql repository type is deprecated and will be removed in the
-   4.0.0 release.
-
-.. _subunit2sql:
+* meta.dbm: An dbm file that maps a run id (which will be the integer file
+  documented above) to an arbitrary string metadata field describing the run.
+  Right now this must be manually specified.

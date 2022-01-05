@@ -85,7 +85,6 @@ class List(command.Command):
         args = parsed_args
         filters = parsed_args.filters or None
         return list_command(config=self.app_args.config,
-                            repo_type=self.app_args.repo_type,
                             repo_url=self.app_args.repo_url,
                             group_regex=self.app_args.group_regex,
                             test_path=self.app_args.test_path,
@@ -99,7 +98,7 @@ class List(command.Command):
                             filters=filters)
 
 
-def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
+def list_command(config='.stestr.conf', repo_url=None,
                  test_path=None, top_dir=None, group_regex=None,
                  blacklist_file=None, exclude_list=None,
                  whitelist_file=None, include_list=None,
@@ -112,8 +111,6 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
     will be run.
 
     :param str config: The path to the stestr config file. Must be a string.
-    :param str repo_type: This is the type of repository to use. Valid choices
-        are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param str test_path: Set the test path to use for unittest discovery.
         If both this and the corresponding config file option are set, this
@@ -170,7 +167,7 @@ def list_command(config='.stestr.conf', repo_type='file', repo_url=None,
     else:
         conf = config_file.TestrConf(config)
     cmd = conf.get_run_command(
-        regexes=filters, repo_type=repo_type,
+        regexes=filters,
         repo_url=repo_url, group_regex=group_regex,
         blacklist_file=blacklist_file, exclude_list=exclude_list,
         whitelist_file=whitelist_file, include_list=include_list,

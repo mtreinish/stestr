@@ -131,8 +131,7 @@ class Load(command.Command):
             all_attachments = args.all_attachments
         verbose_level = self.app.options.verbose_level
         stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
-        load(repo_type=self.app_args.repo_type,
-             repo_url=self.app_args.repo_url,
+        load(repo_url=self.app_args.repo_url,
              partial=args.partial, subunit_out=args.subunit,
              force_init=force_init, streams=args.files,
              pretty_out=pretty_out, color=color,
@@ -143,7 +142,7 @@ class Load(command.Command):
 
 
 def load(force_init=False, in_streams=None,
-         partial=False, subunit_out=False, repo_type='file', repo_url=None,
+         partial=False, subunit_out=False, repo_url=None,
          run_id=None, streams=None, pretty_out=False, color=False,
          stdout=sys.stdout, abbreviate=False, suppress_attachments=False,
          serial=False, all_attachments=False, show_binary_attachments=False):
@@ -162,8 +161,6 @@ def load(force_init=False, in_streams=None,
         This option is deprecated and no longer does anything. It will be
         removed in the future.
     :param bool subunit_out: Output the subunit stream to stdout
-    :param str repo_type: This is the type of repository to use. Valid choices
-        are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param run_id: The optional run id to save the subunit stream to.
     :param list streams: A list of file paths to read for the input streams.
@@ -189,11 +186,11 @@ def load(force_init=False, in_streams=None,
                       'anymore')
 
     try:
-        repo = util.get_repo_open(repo_type, repo_url)
+        repo = util.get_repo_open('file', repo_url)
     except repository.RepositoryNotFound:
         if force_init:
             try:
-                repo = util.get_repo_initialise(repo_type, repo_url)
+                repo = util.get_repo_initialise('file', repo_url)
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise

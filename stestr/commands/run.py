@@ -254,7 +254,7 @@ class Run(command.Command):
             stdout.write(msg)
             return 2
         result = run_command(
-            config=self.app_args.config, repo_type=self.app_args.repo_type,
+            config=self.app_args.config,
             repo_url=self.app_args.repo_url,
             test_path=self.app_args.test_path, top_dir=self.app_args.top_dir,
             group_regex=self.app_args.group_regex, failing=args.failing,
@@ -280,8 +280,7 @@ class Run(command.Command):
         if getattr(user_conf, 'run', False):
             user_slowest = user_conf.run.get('slowest', False)
         if args.slowest or user_slowest:
-            slowest.slowest(repo_type=self.app_args.repo_type,
-                            repo_url=self.app_args.repo_url)
+            slowest.slowest(repo_url=self.app_args.repo_url)
 
         return result
 
@@ -304,7 +303,7 @@ def _find_failing(repo):
     return ids
 
 
-def run_command(config='.stestr.conf', repo_type='file',
+def run_command(config='.stestr.conf',
                 repo_url=None, test_path=None, top_dir=None, group_regex=None,
                 failing=False, serial=False, concurrency=0, load_list=None,
                 partial=False, subunit_out=False, until_failure=False,
@@ -324,8 +323,6 @@ def run_command(config='.stestr.conf', repo_type='file',
     printed to STDOUT and loaded into the repository.
 
     :param str config: The path to the stestr config file. Must be a string.
-    :param str repo_type: This is the type of repository to use. Valid choices
-        are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param str test_path: Set the test path to use for unittest discovery.
         If both this and the corresponding config file option are set, this
@@ -417,7 +414,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                       "exclude-regex which is functionally equivalent",
                       DeprecationWarning)
     try:
-        repo = util.get_repo_open(repo_type, repo_url)
+        repo = util.get_repo_open('file', repo_url)
     # If a repo is not found, and there a stestr config exists just create it
     except repository.RepositoryNotFound:
         if not os.path.isfile(config) and not test_path:
@@ -440,7 +437,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                 stdout.write(msg)
                 exit(1)
         try:
-            repo = util.get_repo_initialise(repo_type, repo_url)
+            repo = util.get_repo_initialise('file', repo_url)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
@@ -495,7 +492,6 @@ def run_command(config='.stestr.conf', repo_type='file',
                                  stdout=subprocess.PIPE)))]
             return load.load(in_streams=run_proc,
                              subunit_out=subunit_out,
-                             repo_type=repo_type,
                              repo_url=repo_url, run_id=combine_id,
                              pretty_out=pretty_out,
                              color=color, stdout=stdout, abbreviate=abbreviate,
@@ -541,7 +537,6 @@ def run_command(config='.stestr.conf', repo_type='file',
         run_proc = [('subunit', stream)]
         return load.load(in_streams=run_proc,
                          subunit_out=subunit_out,
-                         repo_type=repo_type,
                          repo_url=repo_url, run_id=combine_id,
                          pretty_out=pretty_out,
                          color=color, stdout=stdout, abbreviate=abbreviate,
@@ -574,7 +569,7 @@ def run_command(config='.stestr.conf', repo_type='file',
         conf = config_file.TestrConf(config)
     if not analyze_isolation:
         cmd = conf.get_run_command(
-            ids, regexes=filters, group_regex=group_regex, repo_type=repo_type,
+            ids, regexes=filters, group_regex=group_regex,
             repo_url=repo_url, serial=serial, worker_path=worker_path,
             concurrency=concurrency, blacklist_file=blacklist_file,
             exclude_list=exclude_list, whitelist_file=whitelist_file,
@@ -592,7 +587,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                 # TODO(mtreinish): add regex
                 cmd = conf.get_run_command(
                     [test_id], filters, group_regex=group_regex,
-                    repo_type=repo_type, repo_url=repo_url, serial=serial,
+                    repo_url=repo_url, serial=serial,
                     worker_path=worker_path, concurrency=concurrency,
                     blacklist_file=blacklist_file, exclude_list=exclude_list,
                     whitelist_file=whitelist_file, include_list=include_list,
@@ -602,7 +597,7 @@ def run_command(config='.stestr.conf', repo_type='file',
                 run_result = _run_tests(
                     cmd, until_failure,
                     subunit_out=subunit_out, combine_id=combine_id,
-                    repo_type=repo_type, repo_url=repo_url,
+                    repo_url=repo_url,
                     pretty_out=pretty_out, color=color, abbreviate=abbreviate,
                     stdout=stdout, suppress_attachments=suppress_attachments,
                     all_attachments=all_attachments,
@@ -614,7 +609,6 @@ def run_command(config='.stestr.conf', repo_type='file',
             return _run_tests(cmd, until_failure,
                               subunit_out=subunit_out,
                               combine_id=combine_id,
-                              repo_type=repo_type,
                               repo_url=repo_url,
                               pretty_out=pretty_out,
                               color=color,
@@ -632,7 +626,7 @@ def run_command(config='.stestr.conf', repo_type='file',
         for test_id in ids:
             # TODO(mtrienish): Add regex
             cmd = conf.get_run_command(
-                [test_id], group_regex=group_regex, repo_type=repo_type,
+                [test_id], group_regex=group_regex,
                 repo_url=repo_url, serial=serial, worker_path=worker_path,
                 concurrency=concurrency, blacklist_file=blacklist_file,
                 exclude_list=exclude_list, whitelist_file=whitelist_file,
@@ -658,14 +652,14 @@ def run_command(config='.stestr.conf', repo_type='file',
             return 0
         bisect_runner = bisect_tests.IsolationAnalyzer(
             latest_run, conf, _run_tests, repo, test_path=test_path,
-            top_dir=top_dir, group_regex=group_regex, repo_type=repo_type,
+            top_dir=top_dir, group_regex=group_regex,
             repo_url=repo_url, serial=serial, concurrency=concurrency)
         # spurious-failure -> cause.
         return bisect_runner.bisect_tests(spurious_failures)
 
 
 def _run_tests(cmd, until_failure,
-               subunit_out=False, combine_id=None, repo_type='file',
+               subunit_out=False, combine_id=None,
                repo_url=None, pretty_out=True, color=False, stdout=sys.stdout,
                abbreviate=False, suppress_attachments=False,
                all_attachments=False, show_binary_attachments=False):
@@ -681,7 +675,6 @@ def _run_tests(cmd, until_failure,
                 return 1
             return load.load((None, None), in_streams=run_procs,
                              subunit_out=subunit_out,
-                             repo_type=repo_type,
                              repo_url=repo_url, run_id=combine_id,
                              pretty_out=pretty_out, color=color, stdout=stdout,
                              abbreviate=abbreviate,
@@ -698,7 +691,7 @@ def _run_tests(cmd, until_failure,
                 # the result from the repository because load() returns 0
                 # always on subunit output
                 if subunit_out:
-                    repo = util.get_repo_open(repo_type, repo_url)
+                    repo = util.get_repo_open('file', repo_url)
                     summary = testtools.StreamSummary()
                     last_run = repo.get_latest_run().get_subunit_stream()
                     stream = subunit.ByteStreamToStreamResult(last_run)

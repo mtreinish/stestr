@@ -54,8 +54,7 @@ class Failing(command.Command):
             list_opt = args.list or user_conf.failing.get('list', False)
         else:
             list_opt = args.list
-        return failing(repo_type=self.app_args.repo_type,
-                       repo_url=self.app_args.repo_url,
+        return failing(repo_url=self.app_args.repo_url,
                        list_tests=list_opt, subunit=args.subunit)
 
 
@@ -82,7 +81,7 @@ def _make_result(repo, list_tests=False, stdout=sys.stdout):
         return output_result, summary_result
 
 
-def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False,
+def failing(repo_url=None, list_tests=False, subunit=False,
             stdout=sys.stdout):
     """Print the failing tests from the most recent run in the repository
 
@@ -91,12 +90,9 @@ def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False,
     tests if ``list_tests`` is true. If ``subunit`` is true a subunit stream
     with just the failed tests will be printed to STDOUT.
 
-    Note this function depends on the cwd for the repository if `repo_type` is
-    set to file and `repo_url` is not specified it will use the repository
-    located at CWD/.stestr
+    Note this function depends on the cwd for the repository if `repo_url` is
+    not specified it will use the repository located at CWD/.stestr
 
-    :param str repo_type: This is the type of repository to use. Valid choices
-        are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param bool list_test: Show only a list of failing tests.
     :param bool subunit: Show output as a subunit stream.
@@ -107,11 +103,7 @@ def failing(repo_type='file', repo_url=None, list_tests=False, subunit=False,
         for failures.
     :rtype: int
     """
-    if repo_type not in ['file', 'sql']:
-        stdout.write('Repository type %s is not a type' % repo_type)
-        return 1
-
-    repo = util.get_repo_open(repo_type, repo_url)
+    repo = util.get_repo_open('file', repo_url)
     run = repo.get_failing()
     if subunit:
         return _show_subunit(run)

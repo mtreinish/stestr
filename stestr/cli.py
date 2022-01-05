@@ -68,14 +68,14 @@ class StestrCLI(app.App):
                                  "command. If one isn't specified then "
                                  ".stestr.conf in the directory that a command"
                                  " is running from is used")
-        parser.add_argument('--repo-type', '-r', dest='repo_type',
-                            choices=['file', 'sql'], default='file',
-                            help="DEPRECATED: Select the repo backend to use")
         parser.add_argument('--repo-url', '-u', dest='repo_url',
                             default=None,
                             help="Set the repo url to use. An acceptable value"
                                  " for this depends on the repository type "
-                                 "used.")
+                                 "used. As of right now this is typically "
+                                 "just the path to the stestr repository "
+                                 "directory as the file repository type is "
+                                 "the only user facing type available.")
         parser.add_argument('--test-path', '-t', dest='test_path',
                             default=None,
                             help="Set the test path to use for unittest "
