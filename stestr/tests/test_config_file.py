@@ -60,12 +60,12 @@ class TestTestrConf(base.TestCase):
         # we specfied and with the correct python.
         mock_TestProcessorFixture.assert_called_once_with(
             None, command, "--list", "--load-list $IDFILE",
-            mock_get_repo_open.return_value, black_regex=None,
+            mock_get_repo_open.return_value,
             exclude_regex=None,
-            blacklist_file=None, exclude_list=None, concurrency=0,
+            exclude_list=None, concurrency=0,
             group_callback=expected_group_callback,
             test_filters=None, randomize=False, serial=False,
-            whitelist_file=None, include_list=None, worker_path=None)
+            include_list=None, worker_path=None)
 
     @mock.patch.object(config_file, 'sys')
     def _check_get_run_command_exception(self, mock_sys, platform='win32',
