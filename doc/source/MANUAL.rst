@@ -190,12 +190,6 @@ list file is used in conjunction with the normal filters then the regex filters
 passed in as an argument regex will be used for the initial test selection, and
 the exclusion regexes from the exclusion list file on top of that.
 
-.. note::
-    DEPRECATION WARNING:
-    Previously the option ``--blacklist-file``/``-b`` was available for this
-    functionality. While it is still available at this time, it is soon to be
-    replaced by the new (equivalent) option ``--exclude-list``/``-e``.
-
 The dual of the exclusion list file is the inclusion list file which will
 include any tests matching the regexes in the file. You can specify the path to
 the file with ``--include-list``/``-i``, for example::
@@ -209,12 +203,6 @@ The format for the file is more or less identical to the exclusion list file::
   .*regex2 # include those tests
 
 However, instead of excluding the matches it will include them.
-
-.. note::
-    DEPRECATION WARNING:
-    Previously the option ``--whitelist-file``/``-w`` was available for this
-    functionality. While it is still available at this time, it is soon to be
-    replaced by the new (equivalent) option ``--include-list``/``-i``.
 
 It's also worth noting that you can use the test list option to dry run any
 selection arguments you are using. You just need to use ``stestr list``
