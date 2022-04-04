@@ -70,12 +70,9 @@ class StestrCLI(app.App):
                                  " is running from is used")
         parser.add_argument('--repo-url', '-u', dest='repo_url',
                             default=None,
-                            help="Set the repo url to use. An acceptable value"
-                                 " for this depends on the repository type "
-                                 "used. As of right now this is typically "
-                                 "just the path to the stestr repository "
-                                 "directory as the file repository type is "
-                                 "the only user facing type available.")
+                            help="Set the repo url to use. This should just "
+                                 "be the path to the stestr repository "
+                                 "directory")
         parser.add_argument('--test-path', '-t', dest='test_path',
                             default=None,
                             help="Set the test path to use for unittest "

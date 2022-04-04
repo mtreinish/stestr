@@ -597,8 +597,7 @@ Repositories
 stestr uses a data repository to keep track of test previous test runs.
 
 You can also specify an alternative repository with the ``--repo-url``/``-u``
-cli flags. The default value for a **file** repository type is to use the
-directory: ``$CWD/.stestr``.
+cli flags. The default value is to use the directory: ``$CWD/.stestr``.
 
 .. note:: Make sure you put these flags before the cli subcommand
 
