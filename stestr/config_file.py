@@ -49,7 +49,7 @@ class TestrConf:
 
     def get_run_command(self, test_ids=None, regexes=None,
                         test_path=None, top_dir=None, group_regex=None,
-                        repo_type='file', repo_url=None,
+                        repo_url=None,
                         serial=False, worker_path=None,
                         concurrency=0,
                         exclude_list=None,
@@ -80,8 +80,6 @@ class TestrConf:
         :param str group_regex: Set a group regex to use for grouping tests
             together in the stestr scheduler. If both this and the
             corresponding config file option are set this value will be used.
-        :param str repo_type: This is the type of repository to use. Valid
-            choices are 'file' and 'sql'.
         :param str repo_url: The url of the repository to use.
         :param bool serial: If tests are run from the returned fixture, they
             will be run serially
@@ -166,7 +164,7 @@ class TestrConf:
         else:
             group_callback = None
         # Handle the results repository
-        repository = util.get_repo_open(repo_type, repo_url)
+        repository = util.get_repo_open('file', repo_url)
         return test_processor.TestProcessorFixture(
             test_ids, command, listopt, idoption, repository,
             test_filters=regexes, group_callback=group_callback, serial=serial,

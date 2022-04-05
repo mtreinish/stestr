@@ -20,7 +20,7 @@ from stestr import output
 class IsolationAnalyzer:
 
     def __init__(self, latest_run, conf, run_func, repo, test_path=None,
-                 top_dir=None, group_regex=None, repo_type='file',
+                 top_dir=None, group_regex=None,
                  repo_url=None, serial=False, concurrency=0):
         super().__init__()
         self._worker_to_test = None
@@ -28,7 +28,6 @@ class IsolationAnalyzer:
         self.latest_run = latest_run
         self.conf = conf
         self.group_regex = group_regex
-        self.repo_type = repo_type
         self.repo_url = repo_url
         self.serial = serial
         self.concurrency = concurrency
@@ -54,12 +53,11 @@ class IsolationAnalyzer:
                     bottom:bottom + check_width] + [spurious_failure]
                 cmd = self.conf.get_run_command(
                     test_ids, group_regex=self.group_regex,
-                    repo_type=self.repo_type, repo_url=self.repo_url,
+                    repo_url=self.repo_url,
                     serial=self.serial, concurrency=self.concurrency,
                     test_path=self.test_path, top_dir=self.top_dir)
                 self.run_func(cmd, False,
                               pretty_out=False,
-                              repo_type=self.repo_type,
                               repo_url=self.repo_url)
                 # check that the test we're probing still failed - still
                 # awkward.

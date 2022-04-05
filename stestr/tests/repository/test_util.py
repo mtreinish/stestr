@@ -30,12 +30,6 @@ class TestUtil(base.TestCase):
         self.temp_dir = os.getcwd()
         self.addCleanup(os.chdir, cwd)
 
-    def test_get_default_url_sql(self):
-        repo_url = util._get_default_repo_url('sql')
-        self.assertEqual('sqlite:///' + os.path.join(self.temp_dir,
-                                                     '.stestr.sqlite'),
-                         repo_url)
-
     def test_get_default_url_file(self):
         repo_url = util._get_default_repo_url('file')
         self.assertEqual(self.temp_dir, repo_url)
@@ -45,16 +39,8 @@ class TestUtil(base.TestCase):
                           'invalid_type')
 
     @mock.patch('importlib.import_module', side_effect=ImportError)
-    def test_sql_get_repo_init_no_deps(self, import_mock):
-        self.assertRaises(SystemExit, util.get_repo_initialise, 'sql')
-
-    @mock.patch('importlib.import_module', side_effect=ImportError)
     def test_non_sql_get_repo_init_no_deps_import_error(self, import_mock):
         self.assertRaises(ImportError, util.get_repo_initialise, 'file')
-
-    @mock.patch('importlib.import_module', side_effect=ImportError)
-    def test_sql_get_repo_open_no_deps(self, import_mock):
-        self.assertRaises(SystemExit, util.get_repo_open, 'sql')
 
     @mock.patch('importlib.import_module', side_effect=ImportError)
     def test_non_sql_get_repo_open_no_deps_import_error(self, import_mock):

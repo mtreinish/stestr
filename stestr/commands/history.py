@@ -46,8 +46,7 @@ class HistoryList(lister.Lister):
             if user_conf.history_show.get('show-metadata',
                                           None) is not None:
                 show_metadata = args.show_metadata
-        return history_list(repo_type=self.app_args.repo_type,
-                            repo_url=self.app_args.repo_url,
+        return history_list(repo_url=self.app_args.repo_url,
                             show_metadata=show_metadata)
 
 
@@ -138,7 +137,6 @@ class HistoryShow(command.Command):
             all_attachments = args.all_attachments
         return history_show(
             args.run_id,
-            repo_type=self.app_args.repo_type,
             repo_url=self.app_args.repo_url,
             subunit_out=args.subunit,
             pretty_out=pretty_out, color=color,
@@ -161,7 +159,7 @@ class HistoryRemove(command.Command):
 
     def take_action(self, parsed_args):
         args = parsed_args
-        history_remove(args.run_id, repo_type=self.app_args.repo_type,
+        history_remove(args.run_id,
                        repo_url=self.app_args.repo_url)
 
 
@@ -206,16 +204,13 @@ def _get_run_details(stream_file, stdout):
     return {'passed': successful, 'runtime': run_time, 'start': start_time}
 
 
-def history_list(repo_type='file', repo_url=None, show_metadata=False,
+def history_list(repo_url=None, show_metadata=False,
                  stdout=sys.stdout):
     """Show a list of runs in a repository
 
-    Note this function depends on the cwd for the repository if `repo_type` is
-    set to file and `repo_url` is not specified it will use the repository
-    located at CWD/.stestr
+    Note this function depends on the cwd for the repository if `repo_url` is
+    not specified it will use the repository located at CWD/.stestr
 
-    :param str repo_type: This is the type of repository to use. Valid choices
-        are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param bool show_metadata: If set to ``True`` a column with any metadata
         for a run will be included in the output.
@@ -233,7 +228,7 @@ def history_list(repo_type='file', repo_url=None, show_metadata=False,
     else:
         field_names = ('Run ID', 'Passed', 'Runtime', 'Date')
     try:
-        repo = util.get_repo_open(repo_type, repo_url)
+        repo = util.get_repo_open('file', repo_url)
     except abstract.RepositoryNotFound as e:
         stdout.write(str(e) + '\n')
         return 1
@@ -257,7 +252,7 @@ def history_list(repo_type='file', repo_url=None, show_metadata=False,
     return (field_names, rows)
 
 
-def history_show(run_id, repo_type='file', repo_url=None, subunit_out=False,
+def history_show(run_id, repo_url=None, subunit_out=False,
                  pretty_out=True, color=False, stdout=sys.stdout,
                  suppress_attachments=False, all_attachments=False,
                  show_binary_attachments=False):
@@ -267,13 +262,10 @@ def history_show(run_id, repo_type='file', repo_url=None, subunit_out=False,
     to STDOUT. It can optionally print the subunit stream for the last run
     to STDOUT if the ``subunit`` option is set to true.
 
-    Note this function depends on the cwd for the repository if `repo_type` is
-    set to file and `repo_url` is not specified it will use the repository
-    located at CWD/.stestr
+    Note this function depends on the cwd for the repository if `repo_url` is
+    not specified it will use the repository located at CWD/.stestr
 
     :param str run_id: The run id to show
-    :param str repo_type: This is the type of repository to use. Valid choices
-        are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param bool subunit_out: Show output as a subunit stream.
     :param pretty_out: Use the subunit-trace output filter.
@@ -293,7 +285,7 @@ def history_show(run_id, repo_type='file', repo_url=None, subunit_out=False,
     :rtype: int
     """
     try:
-        repo = util.get_repo_open(repo_type, repo_url)
+        repo = util.get_repo_open('file', repo_url)
     except abstract.RepositoryNotFound as e:
         stdout.write(str(e) + '\n')
         return 1
@@ -313,15 +305,10 @@ def history_show(run_id, repo_type='file', repo_url=None, subunit_out=False,
         return 0
     case = run.get_test()
     try:
-        if repo_type == 'file':
-            if run_id:
-                previous_run = int(run_id) - 1
-            else:
-                previous_run = repo.get_test_run(repo.latest_id() - 1)
-        # TODO(mtreinish): add a repository api to get the previous_run to
-        # unify this logic
+        if run_id:
+            previous_run = int(run_id) - 1
         else:
-            previous_run = None
+            previous_run = repo.get_test_run(repo.latest_id() - 1)
     except KeyError:
         previous_run = None
     failed = False
@@ -348,17 +335,14 @@ def history_show(run_id, repo_type='file', repo_url=None, subunit_out=False,
         return 0
 
 
-def history_remove(run_id, repo_type='file', repo_url=None, stdout=sys.stdout):
+def history_remove(run_id, repo_url=None, stdout=sys.stdout):
     """Remove a run from a repository
 
-    Note this function depends on the cwd for the repository if `repo_type` is
-    set to file and `repo_url` is not specified it will use the repository
-    located at CWD/.stestr
+    Note this function depends on the cwd for the repository if `repo_url` is
+    not specified it will use the repository located at CWD/.stestr
 
     :param str run_id: The run id to remove from the repository. Also, can be
         set to ``all`` which will remove all runs from the repository.
-    :param str repo_type: This is the type of repository to use. Valid choices
-        are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param file stdout: The output file to write all output to. By default
          this is sys.stdout
@@ -368,7 +352,7 @@ def history_remove(run_id, repo_type='file', repo_url=None, stdout=sys.stdout):
     :rtype: int
     """
     try:
-        repo = util.get_repo_open(repo_type, repo_url)
+        repo = util.get_repo_open('file', repo_url)
     except abstract.RepositoryNotFound as e:
         stdout.write(str(e) + '\n')
         return 1
