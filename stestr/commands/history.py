@@ -228,7 +228,7 @@ def history_list(repo_url=None, show_metadata=False,
     else:
         field_names = ('Run ID', 'Passed', 'Runtime', 'Date')
     try:
-        repo = util.get_repo_open('file', repo_url)
+        repo = util.get_repo_open(repo_url)
     except abstract.RepositoryNotFound as e:
         stdout.write(str(e) + '\n')
         return 1
@@ -285,7 +285,7 @@ def history_show(run_id, repo_url=None, subunit_out=False,
     :rtype: int
     """
     try:
-        repo = util.get_repo_open('file', repo_url)
+        repo = util.get_repo_open(repo_url)
     except abstract.RepositoryNotFound as e:
         stdout.write(str(e) + '\n')
         return 1
@@ -352,7 +352,7 @@ def history_remove(run_id, repo_url=None, stdout=sys.stdout):
     :rtype: int
     """
     try:
-        repo = util.get_repo_open('file', repo_url)
+        repo = util.get_repo_open(repo_url)
     except abstract.RepositoryNotFound as e:
         stdout.write(str(e) + '\n')
         return 1

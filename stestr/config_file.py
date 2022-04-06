@@ -164,7 +164,7 @@ class TestrConf:
         else:
             group_callback = None
         # Handle the results repository
-        repository = util.get_repo_open('file', repo_url)
+        repository = util.get_repo_open(repo_url)
         return test_processor.TestProcessorFixture(
             test_ids, command, listopt, idoption, repository,
             test_filters=regexes, group_callback=group_callback, serial=serial,

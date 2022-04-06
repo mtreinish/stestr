@@ -103,7 +103,7 @@ def failing(repo_url=None, list_tests=False, subunit=False,
         for failures.
     :rtype: int
     """
-    repo = util.get_repo_open('file', repo_url)
+    repo = util.get_repo_open(repo_url)
     run = repo.get_failing()
     if subunit:
         return _show_subunit(run)

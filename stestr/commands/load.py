@@ -173,11 +173,11 @@ def load(force_init=False, in_streams=None,
     :rtype: int
     """
     try:
-        repo = util.get_repo_open('file', repo_url)
+        repo = util.get_repo_open(repo_url)
     except repository.RepositoryNotFound:
         if force_init:
             try:
-                repo = util.get_repo_initialise('file', repo_url)
+                repo = util.get_repo_initialise(repo_url)
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
