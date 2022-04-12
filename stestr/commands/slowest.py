@@ -79,7 +79,7 @@ def slowest(repo_url=None, show_all=False,
     :rtype: int
     """
 
-    repo = util.get_repo_open(repo_url)
+    repo = util.get_repo_open(repo_url=repo_url)
     try:
         latest_id = repo.latest_id()
     except KeyError:

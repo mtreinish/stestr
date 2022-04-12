@@ -146,7 +146,7 @@ def last(repo_url=None, subunit_out=False, pretty_out=True,
     :rtype: int
     """
     try:
-        repo = util.get_repo_open(repo_url)
+        repo = util.get_repo_open(repo_url=repo_url)
     except abstract.RepositoryNotFound as e:
         stdout.write(str(e) + '\n')
         return 1

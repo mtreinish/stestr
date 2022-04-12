@@ -12,7 +12,6 @@
 
 import importlib
 import os
-import sys
 import warnings
 
 
@@ -33,6 +32,8 @@ def get_repo_open(repo_type=None, repo_url=None):
         default $CWD/.stestr will be used.
     """
     if repo_type is not None:
+        msg = ("WARNING: Specifying repository type is deprecated and will be "
+               "removed in future release.\n")
         warnings.warn(msg, DeprecationWarning, stacklevel=3)
     else:
         repo_type = 'file'
@@ -51,6 +52,8 @@ def get_repo_initialise(repo_type=None, repo_url=None):
         default $CWD/.stestr will be used.
     """
     if repo_type is not None:
+        msg = ("WARNING: Specifying repository type is deprecated and will be "
+               "removed in future release.\n")
         warnings.warn(msg, DeprecationWarning, stacklevel=3)
     else:
         repo_type = 'file'

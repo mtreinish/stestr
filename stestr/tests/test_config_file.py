@@ -51,7 +51,7 @@ class TestTestrConf(base.TestCase):
                                                  parallel_class=parallel_class)
 
         self.assertEqual(mock_TestProcessorFixture.return_value, fixture)
-        mock_get_repo_open.assert_called_once_with(None)
+        mock_get_repo_open.assert_called_once_with(repo_url=None)
         command = '"%s" -m stestr.subunit_runner.run discover -t "%s" "%s" ' \
                   '$LISTOPT $IDOPTION' % (expected_python, 'fake_top_dir',
                                           'fake_test_path')

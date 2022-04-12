@@ -357,7 +357,7 @@ def run_command(config='.stestr.conf',
     :rtype: int
     """
     try:
-        repo = util.get_repo_open(repo_url)
+        repo = util.get_repo_open(repo_url=repo_url)
     # If a repo is not found, and there a stestr config exists just create it
     except repository.RepositoryNotFound:
         if not os.path.isfile(config) and not test_path:
@@ -380,7 +380,7 @@ def run_command(config='.stestr.conf',
                 stdout.write(msg)
                 exit(1)
         try:
-            repo = util.get_repo_initialise(repo_url)
+            repo = util.get_repo_initialise(repo_url=repo_url)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
@@ -634,7 +634,7 @@ def _run_tests(cmd, until_failure,
                 # the result from the repository because load() returns 0
                 # always on subunit output
                 if subunit_out:
-                    repo = util.get_repo_open(repo_url)
+                    repo = util.get_repo_open(repo_url=repo_url)
                     summary = testtools.StreamSummary()
                     last_run = repo.get_latest_run().get_subunit_stream()
                     stream = subunit.ByteStreamToStreamResult(last_run)

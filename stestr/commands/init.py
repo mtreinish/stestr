@@ -43,7 +43,7 @@ def init(repo_url=None, stdout=sys.stdout):
     :rtype: int
     """
     try:
-        util.get_repo_initialise(repo_url)
+        util.get_repo_initialise(repo_url=repo_url)
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
