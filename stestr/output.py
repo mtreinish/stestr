@@ -171,6 +171,9 @@ class ReturnCodeToSubunit:
         self.source = self.proc.stdout
         self.lastoutput = bytes((b'\n')[0])
 
+    def __del__(self):
+        self.proc.wait()
+
     def _append_return_code_as_test(self):
         if self.done is True:
             return
