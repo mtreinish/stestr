@@ -153,6 +153,6 @@ Community
 
 Besides Github interactions there is also a stestr IRC channel:
 
-#stestr on Freenode
+#stestr on `OFTC <https://oftc.net/>`__
 
 feel free to join to ask questions, or just discuss stestr.
