@@ -15,47 +15,6 @@ import io
 from stestr import output
 
 
-class CallWhenProcFinishes:
-    """Convert a process object to trigger a callback when returncode is set.
-
-    This just wraps the entire object and when the returncode attribute access
-    finds a set value, calls the callback.
-    """
-
-    def __init__(self, process, callback):
-        """Adapt process
-
-        :param process: A subprocess.Popen object.
-        :param callback: The process to call when the process completes.
-        """
-        self._proc = process
-        self._callback = callback
-        self._done = False
-
-    @property
-    def stdin(self):
-        return self._proc.stdin
-
-    @property
-    def stdout(self):
-        return self._proc.stdout
-
-    @property
-    def stderr(self):
-        return self._proc.stderr
-
-    @property
-    def returncode(self):
-        result = self._proc.returncode
-        if not self._done and result is not None:
-            self._done = True
-            self._callback()
-        return result
-
-    def wait(self):
-        return self._proc.wait()
-
-
 def _iter_internal_streams(input_streams, stream_type):
     streams = []
     for in_stream in input_streams:
