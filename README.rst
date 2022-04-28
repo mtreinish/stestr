@@ -5,8 +5,8 @@ stestr
     :target: https://github.com/mtreinish/stestr/actions/workflows/main.yml
     :alt: CI Testing status
 
-.. image:: https://img.shields.io/coveralls/github/mtreinish/stestr/main.svg?style=flat-square
-    :target: https://coveralls.io/github/mtreinish/stestr?branch=main
+.. image:: https://img.shields.io/codecov/c/gh/mtreinish/stestr?style=flat-square
+    :target: https://codecov.io/gh/mtreinish/stestr
     :alt: Code coverage
 
 .. image:: https://img.shields.io/pypi/v/stestr.svg?style=flat-square
