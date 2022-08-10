@@ -276,6 +276,21 @@ def _find_failing(repo):
     return ids
 
 
+def _load_list_and_filter(list_filename, filter_ids):
+    """Load list of IDs and optionally filter them by a list of ids."""
+    list_ids = []
+    set_ids = set()
+    # Should perhaps be text.. currently does its own decode.
+    with open(list_filename, 'rb') as list_file:
+        # Remove duplicates and filter out non failing tests when required
+        for test_id in parse_list(list_file.read()):
+            if test_id not in set_ids and (filter_ids is None or
+                                           test_id in filter_ids):
+                list_ids.append(test_id)
+                set_ids.add(test_id)
+    return list_ids
+
+
 def run_command(config='.stestr.conf',
                 repo_url=None, test_path=None, top_dir=None, group_regex=None,
                 failing=False, serial=False, concurrency=0, load_list=None,
@@ -492,17 +507,7 @@ def run_command(config='.stestr.conf',
     else:
         ids = None
     if load_list:
-        list_ids = set()
-        # Should perhaps be text.. currently does its own decode.
-        with open(load_list, 'rb') as list_file:
-            list_ids = set(parse_list(list_file.read()))
-        if ids is None:
-            # Use the supplied list verbatim
-            ids = list_ids
-        else:
-            # We have some already limited set of ids, just reduce to ids
-            # that are both failing and listed.
-            ids = list_ids.intersection(ids)
+        ids = _load_list_and_filter(load_list, ids)
 
     if config and os.path.isfile(config):
         conf = config_file.TestrConf(config)
