@@ -22,7 +22,7 @@ import extras
 
 
 def filter_by_ids(suite_or_case, test_ids):
-    """Remove tests from suite_or_case where their id is not in test_ids.
+    """Return a test suite with the intersection of suite_or_case and test_ids.
 
     :param suite_or_case: A test suite or test case.
     :param test_ids: Something that supports the __contains__ protocol.
@@ -58,23 +58,31 @@ def filter_by_ids(suite_or_case, test_ids):
     thus the backwards-compatible code paths attempt to mutate in place rather
     than guessing how to reconstruct a new suite.
     """
-    # Compatible objects
-    if extras.safe_hasattr(suite_or_case, 'filter_by_ids'):
-        return suite_or_case.filter_by_ids(test_ids)
-    # TestCase objects.
-    if extras.safe_hasattr(suite_or_case, 'id'):
-        if suite_or_case.id() in test_ids:
-            return suite_or_case
-        else:
-            return unittest.TestSuite()
-    # Standard TestSuites or derived classes [assumed to be mutable].
-    if isinstance(suite_or_case, unittest.TestSuite):
-        filtered = []
-        for item in suite_or_case:
-            filtered.append(filter_by_ids(item, test_ids))
-        suite_or_case._tests[:] = filtered
-    # Everything else:
-    return suite_or_case
+    def _filter_tests(to_filter, id_map):
+        # Compatible objects
+        if extras.safe_hasattr(to_filter, 'filter_by_ids'):
+            res = to_filter.filter_by_ids(test_ids)
+            _filter_tests(res, id_map)
+        # TestCase objects.
+        elif extras.safe_hasattr(to_filter, 'id'):
+            test_id = to_filter.id()
+            if test_id in test_ids:
+                id_map[test_id] = to_filter
+        # Standard TestSuites or derived classes.
+        elif isinstance(to_filter, unittest.TestSuite):
+            for item in to_filter:
+                _filter_tests(item, id_map)
+
+    id_map = {}
+    _filter_tests(suite_or_case, id_map)
+
+    result = unittest.TestSuite()
+    for test_id in test_ids:
+        if test_id in id_map:
+            # Use pop to avoid duplicates
+            result.addTest(id_map.pop(test_id))
+
+    return result
 
 
 def iterate_tests(test_suite_or_case):
@@ -178,8 +186,9 @@ class TestProgram(unittest.TestProgram):
                 lines = source.readlines()
             finally:
                 source.close()
-            test_ids = {line.strip().decode('utf-8') for line in lines}
+            test_ids = [line.strip().decode('utf-8') for line in lines]
             self.test = filter_by_ids(self.test, test_ids)
+
         # XXX: Local edit (see http://bugs.python.org/issue22860)
         if not self.listtests:
             self.runTests()

@@ -11,6 +11,7 @@
 # under the License.
 
 import contextlib
+import random
 import re
 import sys
 
@@ -89,7 +90,7 @@ def _get_regex_from_include_list(file_path):
 
 
 def construct_list(test_ids, regexes=None, exclude_list=None,
-                   include_list=None, exclude_regex=None):
+                   include_list=None, exclude_regex=None, randomize=False):
     """Filters the discovered test cases
 
     :param list test_ids: The set of test_ids to be filtered
@@ -100,10 +101,11 @@ def construct_list(test_ids, regexes=None, exclude_list=None,
     :param str exclude_list: The path to an exclusion_list file
     :param str include_list: The path to an inclusion_list file
     :param str exclude_regex: regex pattern to exclude tests
+    :param str randomize: Randomize the result
 
     :return: iterable of strings. The strings are full
         test_ids
-    :rtype: set
+    :rtype: list
     """
 
     if not regexes:
@@ -137,20 +139,16 @@ def construct_list(test_ids, regexes=None, exclude_list=None,
             exclude_data = [record]
 
     list_of_test_cases = filter_tests(regexes, test_ids)
-    set_of_test_cases = set(list_of_test_cases)
 
-    if not exclude_data:
-        return set_of_test_cases
+    if exclude_data:
+        # NOTE(afazekas): We might use a faster logic when the
+        # print option is not requested
+        for (rex, msg, s_list) in exclude_data:
+            # NOTE(mtreinish): In the case of overlapping regex the test case
+            # might have already been removed from the set of tests
+            list_of_test_cases = [tc for tc in list_of_test_cases
+                                  if not rex.search(tc)]
+    if randomize:
+        random.shuffle(list_of_test_cases)
 
-    # NOTE(afazekas): We might use a faster logic when the
-    # print option is not requested
-    for (rex, msg, s_list) in exclude_data:
-        for test_case in list_of_test_cases:
-            if rex.search(test_case):
-                # NOTE(mtreinish): In the case of overlapping regex the test
-                # case might have already been removed from the set of tests
-                if test_case in set_of_test_cases:
-                    set_of_test_cases.remove(test_case)
-                    s_list.append(test_case)
-
-    return set_of_test_cases
+    return list_of_test_cases
