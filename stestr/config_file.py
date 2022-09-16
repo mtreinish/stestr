@@ -31,31 +31,39 @@ class TestrConf:
         this is DEFATULT.
     """
 
-    _escape_trailing_backslash_re = re.compile(r'(?<=[^\\])\\$')
+    _escape_trailing_backslash_re = re.compile(r"(?<=[^\\])\\$")
 
-    def __init__(self, config_file, section='DEFAULT'):
+    def __init__(self, config_file, section="DEFAULT"):
         self.parser = configparser.ConfigParser()
         self.parser.read(config_file)
         self.config_file = config_file
         self.section = section
 
     def _sanitize_path(self, path):
-        if os.sep == '\\':
+        if os.sep == "\\":
             # Trailing backslashes have to be escaped. Othwerise, the
             # command we're issuing will be incorrectly interpreted on
             # Windows.
-            path = self._escape_trailing_backslash_re.sub(r'\\\\', path)
+            path = self._escape_trailing_backslash_re.sub(r"\\\\", path)
         return path
 
-    def get_run_command(self, test_ids=None, regexes=None,
-                        test_path=None, top_dir=None, group_regex=None,
-                        repo_url=None,
-                        serial=False, worker_path=None,
-                        concurrency=0,
-                        exclude_list=None,
-                        include_list=None,
-                        exclude_regex=None,
-                        randomize=False, parallel_class=None):
+    def get_run_command(
+        self,
+        test_ids=None,
+        regexes=None,
+        test_path=None,
+        top_dir=None,
+        group_regex=None,
+        repo_url=None,
+        serial=False,
+        worker_path=None,
+        concurrency=0,
+        exclude_list=None,
+        include_list=None,
+        exclude_regex=None,
+        randomize=False,
+        parallel_class=None,
+    ):
         """Get a test_processor.TestProcessorFixture for this config file
 
         Any parameters about running tests will be used for initialize the
@@ -106,69 +114,86 @@ class TestrConf:
         :rtype: test_processor.TestProcessorFixture
         """
 
-        if not test_path and self.parser.has_option(self.section, 'test_path'):
-            test_path = self.parser.get(self.section, 'test_path')
+        if not test_path and self.parser.has_option(self.section, "test_path"):
+            test_path = self.parser.get(self.section, "test_path")
         elif not test_path:
-            sys.exit("No test_path can be found in either the command line "
-                     "options nor in the specified config file {}.  Please "
-                     "specify a test path either in the config file or via "
-                     "the --test-path argument".format(self.config_file))
-        if not top_dir and self.parser.has_option(self.section, 'top_dir'):
-            top_dir = self.parser.get(self.section, 'top_dir')
+            sys.exit(
+                "No test_path can be found in either the command line "
+                "options nor in the specified config file {}.  Please "
+                "specify a test path either in the config file or via "
+                "the --test-path argument".format(self.config_file)
+            )
+        if not top_dir and self.parser.has_option(self.section, "top_dir"):
+            top_dir = self.parser.get(self.section, "top_dir")
         elif not top_dir:
-            top_dir = './'
+            top_dir = "./"
 
         test_path = self._sanitize_path(test_path)
         top_dir = self._sanitize_path(top_dir)
 
         stestr_python = sys.executable
         # let's try to be explicit, even if it means a longer set of ifs
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             # it may happen, albeit rarely
             if not stestr_python:
                 raise RuntimeError("The Python interpreter was not found")
             python = stestr_python
         else:
-            if os.environ.get('PYTHON'):
-                python = '${PYTHON}'
+            if os.environ.get("PYTHON"):
+                python = "${PYTHON}"
             elif stestr_python:
                 python = stestr_python
             else:
-                raise RuntimeError("The Python interpreter was not found and "
-                                   "PYTHON is not set")
+                raise RuntimeError(
+                    "The Python interpreter was not found and " "PYTHON is not set"
+                )
 
         # The python binary path may contain whitespaces.
         if os.path.exists('"%s"' % python):
             python = '"%s"' % python
 
-        command = '%s -m stestr.subunit_runner.run discover -t "%s" "%s" ' \
-                  '$LISTOPT $IDOPTION' % (python, top_dir, test_path)
+        command = (
+            '%s -m stestr.subunit_runner.run discover -t "%s" "%s" '
+            "$LISTOPT $IDOPTION" % (python, top_dir, test_path)
+        )
         listopt = "--list"
         idoption = "--load-list $IDFILE"
         # If the command contains $IDOPTION read that command from config
         # Use a group regex if one is defined
         if parallel_class:
-            group_regex = r'([^\.]*\.)*'
-        if not group_regex \
-                and self.parser.has_option(self.section, 'parallel_class') \
-                and self.parser.getboolean(self.section, 'parallel_class'):
-            group_regex = r'([^\.]*\.)*'
-        if not group_regex and self.parser.has_option(self.section,
-                                                      'group_regex'):
-            group_regex = self.parser.get(self.section, 'group_regex')
+            group_regex = r"([^\.]*\.)*"
+        if (
+            not group_regex
+            and self.parser.has_option(self.section, "parallel_class")
+            and self.parser.getboolean(self.section, "parallel_class")
+        ):
+            group_regex = r"([^\.]*\.)*"
+        if not group_regex and self.parser.has_option(self.section, "group_regex"):
+            group_regex = self.parser.get(self.section, "group_regex")
         if group_regex:
+
             def group_callback(test_id, regex=re.compile(group_regex)):
                 match = regex.match(test_id)
                 if match:
                     return match.group(0)
+
         else:
             group_callback = None
         # Handle the results repository
         repository = util.get_repo_open(repo_url=repo_url)
         return test_processor.TestProcessorFixture(
-            test_ids, command, listopt, idoption, repository,
-            test_filters=regexes, group_callback=group_callback, serial=serial,
-            worker_path=worker_path, concurrency=concurrency,
+            test_ids,
+            command,
+            listopt,
+            idoption,
+            repository,
+            test_filters=regexes,
+            group_callback=group_callback,
+            serial=serial,
+            worker_path=worker_path,
+            concurrency=concurrency,
             exclude_list=exclude_list,
             exclude_regex=exclude_regex,
-            include_list=include_list, randomize=randomize)
+            include_list=include_list,
+            randomize=randomize,
+        )

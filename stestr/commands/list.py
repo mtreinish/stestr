@@ -31,52 +31,76 @@ class List(command.Command):
 
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
-        parser.add_argument("filters", nargs="*", default=None,
-                            help="A list of string regex filters to initially "
-                            "apply on the test list. Tests that match any of "
-                            "the regexes will be used. (assuming any other "
-                            "filtering specified also uses it)")
-        parser.add_argument('--exclude-list', '-e',
-                            default=None, dest='exclude_list',
-                            help='Path to an exclusion list file, this file '
-                                 'contains a separate regex exclude on each '
-                                 'newline')
-        parser.add_argument('--include-list', '-i',
-                            default=None, dest='include_list',
-                            help='Path to an inclusion list file, this file '
-                                 'contains a separate regex on each newline.')
-        parser.add_argument('--exclude-regex', '-E',
-                            default=None, dest='exclude_regex',
-                            help='Test rejection regex. If a test cases name '
-                            'matches on re.search() operation , '
-                            'it will be removed from the final test list. '
-                            'Effectively the exclusion-regexp is added to '
-                            'exclusion regexp list, but you do need to edit a '
-                            'file. The exclusion filtering happens after the '
-                            'initial safe list selection, which by default is '
-                            'everything.')
+        parser.add_argument(
+            "filters",
+            nargs="*",
+            default=None,
+            help="A list of string regex filters to initially "
+            "apply on the test list. Tests that match any of "
+            "the regexes will be used. (assuming any other "
+            "filtering specified also uses it)",
+        )
+        parser.add_argument(
+            "--exclude-list",
+            "-e",
+            default=None,
+            dest="exclude_list",
+            help="Path to an exclusion list file, this file "
+            "contains a separate regex exclude on each "
+            "newline",
+        )
+        parser.add_argument(
+            "--include-list",
+            "-i",
+            default=None,
+            dest="include_list",
+            help="Path to an inclusion list file, this file "
+            "contains a separate regex on each newline.",
+        )
+        parser.add_argument(
+            "--exclude-regex",
+            "-E",
+            default=None,
+            dest="exclude_regex",
+            help="Test rejection regex. If a test cases name "
+            "matches on re.search() operation , "
+            "it will be removed from the final test list. "
+            "Effectively the exclusion-regexp is added to "
+            "exclusion regexp list, but you do need to edit a "
+            "file. The exclusion filtering happens after the "
+            "initial safe list selection, which by default is "
+            "everything.",
+        )
         return parser
 
     def take_action(self, parsed_args):
         args = parsed_args
         filters = parsed_args.filters or None
-        return list_command(config=self.app_args.config,
-                            repo_url=self.app_args.repo_url,
-                            group_regex=self.app_args.group_regex,
-                            test_path=self.app_args.test_path,
-                            top_dir=self.app_args.top_dir,
-                            exclude_list=args.exclude_list,
-                            include_list=args.include_list,
-                            exclude_regex=args.exclude_regex,
-                            filters=filters)
+        return list_command(
+            config=self.app_args.config,
+            repo_url=self.app_args.repo_url,
+            group_regex=self.app_args.group_regex,
+            test_path=self.app_args.test_path,
+            top_dir=self.app_args.top_dir,
+            exclude_list=args.exclude_list,
+            include_list=args.include_list,
+            exclude_regex=args.exclude_regex,
+            filters=filters,
+        )
 
 
-def list_command(config='.stestr.conf', repo_url=None,
-                 test_path=None, top_dir=None, group_regex=None,
-                 exclude_list=None,
-                 include_list=None,
-                 exclude_regex=None, filters=None,
-                 stdout=sys.stdout):
+def list_command(
+    config=".stestr.conf",
+    repo_url=None,
+    test_path=None,
+    top_dir=None,
+    group_regex=None,
+    exclude_list=None,
+    include_list=None,
+    exclude_regex=None,
+    filters=None,
+    stdout=sys.stdout,
+):
     """Print a list of test_ids for a project
 
     This function will print the test_ids for tests in a project. You can
@@ -111,20 +135,26 @@ def list_command(config='.stestr.conf', repo_url=None,
     ids = None
     if config and os.path.isfile(config):
         conf = config_file.TestrConf(config)
-    elif os.path.isfile('tox.ini'):
-        conf = config_file.TestrConf('tox.ini', section='stestr')
+    elif os.path.isfile("tox.ini"):
+        conf = config_file.TestrConf("tox.ini", section="stestr")
     else:
         conf = config_file.TestrConf(config)
     cmd = conf.get_run_command(
         regexes=filters,
-        repo_url=repo_url, group_regex=group_regex,
+        repo_url=repo_url,
+        group_regex=group_regex,
         exclude_list=exclude_list,
         include_list=include_list,
         exclude_regex=exclude_regex,
-        test_path=test_path, top_dir=top_dir)
-    not_filtered = filters is None\
-        and include_list is None and exclude_list is None\
+        test_path=test_path,
+        top_dir=top_dir,
+    )
+    not_filtered = (
+        filters is None
+        and include_list is None
+        and exclude_list is None
         and exclude_regex is None
+    )
     try:
         cmd.setUp()
         # List tests if the fixture has not already needed to to filter.
@@ -134,7 +164,7 @@ def list_command(config='.stestr.conf', repo_url=None,
             ids = cmd.test_ids
         stream = BytesIO()
         for id in ids:
-            stream.write(('%s\n' % id).encode('utf8'))
+            stream.write(("%s\n" % id).encode("utf8"))
         stream.seek(0)
         output.output_stream(stream, output=stdout)
         return 0

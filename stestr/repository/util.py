@@ -16,10 +16,10 @@ import warnings
 
 
 def _get_default_repo_url(repo_type):
-    if repo_type == 'file':
+    if repo_type == "file":
         repo_url = os.getcwd()
     else:
-        raise TypeError('Unrecognized repository type %s' % repo_type)
+        raise TypeError("Unrecognized repository type %s" % repo_type)
     return repo_url
 
 
@@ -32,12 +32,14 @@ def get_repo_open(repo_type=None, repo_url=None):
         default $CWD/.stestr will be used.
     """
     if repo_type is not None:
-        msg = ("WARNING: Specifying repository type is deprecated and will be "
-               "removed in future release.\n")
+        msg = (
+            "WARNING: Specifying repository type is deprecated and will be "
+            "removed in future release.\n"
+        )
         warnings.warn(msg, DeprecationWarning, stacklevel=3)
     else:
-        repo_type = 'file'
-    repo_module = importlib.import_module('stestr.repository.' + repo_type)
+        repo_type = "file"
+    repo_module = importlib.import_module("stestr.repository." + repo_type)
     if not repo_url:
         repo_url = _get_default_repo_url(repo_type)
     return repo_module.RepositoryFactory().open(repo_url)
@@ -52,12 +54,14 @@ def get_repo_initialise(repo_type=None, repo_url=None):
         default $CWD/.stestr will be used.
     """
     if repo_type is not None:
-        msg = ("WARNING: Specifying repository type is deprecated and will be "
-               "removed in future release.\n")
+        msg = (
+            "WARNING: Specifying repository type is deprecated and will be "
+            "removed in future release.\n"
+        )
         warnings.warn(msg, DeprecationWarning, stacklevel=3)
     else:
-        repo_type = 'file'
-    repo_module = importlib.import_module('stestr.repository.' + repo_type)
+        repo_type = "file"
+    repo_module = importlib.import_module("stestr.repository." + repo_type)
     if not repo_url:
         repo_url = _get_default_repo_url(repo_type)
     return repo_module.RepositoryFactory().initialise(repo_url)

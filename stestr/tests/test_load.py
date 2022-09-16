@@ -23,6 +23,7 @@ class TestLoadCommand(base.TestCase):
         subunit_trace.RESULTS.clear()
         stream = io.BytesIO()
         output = io.BytesIO()
-        res = load.load(in_streams=[('subunit', stream)], pretty_out=True,
-                        stdout=output)
+        res = load.load(
+            in_streams=[("subunit", stream)], pretty_out=True, stdout=output
+        )
         self.assertEqual(1, res)

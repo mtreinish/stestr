@@ -31,14 +31,16 @@ class Slowest(command.Command):
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
         parser.add_argument(
-            "--all", action="store_true",
-            default=False, help="Show timing for all tests.")
+            "--all",
+            action="store_true",
+            default=False,
+            help="Show timing for all tests.",
+        )
         return parser
 
     def take_action(self, parsed_args):
         args = parsed_args
-        return slowest(repo_url=self.app_args.repo_url,
-                       show_all=args.all)
+        return slowest(repo_url=self.app_args.repo_url, show_all=args.all)
 
 
 def format_times(times):
@@ -57,12 +59,12 @@ def format_times(times):
         # place, and also enforce a minimum width
         # based on the longest duration
         return "%*.*f" % (min_length, precision, time)
+
     times = [(name, format_time(time)) for name, time in times]
     return times
 
 
-def slowest(repo_url=None, show_all=False,
-            stdout=sys.stdout):
+def slowest(repo_url=None, show_all=False, stdout=sys.stdout):
     """Print the slowest times from the last run in the repository
 
     This function will print to STDOUT the 10 slowests tests in the last run.
@@ -86,14 +88,14 @@ def slowest(repo_url=None, show_all=False,
         return 3
     # what happens when there is no timing info?
     test_times = repo.get_test_times(repo.get_test_ids(latest_id))
-    known_times = list(test_times['known'].items())
+    known_times = list(test_times["known"].items())
     known_times.sort(key=itemgetter(1), reverse=True)
     if len(known_times) > 0:
         # By default show 10 rows
         if not show_all:
             known_times = known_times[:10]
         known_times = format_times(known_times)
-        header = ('Test id', 'Runtime (s)')
+        header = ("Test id", "Runtime (s)")
         rows = [header] + known_times
         output.output_table(rows, output=stdout)
     return 0

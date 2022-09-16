@@ -157,7 +157,7 @@ class AbstractRepository:
         ids = []
 
         def gather(test_dict):
-            ids.append(test_dict['id'])
+            ids.append(test_dict["id"])
 
         result = StreamToDict(gather)
         result.startTestRun()

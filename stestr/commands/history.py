@@ -33,21 +33,24 @@ class HistoryList(lister.Lister):
 
     def get_parser(self, prog_name):
         list_parser = super().get_parser(prog_name)
-        list_parser.add_argument('--show-metadata', '-m', action='store_true',
-                                 help="Show metadata associated with runs in "
-                                      "output table")
+        list_parser.add_argument(
+            "--show-metadata",
+            "-m",
+            action="store_true",
+            help="Show metadata associated with runs in " "output table",
+        )
         return list_parser
 
     def take_action(self, parsed_args):
         args = parsed_args
         user_conf = user_config.get_user_config(self.app_args.user_config)
         show_metadata = args.show_metadata
-        if getattr(user_conf, 'history_list', False):
-            if user_conf.history_show.get('show-metadata',
-                                          None) is not None:
+        if getattr(user_conf, "history_list", False):
+            if user_conf.history_show.get("show-metadata", None) is not None:
                 show_metadata = args.show_metadata
-        return history_list(repo_url=self.app_args.repo_url,
-                            show_metadata=show_metadata)
+        return history_list(
+            repo_url=self.app_args.repo_url, show_metadata=show_metadata
+        )
 
 
 class HistoryShow(command.Command):
@@ -56,57 +59,83 @@ class HistoryShow(command.Command):
     def get_parser(self, prog_name):
         show_parser = super().get_parser(prog_name)
         show_parser.add_argument(
-            "--subunit", action="store_true",
-            default=False, help="Show output as a subunit stream.")
-        show_parser.add_argument("--no-subunit-trace", action='store_true',
-                                 default=False,
-                                 help="Disable output with the subunit-trace "
-                                      "output filter")
-        show_parser.add_argument('--force-subunit-trace', action='store_true',
-                                 default=False,
-                                 help='Force subunit-trace output regardless '
-                                      'of any other options or config '
-                                      'settings')
-        show_parser.add_argument('--color', action='store_true', default=False,
-                                 help='Enable color output in the '
-                                      'subunit-trace output, if subunit-trace '
-                                      'output is enabled. (this is the '
-                                      'default). If subunit-trace is disabled '
-                                      'this does nothing.')
-        show_parser.add_argument('--suppress-attachments', action='store_true',
-                                 dest='suppress_attachments',
-                                 help='If set do not print stdout or stderr '
-                                      'attachment contents on a successful '
-                                      'test execution')
-        show_parser.add_argument('--all-attachments', action='store_true',
-                                 dest='all_attachments',
-                                 help='If set print all text attachment '
-                                      'contents on a successful test '
-                                      'execution')
-        show_parser.add_argument('--show-binary-attachments',
-                                 action='store_true',
-                                 dest='show_binary_attachments',
-                                 help='If set, show non-text attachments. '
-                                      'This is generally only useful for '
-                                      'debug purposes.')
-        show_parser.add_argument('run_id', nargs='?', default=None,
-                                 help='The run id to show the results from '
-                                      'if not specified the last run will be '
-                                      'shown (which is equivalent to '
-                                      "'stestr last')")
+            "--subunit",
+            action="store_true",
+            default=False,
+            help="Show output as a subunit stream.",
+        )
+        show_parser.add_argument(
+            "--no-subunit-trace",
+            action="store_true",
+            default=False,
+            help="Disable output with the subunit-trace " "output filter",
+        )
+        show_parser.add_argument(
+            "--force-subunit-trace",
+            action="store_true",
+            default=False,
+            help="Force subunit-trace output regardless "
+            "of any other options or config "
+            "settings",
+        )
+        show_parser.add_argument(
+            "--color",
+            action="store_true",
+            default=False,
+            help="Enable color output in the "
+            "subunit-trace output, if subunit-trace "
+            "output is enabled. (this is the "
+            "default). If subunit-trace is disabled "
+            "this does nothing.",
+        )
+        show_parser.add_argument(
+            "--suppress-attachments",
+            action="store_true",
+            dest="suppress_attachments",
+            help="If set do not print stdout or stderr "
+            "attachment contents on a successful "
+            "test execution",
+        )
+        show_parser.add_argument(
+            "--all-attachments",
+            action="store_true",
+            dest="all_attachments",
+            help="If set print all text attachment "
+            "contents on a successful test "
+            "execution",
+        )
+        show_parser.add_argument(
+            "--show-binary-attachments",
+            action="store_true",
+            dest="show_binary_attachments",
+            help="If set, show non-text attachments. "
+            "This is generally only useful for "
+            "debug purposes.",
+        )
+        show_parser.add_argument(
+            "run_id",
+            nargs="?",
+            default=None,
+            help="The run id to show the results from "
+            "if not specified the last run will be "
+            "shown (which is equivalent to "
+            "'stestr last')",
+        )
         return show_parser
 
     def take_action(self, parsed_args):
         args = parsed_args
         user_conf = user_config.get_user_config(self.app_args.user_config)
         if args.suppress_attachments and args.all_attachments:
-            msg = ("The --suppress-attachments and --all-attachments "
-                   "options are mutually exclusive, you can not use both "
-                   "at the same time")
+            msg = (
+                "The --suppress-attachments and --all-attachments "
+                "options are mutually exclusive, you can not use both "
+                "at the same time"
+            )
             print(msg)
             sys.exit(1)
-        if getattr(user_conf, 'history_show', False):
-            if not user_conf.history_show.get('no-subunit-trace'):
+        if getattr(user_conf, "history_show", False):
+            if not user_conf.history_show.get("no-subunit-trace"):
                 if not args.no_subunit_trace:
                     pretty_out = True
                 else:
@@ -114,12 +143,11 @@ class HistoryShow(command.Command):
             else:
                 pretty_out = False
             pretty_out = args.force_subunit_trace or pretty_out
-            color = args.color or user_conf.history_show.get('color',
-                                                             False)
+            color = args.color or user_conf.history_show.get("color", False)
             suppress_attachments_conf = user_conf.history_show.get(
-                'suppress-attachments', False)
-            all_attachments_conf = user_conf.history_show.get(
-                'all-attachments', False)
+                "suppress-attachments", False
+            )
+            all_attachments_conf = user_conf.history_show.get("all-attachments", False)
             if not args.suppress_attachments and not args.all_attachments:
                 suppress_attachments = suppress_attachments_conf
                 all_attachments = all_attachments_conf
@@ -130,8 +158,7 @@ class HistoryShow(command.Command):
                 suppress_attachments = False
                 all_attachments = args.all_attachments
         else:
-            pretty_out = args.force_subunit_trace or not \
-                args.no_subunit_trace
+            pretty_out = args.force_subunit_trace or not args.no_subunit_trace
             color = args.color
             suppress_attachments = args.suppress_attachments
             all_attachments = args.all_attachments
@@ -139,10 +166,12 @@ class HistoryShow(command.Command):
             args.run_id,
             repo_url=self.app_args.repo_url,
             subunit_out=args.subunit,
-            pretty_out=pretty_out, color=color,
+            pretty_out=pretty_out,
+            color=color,
             suppress_attachments=suppress_attachments,
             all_attachments=all_attachments,
-            show_binary_attachments=args.show_binary_attachments)
+            show_binary_attachments=args.show_binary_attachments,
+        )
 
 
 class HistoryRemove(command.Command):
@@ -150,17 +179,18 @@ class HistoryRemove(command.Command):
 
     def get_parser(self, prog_name):
         remove_parser = super().get_parser(prog_name)
-        remove_parser.add_argument('run_id',
-                                   help='The run id to remove from the '
-                                        'repository. Also the string "all" '
-                                        'can be used to remove all runs in '
-                                        'the history')
+        remove_parser.add_argument(
+            "run_id",
+            help="The run id to remove from the "
+            'repository. Also the string "all" '
+            "can be used to remove all runs in "
+            "the history",
+        )
         return remove_parser
 
     def take_action(self, parsed_args):
         args = parsed_args
-        history_remove(args.run_id,
-                       repo_url=self.app_args.repo_url)
+        history_remove(args.run_id, repo_url=self.app_args.repo_url)
 
 
 start_times = None
@@ -168,8 +198,7 @@ stop_times = None
 
 
 def _get_run_details(stream_file, stdout):
-    stream = subunit.ByteStreamToStreamResult(stream_file,
-                                              non_subunit_name='stdout')
+    stream = subunit.ByteStreamToStreamResult(stream_file, non_subunit_name="stdout")
     global start_times
     global stop_times
     start_times = []
@@ -178,15 +207,15 @@ def _get_run_details(stream_file, stdout):
     def collect_data(stream, test):
         global start_times
         global stop_times
-        start_times.append(test['timestamps'][0])
-        stop_times.append(test['timestamps'][1])
+        start_times.append(test["timestamps"][0])
+        stop_times.append(test["timestamps"][1])
 
     outcomes = testtools.StreamToDict(functools.partial(collect_data, stdout))
     summary = testtools.StreamSummary()
     result = testtools.CopyStreamResult([outcomes, summary])
     result = testtools.StreamResultRouter(result)
     cat = subunit.test_results.CatFiles(stdout)
-    result.add_rule(cat, 'test_id', test_id=None)
+    result.add_rule(cat, "test_id", test_id=None)
     result.startTestRun()
     try:
         stream.run(result)
@@ -198,14 +227,13 @@ def _get_run_details(stream_file, stdout):
         stop_time = max(stop_times)
         run_time = subunit_trace.get_duration([start_time, stop_time])
     else:
-        run_time = '---'
-        successful = '---'
-        start_time = '---'
-    return {'passed': successful, 'runtime': run_time, 'start': start_time}
+        run_time = "---"
+        successful = "---"
+        start_time = "---"
+    return {"passed": successful, "runtime": run_time, "start": start_time}
 
 
-def history_list(repo_url=None, show_metadata=False,
-                 stdout=sys.stdout):
+def history_list(repo_url=None, show_metadata=False, stdout=sys.stdout):
     """Show a list of runs in a repository
 
     Note this function depends on the cwd for the repository if `repo_url` is
@@ -224,18 +252,18 @@ def history_list(repo_url=None, show_metadata=False,
 
     field_names = ()
     if show_metadata:
-        field_names = ('Run ID', 'Passed', 'Runtime', 'Date', 'Metadata')
+        field_names = ("Run ID", "Passed", "Runtime", "Date", "Metadata")
     else:
-        field_names = ('Run ID', 'Passed', 'Runtime', 'Date')
+        field_names = ("Run ID", "Passed", "Runtime", "Date")
     try:
         repo = util.get_repo_open(repo_url=repo_url)
     except abstract.RepositoryNotFound as e:
-        stdout.write(str(e) + '\n')
+        stdout.write(str(e) + "\n")
         return 1
     try:
         run_ids = repo.get_run_ids()
     except KeyError as e:
-        stdout.write(str(e) + '\n')
+        stdout.write(str(e) + "\n")
         return 1
     rows = []
     for run_id in run_ids:
@@ -243,19 +271,32 @@ def history_list(repo_url=None, show_metadata=False,
         stream = run.get_subunit_stream()
         data = _get_run_details(stream, stdout)
         if show_metadata:
-            rows.append((run_id, data['passed'], data['runtime'],
-                         data['start'], run.get_metadata()))
+            rows.append(
+                (
+                    run_id,
+                    data["passed"],
+                    data["runtime"],
+                    data["start"],
+                    run.get_metadata(),
+                )
+            )
         else:
-            rows.append((run_id, data['passed'], data['runtime'],
-                         data['start']))
+            rows.append((run_id, data["passed"], data["runtime"], data["start"]))
 
     return (field_names, rows)
 
 
-def history_show(run_id, repo_url=None, subunit_out=False,
-                 pretty_out=True, color=False, stdout=sys.stdout,
-                 suppress_attachments=False, all_attachments=False,
-                 show_binary_attachments=False):
+def history_show(
+    run_id,
+    repo_url=None,
+    subunit_out=False,
+    pretty_out=True,
+    color=False,
+    stdout=sys.stdout,
+    suppress_attachments=False,
+    all_attachments=False,
+    show_binary_attachments=False,
+):
     """Show a run loaded into a repository
 
     This function will print the results from the last run in the repository
@@ -287,7 +328,7 @@ def history_show(run_id, repo_url=None, subunit_out=False,
     try:
         repo = util.get_repo_open(repo_url=repo_url)
     except abstract.RepositoryNotFound as e:
-        stdout.write(str(e) + '\n')
+        stdout.write(str(e) + "\n")
         return 1
     try:
         if run_id:
@@ -295,7 +336,7 @@ def history_show(run_id, repo_url=None, subunit_out=False,
         else:
             run = repo.get_latest_run()
     except KeyError as e:
-        stdout.write(str(e) + '\n')
+        stdout.write(str(e) + "\n")
         return 1
 
     if subunit_out:
@@ -313,8 +354,7 @@ def history_show(run_id, repo_url=None, subunit_out=False,
         previous_run = None
     failed = False
     if not pretty_out:
-        output_result = results.CLITestResult(run.get_id, stdout,
-                                              previous_run)
+        output_result = results.CLITestResult(run.get_id, stdout, previous_run)
         summary = output_result.get_summary()
         output_result.startTestRun()
         try:
@@ -325,10 +365,14 @@ def history_show(run_id, repo_url=None, subunit_out=False,
     else:
         stream = run.get_subunit_stream()
         failed = subunit_trace.trace(
-            stream, stdout, post_fails=True, color=color,
+            stream,
+            stdout,
+            post_fails=True,
+            color=color,
             suppress_attachments=suppress_attachments,
             all_attachments=all_attachments,
-            show_binary_attachments=show_binary_attachments)
+            show_binary_attachments=show_binary_attachments,
+        )
     if failed:
         return 1
     else:
@@ -354,13 +398,13 @@ def history_remove(run_id, repo_url=None, stdout=sys.stdout):
     try:
         repo = util.get_repo_open(repo_url=repo_url)
     except abstract.RepositoryNotFound as e:
-        stdout.write(str(e) + '\n')
+        stdout.write(str(e) + "\n")
         return 1
-    if run_id == 'all':
+    if run_id == "all":
         try:
             run_ids = repo.get_run_ids()
         except KeyError as e:
-            stdout.write(str(e) + '\n')
+            stdout.write(str(e) + "\n")
             return 1
         for run_id in run_ids:
             repo.remove_run_id(run_id)
@@ -368,6 +412,6 @@ def history_remove(run_id, repo_url=None, stdout=sys.stdout):
         try:
             repo.remove_run_id(run_id)
         except KeyError as e:
-            stdout.write(str(e) + '\n')
+            stdout.write(str(e) + "\n")
             return 1
     return 0

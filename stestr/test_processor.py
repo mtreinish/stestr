@@ -76,13 +76,25 @@ class TestProcessorFixture(fixtures.Fixture):
         partitioned into separate workers
     """
 
-    def __init__(self, test_ids, cmd_template, listopt, idoption,
-                 repository, parallel=True, listpath=None,
-                 test_filters=None, group_callback=None, serial=False,
-                 worker_path=None, concurrency=0,
-                 exclude_list=None,
-                 exclude_regex=None,
-                 include_list=None, randomize=False):
+    def __init__(
+        self,
+        test_ids,
+        cmd_template,
+        listopt,
+        idoption,
+        repository,
+        parallel=True,
+        listpath=None,
+        test_filters=None,
+        group_callback=None,
+        serial=False,
+        worker_path=None,
+        concurrency=0,
+        exclude_list=None,
+        exclude_regex=None,
+        include_list=None,
+        randomize=False,
+    ):
         """Create a TestProcessorFixture."""
 
         self.test_ids = test_ids
@@ -105,21 +117,23 @@ class TestProcessorFixture(fixtures.Fixture):
 
     def setUp(self):
         super().setUp()
-        variable_regex = r'\$(IDOPTION|IDFILE|IDLIST|LISTOPT)'
+        variable_regex = r"\$(IDOPTION|IDFILE|IDLIST|LISTOPT)"
         variables = {}
-        list_variables = {'LISTOPT': self.listopt}
+        list_variables = {"LISTOPT": self.listopt}
         cmd = self.template
         default_idstr = None
 
         def list_subst(match):
-            return list_variables.get(match.groups(1)[0], '')
+            return list_variables.get(match.groups(1)[0], "")
 
         self.list_cmd = re.sub(variable_regex, list_subst, cmd)
         nonparallel = not self.parallel
-        selection_logic = (self.test_filters or
-                           self.exclude_list or
-                           self.include_list or
-                           self.exclude_regex)
+        selection_logic = (
+            self.test_filters
+            or self.exclude_list
+            or self.include_list
+            or self.exclude_regex
+        )
         if nonparallel:
             self.concurrency = 1
         else:
@@ -141,31 +155,33 @@ class TestProcessorFixture(fixtures.Fixture):
         if self.test_ids is None:
             # No test ids to supply to the program.
             self.list_file_name = None
-            name = ''
-            idlist = ''
+            name = ""
+            idlist = ""
         else:
             # Randomize now if it's not going to be partitioned
             randomize = self.randomize and self.concurrency == 1
             self.test_ids = selection.construct_list(
-                self.test_ids, exclude_list=self.exclude_list,
+                self.test_ids,
+                exclude_list=self.exclude_list,
                 include_list=self.include_list,
                 regexes=self.test_filters,
                 exclude_regex=self.exclude_regex,
-                randomize=randomize)
+                randomize=randomize,
+            )
             name = self.make_listfile()
-            variables['IDFILE'] = name
-            idlist = ' '.join(self.test_ids)
-        variables['IDLIST'] = idlist
+            variables["IDFILE"] = name
+            idlist = " ".join(self.test_ids)
+        variables["IDLIST"] = idlist
 
         def subst(match):
-            return variables.get(match.groups(1)[0], '')
+            return variables.get(match.groups(1)[0], "")
 
         if self.test_ids is None:
             # No test ids, no id option.
-            idoption = ''
+            idoption = ""
         else:
             idoption = re.sub(variable_regex, subst, self.idoption)
-            variables['IDOPTION'] = idoption
+            variables["IDOPTION"] = idoption
         self.cmd = re.sub(variable_regex, subst, cmd)
 
     def make_listfile(self):
@@ -173,10 +189,10 @@ class TestProcessorFixture(fixtures.Fixture):
         try:
             if self._listpath:
                 name = self._listpath
-                stream = open(name, 'wb')
+                stream = open(name, "wb")
             else:
                 fd, name = tempfile.mkstemp()
-                stream = os.fdopen(fd, 'wb')
+                stream = os.fdopen(fd, "wb")
             with stream:
                 self.list_file_name = name
                 testlist.write_list(stream, self.test_ids)
@@ -194,11 +210,14 @@ class TestProcessorFixture(fixtures.Fixture):
     def _start_process(self, cmd):
         # NOTE(claudiub): Windows does not support passing in a preexec_fn
         # argument.
-        preexec_fn = None if sys.platform == 'win32' else self._clear_SIGPIPE
-        return subprocess.Popen(cmd, shell=True,
-                                stdout=subprocess.PIPE,
-                                stdin=subprocess.PIPE,
-                                preexec_fn=preexec_fn)
+        preexec_fn = None if sys.platform == "win32" else self._clear_SIGPIPE
+        return subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            preexec_fn=preexec_fn,
+        )
 
     def list_tests(self):
         """List the tests returned by list_cmd.
@@ -208,22 +227,26 @@ class TestProcessorFixture(fixtures.Fixture):
         run_proc = self._start_process(self.list_cmd)
         out, err = run_proc.communicate()
         if run_proc.returncode != 0:
-            sys.stdout.write("\n=========================\n"
-                             "Failures during discovery"
-                             "\n=========================\n")
+            sys.stdout.write(
+                "\n=========================\n"
+                "Failures during discovery"
+                "\n=========================\n"
+            )
             new_out = io.BytesIO()
-            v2.ByteStreamToStreamResult(
-                io.BytesIO(out), 'stdout').run(
-                    results.CatFiles(new_out))
+            v2.ByteStreamToStreamResult(io.BytesIO(out), "stdout").run(
+                results.CatFiles(new_out)
+            )
             out = new_out.getvalue()
             if out:
-                sys.stdout.write(out.decode('utf8'))
+                sys.stdout.write(out.decode("utf8"))
             if err:
-                sys.stderr.write(err.decode('utf8'))
-            sys.stdout.write("\n" + "=" * 80 + "\n"
-                             "The above traceback was encountered during "
-                             "test discovery which imports all the found test"
-                             " modules in the specified test_path.\n")
+                sys.stderr.write(err.decode("utf8"))
+            sys.stdout.write(
+                "\n" + "=" * 80 + "\n"
+                "The above traceback was encountered during "
+                "test discovery which imports all the found test"
+                " modules in the specified test_path.\n"
+            )
             exit(100)
         ids = testlist.parse_enumeration(out)
         return ids
@@ -247,23 +270,31 @@ class TestProcessorFixture(fixtures.Fixture):
         # If there is a worker path, use that to get worker groups
         elif self.worker_path:
             test_id_groups = scheduler.generate_worker_partitions(
-                test_ids, self.worker_path, self.repository,
-                self._group_callback, self.randomize)
+                test_ids,
+                self.worker_path,
+                self.repository,
+                self._group_callback,
+                self.randomize,
+            )
         # If we have multiple workers partition the tests and recursively
         # create single worker TestProcessorFixtures for each worker
         else:
-            test_id_groups = scheduler.partition_tests(test_ids,
-                                                       self.concurrency,
-                                                       self.repository,
-                                                       self._group_callback)
+            test_id_groups = scheduler.partition_tests(
+                test_ids, self.concurrency, self.repository, self._group_callback
+            )
         for test_ids in test_id_groups:
             if not test_ids:
                 # No tests in this partition
                 continue
             fixture = self.useFixture(
-                TestProcessorFixture(test_ids,
-                                     self.template, self.listopt,
-                                     self.idoption, self.repository,
-                                     parallel=False))
+                TestProcessorFixture(
+                    test_ids,
+                    self.template,
+                    self.listopt,
+                    self.idoption,
+                    self.repository,
+                    parallel=False,
+                )
+            )
             result.extend(fixture.run_tests())
         return result

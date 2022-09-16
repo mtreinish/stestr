@@ -21,8 +21,7 @@ import yaml
 from stestr import selection
 
 
-def partition_tests(test_ids, concurrency, repository, group_callback,
-                    randomize=False):
+def partition_tests(test_ids, concurrency, repository, group_callback, randomize=False):
     """Partition test_ids by concurrency.
 
     Test durations from the repository are used to get partitions which
@@ -46,6 +45,7 @@ def partition_tests(test_ids, concurrency, repository, group_callback,
     :return: A list where each element is a distinct subset of test_ids,
         and the union of all the elements is equal to set(test_ids).
     """
+
     def noop(_):
         return None
 
@@ -55,8 +55,8 @@ def partition_tests(test_ids, concurrency, repository, group_callback,
     time_data = {}
     if repository:
         time_data = repository.get_test_times(test_ids)
-        timed_tests = time_data['known']
-        unknown_tests = time_data['unknown']
+        timed_tests = time_data["known"]
+        unknown_tests = time_data["unknown"]
     else:
         timed_tests = {}
         unknown_tests = set(test_ids)
@@ -81,9 +81,11 @@ def partition_tests(test_ids, concurrency, repository, group_callback,
     for group_id, group_tests in group_ids.items():
         untimed_ids = unknown_tests.intersection(group_tests)
         group_time = sum(
-            [timed_tests[test_id]
-                for test_id in untimed_ids.symmetric_difference(
-                    group_tests)])
+            [
+                timed_tests[test_id]
+                for test_id in untimed_ids.symmetric_difference(group_tests)
+            ]
+        )
         if not untimed_ids:
             timed[group_id] = group_time
         elif group_time:
@@ -98,8 +100,7 @@ def partition_tests(test_ids, concurrency, repository, group_callback,
     # allocate to partitions by putting each group in to the partition with
     # the current (lowest time, shortest length[in tests])
     def consume_queue(groups):
-        queue = sorted(
-            groups.items(), key=operator.itemgetter(1), reverse=True)
+        queue = sorted(groups.items(), key=operator.itemgetter(1), reverse=True)
         for group_id, duration in queue:
             timed_partitions[0][0] = timed_partitions[0][0] + duration
             timed_partitions[0][1].extend(group_ids[group_id])
@@ -135,8 +136,9 @@ def local_concurrency():
         return None
 
 
-def generate_worker_partitions(ids, worker_path, repository=None,
-                               group_callback=None, randomize=False):
+def generate_worker_partitions(
+    ids, worker_path, repository=None, group_callback=None, randomize=False
+):
     """Parse a worker yaml file and generate test groups
 
     :param list ids: A list of test ids too be partitioned
@@ -161,23 +163,25 @@ def generate_worker_partitions(ids, worker_path, repository=None,
         workers_desc = yaml.safe_load(worker_file.read())
     worker_groups = []
     for worker in workers_desc:
-        if isinstance(worker, dict) and 'worker' in worker.keys():
-            if isinstance(worker['worker'], list):
-                local_worker_list = selection.filter_tests(
-                    worker['worker'], ids)
+        if isinstance(worker, dict) and "worker" in worker.keys():
+            if isinstance(worker["worker"], list):
+                local_worker_list = selection.filter_tests(worker["worker"], ids)
 
-                if 'concurrency' in worker.keys() and worker[
-                    'concurrency'] > 1:
+                if "concurrency" in worker.keys() and worker["concurrency"] > 1:
                     partitioned_tests = partition_tests(
-                        local_worker_list, worker['concurrency'], repository,
-                        group_callback, randomize)
+                        local_worker_list,
+                        worker["concurrency"],
+                        repository,
+                        group_callback,
+                        randomize,
+                    )
                     worker_groups.extend(partitioned_tests)
                 else:
                     # If a worker partition is empty don't add it to the output
                     if local_worker_list:
                         worker_groups.append(local_worker_list)
             else:
-                raise TypeError('The input yaml is the incorrect format')
+                raise TypeError("The input yaml is the incorrect format")
         else:
-            raise TypeError('The input yaml is the incorrect format')
+            raise TypeError("The input yaml is the incorrect format")
     return worker_groups

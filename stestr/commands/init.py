@@ -47,8 +47,10 @@ def init(repo_url=None, stdout=sys.stdout):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
-        repo_path = repo_url or './stestr'
-        stdout.write('The specified repository directory %s already exists. '
-                     'Please check if the repository already exists or '
-                     'select a different path\n' % repo_path)
+        repo_path = repo_url or "./stestr"
+        stdout.write(
+            "The specified repository directory %s already exists. "
+            "Please check if the repository already exists or "
+            "select a different path\n" % repo_path
+        )
         return 1
