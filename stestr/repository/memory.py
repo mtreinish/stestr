@@ -22,7 +22,7 @@ import testtools
 
 from stestr.repository import abstract as repository
 
-OrderedDict = try_import('collections.OrderedDict', dict)
+OrderedDict = try_import("collections.OrderedDict", dict)
 
 
 class RepositoryFactory(repository.AbstractRepositoryFactory):
@@ -118,14 +118,14 @@ class _Failures(repository.AbstractTestRun):
         def wrap_result(result):
             # Wrap in a router to mask out startTestRun/stopTestRun from the
             # ExtendedToStreamDecorator.
-            result = testtools.StreamResultRouter(result,
-                                                  do_start_stop_run=False)
+            result = testtools.StreamResultRouter(result, do_start_stop_run=False)
             # Wrap that in ExtendedToStreamDecorator to convert v1 calls to
             # StreamResult.
             return testtools.ExtendedToStreamDecorator(result)
+
         return testtools.DecorateTestCaseResult(
-            self, wrap_result, methodcaller('startTestRun'),
-            methodcaller('stopTestRun'))
+            self, wrap_result, methodcaller("startTestRun"), methodcaller("stopTestRun")
+        )
 
     def run(self, result):
         # Speaks original V1 protocol.
@@ -148,22 +148,22 @@ class _Inserter(repository.AbstractTestRun):
     def startTestRun(self):
         self._subunit = BytesIO()
         serialiser = subunit.v2.StreamResultToBytes(self._subunit)
-        self._hook = testtools.CopyStreamResult([
-            testtools.StreamToDict(self._handle_test),
-            serialiser])
+        self._hook = testtools.CopyStreamResult(
+            [testtools.StreamToDict(self._handle_test), serialiser]
+        )
         self._hook.startTestRun()
 
     def _handle_test(self, test_dict):
         self._tests.append(test_dict)
-        start, stop = test_dict['timestamps']
-        if test_dict['status'] == 'exists' or None in (start, stop):
+        start, stop = test_dict["timestamps"]
+        if test_dict["status"] == "exists" or None in (start, stop):
             return
         duration_delta = stop - start
         duration_seconds = (
-            (duration_delta.microseconds + (
-                duration_delta.seconds +
-                duration_delta.days * 24 * 3600) * 10 ** 6) / 10.0 ** 6)
-        self._repository._times[test_dict['id']] = duration_seconds
+            duration_delta.microseconds
+            + (duration_delta.seconds + duration_delta.days * 24 * 3600) * 10**6
+        ) / 10.0**6
+        self._repository._times[test_dict["id"]] = duration_seconds
 
     def stopTestRun(self):
         self._hook.stopTestRun()
@@ -173,8 +173,8 @@ class _Inserter(repository.AbstractTestRun):
         if not self._partial:
             self._repository._failing = OrderedDict()
         for test_dict in self._tests:
-            test_id = test_dict['id']
-            if test_dict['status'] == 'fail':
+            test_id = test_dict["id"]
+            if test_dict["status"] == "fail":
                 case = testtools.testresult.real.test_dict_to_case(test_dict)
                 self._repository._failing[test_id] = case
             else:
@@ -195,14 +195,14 @@ class _Inserter(repository.AbstractTestRun):
         def wrap_result(result):
             # Wrap in a router to mask out startTestRun/stopTestRun from the
             # ExtendedToStreamDecorator.
-            result = testtools.StreamResultRouter(result,
-                                                  do_start_stop_run=False)
+            result = testtools.StreamResultRouter(result, do_start_stop_run=False)
             # Wrap that in ExtendedToStreamDecorator to convert v1 calls to
             # StreamResult.
             return testtools.ExtendedToStreamDecorator(result)
+
         return testtools.DecorateTestCaseResult(
-            self, wrap_result, methodcaller('startTestRun'),
-            methodcaller('stopTestRun'))
+            self, wrap_result, methodcaller("startTestRun"), methodcaller("stopTestRun")
+        )
 
     def run(self, result):
         # Speaks original.

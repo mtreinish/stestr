@@ -16,19 +16,16 @@ from stestr.tests import base
 
 class TestSlowest(base.TestCase):
     def test_format_times(self):
-        times = [('test_id_a', 12.34), ('test_id_b', 1.34)]
+        times = [("test_id_a", 12.34), ("test_id_b", 1.34)]
         res = slowest.format_times(times)
-        self.assertEqual([('test_id_a', '12.340'), ('test_id_b', ' 1.340')],
-                         res)
+        self.assertEqual([("test_id_a", "12.340"), ("test_id_b", " 1.340")], res)
 
     def test_format_times_with_zero(self):
-        times = [('test_id_a', 0), ('test_id_b', 1.34)]
+        times = [("test_id_a", 0), ("test_id_b", 1.34)]
         res = slowest.format_times(times)
-        self.assertEqual([('test_id_a', '0.000'), ('test_id_b', '1.340')],
-                         res)
+        self.assertEqual([("test_id_a", "0.000"), ("test_id_b", "1.340")], res)
 
     def test_format_times_all_zero(self):
-        times = [('test_id_a', 0), ('test_id_b', 0.00)]
+        times = [("test_id_a", 0), ("test_id_b", 0.00)]
         res = slowest.format_times(times)
-        self.assertEqual([('test_id_a', '0.000'), ('test_id_b', '0.000')],
-                         res)
+        self.assertEqual([("test_id_a", "0.000"), ("test_id_b", "0.000")], res)

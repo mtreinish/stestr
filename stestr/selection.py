@@ -35,8 +35,7 @@ def filter_tests(filters, test_ids):
             try:
                 _filters.append(re.compile(f))
             except re.error:
-                print("Invalid regex: %s provided in filters" % f,
-                      file=sys.stderr)
+                print("Invalid regex: %s provided in filters" % f, file=sys.stderr)
                 sys.exit(5)
         else:
             _filters.append(f)
@@ -54,21 +53,23 @@ def exclusion_reader(exclude_list):
         regex_comment_lst = []  # tuple of (regex_compiled, msg, skipped_lst)
         for line in exclude_file:
             raw_line = line.strip()
-            split_line = raw_line.split('#')
+            split_line = raw_line.split("#")
             # Before the # is the regex
             line_regex = split_line[0].strip()
             if len(split_line) > 1:
                 # After the # is a comment
-                comment = ''.join(split_line[1:]).strip()
+                comment = "".join(split_line[1:]).strip()
             else:
-                comment = 'Skipped because of regex %s:' % line_regex
+                comment = "Skipped because of regex %s:" % line_regex
             if not line_regex:
                 continue
             try:
                 regex_comment_lst.append((re.compile(line_regex), comment, []))
             except re.error:
-                print("Invalid regex: %s in provided exclusion list file" %
-                      line_regex, file=sys.stderr)
+                print(
+                    "Invalid regex: %s in provided exclusion list file" % line_regex,
+                    file=sys.stderr,
+                )
                 sys.exit(5)
     return regex_comment_lst
 
@@ -76,21 +77,29 @@ def exclusion_reader(exclude_list):
 def _get_regex_from_include_list(file_path):
     lines = []
     for line in open(file_path).read().splitlines():
-        split_line = line.strip().split('#')
+        split_line = line.strip().split("#")
         # Before the # is the regex
         line_regex = split_line[0].strip()
         if line_regex:
             try:
                 lines.append(re.compile(line_regex))
             except re.error:
-                print("Invalid regex: %s in provided inclusion_list file" %
-                      line_regex, file=sys.stderr)
+                print(
+                    "Invalid regex: %s in provided inclusion_list file" % line_regex,
+                    file=sys.stderr,
+                )
                 sys.exit(5)
     return lines
 
 
-def construct_list(test_ids, regexes=None, exclude_list=None,
-                   include_list=None, exclude_regex=None, randomize=False):
+def construct_list(
+    test_ids,
+    regexes=None,
+    exclude_list=None,
+    include_list=None,
+    exclude_regex=None,
+    randomize=False,
+):
     """Filters the discovered test cases
 
     :param list test_ids: The set of test_ids to be filtered
@@ -130,8 +139,10 @@ def construct_list(test_ids, regexes=None, exclude_list=None,
         try:
             record = (re.compile(exclude_regex), msg, [])
         except re.error:
-            print("Invalid regex: %s used for exclude_regex" %
-                  exclude_regex, file=sys.stderr)
+            print(
+                "Invalid regex: %s used for exclude_regex" % exclude_regex,
+                file=sys.stderr,
+            )
             sys.exit(5)
         if exclude_data:
             exclude_data.append(record)
@@ -146,8 +157,7 @@ def construct_list(test_ids, regexes=None, exclude_list=None,
         for (rex, msg, s_list) in exclude_data:
             # NOTE(mtreinish): In the case of overlapping regex the test case
             # might have already been removed from the set of tests
-            list_of_test_cases = [tc for tc in list_of_test_cases
-                                  if not rex.search(tc)]
+            list_of_test_cases = [tc for tc in list_of_test_cases if not rex.search(tc)]
     if randomize:
         random.shuffle(list_of_test_cases)
 

@@ -15,13 +15,13 @@
 import os
 
 
-def find_and_remove(suffix='.pyc'):
-    for root, dirs, files in os.walk('.'):
+def find_and_remove(suffix=".pyc"):
+    for root, dirs, files in os.walk("."):
         for file in files:
             target = os.path.join(root, file)
             if os.path.isfile(target) and target.endswith(suffix):
                 os.remove(target)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     find_and_remove()

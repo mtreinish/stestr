@@ -46,23 +46,23 @@ def output_table(table, output=sys.stdout):
         for idx, column in enumerate(row):
             outputs.append(column)
             if idx == len(row) - 1:
-                outputs.append('\n')
+                outputs.append("\n")
                 return
             # spacers for the next column
-            outputs.append(' ' * (widths[idx] - len(column)))
-            outputs.append('  ')
+            outputs.append(" " * (widths[idx] - len(column)))
+            outputs.append("  ")
 
     show_row(contents[0])
     # title spacer
     for idx, width in enumerate(widths):
-        outputs.append('-' * width)
+        outputs.append("-" * width)
         if idx == len(widths) - 1:
-            outputs.append('\n')
+            outputs.append("\n")
             continue
-        outputs.append('  ')
+        outputs.append("  ")
     for row in contents[1:]:
         show_row(row)
-    output.write(''.join(outputs))
+    output.write("".join(outputs))
 
 
 def output_tests(tests, output=sys.stdout):
@@ -76,7 +76,7 @@ def output_tests(tests, output=sys.stdout):
     for test in tests:
         id_str = test.id()
         output.write(str(id_str))
-        output.write('\n')
+        output.write("\n")
 
 
 def make_result(get_id, output=sys.stdout):
@@ -90,8 +90,9 @@ def make_result(get_id, output=sys.stdout):
     return result, summary
 
 
-def output_summary(successful, tests, tests_delta, time, time_delta, values,
-                   output=sys.stdout):
+def output_summary(
+    successful, tests, tests_delta, time, time_delta, values, output=sys.stdout
+):
     """Display a summary view for the test run.
 
     :param bool successful: Was the test run successful
@@ -122,27 +123,26 @@ def output_summary(successful, tests, tests_delta, time, time_delta, values,
     if summary:
         a("\n")
     if successful:
-        a('PASSED')
+        a("PASSED")
     else:
-        a('FAILED')
+        a("FAILED")
     if values:
-        a(' (')
+        a(" (")
         values_strings = []
         for name, value, delta in values:
-            value_str = '{}={}'.format(name, value)
+            value_str = "{}={}".format(name, value)
             if delta:
-                value_str += ' (%+d)' % (delta,)
+                value_str += " (%+d)" % (delta,)
             values_strings.append(value_str)
-        a(', '.join(values_strings))
-        a(')')
-    output.write(''.join(summary) + '\n')
+        a(", ".join(values_strings))
+        a(")")
+    output.write("".join(summary) + "\n")
 
 
 def output_stream(stream, output=sys.stdout):
     _binary_stdout = subunit.make_stream_binary(output)
     contents = stream.read(65536)
-    assert type(contents) is bytes, \
-        "Bad stream contents %r" % type(contents)
+    assert type(contents) is bytes, "Bad stream contents %r" % type(contents)
     # If there are unflushed bytes in the text wrapper, we need to sync..
     output.flush()
     while contents:
@@ -169,7 +169,7 @@ class ReturnCodeToSubunit:
         self.proc = process
         self.done = False
         self.source = self.proc.stdout
-        self.lastoutput = bytes((b'\n')[0])
+        self.lastoutput = bytes((b"\n")[0])
 
     def __del__(self):
         self.proc.wait()
@@ -180,24 +180,26 @@ class ReturnCodeToSubunit:
         self.source = io.BytesIO()
         returncode = self.proc.wait()
         if returncode != 0:
-            if self.lastoutput != bytes((b'\n')[0]):
+            if self.lastoutput != bytes((b"\n")[0]):
                 # Subunit V1 is line orientated, it has to start on a fresh
                 # line. V2 needs to start on any fresh utf8 character border
                 # - which is not guaranteed in an arbitrary stream endpoint, so
                 # injecting a \n gives us such a guarantee.
-                self.source.write(bytes('\n'))
+                self.source.write(bytes("\n"))
             stream = subunit.StreamResultToBytes(self.source)
-            stream.status(test_id='process-returncode', test_status='fail',
-                          file_name='traceback',
-                          mime_type='text/plain;charset=utf8',
-                          file_bytes=(
-                              'returncode %d' % returncode).encode('utf8'))
+            stream.status(
+                test_id="process-returncode",
+                test_status="fail",
+                file_name="traceback",
+                mime_type="text/plain;charset=utf8",
+                file_bytes=("returncode %d" % returncode).encode("utf8"),
+            )
         self.source.seek(0)
         self.done = True
 
     def read(self, count=-1):
         if count == 0:
-            return ''
+            return ""
         result = self.source.read(count)
         if result:
             self.lastoutput = result[-1]

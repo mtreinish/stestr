@@ -31,7 +31,6 @@ from stestr.tests import base
 
 @ddt
 class TestSubunitTrace(base.TestCase):
-
     def setUp(self):
         super().setUp()
         # NOTE(mtreinish): subunit-trace relies on a global to track results
@@ -41,45 +40,45 @@ class TestSubunitTrace(base.TestCase):
         subunit_trace.RESULTS = {}
         subunit_trace.FAILS = []
 
-    @data(([dt(2015, 4, 17, 22, 23, 14, 111111),
-            dt(2015, 4, 17, 22, 23, 14, 111111)],
-           "0.000000s"),
-          ([dt(2015, 4, 17, 22, 23, 14, 111111),
-            dt(2015, 4, 17, 22, 23, 15, 111111)],
-           "1.000000s"),
-          ([dt(2015, 4, 17, 22, 23, 14, 111111),
-            None],
-           ""))
+    @data(
+        (
+            [dt(2015, 4, 17, 22, 23, 14, 111111), dt(2015, 4, 17, 22, 23, 14, 111111)],
+            "0.000000s",
+        ),
+        (
+            [dt(2015, 4, 17, 22, 23, 14, 111111), dt(2015, 4, 17, 22, 23, 15, 111111)],
+            "1.000000s",
+        ),
+        ([dt(2015, 4, 17, 22, 23, 14, 111111), None], ""),
+    )
     @unpack
     def test_get_durating(self, timestamps, expected_result):
-        self.assertEqual(subunit_trace.get_duration(timestamps),
-                         expected_result)
+        self.assertEqual(subunit_trace.get_duration(timestamps), expected_result)
 
-    @data(([dt(2015, 4, 17, 22, 23, 14, 111111),
-            dt(2015, 4, 17, 22, 23, 14, 111111)],
-           0.0),
-          ([dt(2015, 4, 17, 22, 23, 14, 111111),
-            dt(2015, 4, 17, 22, 23, 15, 111111)],
-           1.0),
-          ([dt(2015, 4, 17, 22, 23, 14, 111111),
-            None],
-           0.0))
+    @data(
+        (
+            [dt(2015, 4, 17, 22, 23, 14, 111111), dt(2015, 4, 17, 22, 23, 14, 111111)],
+            0.0,
+        ),
+        (
+            [dt(2015, 4, 17, 22, 23, 14, 111111), dt(2015, 4, 17, 22, 23, 15, 111111)],
+            1.0,
+        ),
+        ([dt(2015, 4, 17, 22, 23, 14, 111111), None], 0.0),
+    )
     @unpack
     def test_run_time(self, timestamps, expected_result):
-        patched_res = {
-            0: [
-                {'timestamps': timestamps}
-            ]
-        }
+        patched_res = {0: [{"timestamps": timestamps}]}
         with patch.dict(subunit_trace.RESULTS, patched_res, clear=True):
             self.assertEqual(subunit_trace.run_time(), expected_result)
 
     def test_trace(self):
         regular_stream = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            'sample_streams/successful.subunit')
+            "sample_streams/successful.subunit",
+        )
         bytes_ = io.BytesIO()
-        with open(regular_stream, 'rb') as stream:
+        with open(regular_stream, "rb") as stream:
             bytes_.write(bytes(stream.read()))
         bytes_.seek(0)
         stdin = io.TextIOWrapper(io.BufferedReader(bytes_))
@@ -89,9 +88,10 @@ class TestSubunitTrace(base.TestCase):
     def test_trace_with_all_skips(self):
         regular_stream = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            'sample_streams/all_skips.subunit')
+            "sample_streams/all_skips.subunit",
+        )
         bytes_ = io.BytesIO()
-        with open(regular_stream, 'rb') as stream:
+        with open(regular_stream, "rb") as stream:
             bytes_.write(bytes(stream.read()))
         bytes_.seek(0)
         stdin = io.TextIOWrapper(io.BufferedReader(bytes_))
@@ -100,10 +100,10 @@ class TestSubunitTrace(base.TestCase):
 
     def test_trace_with_failures(self):
         regular_stream = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            'sample_streams/failure.subunit')
+            os.path.dirname(os.path.abspath(__file__)), "sample_streams/failure.subunit"
+        )
         bytes_ = io.BytesIO()
-        with open(regular_stream, 'rb') as stream:
+        with open(regular_stream, "rb") as stream:
             bytes_.write(bytes(stream.read()))
         bytes_.seek(0)
         stdin = io.TextIOWrapper(io.BufferedReader(bytes_))
@@ -114,12 +114,15 @@ class TestSubunitTrace(base.TestCase):
         output = io.BytesIO()
         stream = StreamResultToBytes(output)
         stream.startTestRun()
-        stream.status(test_id='test_passes', test_status='inprogress',
-                      timestamp=dt.now(UTC))
-        stream.status(test_id='test_segfault', test_status='inprogress',
-                      timestamp=dt.now(UTC))
-        stream.status(test_id='test_passes', test_status='success',
-                      timestamp=dt.now(UTC))
+        stream.status(
+            test_id="test_passes", test_status="inprogress", timestamp=dt.now(UTC)
+        )
+        stream.status(
+            test_id="test_segfault", test_status="inprogress", timestamp=dt.now(UTC)
+        )
+        stream.status(
+            test_id="test_passes", test_status="success", timestamp=dt.now(UTC)
+        )
         stream.stopTestRun()
         output.seek(0)
         # capture stderr for test

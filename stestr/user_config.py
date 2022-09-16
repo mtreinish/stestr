@@ -20,63 +20,63 @@ import yaml
 def get_user_config(path=None):
     if not path:
         home_dir = os.path.expanduser("~")
-        path = os.path.join(home_dir, '.stestr.yaml')
+        path = os.path.join(home_dir, ".stestr.yaml")
         if not os.path.isfile(path):
-            path = os.path.join(os.path.join(home_dir, '.config'),
-                                'stestr.yaml')
+            path = os.path.join(os.path.join(home_dir, ".config"), "stestr.yaml")
             if not os.path.isfile(path):
                 path = None
         if not path:
             return None
     else:
         if not os.path.isfile(path):
-            msg = 'The specified stestr user config is not a valid path'
+            msg = "The specified stestr user config is not a valid path"
             sys.exit(msg)
 
     return UserConfig(path)
 
 
 class UserConfig:
-
     def __init__(self, path):
-        self.schema = vp.Schema({
-            vp.Optional('run'): {
-                vp.Optional('concurrency'): int,
-                vp.Optional('random'): bool,
-                vp.Optional('no-subunit-trace'): bool,
-                vp.Optional('color'): bool,
-                vp.Optional('abbreviate'): bool,
-                vp.Optional('slowest'): bool,
-                vp.Optional('suppress-attachments'): bool,
-                vp.Optional('all-attachments'): bool,
-            },
-            vp.Optional('failing'): {
-                vp.Optional('list'): bool,
-            },
-            vp.Optional('last'): {
-                vp.Optional('no-subunit-trace'): bool,
-                vp.Optional('color'): bool,
-                vp.Optional('suppress-attachments'): bool,
-                vp.Optional('all-attachments'): bool,
-            },
-            vp.Optional('load'): {
-                vp.Optional('force-init'): bool,
-                vp.Optional('subunit-trace'): bool,
-                vp.Optional('color'): bool,
-                vp.Optional('abbreviate'): bool,
-                vp.Optional('suppress-attachments'): bool,
-                vp.Optional('all-attachments'): bool,
-            },
-            vp.Optional('history-list'): {
-                vp.Optional('show-metadata'): bool,
-            },
-            vp.Optional('history-show'): {
-                vp.Optional('no-subunit-trace'): bool,
-                vp.Optional('color'): bool,
-                vp.Optional('suppress-attachments'): bool,
-                vp.Optional('all-attachments'): bool,
+        self.schema = vp.Schema(
+            {
+                vp.Optional("run"): {
+                    vp.Optional("concurrency"): int,
+                    vp.Optional("random"): bool,
+                    vp.Optional("no-subunit-trace"): bool,
+                    vp.Optional("color"): bool,
+                    vp.Optional("abbreviate"): bool,
+                    vp.Optional("slowest"): bool,
+                    vp.Optional("suppress-attachments"): bool,
+                    vp.Optional("all-attachments"): bool,
+                },
+                vp.Optional("failing"): {
+                    vp.Optional("list"): bool,
+                },
+                vp.Optional("last"): {
+                    vp.Optional("no-subunit-trace"): bool,
+                    vp.Optional("color"): bool,
+                    vp.Optional("suppress-attachments"): bool,
+                    vp.Optional("all-attachments"): bool,
+                },
+                vp.Optional("load"): {
+                    vp.Optional("force-init"): bool,
+                    vp.Optional("subunit-trace"): bool,
+                    vp.Optional("color"): bool,
+                    vp.Optional("abbreviate"): bool,
+                    vp.Optional("suppress-attachments"): bool,
+                    vp.Optional("all-attachments"): bool,
+                },
+                vp.Optional("history-list"): {
+                    vp.Optional("show-metadata"): bool,
+                },
+                vp.Optional("history-show"): {
+                    vp.Optional("no-subunit-trace"): bool,
+                    vp.Optional("color"): bool,
+                    vp.Optional("suppress-attachments"): bool,
+                    vp.Optional("all-attachments"): bool,
+                },
             }
-        })
+        )
         with open(path) as fd:
             self.config = yaml.safe_load(fd.read())
         if self.config is None:
@@ -84,30 +84,31 @@ class UserConfig:
         try:
             self.schema(self.config)
         except vp.MultipleInvalid as e:
-            msg = ('Provided user config file {} is invalid '
-                   'because:\n{}'.format(path, str(e)))
+            msg = "Provided user config file {} is invalid " "because:\n{}".format(
+                path, str(e)
+            )
             sys.exit(msg)
 
     @property
     def run(self):
-        return self.config.get('run')
+        return self.config.get("run")
 
     @property
     def failing(self):
-        return self.config.get('failing')
+        return self.config.get("failing")
 
     @property
     def last(self):
-        return self.config.get('last')
+        return self.config.get("last")
 
     @property
     def load(self):
-        return self.config.get('load')
+        return self.config.get("load")
 
     @property
     def history_list(self):
-        return self.config.get('history-list')
+        return self.config.get("history-list")
 
     @property
     def history_show(self):
-        return self.config.get('history-show')
+        return self.config.get("history-show")
