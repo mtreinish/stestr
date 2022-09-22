@@ -242,11 +242,7 @@ def show_outcome(stream, test, print_failures=False, failonly=False,
 
 
 def print_fails(stream):
-    """Print summary failure report.
-
-    Currently unused, however there remains debate on inline vs. at end
-    reporting, so leave the utility function for later use.
-    """
+    """Print summary failure report."""
     if not FAILS:
         return
     stream.write("\n==============================\n")
@@ -403,18 +399,25 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
             x['timestamps'][0] for x in RESULTS[worker] if
             x['timestamps'][0] is not None]
         stop_times += [
-            x['timestamps'][1] for x in RESULTS[worker] if
-            x['timestamps'][1] is not None]
-    if not start_times:
+            x["timestamps"][1]
+            for x in RESULTS[worker]
+            if x["timestamps"][1] is not None
+        ]
+    if print_full_output(stdout, start_times, stop_times, post_fails, no_summary):
+        return 1
+    return 0 if results.wasSuccessful(summary) else 1
+
+
+def print_full_output(stdout, start_times, stop_times, post_fails, no_summary):
+    """Print output plus edge case validation"""
+    if not start_times or count_tests("status", ".*") == 0:
         print("The test run didn't actually run any tests", file=sys.stderr)
         return 1
+
     start_time = min(start_times)
     stop_time = max(stop_times)
     elapsed_time = stop_time - start_time
 
-    if count_tests('status', '.*') == 0:
-        print("The test run didn't actually run any tests", file=sys.stderr)
-        return 1
     if post_fails:
         print_fails(stdout)
     if not no_summary:
@@ -422,7 +425,7 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
 
     # NOTE(mtreinish): Ideally this should live in testtools streamSummary
     # this is just in place until the behavior lands there (if it ever does)
-    if count_tests('status', '^success$') == 0:
+    if count_tests("status", "^xfail$") + count_tests("status", "^success$") == 0:
         print("\nNo tests were successful during the run", file=sys.stderr)
         return 1
     in_progress = get_stuck_in_progress()
@@ -432,7 +435,6 @@ def trace(stdin, stdout, print_failures=False, failonly=False,
         for test in in_progress:
             print("\n\t* %s" % test, file=sys.stderr)
         return 1
-    return 0 if results.wasSuccessful(summary) else 1
 
 
 def main():
