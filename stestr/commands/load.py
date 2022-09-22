@@ -359,14 +359,13 @@ def _load_case(
                     continue
                 start_times.append(test["timestamps"][0])
                 stop_times.append(test["timestamps"][1])
-        if not start_times or not stop_times:
-            sys.stderr.write("\nNo tests were successful during the run")
+
+        # This is not ideal, as it means if you use don't enter this if statement
+        # some errors aren't caught
+        if subunit_trace.print_full_output(
+            stdout, start_times, stop_times, post_fails=True, no_summary=False
+        ):
             return 1
-        start_time = min(start_times)
-        stop_time = max(stop_times)
-        elapsed_time = stop_time - start_time
-        subunit_trace.print_fails(stdout)
-        subunit_trace.print_summary(stdout, elapsed_time)
     if not results.wasSuccessful(summary_result):
         return 1
     else:
