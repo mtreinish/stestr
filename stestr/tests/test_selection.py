@@ -72,28 +72,9 @@ class TestExclusionReader(base.TestCase):
 
 class TestConstructList(base.TestCase):
     def test_simple_re(self):
-        test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])',
-                      'fake_test(necs)[tag,bar])', 'fake_test(necs)[egg,foo])',
-                      'fake_test(nnnn)[foo,bar])', 'fake_test(nnnn)[foo,foo])']
+        test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])']
         result = selection.construct_list(test_lists, regexes=['foo'])
-        # Order must be preserved
-        expected = test_lists[:]
-        del expected[2]
-        del expected[0]
-        self.assertEqual(expected, result)
-
-    def test_simple_re_randomized(self):
-        test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])',
-                      'fake_test(necs)[tag,bar])', 'fake_test(necs)[egg,foo])',
-                      'fake_test(nnnn)[foo,bar])', 'fake_test(nnnn)[foo,foo])']
-        result = selection.construct_list(test_lists, regexes=['foo'],
-                                          randomize=True)
-        expected_names = test_lists[:]
-        del expected_names[2]
-        del expected_names[0]
-        # Order is randomized
-        self.assertNotEqual(expected_names, result)
-        self.assertEqual(set(expected_names), set(result))
+        self.assertEqual(list(result), ['fake_test(scen)[egg,foo])'])
 
     def test_simple_exclusion_re(self):
         test_lists = ['fake_test(scen)[tag,bar])', 'fake_test(scen)[egg,foo])']
