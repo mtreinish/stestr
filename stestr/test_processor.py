@@ -108,6 +108,7 @@ class TestProcessorFixture(fixtures.Fixture):
         self._listpath = listpath
         self.test_filters = test_filters
         self._group_callback = group_callback
+        self.worker_path = None
         self.worker_path = worker_path
         self.concurrency_value = concurrency
         self.exclude_list = exclude_list
@@ -158,15 +159,12 @@ class TestProcessorFixture(fixtures.Fixture):
             name = ""
             idlist = ""
         else:
-            # Randomize now if it's not going to be partitioned
-            randomize = self.randomize and self.concurrency == 1
             self.test_ids = selection.construct_list(
                 self.test_ids,
                 exclude_list=self.exclude_list,
                 include_list=self.include_list,
                 regexes=self.test_filters,
                 exclude_regex=self.exclude_regex,
-                randomize=randomize,
             )
             name = self.make_listfile()
             variables["IDFILE"] = name
