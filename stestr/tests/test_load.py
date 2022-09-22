@@ -13,14 +13,11 @@
 import io
 
 from stestr.commands import load
-from stestr import subunit_trace
 from stestr.tests import base
 
 
 class TestLoadCommand(base.TestCase):
     def test_empty_with_pretty_out(self):
-        # Clear results that may be there
-        subunit_trace.RESULTS.clear()
         stream = io.BytesIO()
         output = io.BytesIO()
         res = load.load(
