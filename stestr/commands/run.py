@@ -644,12 +644,7 @@ def run_command(
             # that are both failing and listed.
             ids = list_ids.intersection(ids)
 
-    if config and os.path.isfile(config):
-        conf = config_file.TestrConf(config)
-    elif os.path.isfile("tox.ini"):
-        conf = config_file.TestrConf("tox.ini", section="stestr")
-    else:
-        conf = config_file.TestrConf(config)
+    conf = config_file.TestrConf.load_from_file(config)
     if not analyze_isolation:
         cmd = conf.get_run_command(
             ids,

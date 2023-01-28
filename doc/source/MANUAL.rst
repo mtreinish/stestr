@@ -84,6 +84,8 @@ CLI. This way you can run stestr directly without having to write a config file
 and manually specify the test_path like above with the ``--test-path``/``-t``
 CLI argument.
 
+.. _tox:
+
 Tox
 '''
 
@@ -102,6 +104,22 @@ specified and pointing to an existing file or the default location
 ``.stestr.conf`` file is present then any configuration in the ``tox.ini`` will
 be ignored. Configuration embedded in a ``tox.ini`` will only be used if other
 configuration files are not present.
+
+pyproject.toml
+''''''''''''''
+
+Similarly, if your project is using ``pyproject.toml``, you may forego the
+config file, and instead create a ``[tool.stestr]`` section with the desired
+configuration options.  For example::
+
+  [tool.stestr]
+  test_path = "./project/tests"
+  top_dir = "./"
+  group_regex = "([^\.]*\.)*"
+
+The same caveats apply as the :ref:`tox` with regards to CLI arguments.  Also
+of note is that files specified with ``--config-file``/``-c`` may be ``.ini``
+or TOML format.
 
 Running tests
 -------------

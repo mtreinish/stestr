@@ -9,10 +9,11 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+import os
 from unittest import mock
 
 import ddt
+import fixtures
 
 from stestr import config_file
 from stestr.tests import base
@@ -24,7 +25,6 @@ class TestTestrConf(base.TestCase):
     def setUp(self, mock_ConfigParser):
         super().setUp()
         self._testr_conf = config_file.TestrConf(mock.sentinel.config_file)
-        self._testr_conf.parser = mock.Mock()
 
     @mock.patch.object(config_file.util, "get_repo_open")
     @mock.patch.object(config_file.test_processor, "TestProcessorFixture")
@@ -130,7 +130,8 @@ class TestTestrConf(base.TestCase):
         self._check_get_run_command(parallel_class=True)
 
     def test_get_run_command_nogroup_regex_noparallel_class(self):
-        self._testr_conf.parser.has_option.return_value = False
+        self._testr_conf.parallel_class = False
+        self._testr_conf.group_regex = ""
         self._check_get_run_command(group_regex="", expected_group_callback=None)
 
     @ddt.data((".\\", ".\\\\"), ("a\\b\\", "a\\b\\\\"), ("a\\b", "a\\b"))
@@ -139,3 +140,13 @@ class TestTestrConf(base.TestCase):
     def test_sanitize_dir_win32(self, path, expected):
         sanitized = self._testr_conf._sanitize_path(path)
         self.assertEqual(expected, sanitized)
+
+    @mock.patch.object(config_file.tomlkit, "load")
+    def test_toml_load(self, mock_toml):
+        tmpdir = self.useFixture(fixtures.TempDir()).path
+        file_path = os.path.join(tmpdir, "myfile.toml")
+        with open(file_path, "w"):
+            pass
+        self._testr_conf = config_file.TestrConf(file_path)
+        self._check_get_run_command()
+        mock_toml.return_value.__getitem__.assert_called_once_with("tool")
