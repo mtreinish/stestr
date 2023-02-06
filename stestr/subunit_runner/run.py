@@ -14,7 +14,6 @@
 # under the License.
 
 from functools import partial
-import os
 import sys
 
 from subunit import StreamResultToBytes
@@ -71,14 +70,7 @@ class SubunitTestRunner(object):
 
     def _list(self, test):
         test_ids, errors = program.list_test(test)
-        try:
-            fileno = self.stream.fileno()
-        except Exception:
-            fileno = None
-        if fileno is not None:
-            stream = os.fdopen(fileno, "wb", 0)
-        else:
-            stream = self.stream
+        stream = self.stream
         result = StreamResultToBytes(stream)
         for test_id in test_ids:
             result.status(test_id=test_id, test_status="exists")
