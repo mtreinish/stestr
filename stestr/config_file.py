@@ -32,6 +32,7 @@ class TestrConf:
         this is DEFAULT.
     """
 
+    DEFAULT_CONFIG_FILENAME = ".stestr.conf"
     _escape_trailing_backslash_re = re.compile(r"(?<=[^\\])\\$")
     # Set sensible config defaults here, so that override methods are kept DRY
     test_path = None
@@ -81,7 +82,7 @@ class TestrConf:
 
         :param str config: The pathname of the config file to use
         """
-        if os.path.isfile(config):
+        if os.path.isfile(config) or config != cls.DEFAULT_CONFIG_FILENAME:
             return cls(config)
         try:
             return cls("pyproject.toml")

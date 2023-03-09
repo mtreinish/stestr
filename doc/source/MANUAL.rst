@@ -92,18 +92,19 @@ Tox
 If you are also using `tox <https://tox.readthedocs.io/en/latest/>`__ with your
 project then it is not necessary to create separate stestr config file, instead
 you can embed the necessary configuration in the existing ``tox.ini`` file with
-an ``stestr`` section. For example a full configuration section would be::
+an ``[stestr]`` section. For example a full configuration section would be::
 
   [stestr]
   test_path=./project/tests
   top_dir=./
   group_regex=([^\.]*\.)*
 
+Any configuration directives outside the ``[stestr]`` section will be ignored.
 It's important to note that if either the ``--config``/``-c`` CLI argument is
-specified and pointing to an existing file or the default location
-``.stestr.conf`` file is present then any configuration in the ``tox.ini`` will
-be ignored. Configuration embedded in a ``tox.ini`` will only be used if other
-configuration files are not present.
+specified, or the default location ``.stestr.conf`` file is present
+then any configuration in the ``tox.ini`` will be ignored. Configuration
+embedded in a ``tox.ini`` will only be used if other configuration
+files are not present.
 
 pyproject.toml
 ''''''''''''''
@@ -117,9 +118,24 @@ configuration options.  For example::
   top_dir = "./"
   group_regex = "([^\.]*\.)*"
 
-The same caveats apply as the :ref:`tox` with regards to CLI arguments.  Also
-of note is that files specified with ``--config-file``/``-c`` may be ``.ini``
-or TOML format.
+The same caveats apply as the :ref:`tox` with regards to CLI arguments.
+
+Configuration file precedence
+'''''''''''''''''''''''''''''
+
+The order in which configuration files are read is as follows:
+
+* Any file specified with the ``--config``/``-c`` CLI argument
+* The ``.stestr.conf`` file
+* The ``[tool.stestr]`` section in a ``pyproject.toml`` file
+* The ``[stestr]`` section in a ``tox.ini`` file
+
+Also of note is that files specified with ``--config-file``/``-c``
+may be either ``.ini`` or TOML format. If providing configs in
+``.ini`` format, they **must** be in a ``[DEFAULT]`` section. If
+providing configs in TOML format, the configuration directives
+**must** be located in a ``[tool.stestr]`` section, and the filename
+**must** have a ``.toml`` extension.
 
 Running tests
 -------------

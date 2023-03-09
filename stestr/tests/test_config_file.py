@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import os
+import random
 from unittest import mock
 
 import ddt
@@ -140,6 +141,55 @@ class TestTestrConf(base.TestCase):
     def test_sanitize_dir_win32(self, path, expected):
         sanitized = self._testr_conf._sanitize_path(path)
         self.assertEqual(expected, sanitized)
+
+    @mock.patch("os.path.isfile")
+    @mock.patch("stestr.config_file.TestrConf.__init__")
+    def test_load_from_file_user_specified(self, initializer, isfile):
+        # Test that user-specified config files are "one-and-done"
+        initializer.return_value = None
+        isfile.return_value = True
+        config_file.TestrConf.load_from_file("user.conf")
+        initializer.assert_called_once_with("user.conf")
+
+    @mock.patch("os.path.isfile")
+    @mock.patch("stestr.config_file.TestrConf.__init__")
+    def test_load_from_file_user_specified_fails(self, initializer, isfile):
+        # Test that user-specified config files that do not exist gives up
+        # immediately
+        initializer.return_value = None
+        initializer.side_effect = FileNotFoundError
+        isfile.return_value = False
+        self.assertRaises(
+            FileNotFoundError, config_file.TestrConf.load_from_file, "user.conf"
+        )
+        isfile.assert_called_once_with("user.conf")
+        initializer.assert_called_once_with("user.conf")
+
+    @mock.patch("os.path.isfile")
+    @mock.patch("stestr.config_file.TestrConf.__init__")
+    def test_load_from_file_toml_has_precedence(self, initializer, isfile):
+        # Test that tox.ini is ignored if a pyproject.toml config exists
+        initializer.return_value = None
+        isfile.return_value = False
+        config_file.TestrConf.load_from_file(".stestr.conf")
+        isfile.assert_called_once_with(".stestr.conf")
+        initializer.assert_called_once_with("pyproject.toml")
+
+    @mock.patch("os.path.isfile")
+    @mock.patch("stestr.config_file.TestrConf.__init__")
+    def test_load_from_file_ini_fallback(self, initializer, isfile):
+        initializer.return_value = None
+        # The only difference between "no config file" and "nothing defined
+        # in the config file" is the type of exception thrown; we'll make
+        # sure that, in aggregate, we test for both conditions
+        exc = random.choice([FileNotFoundError, KeyError])
+        initializer.side_effect = (exc, None)
+        isfile.return_value = False
+        config_file.TestrConf.load_from_file(".stestr.conf")
+        isfile.assert_called_once_with(".stestr.conf")
+        initializer.assert_has_calls(
+            [mock.call("pyproject.toml"), mock.call("tox.ini", section="stestr")]
+        )
 
     @mock.patch.object(config_file.tomlkit, "load")
     def test_toml_load(self, mock_toml):

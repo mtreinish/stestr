@@ -89,7 +89,7 @@ class List(command.Command):
 
 
 def list_command(
-    config=".stestr.conf",
+    config=config_file.TestrConf.DEFAULT_CONFIG_FILENAME,
     repo_url=None,
     test_path=None,
     top_dir=None,
