@@ -13,7 +13,6 @@
 """List the tests from a project and show them."""
 
 from io import BytesIO
-import os
 import sys
 
 from cliff import command
@@ -90,7 +89,7 @@ class List(command.Command):
 
 
 def list_command(
-    config=".stestr.conf",
+    config=config_file.TestrConf.DEFAULT_CONFIG_FILENAME,
     repo_url=None,
     test_path=None,
     top_dir=None,
@@ -133,12 +132,7 @@ def list_command(
 
     """
     ids = None
-    if config and os.path.isfile(config):
-        conf = config_file.TestrConf(config)
-    elif os.path.isfile("tox.ini"):
-        conf = config_file.TestrConf("tox.ini", section="stestr")
-    else:
-        conf = config_file.TestrConf(config)
+    conf = config_file.TestrConf.load_from_file(config)
     cmd = conf.get_run_command(
         regexes=filters,
         repo_url=repo_url,
