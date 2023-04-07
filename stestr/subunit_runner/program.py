@@ -106,6 +106,7 @@ def list_test(test):
         "unittest2.loader.ModuleImportFailure.",
         "unittest.loader.ModuleImportFailure.",
         "discover.ModuleImportFailure.",
+        "unittest.loader._FailedTest.",
     }
     test_ids = []
     errors = []
