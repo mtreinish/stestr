@@ -15,6 +15,7 @@ import re
 import sys
 
 import configparser
+import tomlkit
 
 from stestr.repository import util
 from stestr import test_processor
@@ -27,17 +28,66 @@ class TestrConf:
     of a tox.ini file the stestr section in the tox.ini file
 
     :param str config_file: The path to the config file to use
-    :param str section: The section to use for the stestr config. By default
-        this is DEFATULT.
+    :param str section: The section to use for the stestr config. By default,
+        this is DEFAULT.
     """
 
+    DEFAULT_CONFIG_FILENAME = ".stestr.conf"
     _escape_trailing_backslash_re = re.compile(r"(?<=[^\\])\\$")
+    # Set sensible config defaults here, so that override methods are kept DRY
+    test_path = None
+    top_dir = None
+    parallel_class = False
+    group_regex = None
 
     def __init__(self, config_file, section="DEFAULT"):
-        self.parser = configparser.ConfigParser()
-        self.parser.read(config_file)
-        self.config_file = config_file
+        self.config_file = str(config_file)
         self.section = section
+        if self.config_file.lower().endswith(".toml"):
+            self._load_from_toml()
+        else:
+            self._load_from_configparser()
+
+    def _load_from_configparser(self):
+        parser = configparser.ConfigParser()
+        parser.read(self.config_file)
+        self.test_path = parser.get(self.section, "test_path", fallback=self.test_path)
+        self.top_dir = parser.get(self.section, "top_dir", fallback=self.top_dir)
+        self.parallel_class = parser.getboolean(
+            self.section, "parallel_class", fallback=self.parallel_class
+        )
+        self.group_regex = parser.get(
+            self.section, "group_regex", fallback=self.group_regex
+        )
+
+    def _load_from_toml(self):
+        with open(self.config_file) as f:
+            doc = tomlkit.load(f)
+            root = doc["tool"]["stestr"]
+            self.test_path = root.get("test_path", self.test_path)
+            self.top_dir = root.get("top_dir", self.top_dir)
+            self.parallel_class = root.get("parallel_class", self.parallel_class)
+            self.group_regex = root.get("group_regex", self.group_regex)
+
+    @classmethod
+    def load_from_file(cls, config):
+        """Load user-specified values from the various config files.
+
+        ConfigParser (.ini) and TOML are supported.
+        If a config file is specified, it is used, and fails on errors.
+        If no config file is specified, the order of precedence is as follows:
+        - .stestr.conf
+        - pyproject.toml with a valid [tool.stestr] section
+        - tox.ini with a valid [stestr] section
+
+        :param str config: The pathname of the config file to use
+        """
+        if os.path.isfile(config) or config != cls.DEFAULT_CONFIG_FILENAME:
+            return cls(config)
+        try:
+            return cls("pyproject.toml")
+        except (FileNotFoundError, KeyError):
+            return cls("tox.ini", section="stestr")
 
     def _sanitize_path(self, path):
         if os.sep == "\\":
@@ -114,22 +164,18 @@ class TestrConf:
         :rtype: test_processor.TestProcessorFixture
         """
 
-        if not test_path and self.parser.has_option(self.section, "test_path"):
-            test_path = self.parser.get(self.section, "test_path")
-        elif not test_path:
+        if not test_path and not self.test_path:
             sys.exit(
                 "No test_path can be found in either the command line "
                 "options nor in the specified config file {}.  Please "
                 "specify a test path either in the config file or via "
                 "the --test-path argument".format(self.config_file)
             )
-        if not top_dir and self.parser.has_option(self.section, "top_dir"):
-            top_dir = self.parser.get(self.section, "top_dir")
-        elif not top_dir:
+        if not top_dir and not self.top_dir:
             top_dir = "./"
 
-        test_path = self._sanitize_path(test_path)
-        top_dir = self._sanitize_path(top_dir)
+        test_path = self._sanitize_path(test_path or self.test_path)
+        top_dir = self._sanitize_path(top_dir or self.top_dir)
 
         stestr_python = sys.executable
         # let's try to be explicit, even if it means a longer set of ifs
@@ -160,16 +206,10 @@ class TestrConf:
         idoption = "--load-list $IDFILE"
         # If the command contains $IDOPTION read that command from config
         # Use a group regex if one is defined
-        if parallel_class:
+        if parallel_class or self.parallel_class:
             group_regex = r"([^\.]*\.)*"
-        if (
-            not group_regex
-            and self.parser.has_option(self.section, "parallel_class")
-            and self.parser.getboolean(self.section, "parallel_class")
-        ):
-            group_regex = r"([^\.]*\.)*"
-        if not group_regex and self.parser.has_option(self.section, "group_regex"):
-            group_regex = self.parser.get(self.section, "group_regex")
+        if not group_regex and self.group_regex:
+            group_regex = self.group_regex
         if group_regex:
 
             def group_callback(test_id, regex=re.compile(group_regex)):

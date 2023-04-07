@@ -8,3 +8,4 @@ fixtures>=3.0.0 # Apache-2.0/BSD
 testtools>=2.2.0 # MIT
 PyYAML>=3.10.0 # MIT
 voluptuous>=0.8.9 # BSD License
+tomlkit>=0.11.6 # MIT
