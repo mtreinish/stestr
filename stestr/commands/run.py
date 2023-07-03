@@ -473,7 +473,7 @@ def run_command(
         if not os.path.isfile(config) and not test_path:
             # If there is no config and no test-path
             if os.path.isfile("tox.ini"):
-                tox_conf = configparser.SafeConfigParser()
+                tox_conf = configparser.ConfigParser()
                 tox_conf.read("tox.ini")
                 if not tox_conf.has_section("stestr"):
                     msg = (
