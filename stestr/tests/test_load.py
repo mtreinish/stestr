@@ -20,6 +20,7 @@ class TestLoadCommand(base.TestCase):
     def test_empty_with_pretty_out(self):
         stream = io.BytesIO()
         output = io.BytesIO()
-        res = load.load(in_streams=[('subunit', stream)], pretty_out=True,
-                        stdout=output)
+        res = load.load(
+            in_streams=[("subunit", stream)], pretty_out=True, stdout=output
+        )
         self.assertEqual(1, res)

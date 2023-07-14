@@ -59,10 +59,10 @@ def filter_by_ids(suite_or_case, test_ids):
     than guessing how to reconstruct a new suite.
     """
     # Compatible objects
-    if extras.safe_hasattr(suite_or_case, 'filter_by_ids'):
+    if extras.safe_hasattr(suite_or_case, "filter_by_ids"):
         return suite_or_case.filter_by_ids(test_ids)
     # TestCase objects.
-    if extras.safe_hasattr(suite_or_case, 'id'):
+    if extras.safe_hasattr(suite_or_case, "id"):
         if suite_or_case.id() in test_ids:
             return suite_or_case
         else:
@@ -103,17 +103,18 @@ def list_test(test):
         describing things that failed to import.
     """
     unittest_import_strs = {
-        'unittest2.loader.ModuleImportFailure.',
-        'unittest.loader.ModuleImportFailure.',
-        'discover.ModuleImportFailure.'
-        }
+        "unittest2.loader.ModuleImportFailure.",
+        "unittest.loader.ModuleImportFailure.",
+        "discover.ModuleImportFailure.",
+        "unittest.loader._FailedTest.",
+    }
     test_ids = []
     errors = []
     for test in iterate_tests(test):
         # Much ugly.
         for prefix in unittest_import_strs:
             if test.id().startswith(prefix):
-                errors.append(test.id()[len(prefix):])
+                errors.append(test.id()[len(prefix) :])
                 break
         else:
             test_ids.append(test.id())
@@ -128,13 +129,24 @@ class TestProgram(unittest.TestProgram):
     failfast = catchbreak = buffer = progName = None
     _discovery_parser = None
 
-    def __init__(self, module='__main__', defaultTest=None, argv=None,
-                 testRunner=None, testLoader=unittest.defaultTestLoader,
-                 exit=False, verbosity=1, failfast=None, catchbreak=None,
-                 buffer=None, warnings=None, tb_locals=False):
+    def __init__(
+        self,
+        module="__main__",
+        defaultTest=None,
+        argv=None,
+        testRunner=None,
+        testLoader=unittest.defaultTestLoader,
+        exit=False,
+        verbosity=1,
+        failfast=None,
+        catchbreak=None,
+        buffer=None,
+        warnings=None,
+        tb_locals=False,
+    ):
         if isinstance(module, str):
             self.module = __import__(module)
-            for part in module.split('.')[1:]:
+            for part in module.split(".")[1:]:
                 self.module = getattr(self.module, part)
         else:
             self.module = module
@@ -151,7 +163,7 @@ class TestProgram(unittest.TestProgram):
             # even if DeprecationWarnings are ignored by default
             # print them anyway unless other warnings settings are
             # specified by the warnings arg or the -W python flag
-            self.warnings = 'default'
+            self.warnings = "default"
         else:
             # here self.warnings is set either to the value passed
             # to the warnings args or to None.
@@ -173,44 +185,53 @@ class TestProgram(unittest.TestProgram):
             # does in OptimisingTestSuite.add, but with a standard protocol).
             # This is needed because the load_tests hook allows arbitrary
             # suites, even if that is rarely used.
-            source = open(self.load_list, 'rb')
+            source = open(self.load_list, "rb")
             try:
                 lines = source.readlines()
             finally:
                 source.close()
-            test_ids = {line.strip().decode('utf-8') for line in lines}
+            test_ids = {line.strip().decode("utf-8") for line in lines}
             self.test = filter_by_ids(self.test, test_ids)
         # XXX: Local edit (see http://bugs.python.org/issue22860)
         if not self.listtests:
             self.runTests()
         else:
             runner = self._get_runner()
-            if extras.safe_hasattr(runner, 'list'):
+            if extras.safe_hasattr(runner, "list"):
                 try:
                     runner.list(self.test, loader=self.testLoader)
                 except TypeError:
                     runner.list(self.test)
             else:
                 for test in iterate_tests(self.test):
-                    sys.stdout.write('%s\n' % test.id())
+                    sys.stdout.write("%s\n" % test.id())
 
     def _getParentArgParser(self):
         parser = super(TestProgram, self)._getParentArgParser()
         # XXX: Local edit (see http://bugs.python.org/issue22860)
         parser.add_argument(
-            '-l', '--list', dest='listtests', default=False,
-            action='store_true', help='List tests rather than executing them')
+            "-l",
+            "--list",
+            dest="listtests",
+            default=False,
+            action="store_true",
+            help="List tests rather than executing them",
+        )
         parser.add_argument(
-            '--load-list', dest='load_list', default=None,
-            help='Specifies a file containing test ids, only tests matching '
-                 'those ids are executed')
+            "--load-list",
+            dest="load_list",
+            default=None,
+            help="Specifies a file containing test ids, only tests matching "
+            "those ids are executed",
+        )
         return parser
 
     def _get_runner(self):
         testRunner = self.testRunner
         try:
-            testRunner = self.testRunner(failfast=self.failfast,
-                                         tb_locals=self.tb_locals)
+            testRunner = self.testRunner(
+                failfast=self.failfast, tb_locals=self.tb_locals
+            )
         except TypeError:
             testRunner = self.testRunner()
         # If for some reason we failed to initialize the runner initialize

@@ -18,17 +18,25 @@ from stestr import output
 
 
 class IsolationAnalyzer:
-
-    def __init__(self, latest_run, conf, run_func, repo, test_path=None,
-                 top_dir=None, group_regex=None, repo_type='file',
-                 repo_url=None, serial=False, concurrency=0):
+    def __init__(
+        self,
+        latest_run,
+        conf,
+        run_func,
+        repo,
+        test_path=None,
+        top_dir=None,
+        group_regex=None,
+        repo_url=None,
+        serial=False,
+        concurrency=0,
+    ):
         super().__init__()
         self._worker_to_test = None
         self._test_to_worker = None
         self.latest_run = latest_run
         self.conf = conf
         self.group_regex = group_regex
-        self.repo_type = repo_type
         self.repo_url = repo_url
         self.serial = serial
         self.concurrency = concurrency
@@ -41,32 +49,33 @@ class IsolationAnalyzer:
 
         test_conflicts = {}
         if not spurious_failures:
-            raise ValueError('No failures provided to bisect the cause of')
+            raise ValueError("No failures provided to bisect the cause of")
         for spurious_failure in spurious_failures:
-            candidate_causes = self._prior_tests(self.latest_run,
-                                                 spurious_failure)
+            candidate_causes = self._prior_tests(self.latest_run, spurious_failure)
             bottom = 0
             top = len(candidate_causes)
             width = top - bottom
             while width:
                 check_width = int(math.ceil(width / 2.0))
-                test_ids = candidate_causes[
-                    bottom:bottom + check_width] + [spurious_failure]
+                test_ids = candidate_causes[bottom : bottom + check_width] + [
+                    spurious_failure
+                ]
                 cmd = self.conf.get_run_command(
-                    test_ids, group_regex=self.group_regex,
-                    repo_type=self.repo_type, repo_url=self.repo_url,
-                    serial=self.serial, concurrency=self.concurrency,
-                    test_path=self.test_path, top_dir=self.top_dir)
-                self.run_func(cmd, False,
-                              pretty_out=False,
-                              repo_type=self.repo_type,
-                              repo_url=self.repo_url)
+                    test_ids,
+                    group_regex=self.group_regex,
+                    repo_url=self.repo_url,
+                    serial=self.serial,
+                    concurrency=self.concurrency,
+                    test_path=self.test_path,
+                    top_dir=self.top_dir,
+                )
+                self.run_func(cmd, False, pretty_out=False, repo_url=self.repo_url)
                 # check that the test we're probing still failed - still
                 # awkward.
                 found_fail = []
 
                 def find_fail(test_dict):
-                    if test_dict['id'] == spurious_failure:
+                    if test_dict["id"] == spurious_failure:
                         found_fail.append(True)
 
                 checker = testtools.StreamToDict(find_fail)
@@ -80,8 +89,7 @@ class IsolationAnalyzer:
                     top = bottom + check_width
                     if width == 1:
                         # found the cause
-                        test_conflicts[
-                            spurious_failure] = candidate_causes[bottom]
+                        test_conflicts[spurious_failure] = candidate_causes[bottom]
                         width = 0
                     else:
                         width = top - bottom
@@ -96,9 +104,9 @@ class IsolationAnalyzer:
                         width = top - bottom
             if spurious_failure not in test_conflicts:
                 # Could not determine cause
-                test_conflicts[spurious_failure] = 'unknown - no conflicts'
+                test_conflicts[spurious_failure] = "unknown - no conflicts"
         if test_conflicts:
-            table = [('failing test', 'caused by test')]
+            table = [("failing test", "caused by test")]
             for failure in sorted(test_conflicts):
                 causes = test_conflicts[failure]
                 table.append((failure, causes))
@@ -111,7 +119,7 @@ class IsolationAnalyzer:
 
         Tests that ran in a different worker are not included in the result.
         """
-        if not getattr(self, '_worker_to_test', False):
+        if not getattr(self, "_worker_to_test", False):
             case = run.get_test()
             # Use None if there is no worker-N tag
             # If there are multiple, map them all.
@@ -121,11 +129,11 @@ class IsolationAnalyzer:
             test_to_worker = {}
 
             def map_test(test_dict):
-                tags = test_dict['tags']
-                id = test_dict['id']
+                tags = test_dict["tags"]
+                id = test_dict["id"]
                 workers = []
                 for tag in tags:
-                    if tag.startswith('worker-'):
+                    if tag.startswith("worker-"):
                         workers.append(tag)
                 if not workers:
                     workers = [None]
@@ -145,5 +153,5 @@ class IsolationAnalyzer:
         prior_tests = []
         for worker in failing_workers:
             worker_tests = self._worker_to_test[worker]
-            prior_tests.extend(worker_tests[:worker_tests.index(failing_id)])
+            prior_tests.extend(worker_tests[: worker_tests.index(failing_id)])
         return prior_tests

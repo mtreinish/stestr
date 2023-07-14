@@ -19,7 +19,7 @@ import os
 import sys
 import tempfile
 
-from future.moves.dbm import dumb as my_dbm
+from dbm import dumb as my_dbm
 from subunit import TestProtocolClient
 import subunit.v2
 import testtools
@@ -36,10 +36,9 @@ def atomicish_rename(source, target):
 
 
 class RepositoryFactory(repository.AbstractRepositoryFactory):
-
     def initialise(klass, url):
         """Create a repository at url/path."""
-        base = os.path.join(os.path.expanduser(url), '.stestr')
+        base = os.path.join(os.path.expanduser(url), ".stestr")
         try:
             os.mkdir(base)
         except OSError as e:
@@ -48,23 +47,23 @@ class RepositoryFactory(repository.AbstractRepositoryFactory):
                 pass
             else:
                 raise
-        with open(os.path.join(base, 'format'), 'wt') as stream:
-            stream.write('1\n')
+        with open(os.path.join(base, "format"), "wt") as stream:
+            stream.write("1\n")
         result = Repository(base)
         result._write_next_stream(0)
         return result
 
     def open(self, url):
         path = os.path.expanduser(url)
-        base = os.path.join(path, '.stestr')
+        base = os.path.join(path, ".stestr")
         try:
-            stream = open(os.path.join(base, 'format'))
+            stream = open(os.path.join(base, "format"))
         except OSError as e:
             if e.errno == errno.ENOENT:
                 raise repository.RepositoryNotFound(url)
             raise
         with stream:
-            if '1\n' != stream.read():
+            if "1\n" != stream.read():
                 raise ValueError(url)
         return Repository(base)
 
@@ -94,7 +93,7 @@ class Repository(repository.AbstractRepository):
         return value
 
     def _next_stream(self):
-        with open(os.path.join(self.base, 'next-stream')) as fp:
+        with open(os.path.join(self.base, "next-stream")) as fp:
             next_content = fp.read()
         try:
             return int(next_content)
@@ -128,18 +127,18 @@ class Repository(repository.AbstractRepository):
 
     def get_failing(self):
         try:
-            with open(os.path.join(self.base, "failing"), 'rb') as fp:
+            with open(os.path.join(self.base, "failing"), "rb") as fp:
                 run_subunit_content = fp.read()
         except OSError:
             err = sys.exc_info()[1]
             if err.errno == errno.ENOENT:
-                run_subunit_content = _b('')
+                run_subunit_content = _b("")
             else:
                 raise
         return _DiskRun(None, run_subunit_content)
 
     def _get_metadata(self, run_id):
-        db = my_dbm.open(self._path('meta.dbm'), 'c')
+        db = my_dbm.open(self._path("meta.dbm"), "c")
         try:
             metadata = db.get(str(run_id))
         finally:
@@ -148,7 +147,7 @@ class Repository(repository.AbstractRepository):
 
     def get_test_run(self, run_id):
         try:
-            with open(os.path.join(self.base, str(run_id)), 'rb') as fp:
+            with open(os.path.join(self.base, str(run_id)), "rb") as fp:
                 run_subunit_content = fp.read()
         except OSError as e:
             if e.errno == errno.ENOENT:
@@ -165,15 +164,15 @@ class Repository(repository.AbstractRepository):
         # May be too slow, but build and iterate.
         # 'c' because an existing repo may be missing a file.
         try:
-            db = my_dbm.open(self._path('times.dbm'), 'c')
+            db = my_dbm.open(self._path("times.dbm"), "c")
         except my_dbm.error:
-            os.remove(self._path('times.dbm'))
-            db = my_dbm.open(self._path('times.dbm'), 'c')
+            os.remove(self._path("times.dbm"))
+            db = my_dbm.open(self._path("times.dbm"), "c")
         try:
             result = {}
             for test_id in test_ids:
                 if type(test_id) != str:
-                    test_id = test_id.encode('utf8')
+                    test_id = test_id.encode("utf8")
                 stripped_test_id = utils.cleanup_test_name(test_id)
                 # gdbm does not support get().
                 try:
@@ -194,14 +193,14 @@ class Repository(repository.AbstractRepository):
         # user, repo-per-working-tree model makes this acceptable in the short
         # term. Likewise we don't fsync - this data isn't valuable enough to
         # force disk IO.
-        prefix = self._path('next-stream')
-        with open(prefix + '.new', 'wt') as stream:
-            stream.write('%d\n' % value)
-        atomicish_rename(prefix + '.new', prefix)
+        prefix = self._path("next-stream")
+        with open(prefix + ".new", "wt") as stream:
+            stream.write("%d\n" % value)
+        atomicish_rename(prefix + ".new", prefix)
 
     def find_metadata(self, metadata):
         run_ids = []
-        db = my_dbm.open(self._path('meta.dbm'), 'c')
+        db = my_dbm.open(self._path("meta.dbm"), "c")
         try:
             for run_id in db:
                 if db.get(run_id) == metadata:
@@ -246,21 +245,20 @@ class _DiskRun(repository.AbstractTestRun):
         def wrap_result(result):
             # Wrap in a router to mask out startTestRun/stopTestRun from the
             # ExtendedToStreamDecorator.
-            result = testtools.StreamResultRouter(
-                result, do_start_stop_run=False)
+            result = testtools.StreamResultRouter(result, do_start_stop_run=False)
             # Wrap that in ExtendedToStreamDecorator to convert v1 calls to
             # StreamResult.
             return testtools.ExtendedToStreamDecorator(result)
+
         return testtools.DecorateTestCaseResult(
-            case, wrap_result, methodcaller('startTestRun'),
-            methodcaller('stopTestRun'))
+            case, wrap_result, methodcaller("startTestRun"), methodcaller("stopTestRun")
+        )
 
     def get_metadata(self):
         return self._metadata
 
 
 class _SafeInserter:
-
     def __init__(self, repository, partial=False, run_id=None, metadata=None):
         # XXX: Perhaps should factor into a decorator and use an unaltered
         # TestProtocolClient.
@@ -270,27 +268,26 @@ class _SafeInserter:
         if not self._run_id:
             fd, name = tempfile.mkstemp(dir=self._repository.base)
             self.fname = name
-            stream = os.fdopen(fd, 'wb')
+            stream = os.fdopen(fd, "wb")
         else:
             self.fname = os.path.join(self._repository.base, self._run_id)
-            stream = open(self.fname, 'ab')
+            stream = open(self.fname, "ab")
         self.partial = partial
         # The time take by each test, flushed at the end.
         self._times = {}
         self._test_start = None
         self._time = None
-        subunit_client = testtools.StreamToExtendedDecorator(
-            TestProtocolClient(stream))
-        self.hook = testtools.CopyStreamResult([
-            subunit_client,
-            testtools.StreamToDict(self._handle_test)])
+        subunit_client = testtools.StreamToExtendedDecorator(TestProtocolClient(stream))
+        self.hook = testtools.CopyStreamResult(
+            [subunit_client, testtools.StreamToDict(self._handle_test)]
+        )
         self._stream = stream
 
     def _handle_test(self, test_dict):
-        start, stop = test_dict['timestamps']
-        if test_dict['status'] == 'exists' or None in (start, stop):
+        start, stop = test_dict["timestamps"]
+        if test_dict["status"] == "exists" or None in (start, stop):
             return
-        test_id = utils.cleanup_test_name(test_dict['id'])
+        test_id = utils.cleanup_test_name(test_dict["id"])
         self._times[test_id] = str((stop - start).total_seconds())
 
     def startTestRun(self):
@@ -305,7 +302,7 @@ class _SafeInserter:
             final_path = os.path.join(self._repository.base, str(run_id))
             atomicish_rename(self.fname, final_path)
         if self._metadata:
-            db = my_dbm.open(self._repository._path('meta.dbm'), 'c')
+            db = my_dbm.open(self._repository._path("meta.dbm"), "c")
             try:
                 dbm_run_id = str(run_id)
                 db[dbm_run_id] = str(self._metadata)
@@ -313,14 +310,14 @@ class _SafeInserter:
                 db.close()
 
         # May be too slow, but build and iterate.
-        db = my_dbm.open(self._repository._path('times.dbm'), 'c')
+        db = my_dbm.open(self._repository._path("times.dbm"), "c")
         try:
             db_times = {}
             for key, value in self._times.items():
                 if type(key) != str:
-                    key = key.encode('utf8')
+                    key = key.encode("utf8")
                 db_times[key] = value
-            if getattr(db, 'update', None):
+            if getattr(db, "update", None):
                 db.update(db_times)
             else:
                 for key, value in db_times.items():
@@ -350,7 +347,6 @@ class _FailingInserter(_SafeInserter):
 
 
 class _Inserter(_SafeInserter):
-
     def _name(self):
         if not self._run_id:
             return self._repository._allocate()
@@ -366,6 +362,7 @@ class _Inserter(_SafeInserter):
         # Should just pull the failing items aside as they happen perhaps.
         # Or use a router and avoid using a memory object at all.
         from stestr.repository import memory
+
         repo = memory.Repository()
         if self.partial:
             # Seed with current failing
@@ -374,8 +371,7 @@ class _Inserter(_SafeInserter):
             failing = self._repository.get_failing()
             failing.get_test().run(inserter)
             inserter.stopTestRun()
-        inserter = testtools.ExtendedToStreamDecorator(
-            repo.get_inserter(partial=True))
+        inserter = testtools.ExtendedToStreamDecorator(repo.get_inserter(partial=True))
         inserter.startTestRun()
         run = self._repository.get_test_run(self.get_id())
         run.get_test().run(inserter)

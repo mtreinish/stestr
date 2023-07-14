@@ -72,26 +72,34 @@ class TestProcessorFixture(fixtures.Fixture):
         to use for the run
     :param int concurrency: How many processes to use. The default (0)
         autodetects your CPU count and uses that.
-    :param path blacklist_file: Available now but soon to be replaced by the
-        new option exclude_list below.
     :param path exclude_list: Path to an exclusion list file, this file
         contains a separate regex exclude on each newline.
-    :param str whitelist_file: Available now but soon to be replaced by the
-        new option include_list below.
     :param path include_list: Path to an inclusion list file, this file
          contains a separate regex on each newline.
     :param boolean randomize: Randomize the test order after they are
         partitioned into separate workers
     """
 
-    def __init__(self, test_ids, cmd_template, listopt, idoption,
-                 repository, parallel=True, listpath=None,
-                 test_filters=None, group_callback=None, serial=False,
-                 worker_path=None, concurrency=0, blacklist_file=None,
-                 exclude_list=None, black_regex=None,
-                 exclude_regex=None, whitelist_file=None,
-                 include_list=None, randomize=False,
-                 dynamic=False):
+    def __init__(
+        self,
+        test_ids,
+        cmd_template,
+        listopt,
+        idoption,
+        repository,
+        parallel=True,
+        listpath=None,
+        test_filters=None,
+        group_callback=None,
+        serial=False,
+        worker_path=None,
+        concurrency=0,
+        exclude_list=None,
+        exclude_regex=None,
+        include_list=None,
+        randomize=False,
+        dynamic=False,
+    ):
         """Create a TestProcessorFixture."""
 
         self.test_ids = test_ids
@@ -108,32 +116,31 @@ class TestProcessorFixture(fixtures.Fixture):
         self.worker_path = None
         self.worker_path = worker_path
         self.concurrency_value = concurrency
-        self.blacklist_file = blacklist_file
         self.exclude_list = exclude_list
-        self.whitelist_file = whitelist_file
         self.include_list = include_list
-        self.black_regex = black_regex
         self.exclude_regex = exclude_regex
         self.randomize = randomize
         self.dynamic = dynamic
 
     def setUp(self):
         super().setUp()
-        variable_regex = r'\$(IDOPTION|IDFILE|IDLIST|LISTOPT)'
+        variable_regex = r"\$(IDOPTION|IDFILE|IDLIST|LISTOPT)"
         variables = {}
-        list_variables = {'LISTOPT': self.listopt}
+        list_variables = {"LISTOPT": self.listopt}
         cmd = self.template
         default_idstr = None
 
         def list_subst(match):
-            return list_variables.get(match.groups(1)[0], '')
+            return list_variables.get(match.groups(1)[0], "")
 
         self.list_cmd = re.sub(variable_regex, list_subst, cmd)
         nonparallel = not self.parallel
-        selection_logic = (self.test_filters or self.blacklist_file or
-                           self.exclude_list or self.whitelist_file or
-                           self.include_list or self.black_regex or
-                           self.exclude_regex)
+        selection_logic = (
+            self.test_filters
+            or self.exclude_list
+            or self.include_list
+            or self.exclude_regex
+        )
         if nonparallel:
             self.concurrency = 1
         else:
@@ -155,31 +162,30 @@ class TestProcessorFixture(fixtures.Fixture):
         if self.test_ids is None:
             # No test ids to supply to the program.
             self.list_file_name = None
-            name = ''
-            idlist = ''
+            name = ""
+            idlist = ""
         else:
             self.test_ids = selection.construct_list(
-                self.test_ids, blacklist_file=self.blacklist_file,
+                self.test_ids,
                 exclude_list=self.exclude_list,
-                whitelist_file=self.whitelist_file,
                 include_list=self.include_list,
                 regexes=self.test_filters,
-                black_regex=self.black_regex,
-                exclude_regex=self.exclude_regex)
+                exclude_regex=self.exclude_regex,
+            )
             name = self.make_listfile()
-            variables['IDFILE'] = name
-            idlist = ' '.join(self.test_ids)
-        variables['IDLIST'] = idlist
+            variables["IDFILE"] = name
+            idlist = " ".join(self.test_ids)
+        variables["IDLIST"] = idlist
 
         def subst(match):
-            return variables.get(match.groups(1)[0], '')
+            return variables.get(match.groups(1)[0], "")
 
         if self.test_ids is None:
             # No test ids, no id option.
-            idoption = ''
+            idoption = ""
         else:
             idoption = re.sub(variable_regex, subst, self.idoption)
-            variables['IDOPTION'] = idoption
+            variables["IDOPTION"] = idoption
         self.cmd = re.sub(variable_regex, subst, cmd)
 
     def make_listfile(self):
@@ -187,10 +193,10 @@ class TestProcessorFixture(fixtures.Fixture):
         try:
             if self._listpath:
                 name = self._listpath
-                stream = open(name, 'wb')
+                stream = open(name, "wb")
             else:
                 fd, name = tempfile.mkstemp()
-                stream = os.fdopen(fd, 'wb')
+                stream = os.fdopen(fd, "wb")
             with stream:
                 self.list_file_name = name
                 testlist.write_list(stream, self.test_ids)
@@ -208,11 +214,14 @@ class TestProcessorFixture(fixtures.Fixture):
     def _start_process(self, cmd):
         # NOTE(claudiub): Windows does not support passing in a preexec_fn
         # argument.
-        preexec_fn = None if sys.platform == 'win32' else self._clear_SIGPIPE
-        return subprocess.Popen(cmd, shell=True,
-                                stdout=subprocess.PIPE,
-                                stdin=subprocess.PIPE,
-                                preexec_fn=preexec_fn)
+        preexec_fn = None if sys.platform == "win32" else self._clear_SIGPIPE
+        return subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            preexec_fn=preexec_fn,
+        )
 
     def list_tests(self):
         """List the tests returned by list_cmd.
@@ -222,22 +231,26 @@ class TestProcessorFixture(fixtures.Fixture):
         run_proc = self._start_process(self.list_cmd)
         out, err = run_proc.communicate()
         if run_proc.returncode != 0:
-            sys.stdout.write("\n=========================\n"
-                             "Failures during discovery"
-                             "\n=========================\n")
+            sys.stdout.write(
+                "\n=========================\n"
+                "Failures during discovery"
+                "\n=========================\n"
+            )
             new_out = io.BytesIO()
-            v2.ByteStreamToStreamResult(
-                io.BytesIO(out), 'stdout').run(
-                    results.CatFiles(new_out))
+            v2.ByteStreamToStreamResult(io.BytesIO(out), "stdout").run(
+                results.CatFiles(new_out)
+            )
             out = new_out.getvalue()
             if out:
-                sys.stdout.write(out.decode('utf8'))
+                sys.stdout.write(out.decode("utf8"))
             if err:
-                sys.stderr.write(err.decode('utf8'))
-            sys.stdout.write("\n" + "=" * 80 + "\n"
-                             "The above traceback was encountered during "
-                             "test discovery which imports all the found test"
-                             " modules in the specified test_path.\n")
+                sys.stderr.write(err.decode("utf8"))
+            sys.stdout.write(
+                "\n" + "=" * 80 + "\n"
+                "The above traceback was encountered during "
+                "test discovery which imports all the found test"
+                " modules in the specified test_path.\n"
+            )
             exit(100)
         ids = testlist.parse_enumeration(out)
         return ids
@@ -247,7 +260,7 @@ class TestProcessorFixture(fixtures.Fixture):
             # NOTE(mtreinish): Open on each loop iteration with a dup to
             # remove the chance of being garbage collected. Without this
             # you'll be fighting random Bad file desciptor errors
-            subunit_pipe = os.fdopen(os.dup(subunit_pipe.fileno()), 'wb')
+            subunit_pipe = os.fdopen(os.dup(subunit_pipe.fileno()), "wb")
             if job_queue.empty():
                 subunit_pipe.close()
                 return
@@ -258,12 +271,14 @@ class TestProcessorFixture(fixtures.Fixture):
                 return
             if not test_id:
                 os.close(subunit_pipe.fileno())
-                raise ValueError('Invalid blank test_id: %s' % test_id)
+                raise ValueError("Invalid blank test_id: %s" % test_id)
             cmd_list = [self.cmd, test_id]
             test_runner = run.SubunitTestRunner
             program.TestProgram(
-                module=None, argv=cmd_list,
-                testRunner=functools.partial(test_runner, stdout=subunit_pipe))
+                module=None,
+                argv=cmd_list,
+                testRunner=functools.partial(test_runner, stdout=subunit_pipe),
+            )
 
     def run_tests(self):
         """Run the tests defined by the command
@@ -284,30 +299,39 @@ class TestProcessorFixture(fixtures.Fixture):
         # If there is a worker path, use that to get worker groups
         elif self.worker_path:
             test_id_groups = scheduler.generate_worker_partitions(
-                test_ids, self.worker_path, self.repository,
-                self._group_callback, self.randomize)
+                test_ids,
+                self.worker_path,
+                self.repository,
+                self._group_callback,
+                self.randomize,
+            )
         # If we have multiple workers partition the tests and recursively
         # create single worker TestProcessorFixtures for each worker
         else:
-            test_id_groups = scheduler.partition_tests(test_ids,
-                                                       self.concurrency,
-                                                       self.repository,
-                                                       self._group_callback)
+            test_id_groups = scheduler.partition_tests(
+                test_ids, self.concurrency, self.repository, self._group_callback
+            )
         if not self.dynamic:
             for test_ids in test_id_groups:
                 if not test_ids:
                     # No tests in this partition
                     continue
                 fixture = self.useFixture(
-                    TestProcessorFixture(test_ids,
-                                         self.template, self.listopt,
-                                         self.idoption, self.repository,
-                                         parallel=False))
+                    TestProcessorFixture(
+                        test_ids,
+                        self.template,
+                        self.listopt,
+                        self.idoption,
+                        self.repository,
+                        parallel=False,
+                    )
+                )
                 result.extend(fixture.run_tests())
             return result
         else:
             test_id_list = scheduler.get_dynamic_test_list(
-                test_ids, self.repository, self._group_callback)
+                test_ids, self.repository, self._group_callback
+            )
             test_list = multiprocessing.Queue()
 
             for test_id in test_id_list:
@@ -315,12 +339,13 @@ class TestProcessorFixture(fixtures.Fixture):
 
             for i in range(self.concurrency):
                 fd_pipe_r, fd_pipe_w = multiprocessing.Pipe(False)
-                name = 'worker-%s' % i
-                proc = multiprocessing.Process(target=self._dynamic_run_tests,
-                                               name=name,
-                                               args=(test_list, fd_pipe_w))
+                name = "worker-%s" % i
+                proc = multiprocessing.Process(
+                    target=self._dynamic_run_tests,
+                    name=name,
+                    args=(test_list, fd_pipe_w),
+                )
                 proc.start()
                 stream_read = os.dup(fd_pipe_r.fileno())
-                result.append({'stream': stream_read,
-                               'proc': proc})
+                result.append({"stream": stream_read, "proc": proc})
             return result

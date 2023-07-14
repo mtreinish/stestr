@@ -41,47 +41,70 @@ class Last(command.Command):
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
         parser.add_argument(
-            "--subunit", action="store_true",
-            default=False, help="Show output as a subunit stream.")
-        parser.add_argument("--no-subunit-trace", action='store_true',
-                            default=False,
-                            help="Disable output with the subunit-trace "
-                            "output filter")
-        parser.add_argument('--force-subunit-trace', action='store_true',
-                            default=False,
-                            help='Force subunit-trace output regardless of any'
-                                 'other options or config settings')
-        parser.add_argument('--color', action='store_true', default=False,
-                            help='Enable color output in the subunit-trace '
-                            'output, if subunit-trace output is enabled. '
-                            '(this is the default). If subunit-trace is '
-                            'disable this does nothing.')
-        parser.add_argument('--suppress-attachments', action='store_true',
-                            dest='suppress_attachments',
-                            help='If set do not print stdout or stderr '
-                            'attachment contents on a successful test '
-                            'execution')
-        parser.add_argument('--all-attachments', action='store_true',
-                            dest='all_attachments',
-                            help='If set print all text attachment contents on'
-                            ' a successful test execution')
-        parser.add_argument('--show-binary-attachments', action='store_true',
-                            dest='show_binary_attachments',
-                            help='If set, show non-text attachments. This is '
-                            'generally only useful for debug purposes.')
+            "--subunit",
+            action="store_true",
+            default=False,
+            help="Show output as a subunit stream.",
+        )
+        parser.add_argument(
+            "--no-subunit-trace",
+            action="store_true",
+            default=False,
+            help="Disable output with the subunit-trace " "output filter",
+        )
+        parser.add_argument(
+            "--force-subunit-trace",
+            action="store_true",
+            default=False,
+            help="Force subunit-trace output regardless of any"
+            "other options or config settings",
+        )
+        parser.add_argument(
+            "--color",
+            action="store_true",
+            default=False,
+            help="Enable color output in the subunit-trace "
+            "output, if subunit-trace output is enabled. "
+            "(this is the default). If subunit-trace is "
+            "disable this does nothing.",
+        )
+        parser.add_argument(
+            "--suppress-attachments",
+            action="store_true",
+            dest="suppress_attachments",
+            help="If set do not print stdout or stderr "
+            "attachment contents on a successful test "
+            "execution",
+        )
+        parser.add_argument(
+            "--all-attachments",
+            action="store_true",
+            dest="all_attachments",
+            help="If set print all text attachment contents on"
+            " a successful test execution",
+        )
+        parser.add_argument(
+            "--show-binary-attachments",
+            action="store_true",
+            dest="show_binary_attachments",
+            help="If set, show non-text attachments. This is "
+            "generally only useful for debug purposes.",
+        )
         return parser
 
     def take_action(self, parsed_args):
         user_conf = user_config.get_user_config(self.app_args.user_config)
         args = parsed_args
         if args.suppress_attachments and args.all_attachments:
-            msg = ("The --suppress-attachments and --all-attachments "
-                   "options are mutually exclusive, you can not use both "
-                   "at the same time")
+            msg = (
+                "The --suppress-attachments and --all-attachments "
+                "options are mutually exclusive, you can not use both "
+                "at the same time"
+            )
             print(msg)
             sys.exit(1)
-        if getattr(user_conf, 'last', False):
-            if not user_conf.last.get('no-subunit-trace'):
+        if getattr(user_conf, "last", False):
+            if not user_conf.last.get("no-subunit-trace"):
                 if not args.no_subunit_trace:
                     pretty_out = True
                 else:
@@ -89,11 +112,9 @@ class Last(command.Command):
             else:
                 pretty_out = False
             pretty_out = args.force_subunit_trace or pretty_out
-            color = args.color or user_conf.last.get('color', False)
-            suppress_attachments_conf = user_conf.run.get(
-                'suppress-attachments', False)
-            all_attachments_conf = user_conf.run.get(
-                'all-attachments', False)
+            color = args.color or user_conf.last.get("color", False)
+            suppress_attachments_conf = user_conf.run.get("suppress-attachments", False)
+            all_attachments_conf = user_conf.run.get("all-attachments", False)
             if not args.suppress_attachments and not args.all_attachments:
                 suppress_attachments = suppress_attachments_conf
                 all_attachments = all_attachments_conf
@@ -108,29 +129,36 @@ class Last(command.Command):
             color = args.color
             suppress_attachments = args.suppress_attachments
             all_attachments = args.all_attachments
-        return last(repo_type=self.app_args.repo_type,
-                    repo_url=self.app_args.repo_url,
-                    subunit_out=args.subunit, pretty_out=pretty_out,
-                    color=color, suppress_attachments=suppress_attachments,
-                    all_attachments=all_attachments,
-                    show_binary_attachments=args.show_binary_attachments)
+        return last(
+            repo_url=self.app_args.repo_url,
+            subunit_out=args.subunit,
+            pretty_out=pretty_out,
+            color=color,
+            suppress_attachments=suppress_attachments,
+            all_attachments=all_attachments,
+            show_binary_attachments=args.show_binary_attachments,
+        )
 
 
-def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
-         color=False, stdout=sys.stdout, suppress_attachments=False,
-         all_attachments=False, show_binary_attachments=False):
+def last(
+    repo_url=None,
+    subunit_out=False,
+    pretty_out=True,
+    color=False,
+    stdout=sys.stdout,
+    suppress_attachments=False,
+    all_attachments=False,
+    show_binary_attachments=False,
+):
     """Show the last run loaded into a a repository
 
     This function will print the results from the last run in the repository
     to STDOUT. It can optionally print the subunit stream for the last run
     to STDOUT if the ``subunit`` option is set to true.
 
-    Note this function depends on the cwd for the repository if `repo_type` is
-    set to file and `repo_url` is not specified it will use the repository
-    located at CWD/.stestr
+    Note this function depends on the cwd for the repository if `repo_url` is
+    not specified it will use the repository located at CWD/.stestr
 
-    :param str repo_type: This is the type of repository to use. Valid choices
-        are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param bool subunit_out: Show output as a subunit stream.
     :param pretty_out: Use the subunit-trace output filter.
@@ -150,15 +178,15 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
     :rtype: int
     """
     try:
-        repo = util.get_repo_open(repo_type, repo_url)
+        repo = util.get_repo_open(repo_url=repo_url)
     except abstract.RepositoryNotFound as e:
-        stdout.write(str(e) + '\n')
+        stdout.write(str(e) + "\n")
         return 1
 
     try:
         latest_run = repo.get_latest_run()
     except KeyError as e:
-        stdout.write(str(e) + '\n')
+        stdout.write(str(e) + "\n")
         return 1
 
     if subunit_out:
@@ -168,18 +196,12 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
         return 0
     case = latest_run.get_test()
     try:
-        if repo_type == 'file':
-            previous_run = repo.get_test_run(repo.latest_id() - 1)
-        # TODO(mtreinish): add a repository api to get the previous_run to
-        # unify this logic
-        else:
-            previous_run = None
+        previous_run = repo.get_test_run(repo.latest_id() - 1)
     except KeyError:
         previous_run = None
     failed = False
     if not pretty_out:
-        output_result = results.CLITestResult(latest_run.get_id, stdout,
-                                              previous_run)
+        output_result = results.CLITestResult(latest_run.get_id, stdout, previous_run)
         summary = output_result.get_summary()
         output_result.startTestRun()
         try:
@@ -190,10 +212,14 @@ def last(repo_type='file', repo_url=None, subunit_out=False, pretty_out=True,
     else:
         stream = latest_run.get_subunit_stream()
         failed = subunit_trace.trace(
-            stream, stdout, post_fails=True, color=color,
+            stream,
+            stdout,
+            post_fails=True,
+            color=color,
             suppress_attachments=suppress_attachments,
             all_attachments=all_attachments,
-            show_binary_attachments=show_binary_attachments)
+            show_binary_attachments=show_binary_attachments,
+        )
     if failed:
         return 1
     else:

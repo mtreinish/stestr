@@ -5,8 +5,8 @@ stestr（日本語訳）
     :target: https://github.com/mtreinish/stestr/actions/workflows/main.yml
     :alt: CI Testing status
 
-.. image:: https://img.shields.io/coveralls/github/mtreinish/stestr/main.svg?style=flat-square
-    :target: https://coveralls.io/github/mtreinish/stestr?branch=main
+.. image:: https://img.shields.io/codecov/c/gh/mtreinish/stestr?style=flat-square
+    :target: https://codecov.io/gh/mtreinish/stestr
     :alt: Code coverage
 
 .. image:: https://img.shields.io/pypi/v/stestr.svg?style=flat-square
@@ -159,6 +159,6 @@ manpage builder とともに実行する必要があります。これは、簡�
 
 GitHub でのやり取りに加え、stestr の IRC チャネルもあります:
 
-Freenode の #stestr チャネル
+`OFTC <https://oftc.net/>`__ の #stestr チャネル
 
 stestr に関する質問、もしくは議論をしていますので、気軽に参加してください。

@@ -84,24 +84,58 @@ CLI. This way you can run stestr directly without having to write a config file
 and manually specify the test_path like above with the ``--test-path``/``-t``
 CLI argument.
 
+.. _tox:
+
 Tox
 '''
 
 If you are also using `tox <https://tox.readthedocs.io/en/latest/>`__ with your
 project then it is not necessary to create separate stestr config file, instead
 you can embed the necessary configuration in the existing ``tox.ini`` file with
-an ``stestr`` section. For example a full configuration section would be::
+an ``[stestr]`` section. For example a full configuration section would be::
 
   [stestr]
   test_path=./project/tests
   top_dir=./
   group_regex=([^\.]*\.)*
 
+Any configuration directives outside the ``[stestr]`` section will be ignored.
 It's important to note that if either the ``--config``/``-c`` CLI argument is
-specified and pointing to an existing file or the default location
-``.stestr.conf`` file is present then any configuration in the ``tox.ini`` will
-be ignored. Configuration embedded in a ``tox.ini`` will only be used if other
-configuration files are not present.
+specified, or the default location ``.stestr.conf`` file is present
+then any configuration in the ``tox.ini`` will be ignored. Configuration
+embedded in a ``tox.ini`` will only be used if other configuration
+files are not present.
+
+pyproject.toml
+''''''''''''''
+
+Similarly, if your project is using ``pyproject.toml``, you may forego the
+config file, and instead create a ``[tool.stestr]`` section with the desired
+configuration options.  For example::
+
+  [tool.stestr]
+  test_path = "./project/tests"
+  top_dir = "./"
+  group_regex = "([^\.]*\.)*"
+
+The same caveats apply as the :ref:`tox` with regards to CLI arguments.
+
+Configuration file precedence
+'''''''''''''''''''''''''''''
+
+The order in which configuration files are read is as follows:
+
+* Any file specified with the ``--config``/``-c`` CLI argument
+* The ``.stestr.conf`` file
+* The ``[tool.stestr]`` section in a ``pyproject.toml`` file
+* The ``[stestr]`` section in a ``tox.ini`` file
+
+Also of note is that files specified with ``--config-file``/``-c``
+may be either ``.ini`` or TOML format. If providing configs in
+``.ini`` format, they **must** be in a ``[DEFAULT]`` section. If
+providing configs in TOML format, the configuration directives
+**must** be located in a ``[tool.stestr]`` section, and the filename
+**must** have a ``.toml`` extension.
 
 Running tests
 -------------
@@ -190,12 +224,6 @@ list file is used in conjunction with the normal filters then the regex filters
 passed in as an argument regex will be used for the initial test selection, and
 the exclusion regexes from the exclusion list file on top of that.
 
-.. note::
-    DEPRECATION WARNING:
-    Previously the option ``--blacklist-file``/``-b`` was available for this
-    functionality. While it is still available at this time, it is soon to be
-    replaced by the new (equivalent) option ``--exclude-list``/``-e``.
-
 The dual of the exclusion list file is the inclusion list file which will
 include any tests matching the regexes in the file. You can specify the path to
 the file with ``--include-list``/``-i``, for example::
@@ -209,12 +237,6 @@ The format for the file is more or less identical to the exclusion list file::
   .*regex2 # include those tests
 
 However, instead of excluding the matches it will include them.
-
-.. note::
-    DEPRECATION WARNING:
-    Previously the option ``--whitelist-file``/``-w`` was available for this
-    functionality. While it is still available at this time, it is soon to be
-    replaced by the new (equivalent) option ``--include-list``/``-i``.
 
 It's also worth noting that you can use the test list option to dry run any
 selection arguments you are using. You just need to use ``stestr list``
@@ -606,29 +628,15 @@ from the repository. For example::
 Repositories
 ------------
 
-stestr uses a data repository to keep track of test previous test runs. There
-are different backend types that each offer different advantages. There are
-currently 2 repository types to choose from, **file** and **sql**.
-
-You can choose which repository type you want with the ``--repo-type``/``-r``
-cli flag. **file** is the current default.
+stestr uses a data repository to keep track of test previous test runs.
 
 You can also specify an alternative repository with the ``--repo-url``/``-u``
-cli flags. The default value for a **file** repository type is to use the
-directory: ``$CWD/.stestr``. For a **sql** repository type is to use a sqlite
-database located at: ``$CWD/.stestr.sqlite``.
+cli flags. The default value is to use the directory: ``$CWD/.stestr``.
 
 .. note:: Make sure you put these flags before the cli subcommand
 
-.. note:: Different repository types that use local storage will conflict with
-    each other in the same directory. If you initialize one repository type
-    and then try to use another in the same directory, it will not
-    work.
-
-File
-''''
-The default stestr repository type has a very simple disk structure. It
-contains the following files:
+The stestr repository has a very simple disk structure. It contains the
+following files:
 
 * format: This file identifies the precise layout of the repository, in case
   future changes are needed.
@@ -642,16 +650,11 @@ contains the following files:
 
 * #N - all the streams inserted in the repository are given a serial number.
 
-SQL
-'''
-This is an experimental repository backend, that is based on the `subunit2sql`_
-library.
+* times.dbm: A dbm database (using Python's
+  ```dbm.dumb`` <https://docs.python.org/3/library/dbm.html#module-dbm.dumb>`__
+  implementation) that stores the record of the last elapsed time for each test
+  executed.
 
-.. note:: The sql repository type requirements are not installed by default.
-    They are listed under the 'sql' setuptools extras. You can install them
-    with pip by running: ``pip install 'stestr[sql]'``
-
-.. warning:: The sql repository type is deprecated and will be removed in the
-   4.0.0 release.
-
-.. _subunit2sql:
+* meta.dbm: An dbm file that maps a run id (which will be the integer file
+  documented above) to an arbitrary string metadata field describing the run.
+  Right now this must be manually specified.

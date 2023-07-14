@@ -13,4 +13,4 @@
 
 import pbr.version
 
-version_info = pbr.version.VersionInfo('stestr')
+version_info = pbr.version.VersionInfo("stestr")

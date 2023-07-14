@@ -16,7 +16,6 @@ Repository
    api/repository/abstract
    api/repository/file
    api/repository/memory
-   api/repository/sql
 
 Commands
 --------

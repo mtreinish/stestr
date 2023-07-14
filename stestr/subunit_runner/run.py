@@ -14,7 +14,6 @@
 # under the License.
 
 from functools import partial
-import os
 import sys
 
 from subunit import StreamResultToBytes
@@ -60,34 +59,30 @@ class SubunitTestRunner(object):
         if loader is not None:
             errors = loader.errors
         if errors:
-            failed_descr = '\n'.join(errors).encode('utf8')
-            result.status(file_name="import errors", runnable=False,
-                          file_bytes=failed_descr,
-                          mime_type="text/plain;charset=utf8")
+            failed_descr = "\n".join(errors).encode("utf8")
+            result.status(
+                file_name="import errors",
+                runnable=False,
+                file_bytes=failed_descr,
+                mime_type="text/plain;charset=utf8",
+            )
             sys.exit(2)
 
     def _list(self, test):
         test_ids, errors = program.list_test(test)
-        try:
-            fileno = self.stream.fileno()
-        except Exception:
-            fileno = None
-        if fileno is not None:
-            stream = os.fdopen(fileno, 'wb', 0)
-        else:
-            stream = self.stream
+        stream = self.stream
         result = StreamResultToBytes(stream)
         for test_id in test_ids:
-            result.status(test_id=test_id, test_status='exists')
+            result.status(test_id=test_id, test_status="exists")
         return result, errors
 
 
 def main():
     runner = SubunitTestRunner
     program.TestProgram(
-        module=None, argv=sys.argv,
-        testRunner=partial(runner, stdout=sys.stdout))
+        module=None, argv=sys.argv, testRunner=partial(runner, stdout=sys.stdout)
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

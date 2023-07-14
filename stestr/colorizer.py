@@ -44,8 +44,10 @@ class AnsiColorizer:
 
     Colorizer classes must implement C{supported()} and C{write(text, color)}.
     """
-    _colors = dict(black=30, red=31, green=32, yellow=33,
-                   blue=34, magenta=35, cyan=36, white=37)
+
+    _colors = dict(
+        black=30, red=31, green=32, yellow=33, blue=34, magenta=35, cyan=36, white=37
+    )
 
     def __init__(self, stream):
         self.stream = stream
@@ -82,11 +84,12 @@ class AnsiColorizer:
         @param color: A string label for a color. e.g. 'red', 'white'.
         """
         color = self._colors[color]
-        self.stream.write('\x1b[{};1m{}\x1b[0m'.format(color, text))
+        self.stream.write("\x1b[{};1m{}\x1b[0m".format(color, text))
 
 
 class NullColorizer:
     """See _AnsiColorizer docstring."""
+
     def __init__(self, stream):
         self.stream = stream
 

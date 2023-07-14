@@ -17,12 +17,10 @@ from stestr import output
 
 
 def wasSuccessful(summary):
-    return not (summary.errors or summary.failures or
-                summary.unexpectedSuccesses)
+    return not (summary.errors or summary.failures or summary.unexpectedSuccesses)
 
 
 class SummarizingResult(testtools.StreamSummary):
-
     def __init__(self):
         super().__init__()
 
@@ -32,8 +30,8 @@ class SummarizingResult(testtools.StreamSummary):
         self._last_time = None
 
     def status(self, *args, **kwargs):
-        if kwargs.get('timestamp') is not None:
-            timestamp = kwargs['timestamp']
+        if kwargs.get("timestamp") is not None:
+            timestamp = kwargs["timestamp"]
             if self._last_time is None:
                 self._first_time = timestamp
                 self._last_time = timestamp
@@ -59,13 +57,23 @@ class CatFiles(testtools.StreamResult):
         self.stream = subunit.make_stream_binary(byte_stream)
         self.last_file = None
 
-    def status(self, test_id=None, test_status=None, test_tags=None,
-               runnable=True, file_name=None, file_bytes=None, eof=False,
-               mime_type=None, route_code=None, timestamp=None):
+    def status(
+        self,
+        test_id=None,
+        test_status=None,
+        test_tags=None,
+        runnable=True,
+        file_name=None,
+        file_bytes=None,
+        eof=False,
+        mime_type=None,
+        route_code=None,
+        timestamp=None,
+    ):
         if file_name is None:
             return
         if self.last_file != file_name:
-            self.stream.write(("--- %s ---\n" % file_name).encode('utf8'))
+            self.stream.write(("--- %s ---\n" % file_name).encode("utf8"))
             self.last_file = file_name
         self.stream.write(file_bytes)
         self.stream.flush()
@@ -88,34 +96,39 @@ class CLITestResult(testtools.StreamResult):
         self._previous_run = previous_run
         self._summary = SummarizingResult()
         self.stream = testtools.compat.unicode_output_stream(stream)
-        self.sep1 = testtools.compat._u('=' * 70 + '\n')
-        self.sep2 = testtools.compat._u('-' * 70 + '\n')
-        self.filterable_states = {'success', 'uxsuccess', 'xfail', 'skip'}
+        self.sep1 = testtools.compat._u("=" * 70 + "\n")
+        self.sep2 = testtools.compat._u("-" * 70 + "\n")
+        self.filterable_states = {"success", "uxsuccess", "xfail", "skip"}
         self.get_id = get_id
 
     def _format_error(self, label, test, error_text, test_tags=None):
         test_tags = test_tags or ()
-        tags = ' '.join(test_tags)
+        tags = " ".join(test_tags)
         if tags:
-            tags = str('tags: %s\n' % tags)
-        return str(''.join([
-            self.sep1,
-            str('{}: {}\n'.format(label, test.id())),
-            tags,
-            self.sep2,
-            error_text,
-            ]))
+            tags = str("tags: %s\n" % tags)
+        return str(
+            "".join(
+                [
+                    self.sep1,
+                    str("{}: {}\n".format(label, test.id())),
+                    tags,
+                    self.sep2,
+                    error_text,
+                ]
+            )
+        )
 
     def status(self, **kwargs):
         super().status(**kwargs)
         self._summary.status(**kwargs)
-        test_status = kwargs.get('test_status')
-        test_tags = kwargs.get('test_tags')
-        if test_status == 'fail':
+        test_status = kwargs.get("test_status")
+        test_tags = kwargs.get("test_tags")
+        if test_status == "fail":
             self.stream.write(
-                self._format_error('FAIL',
-                                   *(self._summary.errors[-1]),
-                                   test_tags=test_tags))
+                self._format_error(
+                    "FAIL", *(self._summary.errors[-1]), test_tags=test_tags
+                )
+            )
         if test_status not in self.filterable_states:
             return
 
@@ -138,27 +151,31 @@ class CLITestResult(testtools.StreamResult):
         time_delta = None
         num_tests_run_delta = None
         num_failures_delta = None
-        values = [('id', run_id, None)]
+        values = [("id", run_id, None)]
         failures = self._summary.get_num_failures()
         previous_summary = self._get_previous_summary()
         if failures:
             if previous_summary:
-                num_failures_delta = failures - \
-                    previous_summary.get_num_failures()
-            values.append(('failures', failures, num_failures_delta))
+                num_failures_delta = failures - previous_summary.get_num_failures()
+            values.append(("failures", failures, num_failures_delta))
         if previous_summary:
-            num_tests_run_delta = self._summary.testsRun - \
-                previous_summary.testsRun
+            num_tests_run_delta = self._summary.testsRun - previous_summary.testsRun
             if time:
                 previous_time_taken = previous_summary.get_time_taken()
                 if previous_time_taken:
                     time_delta = time - previous_time_taken
         skips = len(self._summary.skipped)
         if skips:
-            values.append(('skips', skips, None))
+            values.append(("skips", skips, None))
         output.output_summary(
-            not bool(failures), self._summary.testsRun, num_tests_run_delta,
-            time, time_delta, values, output=self.stream)
+            not bool(failures),
+            self._summary.testsRun,
+            num_tests_run_delta,
+            time,
+            time_delta,
+            values,
+            output=self.stream,
+        )
 
     def startTestRun(self):
         super().startTestRun()

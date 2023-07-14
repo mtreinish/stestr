@@ -21,28 +21,24 @@ class TestRunCommand(base.TestCase):
         self.assertEqual(29, run._to_int(29))
 
     def test_to_int_positive_int_str(self):
-        self.assertEqual(42, run._to_int('42'))
+        self.assertEqual(42, run._to_int("42"))
 
     def test_to_int_negative_int(self):
         self.assertEqual(-2, run._to_int(-2))
 
     def test_to_int_negative_int_str(self):
-        self.assertEqual(-45, run._to_int('-45'))
+        self.assertEqual(-45, run._to_int("-45"))
 
     def test_to_int_invalid_str(self):
         fake_stderr = io.StringIO()
-        out = run._to_int('I am not an int', out=fake_stderr)
-        expected = (
-            'Unable to convert "I am not an int" to an integer.  '
-            'Using 0.\n')
+        out = run._to_int("I am not an int", out=fake_stderr)
+        expected = 'Unable to convert "I am not an int" to an integer.  ' "Using 0.\n"
         self.assertEqual(fake_stderr.getvalue(), expected)
         self.assertEqual(0, out)
 
     def test_to_int_none(self):
         fake_stderr = io.StringIO()
         out = run._to_int(None, out=fake_stderr)
-        expected = (
-            'Unable to convert "None" to an integer.  '
-            'Using 0.\n')
+        expected = 'Unable to convert "None" to an integer.  ' "Using 0.\n"
         self.assertEqual(fake_stderr.getvalue(), expected)
         self.assertEqual(0, out)

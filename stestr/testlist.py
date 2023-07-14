@@ -15,8 +15,9 @@
 import io
 
 from extras import try_import
-bytestream_to_streamresult = try_import('subunit.ByteStreamToStreamResult')
-stream_result = try_import('testtools.testresult.doubles.StreamResult')
+
+bytestream_to_streamresult = try_import("subunit.ByteStreamToStreamResult")
+stream_result = try_import("testtools.testresult.doubles.StreamResult")
 
 
 def write_list(stream, test_ids):
@@ -26,8 +27,7 @@ def write_list(stream, test_ids):
     :param test_ids: An iterable of test ids.
     """
     # May need utf8 explicitly?
-    stream.write(bytes((
-        '\n'.join(list(test_ids) + [''])).encode('utf8')))
+    stream.write(bytes(("\n".join(list(test_ids) + [""])).encode("utf8")))
 
 
 def parse_list(list_bytes):
@@ -45,13 +45,13 @@ def parse_enumeration(enumeration_bytes):
 
 
 def _v1(list_bytes):
-    return [id.strip() for id in list_bytes.decode('utf8').split(
-        '\n') if id.strip()]
+    return [id.strip() for id in list_bytes.decode("utf8").split("\n") if id.strip()]
 
 
 def _v2(list_bytes):
-    parser = bytestream_to_streamresult(io.BytesIO(list_bytes),
-                                        non_subunit_name='stdout')
+    parser = bytestream_to_streamresult(
+        io.BytesIO(list_bytes), non_subunit_name="stdout"
+    )
     result = stream_result()
     parser.run(result)
-    return [event[1] for event in result._events if event[2] == 'exists']
+    return [event[1] for event in result._events if event[2] == "exists"]

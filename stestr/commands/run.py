@@ -44,8 +44,7 @@ def _to_int(possible, default=0, out=sys.stderr):
         i = int(possible)
     except (ValueError, TypeError):
         i = default
-        msg = ('Unable to convert "%s" to an integer.  Using %d.\n' %
-               (possible, default))
+        msg = 'Unable to convert "%s" to an integer.  Using %d.\n' % (possible, default)
         out.write(str(msg))
     return i
 
@@ -63,138 +62,196 @@ class Run(command.Command):
 
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
-        parser.add_argument("filters", nargs="*", default=None,
-                            help="A list of string regex filters to initially "
-                            "apply on the test list. Tests that match any of "
-                            "the regexes will be used. (assuming any other "
-                            "filtering specified also uses it)")
-        parser.add_argument("--failing", action="store_true",
-                            default=False,
-                            help="Run only tests known to be failing.")
-        parser.add_argument("--serial", action="store_true",
-                            default=False,
-                            help="Run tests in a serial process.")
-        parser.add_argument("--concurrency", action="store", default=None,
-                            type=int,
-                            help="How many processes to use. The default (0) "
-                            "autodetects your CPU count.")
-        parser.add_argument("--load-list", default=None,
-                            help="Only run tests listed in the named file."),
-        parser.add_argument("--partial", action="store_true", default=False,
-                            help="DEPRECATED: Only some tests will be run. "
-                            "Implied by --failing. This option is deprecated "
-                            "and no longer does anything. It will be removed "
-                            "in the future")
-        parser.add_argument("--subunit", action="store_true", default=False,
-                            help="Display results in subunit format.")
-        parser.add_argument("--until-failure", action="store_true",
-                            default=False,
-                            help="Repeat the run again and again until "
-                            "failure occurs.")
-        parser.add_argument("--analyze-isolation", action="store_true",
-                            default=False,
-                            help="Search the last test run for 2-test test "
-                            "isolation interactions.")
-        parser.add_argument("--isolated", action="store_true",
-                            default=False,
-                            help="Run each test id in a separate test runner.")
-        parser.add_argument("--worker-file", action="store", default=None,
-                            dest='worker_path',
-                            help="Optional path of a manual worker grouping "
-                            "file to use for the run")
-        parser.add_argument('--blacklist-file', '-b',
-                            default=None, dest='blacklist_file',
-                            help='DEPRECATED: This option will soon be '
-                            'replaced by --exclude-list which is functionally '
-                            'equivalent. If this is specified at the same '
-                            'time as --exclude-list, this flag will be '
-                            'ignored and --exclude-list will be used.')
-        parser.add_argument('--exclude-list', '-e',
-                            default=None, dest='exclude_list',
-                            help='Path to an exclusion list file, this file '
-                            'contains a separate regex exclude on each '
-                            'newline')
-        parser.add_argument('--whitelist-file', '-w',
-                            default=None, dest='whitelist_file',
-                            help='DEPRECATED: This option will soon be '
-                            'replaced by --include-list which is functionally '
-                            'equivalent. If this is specified at the same '
-                            'time as --include-list, this flag will be '
-                            'ignored and --include-list will be used.')
-        parser.add_argument('--include-list', '-i',
-                            default=None, dest='include_list',
-                            help='Path to an inclusion list file, this file '
-                            'contains a separate regex on each newline.')
-        parser.add_argument('--black-regex', '-B', default=None,
-                            dest='black_regex',
-                            help='DEPRECATED: This option will soon be '
-                            'replaced by --exclude-regex which is functionally'
-                            ' equivalent. If this is specified at the same '
-                            'time as --exclude-regex, this flag will be '
-                            'ignored and --exclude-regex will be used.')
-        parser.add_argument('--exclude-regex', '-E', default=None,
-                            dest='exclude_regex',
-                            help='Test rejection regex. If a test cases name '
-                            'matches on re.search() operation , '
-                            'it will be removed from the final test list. '
-                            'Effectively the exclusion-regexp is added to '
-                            'exclusion regexp list, but you do need to edit a '
-                            'file. The exclusion filtering happens after the '
-                            'initial safe list selection, which by default is '
-                            'everything.')
-        parser.add_argument('--no-discover', '-n', default=None,
-                            metavar='TEST_ID',
-                            help="Takes in a single test to bypasses test "
-                            "discover and just execute the test specified. A "
-                            "file may be used in place of a test name.")
-        parser.add_argument('--pdb', default=None, metavar='TEST_ID',
-                            help="Run a single test id with the intent of "
-                            "using pdb. This does not launch any separate "
-                            "processes to ensure pdb works as expected. It "
-                            "will bypass test discovery and just execute the "
-                            "test specified. A file may be used in place of a "
-                            "test name.")
-        parser.add_argument('--random', action="store_true",
-                            default=False,
-                            help="Randomize the test order after they are "
-                            "partitioned into separate workers")
-        parser.add_argument('--combine', action='store_true', default=False,
-                            help="Combine the results from the test run with "
-                            "the last run in the repository")
-        parser.add_argument('--no-subunit-trace', action='store_true',
-                            default=False,
-                            help='Disable the default subunit-trace output '
-                            'filter')
-        parser.add_argument('--force-subunit-trace', action='store_true',
-                            default=False,
-                            help='Force subunit-trace output regardless of any'
-                                 'other options or config settings')
-        parser.add_argument('--color', action='store_true', default=False,
-                            help='Enable color output in the subunit-trace '
-                            'output, if subunit-trace output is enabled. '
-                            '(this is the default). If subunit-trace is '
-                            'disable this does nothing.')
-        parser.add_argument('--slowest', action='store_true', default=False,
-                            help='After the test run, print the slowest '
-                            'tests.')
-        parser.add_argument('--abbreviate', action='store_true',
-                            dest='abbreviate',
-                            help='Print one character status for each test')
-        parser.add_argument('--suppress-attachments', action='store_true',
-                            dest='suppress_attachments',
-                            help='If set do not print stdout or stderr '
-                            'attachment contents on a successful test '
-                            'execution')
-        parser.add_argument('--all-attachments', action='store_true',
-                            dest='all_attachments',
-                            help='If set print all text attachment contents on'
-                            ' a successful test execution')
-        parser.add_argument('--dynamic', action='store_true', default=False,
-                            help='Enable the EXPERIMENTAL dynamic scheduler')
-        parser.add_argument('--show-binary-attachments', action='store_true',
-                            dest='show_binary_attachments',
-                            help='If set, show non-text attachments. This is '
-                            'generally only useful for debug purposes.')
+        parser.add_argument(
+            "filters",
+            nargs="*",
+            default=None,
+            help="A list of string regex filters to initially "
+            "apply on the test list. Tests that match any of "
+            "the regexes will be used. (assuming any other "
+            "filtering specified also uses it)",
+        )
+        parser.add_argument(
+            "--failing",
+            action="store_true",
+            default=False,
+            help="Run only tests known to be failing.",
+        )
+        parser.add_argument(
+            "--serial",
+            action="store_true",
+            default=False,
+            help="Run tests in a serial process.",
+        )
+        parser.add_argument(
+            "--concurrency",
+            action="store",
+            default=None,
+            type=int,
+            help="How many processes to use. The default (0) "
+            "autodetects your CPU count.",
+        )
+        parser.add_argument(
+            "--load-list", default=None, help="Only run tests listed in the named file."
+        ),
+        parser.add_argument(
+            "--subunit",
+            action="store_true",
+            default=False,
+            help="Display results in subunit format.",
+        )
+        parser.add_argument(
+            "--until-failure",
+            action="store_true",
+            default=False,
+            help="Repeat the run again and again until " "failure occurs.",
+        )
+        parser.add_argument(
+            "--analyze-isolation",
+            action="store_true",
+            default=False,
+            help="Search the last test run for 2-test test " "isolation interactions.",
+        )
+        parser.add_argument(
+            "--isolated",
+            action="store_true",
+            default=False,
+            help="Run each test id in a separate test runner.",
+        )
+        parser.add_argument(
+            "--worker-file",
+            action="store",
+            default=None,
+            dest="worker_path",
+            help="Optional path of a manual worker grouping " "file to use for the run",
+        )
+        parser.add_argument(
+            "--exclude-list",
+            "-e",
+            default=None,
+            dest="exclude_list",
+            help="Path to an exclusion list file, this file "
+            "contains a separate regex exclude on each "
+            "newline",
+        )
+        parser.add_argument(
+            "--include-list",
+            "-i",
+            default=None,
+            dest="include_list",
+            help="Path to an inclusion list file, this file "
+            "contains a separate regex on each newline.",
+        )
+        parser.add_argument(
+            "--exclude-regex",
+            "-E",
+            default=None,
+            dest="exclude_regex",
+            help="Test rejection regex. If a test cases name "
+            "matches on re.search() operation , "
+            "it will be removed from the final test list. "
+            "Effectively the exclusion-regexp is added to "
+            "exclusion regexp list, but you do need to edit a "
+            "file. The exclusion filtering happens after the "
+            "initial safe list selection, which by default is "
+            "everything.",
+        )
+        parser.add_argument(
+            "--no-discover",
+            "-n",
+            default=None,
+            metavar="TEST_ID",
+            help="Takes in a single test to bypasses test "
+            "discover and just execute the test specified. A "
+            "file may be used in place of a test name.",
+        )
+        parser.add_argument(
+            "--pdb",
+            default=None,
+            metavar="TEST_ID",
+            help="Run a single test id with the intent of "
+            "using pdb. This does not launch any separate "
+            "processes to ensure pdb works as expected. It "
+            "will bypass test discovery and just execute the "
+            "test specified. A file may be used in place of a "
+            "test name.",
+        )
+        parser.add_argument(
+            "--random",
+            action="store_true",
+            default=False,
+            help="Randomize the test order after they are "
+            "partitioned into separate workers",
+        )
+        parser.add_argument(
+            "--combine",
+            action="store_true",
+            default=False,
+            help="Combine the results from the test run with "
+            "the last run in the repository",
+        )
+        parser.add_argument(
+            "--no-subunit-trace",
+            action="store_true",
+            default=False,
+            help="Disable the default subunit-trace output " "filter",
+        )
+        parser.add_argument(
+            "--force-subunit-trace",
+            action="store_true",
+            default=False,
+            help="Force subunit-trace output regardless of any"
+            "other options or config settings",
+        )
+        parser.add_argument(
+            "--color",
+            action="store_true",
+            default=False,
+            help="Enable color output in the subunit-trace "
+            "output, if subunit-trace output is enabled. "
+            "(this is the default). If subunit-trace is "
+            "disable this does nothing.",
+        )
+        parser.add_argument(
+            "--slowest",
+            action="store_true",
+            default=False,
+            help="After the test run, print the slowest " "tests.",
+        )
+        parser.add_argument(
+            "--abbreviate",
+            action="store_true",
+            dest="abbreviate",
+            help="Print one character status for each test",
+        )
+        parser.add_argument(
+            "--suppress-attachments",
+            action="store_true",
+            dest="suppress_attachments",
+            help="If set do not print stdout or stderr "
+            "attachment contents on a successful test "
+            "execution",
+        )
+        parser.add_argument(
+            "--all-attachments",
+            action="store_true",
+            dest="all_attachments",
+            help="If set print all text attachment contents on"
+            " a successful test execution",
+        )
+        parser.add_argument(
+            "--show-binary-attachments",
+            action="store_true",
+            dest="show_binary_attachments",
+            help="If set, show non-text attachments. This is "
+            "generally only useful for debug purposes.",
+        )
+        parser.add_argument(
+            "--dynamic",
+            action="store_true",
+            default=False,
+            help="Enable the EXPERIMENTAL dynamic scheduler",
+        )
         return parser
 
     def take_action(self, parsed_args):
@@ -202,13 +259,15 @@ class Run(command.Command):
         filters = parsed_args.filters
         args = parsed_args
         if args.suppress_attachments and args.all_attachments:
-            msg = ("The --suppress-attachments and --all-attachments "
-                   "options are mutually exclusive, you can not use both "
-                   "at the same time")
+            msg = (
+                "The --suppress-attachments and --all-attachments "
+                "options are mutually exclusive, you can not use both "
+                "at the same time"
+            )
             print(msg)
             sys.exit(1)
-        if getattr(user_conf, 'run', False):
-            if not user_conf.run.get('no-subunit-trace'):
+        if getattr(user_conf, "run", False):
+            if not user_conf.run.get("no-subunit-trace"):
                 if not args.no_subunit_trace:
                     pretty_out = True
                 else:
@@ -218,17 +277,14 @@ class Run(command.Command):
 
             pretty_out = args.force_subunit_trace or pretty_out
             if args.concurrency is None:
-                concurrency = user_conf.run.get('concurrency', 0)
+                concurrency = user_conf.run.get("concurrency", 0)
             else:
                 concurrency = args.concurrency
-            random = args.random or user_conf.run.get('random', False)
-            color = args.color or user_conf.run.get('color', False)
-            abbreviate = args.abbreviate or user_conf.run.get(
-                'abbreviate', False)
-            suppress_attachments_conf = user_conf.run.get(
-                'suppress-attachments', False)
-            all_attachments_conf = user_conf.run.get(
-                'all-attachments', False)
+            random = args.random or user_conf.run.get("random", False)
+            color = args.color or user_conf.run.get("color", False)
+            abbreviate = args.abbreviate or user_conf.run.get("abbreviate", False)
+            suppress_attachments_conf = user_conf.run.get("suppress-attachments", False)
+            all_attachments_conf = user_conf.run.get("all-attachments", False)
             if not args.suppress_attachments and not args.all_attachments:
                 suppress_attachments = suppress_attachments_conf
                 all_attachments = all_attachments_conf
@@ -247,43 +303,56 @@ class Run(command.Command):
             suppress_attachments = args.suppress_attachments
             all_attachments = args.all_attachments
         verbose_level = self.app.options.verbose_level
-        stdout = open(os.devnull, 'w') if verbose_level == 0 else sys.stdout
+        stdout = open(os.devnull, "w") if verbose_level == 0 else sys.stdout
         # Make sure all (python) callers have provided an int()
         concurrency = _to_int(concurrency)
         if concurrency and concurrency < 0:
-            msg = ("The provided concurrency value: %s is not valid. An "
-                   "integer >= 0 must be used.\n" % concurrency)
+            msg = (
+                "The provided concurrency value: %s is not valid. An "
+                "integer >= 0 must be used.\n" % concurrency
+            )
             stdout.write(msg)
             return 2
         result = run_command(
-            config=self.app_args.config, repo_type=self.app_args.repo_type,
+            config=self.app_args.config,
             repo_url=self.app_args.repo_url,
-            test_path=self.app_args.test_path, top_dir=self.app_args.top_dir,
-            group_regex=self.app_args.group_regex, failing=args.failing,
-            serial=args.serial, concurrency=concurrency,
-            load_list=args.load_list, partial=args.partial,
-            subunit_out=args.subunit, until_failure=args.until_failure,
-            analyze_isolation=args.analyze_isolation, isolated=args.isolated,
-            worker_path=args.worker_path, blacklist_file=args.blacklist_file,
-            exclude_list=args.exclude_list, whitelist_file=args.whitelist_file,
+            test_path=self.app_args.test_path,
+            top_dir=self.app_args.top_dir,
+            group_regex=self.app_args.group_regex,
+            failing=args.failing,
+            serial=args.serial,
+            concurrency=concurrency,
+            load_list=args.load_list,
+            subunit_out=args.subunit,
+            until_failure=args.until_failure,
+            analyze_isolation=args.analyze_isolation,
+            isolated=args.isolated,
+            worker_path=args.worker_path,
+            exclude_list=args.exclude_list,
             include_list=args.include_list,
-            black_regex=args.black_regex, exclude_regex=args.exclude_regex,
-            no_discover=args.no_discover, random=random, combine=args.combine,
-            filters=filters, pretty_out=pretty_out, color=color,
-            stdout=stdout, abbreviate=abbreviate,
+            exclude_regex=args.exclude_regex,
+            no_discover=args.no_discover,
+            random=random,
+            combine=args.combine,
+            filters=filters,
+            pretty_out=pretty_out,
+            color=color,
+            stdout=stdout,
+            abbreviate=abbreviate,
             suppress_attachments=suppress_attachments,
             all_attachments=all_attachments,
             show_binary_attachments=args.show_binary_attachments,
-            pdb=args.pdb, dynamic=args.dynamic)
+            pdb=args.pdb,
+            dynamic=args.dynamic,
+        )
 
         # Always output slowest test info if requested, regardless of other
         # test run options
         user_slowest = False
-        if getattr(user_conf, 'run', False):
-            user_slowest = user_conf.run.get('slowest', False)
+        if getattr(user_conf, "run", False):
+            user_slowest = user_conf.run.get("slowest", False)
         if args.slowest or user_slowest:
-            slowest.slowest(repo_type=self.app_args.repo_type,
-                            repo_url=self.app_args.repo_url)
+            slowest.slowest(repo_url=self.app_args.repo_url)
 
         return result
 
@@ -294,8 +363,8 @@ def _find_failing(repo):
     ids = []
 
     def gather_errors(test_dict):
-        if test_dict['status'] == 'fail':
-            ids.append(test_dict['id'])
+        if test_dict["status"] == "fail":
+            ids.append(test_dict["id"])
 
     result = testtools.StreamToDict(gather_errors)
     result.startTestRun()
@@ -306,18 +375,38 @@ def _find_failing(repo):
     return ids
 
 
-def run_command(config='.stestr.conf', repo_type='file',
-                repo_url=None, test_path=None, top_dir=None, group_regex=None,
-                failing=False, serial=False, concurrency=0, load_list=None,
-                partial=False, subunit_out=False, until_failure=False,
-                analyze_isolation=False, isolated=False, worker_path=None,
-                blacklist_file=None, exclude_list=None,
-                whitelist_file=None, include_list=None,
-                black_regex=None, exclude_regex=None, no_discover=False,
-                random=False, combine=False, filters=None, pretty_out=True,
-                color=False, stdout=sys.stdout, abbreviate=False,
-                suppress_attachments=False, all_attachments=False,
-                show_binary_attachments=True, pdb=False, dynamic=False):
+def run_command(
+    config=config_file.TestrConf.DEFAULT_CONFIG_FILENAME,
+    repo_url=None,
+    test_path=None,
+    top_dir=None,
+    group_regex=None,
+    failing=False,
+    serial=False,
+    concurrency=0,
+    load_list=None,
+    subunit_out=False,
+    until_failure=False,
+    analyze_isolation=False,
+    isolated=False,
+    worker_path=None,
+    exclude_list=None,
+    include_list=None,
+    exclude_regex=None,
+    no_discover=False,
+    random=False,
+    combine=False,
+    filters=None,
+    pretty_out=True,
+    color=False,
+    stdout=sys.stdout,
+    abbreviate=False,
+    suppress_attachments=False,
+    all_attachments=False,
+    show_binary_attachments=True,
+    pdb=False,
+    dynamic=False,
+):
     """Function to execute the run command
 
     This function implements the run command. It will run the tests specified
@@ -326,8 +415,6 @@ def run_command(config='.stestr.conf', repo_type='file',
     printed to STDOUT and loaded into the repository.
 
     :param str config: The path to the stestr config file. Must be a string.
-    :param str repo_type: This is the type of repository to use. Valid choices
-        are 'file' and 'sql'.
     :param str repo_url: The url of the repository to use.
     :param str test_path: Set the test path to use for unittest discovery.
         If both this and the corresponding config file option are set, this
@@ -344,9 +431,6 @@ def run_command(config='.stestr.conf', repo_type='file',
         autodetects your CPU count and uses that.
     :param str load_list: The path to a list of test_ids. If specified only
         tests listed in the named file will be run.
-    :param bool partial: DEPRECATED: Only some tests will be run. Implied by
-        `--failing`. This flag is deprecated because and doesn't do anything
-        it will be removed in a future release.
     :param bool subunit_out: Display results in subunit format.
     :param bool until_failure: Repeat the run again and again until failure
         occurs.
@@ -355,19 +439,10 @@ def run_command(config='.stestr.conf', repo_type='file',
     :param bool isolated: Run each test id in a separate test runner.
     :param str worker_path: Optional path of a manual worker grouping file
         to use for the run.
-    :param str blacklist_file: DEPRECATED: soon to be replaced by the new
-        option exclude_list below. If this is specified at the same time as
-        exclude_list, this flag will be ignored and exclude_list will be used
     :param str exclude_list: Path to an exclusion list file, this file
         contains a separate regex exclude on each newline.
-    :param str whitelist_file: DEPRECATED: soon to be replaced by the new
-        option include_list below. If this is specified at the same time as
-        include_list, this flag will be ignored and include_list will be used
     :param str include_list: Path to a inclusion list file, this file
         contains a separate regex on each newline.
-    :param str black_regex: DEPRECATED: soon to be replaced by the new
-        option exclude_regex below. If this is specified at the same time as
-        exclude_regex, this flag will be ignored and exclude_regex will be used
     :param str exclude_regex: Test rejection regex. If a test cases name
         matches on re.search() operation, it will be removed from the final
         test list.
@@ -401,119 +476,124 @@ def run_command(config='.stestr.conf', repo_type='file',
         for failures.
     :rtype: int
     """
-    if partial:
-        warnings.warn('The partial flag is deprecated and has no effect '
-                      'anymore')
-    if blacklist_file is not None:
-        warnings.warn("The blacklist-file argument is deprecated and will be "
-                      "removed in a future release. Instead you should use "
-                      "exclude-list which is functionally equivalent",
-                      DeprecationWarning)
-    if whitelist_file is not None:
-        warnings.warn("The whitelist-file argument is deprecated and will be "
-                      "removed in a future release. Instead you should use "
-                      "include-list which is functionally equivalent",
-                      DeprecationWarning)
-    if black_regex is not None:
-        warnings.warn("The black-regex argument is deprecated and will be "
-                      "removed in a future release. Instead you should use "
-                      "exclude-regex which is functionally equivalent",
-                      DeprecationWarning)
     try:
-        repo = util.get_repo_open(repo_type, repo_url)
+        repo = util.get_repo_open(repo_url=repo_url)
     # If a repo is not found, and there a stestr config exists just create it
     except repository.RepositoryNotFound:
         if not os.path.isfile(config) and not test_path:
             # If there is no config and no test-path
-            if os.path.isfile('tox.ini'):
+            if os.path.isfile("tox.ini"):
                 tox_conf = configparser.SafeConfigParser()
-                tox_conf.read('tox.ini')
-                if not tox_conf.has_section('stestr'):
-                    msg = ("No file found, --test-path not specified, and "
-                           "stestr section not found in tox.ini. Either "
-                           "create or specify a .stestr.conf, use "
-                           "--test-path, or add an stestr section to the "
-                           "tox.ini")
+                tox_conf.read("tox.ini")
+                if not tox_conf.has_section("stestr"):
+                    msg = (
+                        "No file found, --test-path not specified, and "
+                        "stestr section not found in tox.ini. Either "
+                        "create or specify a .stestr.conf, use "
+                        "--test-path, or add an stestr section to the "
+                        "tox.ini"
+                    )
                     stdout.write(msg)
                     exit(1)
             else:
-                msg = ("No config file found and --test-path not specified. "
-                       "Either create or specify a .stestr.conf or use "
-                       "--test-path ")
+                msg = (
+                    "No config file found and --test-path not specified. "
+                    "Either create or specify a .stestr.conf or use "
+                    "--test-path "
+                )
                 stdout.write(msg)
                 exit(1)
         try:
-            repo = util.get_repo_initialise(repo_type, repo_url)
+            repo = util.get_repo_initialise(repo_url=repo_url)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
-            repo_path = repo_url or './stestr'
-            stdout.write('The specified repository directory %s already '
-                         'exists. Please check if the repository already '
-                         'exists or select a different path\n' % repo_path)
+            repo_path = repo_url or "./stestr"
+            stdout.write(
+                "The specified repository directory %s already "
+                "exists. Please check if the repository already "
+                "exists or select a different path\n" % repo_path
+            )
             return 1
 
     combine_id = None
     concurrency = _to_int(concurrency)
 
     if concurrency and concurrency < 0:
-        msg = ("The provided concurrency value: %s is not valid. An integer "
-               ">= 0 must be used.\n" % concurrency)
+        msg = (
+            "The provided concurrency value: %s is not valid. An integer "
+            ">= 0 must be used.\n" % concurrency
+        )
         stdout.write(msg)
         return 2
     if dynamic:
         if sys.version_info[0] < 3 or sys.version_info[1] < 5:
-            msg = 'Dynamic mode requires python 3.5 or newer.'
+            msg = "Dynamic mode requires python 3.5 or newer."
             exit(1)
 
-        warnings.warn("WARNING: The dynamic scheduler is still experimental. "
-                      "You might encounter issues while using it")
+        warnings.warn(
+            "WARNING: The dynamic scheduler is still experimental. "
+            "You might encounter issues while using it"
+        )
     if combine:
         latest_id = repo.latest_id()
         combine_id = str(latest_id)
     if no_discover and pdb:
-        msg = ("--no-discover and --pdb are mutually exclusive options, "
-               "only specify one at a time")
+        msg = (
+            "--no-discover and --pdb are mutually exclusive options, "
+            "only specify one at a time"
+        )
         stdout.write(msg)
         return 2
     if pdb and until_failure:
-        msg = ("pdb mode does not function with the --until-failure flag, "
-               "only specify one at a time")
+        msg = (
+            "pdb mode does not function with the --until-failure flag, "
+            "only specify one at a time"
+        )
         stdout.write(msg)
         return 2
 
     if no_discover:
         ids = no_discover
-        if '::' in ids:
-            ids = ids.replace('::', '.')
-        if ids.find('/') != -1:
-            root = ids.replace('.py', '')
-            ids = root.replace('/', '.')
+        if "::" in ids:
+            ids = ids.replace("::", ".")
+        if ids.find("/") != -1:
+            root = ids.replace(".py", "")
+            ids = root.replace("/", ".")
         stestr_python = sys.executable
-        if os.environ.get('PYTHON'):
-            python_bin = os.environ.get('PYTHON')
+        if os.environ.get("PYTHON"):
+            python_bin = os.environ.get("PYTHON")
         elif stestr_python:
             python_bin = stestr_python
         else:
-            raise RuntimeError("The Python interpreter was not found and "
-                               "PYTHON is not set")
-        run_cmd = python_bin + ' -m stestr.subunit_runner.run ' + ids
+            raise RuntimeError(
+                "The Python interpreter was not found and " "PYTHON is not set"
+            )
+        run_cmd = python_bin + " -m stestr.subunit_runner.run " + ids
 
         def run_tests():
-            run_proc = [('subunit', output.ReturnCodeToSubunit(
-                subprocess.Popen(run_cmd, shell=True,
-                                 stdout=subprocess.PIPE),
-                dynamic=False))]
-
-            return load.load(in_streams=run_proc,
-                             subunit_out=subunit_out,
-                             repo_type=repo_type,
-                             repo_url=repo_url, run_id=combine_id,
-                             pretty_out=pretty_out,
-                             color=color, stdout=stdout, abbreviate=abbreviate,
-                             suppress_attachments=suppress_attachments,
-                             all_attachments=all_attachments,
-                             show_binary_attachments=show_binary_attachments)
+            run_proc = [
+                (
+                    "subunit",
+                    output.ReturnCodeToSubunit(
+                        subprocess.Popen(run_cmd, shell=True, stdout=subprocess.PIPE),
+                        dynamic=False,
+                    ),
+                )
+            ]
+            return load.load(
+                in_streams=run_proc,
+                subunit_out=subunit_out,
+                repo_url=repo_url,
+                run_id=combine_id,
+                pretty_out=pretty_out,
+                color=color,
+                stdout=stdout,
+                abbreviate=abbreviate,
+                suppress_attachments=suppress_attachments,
+                all_attachments=all_attachments,
+                show_binary_attachments=show_binary_attachments,
+            )
 
         if not until_failure:
             return run_tests()
@@ -539,27 +619,33 @@ def run_command(config='.stestr.conf', repo_type='file',
 
     if pdb:
         ids = pdb
-        if '::' in ids:
-            ids = ids.replace('::', '.')
-        if ids.find('/') != -1:
-            root = ids.replace('.py', '')
-            ids = root.replace('/', '.')
+        if "::" in ids:
+            ids = ids.replace("::", ".")
+        if ids.find("/") != -1:
+            root = ids.replace(".py", "")
+            ids = root.replace("/", ".")
         runner = subunit_run.SubunitTestRunner
         stream = io.BytesIO()
-        program.TestProgram(module=None, argv=['stestr', ids],
-                            testRunner=functools.partial(runner,
-                                                         stdout=stream))
+        program.TestProgram(
+            module=None,
+            argv=["stestr", ids],
+            testRunner=functools.partial(runner, stdout=stream),
+        )
         stream.seek(0)
-        run_proc = [('subunit', stream)]
-        return load.load(in_streams=run_proc,
-                         subunit_out=subunit_out,
-                         repo_type=repo_type,
-                         repo_url=repo_url, run_id=combine_id,
-                         pretty_out=pretty_out,
-                         color=color, stdout=stdout, abbreviate=abbreviate,
-                         suppress_attachments=suppress_attachments,
-                         all_attachments=all_attachments,
-                         show_binary_attachments=show_binary_attachments)
+        run_proc = [("subunit", stream)]
+        return load.load(
+            in_streams=run_proc,
+            subunit_out=subunit_out,
+            repo_url=repo_url,
+            run_id=combine_id,
+            pretty_out=pretty_out,
+            color=color,
+            stdout=stdout,
+            abbreviate=abbreviate,
+            suppress_attachments=suppress_attachments,
+            all_attachments=all_attachments,
+            show_binary_attachments=show_binary_attachments,
+        )
 
     if failing or analyze_isolation:
         ids = _find_failing(repo)
@@ -568,7 +654,7 @@ def run_command(config='.stestr.conf', repo_type='file',
     if load_list:
         list_ids = set()
         # Should perhaps be text.. currently does its own decode.
-        with open(load_list, 'rb') as list_file:
+        with open(load_list, "rb") as list_file:
             list_ids = set(parse_list(list_file.read()))
         if ids is None:
             # Use the supplied list verbatim
@@ -578,22 +664,24 @@ def run_command(config='.stestr.conf', repo_type='file',
             # that are both failing and listed.
             ids = list_ids.intersection(ids)
 
-    if config and os.path.isfile(config):
-        conf = config_file.TestrConf(config)
-    elif os.path.isfile('tox.ini'):
-        conf = config_file.TestrConf('tox.ini', section='stestr')
-    else:
-        conf = config_file.TestrConf(config)
+    conf = config_file.TestrConf.load_from_file(config)
     if not analyze_isolation:
         cmd = conf.get_run_command(
-            ids, regexes=filters, group_regex=group_regex, repo_type=repo_type,
-            repo_url=repo_url, serial=serial, worker_path=worker_path,
-            concurrency=concurrency, blacklist_file=blacklist_file,
-            exclude_list=exclude_list, whitelist_file=whitelist_file,
-            include_list=include_list, black_regex=black_regex,
+            ids,
+            regexes=filters,
+            group_regex=group_regex,
+            repo_url=repo_url,
+            serial=serial,
+            worker_path=worker_path,
+            concurrency=concurrency,
+            exclude_list=exclude_list,
+            include_list=include_list,
             exclude_regex=exclude_regex,
-            top_dir=top_dir, test_path=test_path, randomize=random,
-            dynamic=dynamic)
+            top_dir=top_dir,
+            test_path=test_path,
+            randomize=random,
+            dynamic=dynamic,
+        )
         if isolated:
             result = 0
             cmd.setUp()
@@ -604,40 +692,55 @@ def run_command(config='.stestr.conf', repo_type='file',
             for test_id in ids:
                 # TODO(mtreinish): add regex
                 cmd = conf.get_run_command(
-                    [test_id], filters, group_regex=group_regex,
-                    repo_type=repo_type, repo_url=repo_url, serial=serial,
-                    worker_path=worker_path, concurrency=concurrency,
-                    blacklist_file=blacklist_file, exclude_list=exclude_list,
-                    whitelist_file=whitelist_file, include_list=include_list,
-                    black_regex=black_regex, exclude_regex=exclude_regex,
-                    randomize=random, test_path=test_path, top_dir=top_dir)
+                    [test_id],
+                    filters,
+                    group_regex=group_regex,
+                    repo_url=repo_url,
+                    serial=serial,
+                    worker_path=worker_path,
+                    concurrency=concurrency,
+                    exclude_list=exclude_list,
+                    include_list=include_list,
+                    exclude_regex=exclude_regex,
+                    randomize=random,
+                    test_path=test_path,
+                    top_dir=top_dir,
+                )
 
                 run_result = _run_tests(
-                    cmd, until_failure,
-                    subunit_out=subunit_out, combine_id=combine_id,
-                    repo_type=repo_type, repo_url=repo_url,
-                    pretty_out=pretty_out, color=color, abbreviate=abbreviate,
-                    stdout=stdout, suppress_attachments=suppress_attachments,
+                    cmd,
+                    until_failure,
+                    subunit_out=subunit_out,
+                    combine_id=combine_id,
+                    repo_url=repo_url,
+                    pretty_out=pretty_out,
+                    color=color,
+                    abbreviate=abbreviate,
+                    stdout=stdout,
+                    suppress_attachments=suppress_attachments,
                     all_attachments=all_attachments,
                     show_binary_attachments=show_binary_attachments,
-                    dynamic=dynamic)
+                    dynamic=dynamic,
+                )
                 if run_result > result:
                     result = run_result
             return result
         else:
-            return _run_tests(cmd, until_failure,
-                              subunit_out=subunit_out,
-                              combine_id=combine_id,
-                              repo_type=repo_type,
-                              repo_url=repo_url,
-                              pretty_out=pretty_out,
-                              color=color,
-                              stdout=stdout,
-                              abbreviate=abbreviate,
-                              suppress_attachments=suppress_attachments,
-                              all_attachments=all_attachments,
-                              show_binary_attachments=show_binary_attachments,
-                              dynamic=dynamic)
+            return _run_tests(
+                cmd,
+                until_failure,
+                subunit_out=subunit_out,
+                combine_id=combine_id,
+                repo_url=repo_url,
+                pretty_out=pretty_out,
+                color=color,
+                stdout=stdout,
+                abbreviate=abbreviate,
+                suppress_attachments=suppress_attachments,
+                all_attachments=all_attachments,
+                show_binary_attachments=show_binary_attachments,
+                dynamic=dynamic,
+            )
     else:
         # Where do we source data about the cause of conflicts.
         latest_run = repo.get_latest_run()
@@ -647,13 +750,19 @@ def run_command(config='.stestr.conf', repo_type='file',
         for test_id in ids:
             # TODO(mtrienish): Add regex
             cmd = conf.get_run_command(
-                [test_id], group_regex=group_regex, repo_type=repo_type,
-                repo_url=repo_url, serial=serial, worker_path=worker_path,
-                concurrency=concurrency, blacklist_file=blacklist_file,
-                exclude_list=exclude_list, whitelist_file=whitelist_file,
+                [test_id],
+                group_regex=group_regex,
+                repo_url=repo_url,
+                serial=serial,
+                worker_path=worker_path,
+                concurrency=concurrency,
+                exclude_list=exclude_list,
                 include_list=include_list,
-                black_regex=black_regex, exclude_regex=exclude_regex,
-                randomize=random, test_path=test_path, top_dir=top_dir)
+                exclude_regex=exclude_regex,
+                randomize=random,
+                test_path=test_path,
+                top_dir=top_dir,
+            )
             if not _run_tests(cmd, until_failure):
                 # If the test was filtered, it won't have been run.
                 if test_id in repo.get_test_ids(repo.latest_id()):
@@ -672,45 +781,73 @@ def run_command(config='.stestr.conf', repo_type='file',
             # All done.
             return 0
         bisect_runner = bisect_tests.IsolationAnalyzer(
-            latest_run, conf, _run_tests, repo, test_path=test_path,
-            top_dir=top_dir, group_regex=group_regex, repo_type=repo_type,
-            repo_url=repo_url, serial=serial, concurrency=concurrency)
+            latest_run,
+            conf,
+            _run_tests,
+            repo,
+            test_path=test_path,
+            top_dir=top_dir,
+            group_regex=group_regex,
+            repo_url=repo_url,
+            serial=serial,
+            concurrency=concurrency,
+        )
         # spurious-failure -> cause.
         return bisect_runner.bisect_tests(spurious_failures)
 
 
-def _run_tests(cmd, until_failure,
-               subunit_out=False, combine_id=None, repo_type='file',
-               repo_url=None, pretty_out=True, color=False, stdout=sys.stdout,
-               abbreviate=False, suppress_attachments=False,
-               all_attachments=False, show_binary_attachments=False,
-               dynamic=False):
+def _run_tests(
+    cmd,
+    until_failure,
+    subunit_out=False,
+    combine_id=None,
+    repo_url=None,
+    pretty_out=True,
+    color=False,
+    stdout=sys.stdout,
+    abbreviate=False,
+    suppress_attachments=False,
+    all_attachments=False,
+    show_binary_attachments=False,
+    dynamic=False,
+):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
+
         def run_tests():
             if not dynamic or cmd.concurrency == 1:
-                run_procs = [('subunit',
-                              output.ReturnCodeToSubunit(
-                                  proc,
-                                  dynamic=False)) for proc in cmd.run_tests()]
+                run_procs = [
+                    ("subunit", output.ReturnCodeToSubunit(proc, dynamic=False))
+                    for proc in cmd.run_tests()
+                ]
             else:
-                run_procs = [('subunit',
-                              output.ReturnCodeToSubunit(
-                                  os.fdopen(proc['stream']),
-                                  proc['proc'])) for proc in cmd.run_tests()]
+                run_procs = [
+                    (
+                        "subunit",
+                        output.ReturnCodeToSubunit(
+                            os.fdopen(proc["stream"]), proc["proc"]
+                        ),
+                    )
+                    for proc in cmd.run_tests()
+                ]
             if not run_procs:
                 stdout.write("The specified regex doesn't match with anything")
                 return 1
-            return load.load((None, None), in_streams=run_procs,
-                             subunit_out=subunit_out,
-                             repo_type=repo_type,
-                             repo_url=repo_url, run_id=combine_id,
-                             pretty_out=pretty_out, color=color, stdout=stdout,
-                             abbreviate=abbreviate,
-                             suppress_attachments=suppress_attachments,
-                             all_attachments=all_attachments,
-                             show_binary_attachments=show_binary_attachments)
+            return load.load(
+                (None, None),
+                in_streams=run_procs,
+                subunit_out=subunit_out,
+                repo_url=repo_url,
+                run_id=combine_id,
+                pretty_out=pretty_out,
+                color=color,
+                stdout=stdout,
+                abbreviate=abbreviate,
+                suppress_attachments=suppress_attachments,
+                all_attachments=all_attachments,
+                show_binary_attachments=show_binary_attachments,
+            )
 
         if not until_failure:
             return run_tests()
@@ -721,7 +858,7 @@ def _run_tests(cmd, until_failure,
                 # the result from the repository because load() returns 0
                 # always on subunit output
                 if subunit_out:
-                    repo = util.get_repo_open(repo_type, repo_url)
+                    repo = util.get_repo_open(repo_url=repo_url)
                     summary = testtools.StreamSummary()
                     last_run = repo.get_latest_run().get_subunit_stream()
                     stream = subunit.ByteStreamToStreamResult(last_run)

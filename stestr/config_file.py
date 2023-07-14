@@ -15,6 +15,7 @@ import re
 import sys
 
 import configparser
+import tomlkit
 
 from stestr.repository import util
 from stestr import test_processor
@@ -27,36 +28,93 @@ class TestrConf:
     of a tox.ini file the stestr section in the tox.ini file
 
     :param str config_file: The path to the config file to use
-    :param str section: The section to use for the stestr config. By default
-        this is DEFATULT.
+    :param str section: The section to use for the stestr config. By default,
+        this is DEFAULT.
     """
 
-    _escape_trailing_backslash_re = re.compile(r'(?<=[^\\])\\$')
+    DEFAULT_CONFIG_FILENAME = ".stestr.conf"
+    _escape_trailing_backslash_re = re.compile(r"(?<=[^\\])\\$")
+    # Set sensible config defaults here, so that override methods are kept DRY
+    test_path = None
+    top_dir = None
+    parallel_class = False
+    group_regex = None
 
-    def __init__(self, config_file, section='DEFAULT'):
-        self.parser = configparser.ConfigParser()
-        self.parser.read(config_file)
-        self.config_file = config_file
+    def __init__(self, config_file, section="DEFAULT"):
+        self.config_file = str(config_file)
         self.section = section
+        if self.config_file.lower().endswith(".toml"):
+            self._load_from_toml()
+        else:
+            self._load_from_configparser()
+
+    def _load_from_configparser(self):
+        parser = configparser.ConfigParser()
+        parser.read(self.config_file)
+        self.test_path = parser.get(self.section, "test_path", fallback=self.test_path)
+        self.top_dir = parser.get(self.section, "top_dir", fallback=self.top_dir)
+        self.parallel_class = parser.getboolean(
+            self.section, "parallel_class", fallback=self.parallel_class
+        )
+        self.group_regex = parser.get(
+            self.section, "group_regex", fallback=self.group_regex
+        )
+
+    def _load_from_toml(self):
+        with open(self.config_file) as f:
+            doc = tomlkit.load(f)
+            root = doc["tool"]["stestr"]
+            self.test_path = root.get("test_path", self.test_path)
+            self.top_dir = root.get("top_dir", self.top_dir)
+            self.parallel_class = root.get("parallel_class", self.parallel_class)
+            self.group_regex = root.get("group_regex", self.group_regex)
+
+    @classmethod
+    def load_from_file(cls, config):
+        """Load user-specified values from the various config files.
+
+        ConfigParser (.ini) and TOML are supported.
+        If a config file is specified, it is used, and fails on errors.
+        If no config file is specified, the order of precedence is as follows:
+        - .stestr.conf
+        - pyproject.toml with a valid [tool.stestr] section
+        - tox.ini with a valid [stestr] section
+
+        :param str config: The pathname of the config file to use
+        """
+        if os.path.isfile(config) or config != cls.DEFAULT_CONFIG_FILENAME:
+            return cls(config)
+        try:
+            return cls("pyproject.toml")
+        except (FileNotFoundError, KeyError):
+            return cls("tox.ini", section="stestr")
 
     def _sanitize_path(self, path):
-        if os.sep == '\\':
+        if os.sep == "\\":
             # Trailing backslashes have to be escaped. Othwerise, the
             # command we're issuing will be incorrectly interpreted on
             # Windows.
-            path = self._escape_trailing_backslash_re.sub(r'\\\\', path)
+            path = self._escape_trailing_backslash_re.sub(r"\\\\", path)
         return path
 
-    def get_run_command(self, test_ids=None, regexes=None,
-                        test_path=None, top_dir=None, group_regex=None,
-                        repo_type='file', repo_url=None,
-                        serial=False, worker_path=None,
-                        concurrency=0, blacklist_file=None,
-                        exclude_list=None, whitelist_file=None,
-                        include_list=None, black_regex=None,
-                        exclude_regex=None,
-                        randomize=False, parallel_class=None,
-                        dynamic=False):
+    def get_run_command(
+        self,
+        test_ids=None,
+        regexes=None,
+        test_path=None,
+        top_dir=None,
+        group_regex=None,
+        repo_url=None,
+        serial=False,
+        worker_path=None,
+        concurrency=0,
+        exclude_list=None,
+        include_list=None,
+        exclude_regex=None,
+        randomize=False,
+        parallel_class=None,
+        dynamic=False,
+    ):
         """Get a test_processor.TestProcessorFixture for this config file
 
         Any parameters about running tests will be used for initialize the
@@ -81,8 +139,6 @@ class TestrConf:
         :param str group_regex: Set a group regex to use for grouping tests
             together in the stestr scheduler. If both this and the
             corresponding config file option are set this value will be used.
-        :param str repo_type: This is the type of repository to use. Valid
-            choices are 'file' and 'sql'.
         :param str repo_url: The url of the repository to use.
         :param bool serial: If tests are run from the returned fixture, they
             will be run serially
@@ -90,16 +146,10 @@ class TestrConf:
             to use for the run.
         :param int concurrency: How many processes to use. The default (0)
             autodetects your CPU count and uses that.
-        :param str blacklist_file: Available now but soon to be replaced by the
-            new option exclude_list below.
         :param str exclude_list: Path to an exclusion list file, this
             file contains a separate regex exclude on each newline.
-        :param str whitelist_file: Available now but soon to be replaced by the
-            new option include_list below.
         :param str include_list: Path to an inclusion list file, this
             file contains a separate regex on each newline.
-        :param str black_regex: Available now but soon to be replaced by the
-            new option exclude_regex below.
         :param str exclude_regex: Test rejection regex. If a test cases name
             matches on re.search() operation, it will be removed from the final
             test list.
@@ -116,70 +166,77 @@ class TestrConf:
         :rtype: test_processor.TestProcessorFixture
         """
 
-        if not test_path and self.parser.has_option(self.section, 'test_path'):
-            test_path = self.parser.get(self.section, 'test_path')
-        elif not test_path:
-            sys.exit("No test_path can be found in either the command line "
-                     "options nor in the specified config file {}.  Please "
-                     "specify a test path either in the config file or via "
-                     "the --test-path argument".format(self.config_file))
-        if not top_dir and self.parser.has_option(self.section, 'top_dir'):
-            top_dir = self.parser.get(self.section, 'top_dir')
-        elif not top_dir:
-            top_dir = './'
+        if not test_path and not self.test_path:
+            sys.exit(
+                "No test_path can be found in either the command line "
+                "options nor in the specified config file {}.  Please "
+                "specify a test path either in the config file or via "
+                "the --test-path argument".format(self.config_file)
+            )
+        if not top_dir and not self.top_dir:
+            top_dir = "./"
 
-        test_path = self._sanitize_path(test_path)
-        top_dir = self._sanitize_path(top_dir)
+        test_path = self._sanitize_path(test_path or self.test_path)
+        top_dir = self._sanitize_path(top_dir or self.top_dir)
 
         stestr_python = sys.executable
         # let's try to be explicit, even if it means a longer set of ifs
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             # it may happen, albeit rarely
             if not stestr_python:
                 raise RuntimeError("The Python interpreter was not found")
             python = stestr_python
         else:
-            if os.environ.get('PYTHON'):
-                python = '${PYTHON}'
+            if os.environ.get("PYTHON"):
+                python = "${PYTHON}"
             elif stestr_python:
                 python = stestr_python
             else:
-                raise RuntimeError("The Python interpreter was not found and "
-                                   "PYTHON is not set")
+                raise RuntimeError(
+                    "The Python interpreter was not found and " "PYTHON is not set"
+                )
 
         # The python binary path may contain whitespaces.
         if os.path.exists('"%s"' % python):
             python = '"%s"' % python
 
-        command = '%s -m stestr.subunit_runner.run discover -t "%s" "%s" ' \
-                  '$LISTOPT $IDOPTION' % (python, top_dir, test_path)
+        command = (
+            '%s -m stestr.subunit_runner.run discover -t "%s" "%s" '
+            "$LISTOPT $IDOPTION" % (python, top_dir, test_path)
+        )
         listopt = "--list"
         idoption = "--load-list $IDFILE"
         # If the command contains $IDOPTION read that command from config
         # Use a group regex if one is defined
-        if parallel_class:
-            group_regex = r'([^\.]*\.)*'
-        if not group_regex \
-                and self.parser.has_option(self.section, 'parallel_class') \
-                and self.parser.getboolean(self.section, 'parallel_class'):
-            group_regex = r'([^\.]*\.)*'
-        if not group_regex and self.parser.has_option(self.section,
-                                                      'group_regex'):
-            group_regex = self.parser.get(self.section, 'group_regex')
+        if parallel_class or self.parallel_class:
+            group_regex = r"([^\.]*\.)*"
+        if not group_regex and self.group_regex:
+            group_regex = self.group_regex
         if group_regex:
+
             def group_callback(test_id, regex=re.compile(group_regex)):
                 match = regex.match(test_id)
                 if match:
                     return match.group(0)
+
         else:
             group_callback = None
         # Handle the results repository
-        repository = util.get_repo_open(repo_type, repo_url)
+        repository = util.get_repo_open(repo_url=repo_url)
         return test_processor.TestProcessorFixture(
-            test_ids, command, listopt, idoption, repository,
-            test_filters=regexes, group_callback=group_callback, serial=serial,
-            worker_path=worker_path, concurrency=concurrency,
-            blacklist_file=blacklist_file,
-            exclude_list=exclude_list, black_regex=black_regex,
-            exclude_regex=exclude_regex, whitelist_file=whitelist_file,
-            include_list=include_list, randomize=randomize, dynamic=dynamic)
+            test_ids,
+            command,
+            listopt,
+            idoption,
+            repository,
+            test_filters=regexes,
+            group_callback=group_callback,
+            serial=serial,
+            worker_path=worker_path,
+            concurrency=concurrency,
+            exclude_list=exclude_list,
+            exclude_regex=exclude_regex,
+            include_list=include_list,
+            randomize=randomize,
+            dynamic=dynamic,
+        )
