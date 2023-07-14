@@ -527,10 +527,6 @@ def run_command(
         stdout.write(msg)
         return 2
     if dynamic:
-        if sys.version_info[0] < 3 or sys.version_info[1] < 5:
-            msg = "Dynamic mode requires python 3.5 or newer."
-            exit(1)
-
         warnings.warn(
             "WARNING: The dynamic scheduler is still experimental. "
             "You might encounter issues while using it"
