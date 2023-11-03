@@ -12,7 +12,6 @@
 
 """Run a projects tests and load them into stestr."""
 
-import configparser
 import errno
 import functools
 import io
@@ -470,29 +469,15 @@ def run_command(
         repo = util.get_repo_open(repo_url=repo_url)
     # If a repo is not found, and there a stestr config exists just create it
     except repository.RepositoryNotFound:
-        if not os.path.isfile(config) and not test_path:
-            # If there is no config and no test-path
-            if os.path.isfile("tox.ini"):
-                tox_conf = configparser.ConfigParser()
-                tox_conf.read("tox.ini")
-                if not tox_conf.has_section("stestr"):
-                    msg = (
-                        "No file found, --test-path not specified, and "
-                        "stestr section not found in tox.ini. Either "
-                        "create or specify a .stestr.conf, use "
-                        "--test-path, or add an stestr section to the "
-                        "tox.ini"
-                    )
-                    stdout.write(msg)
-                    exit(1)
-            else:
-                msg = (
-                    "No config file found and --test-path not specified. "
-                    "Either create or specify a .stestr.conf or use "
-                    "--test-path "
-                )
-                stdout.write(msg)
-                exit(1)
+        conf = config_file.TestrConf.load_from_file(config)
+        if not conf.test_path and not test_path:
+            msg = (
+                "No config file found and --test-path not specified. "
+                "Either create or specify a .stestr.conf, tox.ini, "
+                "or pyproject.toml, or use --test-path"
+            )
+            stdout.write(msg)
+            exit(1)
         try:
             repo = util.get_repo_initialise(repo_url=repo_url)
         except OSError as e:
