@@ -39,6 +39,7 @@ class TestrConf:
     top_dir = None
     parallel_class = False
     group_regex = None
+    runner = None
 
     def __init__(self, config_file, section="DEFAULT"):
         self.config_file = str(config_file)
@@ -59,6 +60,7 @@ class TestrConf:
         self.group_regex = parser.get(
             self.section, "group_regex", fallback=self.group_regex
         )
+        self.runner = parser.get(self.section, "runner", fallback=self.runner)
 
     def _load_from_toml(self):
         with open(self.config_file) as f:
@@ -68,6 +70,7 @@ class TestrConf:
             self.top_dir = root.get("top_dir", self.top_dir)
             self.parallel_class = root.get("parallel_class", self.parallel_class)
             self.group_regex = root.get("group_regex", self.group_regex)
+            self.runner = root.get("runner", self.runner)
 
     @classmethod
     def load_from_file(cls, config):
@@ -113,6 +116,7 @@ class TestrConf:
         exclude_regex=None,
         randomize=False,
         parallel_class=None,
+        pytest=False,
     ):
         """Get a test_processor.TestProcessorFixture for this config file
 
@@ -158,6 +162,8 @@ class TestrConf:
             stestr scheduler by class. If both this and the corresponding
             config file option which includes `group-regex` are set, this value
             will be used.
+        :param bool pytest: Set to true to use pytest as the test runner instead of
+            the stestr stdlib based unittest runner
 
         :returns: a TestProcessorFixture object for the specified config file
             and any arguments passed into this function
@@ -198,12 +204,35 @@ class TestrConf:
         if os.path.exists('"%s"' % python):
             python = '"%s"' % python
 
-        command = (
-            '%s -m stestr.subunit_runner.run discover -t "%s" "%s" '
-            "$LISTOPT $IDOPTION" % (python, top_dir, test_path)
-        )
-        listopt = "--list"
-        idoption = "--load-list $IDFILE"
+        if not pytest and self.runner is not None:
+            if self.runner == "pytest":
+                pytest = True
+            elif self.runner == "unittest":
+                pytest = False
+            else:
+                raise RuntimeError(
+                    "Specified runner argument value: {self.runner} in config file is not "
+                    "valid. Only pytest or unittest can be specified in the config file."
+                )
+        if pytest:
+            command = (
+                '%s -m pytest --subunit --rootdir="%s" "%s" '
+                "$LISTOPT $IDOPTION"
+                % (
+                    python,
+                    top_dir,
+                    test_path,
+                )
+            )
+            listopt = "--co"
+            idoption = "--load-list $IDFILE"
+        else:
+            command = (
+                '%s -m stestr.subunit_runner.run discover -t "%s" "%s" '
+                "$LISTOPT $IDOPTION" % (python, top_dir, test_path)
+            )
+            listopt = "--list"
+            idoption = "--load-list $IDFILE"
         # If the command contains $IDOPTION read that command from config
         # Use a group regex if one is defined
         if parallel_class or self.parallel_class:
