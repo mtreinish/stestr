@@ -192,14 +192,14 @@ project bundles a ``pytest`` plugin that adds real time subunit output to
 pytest. As a test suite author the ``pytest`` plugin enables you to write your
 test suite using pytest's test library instead of ``unittest``. There are two
 ways to specify your test runner, first is the ``--pytest`` flag on
-``stestr run``. This tells stestr for this test run use ``pytest`` as the runner
-instead of ``unittest``, this is good for a/b comparisons between the test
-runners and also general investigations with using different test runners. The
-other option is to leverage your project's config file and set the ``runner``
-field to either ``pytest`` or ``unittest`` (although ``unittest`` is always the
-default so you shouldn't ever need to set it). This is the more natural fit
-because if your test suite is written using pytest it won't be compatible with
-the unittest based runner.
+``stestr run``. This tells stestr for this test run use ``pytest`` as the
+runner instead of ``unittest``, this is good for a/b comparisons between the
+test runners and also general investigations with using different test runners.
+The other option is to leverage your project's config file and set the
+``runner`` field to either ``pytest`` or ``unittest`` (although ``unittest`` is
+always the default so you shouldn't ever need to set it). This is the more
+natural fit because if your test suite is written using pytest it won't be
+compatible with the unittest based runner.
 
 Running with pdb
 ''''''''''''''''
