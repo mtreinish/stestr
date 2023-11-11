@@ -63,11 +63,6 @@ jobs:
             ${{ runner.os }}-${{ matrix.python-version }}
       - name: Install Deps
         run: python -m pip install -U 'tox<4' setuptools virtualenv wheel
-      - name: Test windows stuff
-        run: |
-          tox -epy --notest
-          .tox/py/Scripts/python -m pytest --subunit --rootdir="./" "./stestr/tests" --co
-        if: runner.os == 'Windows'
       - name: Install and Run Tests
         run: tox -e py -- --pytest
         if: runner.os != 'macOS'
