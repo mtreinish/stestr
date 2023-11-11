@@ -211,7 +211,7 @@ class TestrConf:
                 pytest = False
             else:
                 raise RuntimeError(
-                    "Specified runner argument value: {self.runner} in config file is not "
+                    f"Specified runner argument value: {self.runner} in config file is not "
                     "valid. Only pytest or unittest can be specified in the config file."
                 )
         if pytest:

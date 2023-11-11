@@ -172,6 +172,13 @@ Additionally you can specify a specific class or method within that file using
 will skip discovery and directly call the test runner on the test method in the
 specified test class.
 
+.. note::
+
+   If you're using ``--pytest`` or have the runner configured to pytest, then
+   the ``--no-discover``/``-n`` option passes the id field directly to
+   ``pytest`` and the id passed via the argument needs to be in a format that
+   pytest will accept.
+
 Test runners
 ''''''''''''
 

@@ -529,13 +529,15 @@ def run_command(
         stdout.write(msg)
         return 2
 
+    conf = config_file.TestrConf.load_from_file(config)
     if no_discover:
         ids = no_discover
-        if "::" in ids:
-            ids = ids.replace("::", ".")
-        if ids.find("/") != -1:
-            root = ids.replace(".py", "")
-            ids = root.replace("/", ".")
+        if not pytest and conf.runner != "pytest":
+            if "::" in ids:
+                ids = ids.replace("::", ".")
+            if ids.find("/") != -1:
+                root = ids.replace(".py", "")
+                ids = root.replace("/", ".")
         stestr_python = sys.executable
         if os.environ.get("PYTHON"):
             python_bin = os.environ.get("PYTHON")
@@ -545,7 +547,10 @@ def run_command(
             raise RuntimeError(
                 "The Python interpreter was not found and " "PYTHON is not set"
             )
-        run_cmd = python_bin + " -m stestr.subunit_runner.run " + ids
+        if pytest or conf.runner == "pytest":
+            run_cmd = python_bin + " -m pytest --subunit " + ids
+        else:
+            run_cmd = python_bin + " -m stestr.subunit_runner.run " + ids
 
         def run_tests():
             run_proc = [
@@ -639,7 +644,6 @@ def run_command(
             # that are both failing and listed.
             ids = list_ids.intersection(ids)
 
-    conf = config_file.TestrConf.load_from_file(config)
     if not analyze_isolation:
         cmd = conf.get_run_command(
             ids,
