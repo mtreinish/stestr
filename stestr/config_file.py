@@ -216,15 +216,27 @@ class TestrConf:
                     "specified in the config file."
                 )
         if pytest:
-            command = (
-                '%s -m pytest --subunit --rootdir="%s" "%s" '
-                "$LISTOPT $IDOPTION"
-                % (
-                    python,
-                    top_dir,
-                    test_path,
+            if sys.platform == "win32":
+                command = (
+                    '%s -m pytest -s --subunit --rootdir="%s" "%s" '
+                    "$LISTOPT $IDOPTION"
+                    % (
+                        python,
+                        top_dir,
+                        test_path,
+                    )
                 )
-            )
+
+            else:
+                command = (
+                    '%s -m pytest --subunit --rootdir="%s" "%s" '
+                    "$LISTOPT $IDOPTION"
+                    % (
+                        python,
+                        top_dir,
+                        test_path,
+                    )
+                )
             listopt = "--co"
             idoption = "--load-list $IDFILE"
         else:
