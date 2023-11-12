@@ -29,13 +29,13 @@ import pytest
 from subunit import StreamResultToBytes
 
 
-def to_path(testid: str) -> pathlib.PosixPath:
+def to_path(testid: str) -> pathlib.Path:
     delim = "::"
     if delim in testid:
         path = testid.split(delim)[0]
     else:
         path = testid
-    return pathlib.PosixPath(path).resolve()
+    return pathlib.Path(path).resolve()
 
 
 # hook
