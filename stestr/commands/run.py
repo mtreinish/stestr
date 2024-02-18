@@ -244,6 +244,12 @@ class Run(command.Command):
             help="If set, show non-text attachments. This is "
             "generally only useful for debug purposes.",
         )
+        parser.add_argument(
+            "--pytest",
+            action="store_true",
+            dest="pytest",
+            help="If set to True enable using pytest as the test runner",
+        )
         return parser
 
     def take_action(self, parsed_args):
@@ -335,6 +341,7 @@ class Run(command.Command):
             all_attachments=all_attachments,
             show_binary_attachments=args.show_binary_attachments,
             pdb=args.pdb,
+            pytest=args.pytest,
         )
 
         # Always output slowest test info if requested, regardless of other
@@ -396,6 +403,7 @@ def run_command(
     all_attachments=False,
     show_binary_attachments=True,
     pdb=False,
+    pytest=False,
 ):
     """Function to execute the run command
 
@@ -460,6 +468,8 @@ def run_command(
     :param str pdb: Takes in a single test_id to bypasses test
         discover and just execute the test specified without launching any
         additional processes. A file name may be used in place of a test name.
+    :param bool pytest: Set to true to use pytest as the test runner instead of
+        the stestr stdlib based unittest runner
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -519,13 +529,15 @@ def run_command(
         stdout.write(msg)
         return 2
 
+    conf = config_file.TestrConf.load_from_file(config)
     if no_discover:
         ids = no_discover
-        if "::" in ids:
-            ids = ids.replace("::", ".")
-        if ids.find("/") != -1:
-            root = ids.replace(".py", "")
-            ids = root.replace("/", ".")
+        if not pytest and conf.runner != "pytest":
+            if "::" in ids:
+                ids = ids.replace("::", ".")
+            if ids.find("/") != -1:
+                root = ids.replace(".py", "")
+                ids = root.replace("/", ".")
         stestr_python = sys.executable
         if os.environ.get("PYTHON"):
             python_bin = os.environ.get("PYTHON")
@@ -535,7 +547,10 @@ def run_command(
             raise RuntimeError(
                 "The Python interpreter was not found and " "PYTHON is not set"
             )
-        run_cmd = python_bin + " -m stestr.subunit_runner.run " + ids
+        if pytest or conf.runner == "pytest":
+            run_cmd = python_bin + " -m pytest --subunit " + ids
+        else:
+            run_cmd = python_bin + " -m stestr.subunit_runner.run " + ids
 
         def run_tests():
             run_proc = [
@@ -629,7 +644,6 @@ def run_command(
             # that are both failing and listed.
             ids = list_ids.intersection(ids)
 
-    conf = config_file.TestrConf.load_from_file(config)
     if not analyze_isolation:
         cmd = conf.get_run_command(
             ids,
@@ -645,6 +659,7 @@ def run_command(
             top_dir=top_dir,
             test_path=test_path,
             randomize=random,
+            pytest=pytest,
         )
         if isolated:
             result = 0
@@ -669,6 +684,7 @@ def run_command(
                     randomize=random,
                     test_path=test_path,
                     top_dir=top_dir,
+                    pytest=pytest,
                 )
 
                 run_result = _run_tests(
@@ -724,6 +740,7 @@ def run_command(
                 randomize=random,
                 test_path=test_path,
                 top_dir=top_dir,
+                pytest=pytest,
             )
             if not _run_tests(cmd, until_failure):
                 # If the test was filtered, it won't have been run.
