@@ -68,6 +68,7 @@ A full example config file is::
   test_path=./project/tests
   top_dir=./
   group_regex=([^\.]*\.)*
+  runner=pytest
 
 
 The ``group_regex`` option is used to specify is used to provide a scheduler
@@ -77,7 +78,10 @@ You can also specify the ``parallel_class=True`` instead of
 group_regex to group tests in the stestr scheduler together by
 class. Since this is a common use case this enables that without
 needing to memorize the complicated regex for ``group_regex`` to do
-this.
+this. The ``runner`` argument is used to specify the test runner to use. By
+default a runner based on Python's standard library ``unittest`` module is
+used. However, if you'd prefer to use ``pytest`` as your runner you can specify
+this as the runner argument in the config file.
 
 There is also an option to specify all the options in the config file via the
 CLI. This way you can run stestr directly without having to write a config file
@@ -137,6 +141,8 @@ providing configs in TOML format, the configuration directives
 **must** be located in a ``[tool.stestr]`` section, and the filename
 **must** have a ``.toml`` extension.
 
+
+
 Running tests
 -------------
 
@@ -165,6 +171,35 @@ Additionally you can specify a specific class or method within that file using
 
 will skip discovery and directly call the test runner on the test method in the
 specified test class.
+
+.. note::
+
+   If you're using ``--pytest`` or have the runner configured to pytest, then
+   the ``--no-discover``/``-n`` option passes the id field directly to
+   ``pytest`` and the id passed via the argument needs to be in a format that
+   pytest will accept.
+
+Test runners
+''''''''''''
+
+By default ``stestr`` is built to run tests leveraging the Python standard
+library ``unittest`` modules runner. stestr includes a test runner that will
+emit the subunit protocol it relies on internally to handle live results from
+parallel workers. However, there is an alternative runner available that
+leverages ``pytest`` which is a popular test runner and testing library
+alternative to the standard library's ``unittest`` module. The ``stestr``
+project bundles a ``pytest`` plugin that adds real time subunit output to
+pytest. As a test suite author the ``pytest`` plugin enables you to write your
+test suite using pytest's test library instead of ``unittest``. There are two
+ways to specify your test runner, first is the ``--pytest`` flag on
+``stestr run``. This tells stestr for this test run use ``pytest`` as the
+runner instead of ``unittest``, this is good for a/b comparisons between the
+test runners and also general investigations with using different test runners.
+The other option is to leverage your project's config file and set the
+``runner`` field to either ``pytest`` or ``unittest`` (although ``unittest`` is
+always the default so you shouldn't ever need to set it). This is the more
+natural fit because if your test suite is written using pytest it won't be
+compatible with the unittest based runner.
 
 Running with pdb
 ''''''''''''''''

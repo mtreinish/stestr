@@ -524,3 +524,90 @@ class TestReturnCodesTOML(TestReturnCodes):
         os.remove(self.pyproject_toml)
         output, _ = self.assertRunExit("stestr run passing", 1)
         self.assertIn(b"No config file found", output)
+
+
+class TestPytestReturnCodes(TestReturnCodes):
+    def setUp(self):
+        super().setUp()
+        os.chdir(self.repo_root)
+        # Setup test dirs
+        self.directory = tempfile.mkdtemp(prefix="stestr-pytest-unit")
+        self.addCleanup(shutil.rmtree, self.directory, ignore_errors=True)
+        self.test_dir = os.path.join(self.directory, "tests")
+        os.mkdir(self.test_dir)
+        # Setup Test files
+        self.repo_root = os.path.abspath(os.curdir)
+        self.testr_conf_file = os.path.join(self.directory, ".stestr.conf")
+        self.setup_cfg_file = os.path.join(self.directory, "setup.cfg")
+        self.passing_file = os.path.join(self.test_dir, "test_passing.py")
+        self.failing_file = os.path.join(self.test_dir, "test_failing.py")
+        self.init_file = os.path.join(self.test_dir, "__init__.py")
+        self.setup_py = os.path.join(self.directory, "setup.py")
+        self.user_config = os.path.join(self.directory, "stestr.yaml")
+        shutil.copy(
+            "stestr/tests/pytest_mode_files/pytest_stestr_conf", self.testr_conf_file
+        )
+        shutil.copy("stestr/tests/pytest_mode_files/passing-tests", self.passing_file)
+        shutil.copy("stestr/tests/pytest_mode_files/failing-tests", self.failing_file)
+        shutil.copy("setup.py", self.setup_py)
+        shutil.copy("stestr/tests/pytest_mode_files/setup.cfg", self.setup_cfg_file)
+        shutil.copy("stestr/tests/pytest_mode_files/__init__.py", self.init_file)
+        shutil.copy("stestr/tests/files/stestr.yaml", self.user_config)
+
+        self.stdout = io.StringIO()
+        self.stderr = io.StringIO()
+        # Change directory, run wrapper and check result
+        self.addCleanup(os.chdir, self.repo_root)
+        os.chdir(self.directory)
+        subprocess.call("stestr init", shell=True)
+
+    def test_history_show_passing(self):
+        self.assertRunExit("stestr run passing", 0)
+        self.assertRunExit("stestr run", 1)
+        self.assertRunExit("stestr run passing", 0)
+        output, _ = self.assertRunExit("stestr history show 0", 0)
+        lines = [x.rstrip() for x in output.decode("utf8").split("\n")]
+        self.assertIn(" - Passed: 4", lines)
+        self.assertIn(" - Failed: 0", lines)
+        self.assertIn(" - Expected Fail: 1", lines)
+
+    def test_history_show_failing(self):
+        self.assertRunExit("stestr run passing", 0)
+        self.assertRunExit("stestr run", 1)
+        self.assertRunExit("stestr run passing", 0)
+        output, _ = self.assertRunExit("stestr history show 1", 1)
+        lines = [x.rstrip() for x in output.decode("utf8").split("\n")]
+        self.assertIn(" - Passed: 4", lines)
+        self.assertIn(" - Failed: 3", lines)
+        self.assertIn(" - Expected Fail: 1", lines)
+        self.assertIn(" - Unexpected Success: 1", lines)
+
+    def test_run_no_discover_pytest_path(self):
+        passing_string = "tests/test_passing.py::test_pass_list"
+        out, err = self.assertRunExit("stestr run -n %s" % passing_string, 0)
+        lines = out.decode("utf8").splitlines()
+        self.assertIn(" - Passed: 1", lines)
+        self.assertIn(" - Failed: 0", lines)
+
+    def test_run_no_discover_pytest_path_failing(self):
+        passing_string = "tests/test_failing.py::test_pass_list"
+        out, err = self.assertRunExit("stestr run -n %s" % passing_string, 1)
+        lines = out.decode("utf8").splitlines()
+        self.assertIn(" - Passed: 0", lines)
+        self.assertIn(" - Failed: 1", lines)
+
+    def test_run_no_discover_file_path(self):
+        passing_string = "tests/test_passing.py"
+        out, err = self.assertRunExit("stestr run -n %s" % passing_string, 0)
+        lines = out.decode("utf8").splitlines()
+        self.assertIn(" - Passed: 4", lines)
+        self.assertIn(" - Failed: 0", lines)
+        self.assertIn(" - Expected Fail: 1", lines)
+
+    def test_run_no_discover_file_path_failing(self):
+        passing_string = "tests/test_failing.py"
+        out, err = self.assertRunExit("stestr run -n %s" % passing_string, 1)
+        lines = out.decode("utf8").splitlines()
+        self.assertIn(" - Passed: 0", lines)
+        self.assertIn(" - Failed: 3", lines)
+        self.assertIn(" - Unexpected Success: 1", lines)

@@ -26,6 +26,7 @@ class TestTestrConf(base.TestCase):
     def setUp(self, mock_ConfigParser):
         super().setUp()
         self._testr_conf = config_file.TestrConf(mock.sentinel.config_file)
+        self._testr_conf.runner = "unittest"
 
     @mock.patch.object(config_file.util, "get_repo_open")
     @mock.patch.object(config_file.test_processor, "TestProcessorFixture")
@@ -198,5 +199,6 @@ class TestTestrConf(base.TestCase):
         with open(file_path, "w"):
             pass
         self._testr_conf = config_file.TestrConf(file_path)
+        self._testr_conf.runner = "unittest"
         self._check_get_run_command()
         mock_toml.return_value.__getitem__.assert_called_once_with("tool")
