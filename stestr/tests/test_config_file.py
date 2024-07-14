@@ -74,6 +74,7 @@ class TestTestrConf(base.TestCase):
             exclude_regex=None,
             exclude_list=None,
             concurrency=0,
+            dynamic=False,
             group_callback=expected_group_callback,
             test_filters=None,
             randomize=False,

@@ -18,6 +18,7 @@ import io
 import os
 import subprocess
 import sys
+import warnings
 
 from cliff import command
 import subunit
@@ -244,6 +245,12 @@ class Run(command.Command):
             help="If set, show non-text attachments. This is "
             "generally only useful for debug purposes.",
         )
+        parser.add_argument(
+            "--dynamic",
+            action="store_true",
+            default=False,
+            help="Enable the EXPERIMENTAL dynamic scheduler",
+        )
         return parser
 
     def take_action(self, parsed_args):
@@ -335,6 +342,7 @@ class Run(command.Command):
             all_attachments=all_attachments,
             show_binary_attachments=args.show_binary_attachments,
             pdb=args.pdb,
+            dynamic=args.dynamic,
         )
 
         # Always output slowest test info if requested, regardless of other
@@ -396,6 +404,7 @@ def run_command(
     all_attachments=False,
     show_binary_attachments=True,
     pdb=False,
+    dynamic=False,
 ):
     """Function to execute the run command
 
@@ -460,6 +469,7 @@ def run_command(
     :param str pdb: Takes in a single test_id to bypasses test
         discover and just execute the test specified without launching any
         additional processes. A file name may be used in place of a test name.
+    :param bool dynamic: Enable dynamic scheduling
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -501,6 +511,11 @@ def run_command(
         )
         stdout.write(msg)
         return 2
+    if dynamic:
+        warnings.warn(
+            "WARNING: The dynamic scheduler is still experimental. "
+            "You might encounter issues while using it"
+        )
     if combine:
         latest_id = repo.latest_id()
         combine_id = str(latest_id)
@@ -542,7 +557,8 @@ def run_command(
                 (
                     "subunit",
                     output.ReturnCodeToSubunit(
-                        subprocess.Popen(run_cmd, shell=True, stdout=subprocess.PIPE)
+                        subprocess.Popen(run_cmd, shell=True, stdout=subprocess.PIPE),
+                        dynamic=False,
                     ),
                 )
             ]
@@ -645,6 +661,7 @@ def run_command(
             top_dir=top_dir,
             test_path=test_path,
             randomize=random,
+            dynamic=dynamic,
         )
         if isolated:
             result = 0
@@ -684,6 +701,7 @@ def run_command(
                     suppress_attachments=suppress_attachments,
                     all_attachments=all_attachments,
                     show_binary_attachments=show_binary_attachments,
+                    dynamic=dynamic,
                 )
                 if run_result > result:
                     result = run_result
@@ -702,6 +720,7 @@ def run_command(
                 suppress_attachments=suppress_attachments,
                 all_attachments=all_attachments,
                 show_binary_attachments=show_binary_attachments,
+                dynamic=dynamic,
             )
     else:
         # Where do we source data about the cause of conflicts.
@@ -771,16 +790,28 @@ def _run_tests(
     suppress_attachments=False,
     all_attachments=False,
     show_binary_attachments=False,
+    dynamic=False,
 ):
     """Run the tests cmd was parameterised with."""
     cmd.setUp()
     try:
 
         def run_tests():
-            run_procs = [
-                ("subunit", output.ReturnCodeToSubunit(proc))
-                for proc in cmd.run_tests()
-            ]
+            if not dynamic or cmd.concurrency == 1:
+                run_procs = [
+                    ("subunit", output.ReturnCodeToSubunit(proc, dynamic=False))
+                    for proc in cmd.run_tests()
+                ]
+            else:
+                run_procs = [
+                    (
+                        "subunit",
+                        output.ReturnCodeToSubunit(
+                            os.fdopen(proc["stream"]), proc["proc"]
+                        ),
+                    )
+                    for proc in cmd.run_tests()
+                ]
             if not run_procs:
                 stdout.write("The specified regex doesn't match with anything")
                 return 1
