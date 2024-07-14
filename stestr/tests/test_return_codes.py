@@ -507,3 +507,19 @@ class TestReturnCodesToxIni(TestReturnCodes):
         tox_file = os.path.join(self.repo_root, "stestr/tests/files/tox.ini")
         shutil.copy(tox_file, self.tox_ini_dir)
         os.remove(self.testr_conf_file)
+
+
+class TestReturnCodesTOML(TestReturnCodes):
+    def setUp(self):
+        super().setUp()
+        self.pyproject_toml = os.path.join(self.directory, "pyproject.toml")
+        toml_conf = os.path.join(self.repo_root, "stestr/tests/files/conf.toml")
+        shutil.copy(toml_conf, self.pyproject_toml)
+        os.remove(self.testr_conf_file)
+
+    def test_all_configs_missing(self):
+        stestr_repo_dir = os.path.join(self.directory, ".stestr")
+        shutil.rmtree(stestr_repo_dir, ignore_errors=True)
+        os.remove(self.pyproject_toml)
+        output, _ = self.assertRunExit("stestr run passing", 1)
+        self.assertIn(b"No config file found", output)

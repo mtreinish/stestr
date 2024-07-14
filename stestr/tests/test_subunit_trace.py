@@ -22,7 +22,7 @@ from unittest.mock import patch
 from ddt import data
 from ddt import ddt
 from ddt import unpack
-from subunit.iso8601 import UTC
+from iso8601 import UTC
 from subunit.v2 import StreamResultToBytes
 
 from stestr import subunit_trace

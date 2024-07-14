@@ -1,0 +1,3 @@
+[tool.stestr]
+test_path = './tests'
+group_regex = '([^\.]*\.)*'
