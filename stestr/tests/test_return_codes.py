@@ -512,6 +512,24 @@ class TestReturnCodes(base.TestCase):
         self.assertIn(" - Failed: 2", lines)
         self.assertIn(" - Unexpected Success: 1", lines)
 
+    def test_run_no_discover_unnormalized_file_path(self):
+        # we don't use os.path.join since we want an unnormalized path
+        passing_string = f"tests{os.path.sep}{os.path.sep}test_passing.py"
+        out, err = self.assertRunExit("stestr run -n %s" % passing_string, 0)
+        lines = out.decode("utf8").splitlines()
+        self.assertIn(" - Passed: 2", lines)
+        self.assertIn(" - Failed: 0", lines)
+        self.assertIn(" - Expected Fail: 1", lines)
+
+    def test_run_no_discover_unnormalized_file_path_failing(self):
+        # we don't use os.path.join since we want an unnormalized path
+        failing_string = f"tests{os.path.sep}{os.path.sep}test_failing.py"
+        out, err = self.assertRunExit("stestr run -n %s" % failing_string, 1)
+        lines = out.decode("utf8").splitlines()
+        self.assertIn(" - Passed: 0", lines)
+        self.assertIn(" - Failed: 2", lines)
+        self.assertIn(" - Unexpected Success: 1", lines)
+
 
 class TestReturnCodesToxIni(TestReturnCodes):
     def setUp(self):

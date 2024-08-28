@@ -527,7 +527,7 @@ def run_command(
             ids, klass = ids.split("::", 1)
             klass = ".".join(klass.split("::"))
         if ids.find(os.path.sep) != -1:
-            root, _ = os.path.splitext(ids)
+            root, _ = os.path.splitext(os.path.normpath(ids))
             ids = ".".join(root.split(os.path.sep))
         if klass:
             ids = f"{ids}.{klass}"
@@ -594,7 +594,7 @@ def run_command(
             ids, klass = ids.split("::", 1)
             klass = ".".join(klass.split("::"))
         if ids.find(os.path.sep) != -1:
-            root, _ = os.path.splitext(ids)
+            root, _ = os.path.splitext(os.path.normpath(ids))
             ids = ".".join(root.split(os.path.sep))
         if klass:
             ids = f"{ids}.{klass}"
