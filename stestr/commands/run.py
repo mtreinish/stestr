@@ -16,6 +16,7 @@ import errno
 import functools
 import io
 import os
+import os.path
 import subprocess
 import sys
 
@@ -521,11 +522,15 @@ def run_command(
 
     if no_discover:
         ids = no_discover
+        klass = None
         if "::" in ids:
-            ids = ids.replace("::", ".")
-        if ids.find("/") != -1:
-            root = ids.replace(".py", "")
-            ids = root.replace("/", ".")
+            ids, klass = ids.split("::", 1)
+            klass = ".".join(klass.split("::"))
+        if ids.find(os.path.sep) != -1:
+            root, _ = os.path.splitext(ids)
+            ids = ".".join(root.split(os.path.sep))
+        if klass:
+            ids = f"{ids}.{klass}"
         stestr_python = sys.executable
         if os.environ.get("PYTHON"):
             python_bin = os.environ.get("PYTHON")
@@ -584,11 +589,15 @@ def run_command(
 
     if pdb:
         ids = pdb
+        klass = None
         if "::" in ids:
-            ids = ids.replace("::", ".")
-        if ids.find("/") != -1:
-            root = ids.replace(".py", "")
-            ids = root.replace("/", ".")
+            ids, klass = ids.split("::", 1)
+            klass = ".".join(klass.split("::"))
+        if ids.find(os.path.sep) != -1:
+            root, _ = os.path.splitext(ids)
+            ids = ".".join(root.split(os.path.sep))
+        if klass:
+            ids = f"{ids}.{klass}"
         runner = subunit_run.SubunitTestRunner
         stream = io.BytesIO()
         program.TestProgram(

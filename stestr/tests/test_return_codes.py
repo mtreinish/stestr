@@ -471,21 +471,33 @@ class TestReturnCodes(base.TestCase):
         self.assertEqual(0, list_cmd.list_command(stdout=stdout.stream))
 
     def test_run_no_discover_pytest_path(self):
-        passing_string = "tests/test_passing.py::FakeTestClass::test_pass_list"
+        passing_string = "::".join(
+            [
+                os.path.join("tests", "test_passing.py"),
+                "FakeTestClass",
+                "test_pass_list",
+            ]
+        )
         out, err = self.assertRunExit("stestr run -n %s" % passing_string, 0)
         lines = out.decode("utf8").splitlines()
         self.assertIn(" - Passed: 1", lines)
         self.assertIn(" - Failed: 0", lines)
 
     def test_run_no_discover_pytest_path_failing(self):
-        passing_string = "tests/test_failing.py::FakeTestClass::test_pass_list"
-        out, err = self.assertRunExit("stestr run -n %s" % passing_string, 1)
+        failing_string = "::".join(
+            [
+                os.path.join("tests", "test_failing.py"),
+                "FakeTestClass",
+                "test_pass_list",
+            ]
+        )
+        out, err = self.assertRunExit("stestr run -n %s" % failing_string, 1)
         lines = out.decode("utf8").splitlines()
         self.assertIn(" - Passed: 0", lines)
         self.assertIn(" - Failed: 1", lines)
 
     def test_run_no_discover_file_path(self):
-        passing_string = "tests/test_passing.py"
+        passing_string = os.path.join("tests", "test_passing.py")
         out, err = self.assertRunExit("stestr run -n %s" % passing_string, 0)
         lines = out.decode("utf8").splitlines()
         self.assertIn(" - Passed: 2", lines)
@@ -493,8 +505,8 @@ class TestReturnCodes(base.TestCase):
         self.assertIn(" - Expected Fail: 1", lines)
 
     def test_run_no_discover_file_path_failing(self):
-        passing_string = "tests/test_failing.py"
-        out, err = self.assertRunExit("stestr run -n %s" % passing_string, 1)
+        failing_string = os.path.join("tests", "test_failing.py")
+        out, err = self.assertRunExit("stestr run -n %s" % failing_string, 1)
         lines = out.decode("utf8").splitlines()
         self.assertIn(" - Passed: 0", lines)
         self.assertIn(" - Failed: 2", lines)
