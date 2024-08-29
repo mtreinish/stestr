@@ -12,8 +12,7 @@
 
 """In memory storage of test results."""
 
-from extras import try_import
-
+from collections import OrderedDict
 from io import BytesIO
 from operator import methodcaller
 
@@ -21,8 +20,6 @@ import subunit
 import testtools
 
 from stestr.repository import abstract as repository
-
-OrderedDict = try_import("collections.OrderedDict", dict)
 
 
 class RepositoryFactory(repository.AbstractRepositoryFactory):
