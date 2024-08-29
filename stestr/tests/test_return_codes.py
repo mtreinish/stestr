@@ -97,15 +97,17 @@ class TestReturnCodes(base.TestCase):
 
         if not subunit:
             self.assertEqual(
-                p.returncode, expected, "Stdout: {}; Stderr: {}".format(out, err)
+                p.returncode,
+                expected,
+                "Command: {}; Stdout: {}; Stderr: {}".format(cmd, out, err),
             )
             return (out, err)
         else:
             self.assertEqual(
                 p.returncode,
                 expected,
-                "Expected return code: %s doesn't match actual "
-                "return code of: %s" % (expected, p.returncode),
+                "Expected return code: {} doesn't match actual "
+                "return code of: {}. Command: {}".format(expected, p.returncode, cmd),
             )
             output_stream = io.BytesIO(out)
             stream = subunit_lib.ByteStreamToStreamResult(output_stream)
