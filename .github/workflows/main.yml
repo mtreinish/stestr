@@ -90,6 +90,7 @@ jobs:
           name: stestr # optional
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
+          token: ${{ secrets.CODECOV_TOKEN }}
   docs:
     name: docs
     runs-on: ubuntu-latest
