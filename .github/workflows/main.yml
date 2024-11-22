@@ -83,13 +83,14 @@ jobs:
       - name: Run coverxml
         run: tox -ecoverxml
       - name: codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           files: ./cover/coverage.xml # optional
           flags: unittests # optional
           name: stestr # optional
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
+          token: ${{ secrets.CODECOV_TOKEN }}
   docs:
     name: docs
     runs-on: ubuntu-latest
