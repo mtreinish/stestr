@@ -14,10 +14,15 @@
 
 import io
 
-from extras import try_import
+try:
+    from subunit import ByteStreamToStreamResult as bytestream_to_streamresult
+except ImportError:
+    bytestream_to_streamresult = None
 
-bytestream_to_streamresult = try_import("subunit.ByteStreamToStreamResult")
-stream_result = try_import("testtools.testresult.doubles.StreamResult")
+try:
+    from testtools.testresult.doubles import StreamResult as stream_result
+except ImportError:
+    stream_result = None
 
 
 def write_list(stream, test_ids):
