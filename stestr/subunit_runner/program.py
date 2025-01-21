@@ -18,8 +18,6 @@ import os
 import sys
 import unittest
 
-import extras
-
 
 def filter_by_ids(suite_or_case, test_ids):
     """Remove tests from suite_or_case where their id is not in test_ids.
@@ -59,10 +57,10 @@ def filter_by_ids(suite_or_case, test_ids):
     than guessing how to reconstruct a new suite.
     """
     # Compatible objects
-    if extras.safe_hasattr(suite_or_case, "filter_by_ids"):
+    if hasattr(suite_or_case, "filter_by_ids"):
         return suite_or_case.filter_by_ids(test_ids)
     # TestCase objects.
-    if extras.safe_hasattr(suite_or_case, "id"):
+    if hasattr(suite_or_case, "id"):
         if suite_or_case.id() in test_ids:
             return suite_or_case
         else:
@@ -197,7 +195,7 @@ class TestProgram(unittest.TestProgram):
             self.runTests()
         else:
             runner = self._get_runner()
-            if extras.safe_hasattr(runner, "list"):
+            if hasattr(runner, "list"):
                 try:
                     runner.list(self.test, loader=self.testLoader)
                 except TypeError:
