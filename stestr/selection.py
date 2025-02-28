@@ -150,7 +150,7 @@ def construct_list(
 
     # NOTE(afazekas): We might use a faster logic when the
     # print option is not requested
-    for (rex, msg, s_list) in exclude_data:
+    for rex, msg, s_list in exclude_data:
         for test_case in list_of_test_cases:
             if rex.search(test_case):
                 # NOTE(mtreinish): In the case of overlapping regex the test
