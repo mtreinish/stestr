@@ -22,7 +22,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-tests-${{ hashFiles('setup.py','requirements-dev.txt','constraints.txt') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-tests-${{ hashFiles('pyproject.toml','requirements-dev.txt','constraints.txt') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}-pip-tests-
             ${{ runner.os }}-${{ matrix.python-version }}-pip-
@@ -51,7 +51,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-lint-${{ hashFiles('setup.py','requirements-dev.txt','constraints.txt') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-lint-${{ hashFiles('pyproject.toml','requirements-dev.txt','constraints.txt') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}-pip-lint-
             ${{ runner.os }}-${{ matrix.python-version }}-pip-
@@ -73,7 +73,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-lint-${{ hashFiles('setup.py','requirements-dev.txt','constraints.txt') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-lint-${{ hashFiles('pyproject.toml','requirements-dev.txt','constraints.txt') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}-pip-lint-
             ${{ runner.os }}-${{ matrix.python-version }}-pip-
@@ -106,7 +106,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-docs-${{ hashFiles('setup.py','requirements-dev.txt','constraints.txt') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-docs-${{ hashFiles('pyproject.toml','requirements-dev.txt','constraints.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-docs-
             ${{ runner.os }}-pip-

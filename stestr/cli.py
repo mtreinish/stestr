@@ -14,9 +14,7 @@ import sys
 
 from cliff import app
 from cliff import commandmanager
-from stestr import version
-
-__version__ = version.version_info.version_string_with_vcs()
+from stestr import __version__
 
 
 class StestrCLI(app.App):
