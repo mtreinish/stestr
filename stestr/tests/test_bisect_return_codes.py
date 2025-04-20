@@ -33,7 +33,7 @@ class TestBisectReturnCodes(base.TestCase):
         self.setup_py = os.path.join(self.directory, "setup.py")
         self.user_config = os.path.join(self.directory, "stestr.yaml")
         shutil.copy("stestr/tests/files/testr-conf", self.testr_conf_file)
-        shutil.copy("setup.py", self.setup_py)
+        shutil.copy("stestr/tests/files/setup.py", self.setup_py)
         shutil.copy("stestr/tests/files/setup.cfg", self.setup_cfg_file)
         shutil.copy("stestr/tests/files/__init__.py", self.init_file)
         shutil.copy("stestr/tests/files/stestr.yaml", self.user_config)

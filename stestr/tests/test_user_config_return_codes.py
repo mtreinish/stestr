@@ -42,7 +42,7 @@ class TestReturnCodes(base.TestCase):
         shutil.copy("stestr/tests/files/testr-conf", self.testr_conf_file)
         shutil.copy("stestr/tests/files/passing-tests", self.passing_file)
         shutil.copy("stestr/tests/files/failing-tests", self.failing_file)
-        shutil.copy("setup.py", self.setup_py)
+        shutil.copy("stestr/tests/files/setup.py", self.setup_py)
         shutil.copy("stestr/tests/files/setup.cfg", self.setup_cfg_file)
         shutil.copy("stestr/tests/files/__init__.py", self.init_file)
 

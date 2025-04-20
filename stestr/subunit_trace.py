@@ -21,10 +21,10 @@ import os
 import re
 import sys
 
-import pbr.version
 import subunit
 import testtools
 
+from stestr import __version__
 from stestr import colorizer
 from stestr import results
 
@@ -352,9 +352,6 @@ def print_summary(stream, elapsed_time):
                     out_str += "s"
                 out_str += "\n"
                 stream.write(out_str)
-
-
-__version__ = pbr.version.VersionInfo("stestr").version_string()
 
 
 def parse_args():

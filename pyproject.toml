@@ -1,0 +1,60 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "stestr"
+authors = [{name = "Matthew Treinish", email = "mtreinish@kortar.org"}]
+readme = "README.rst"
+license = {file = "LICENSE"}
+dynamic = ["version"]
+description = "A parallel Python test runner built around subunit"
+classifiers = [
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Quality Assurance",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "cliff>=2.8.0",
+    "python-subunit>=1.4.0",
+    "fixtures>=3.0.0",
+    "testtools>=2.2.0",
+    "PyYAML>=3.10.0",
+    "voluptuous>=0.8.9",
+    "tomlkit>=0.11.6",
+]
+
+[project.urls]
+Home = "http://stestr.readthedocs.io/en/latest/"
+Documentation = "https://stestr.readthedocs.io"
+"Source Code" = "https://github.com/mtreinish/stestr"
+"Bug Tracker" = "https://github.com/mtreinish/stestr/issues"
+
+[project.scripts]
+stestr = "stestr.cli:main"
+
+[project.entry-points."stestr.cm"]
+run = "stestr.commands.run:Run"
+failing = "stestr.commands.failing:Failing"
+init = "stestr.commands.init:Init"
+last = "stestr.commands.last:Last"
+list = "stestr.commands.list:List"
+load = "stestr.commands.load:Load"
+slowest = "stestr.commands.slowest:Slowest"
+history_list = "stestr.commands.history:HistoryList"
+history_show = "stestr.commands.history:HistoryShow"
+history_remove = "stestr.commands.history:HistoryRemove"
+
