@@ -1,19 +1,18 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
+requires = ["flit_core >=3.12,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
 name = "stestr"
 authors = [{name = "Matthew Treinish", email = "mtreinish@kortar.org"}]
 readme = "README.rst"
-license = {file = "LICENSE"}
+license = "Apache-2.0"
 dynamic = ["version"]
 description = "A parallel Python test runner built around subunit"
 classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -38,10 +37,10 @@ dependencies = [
 ]
 
 [project.urls]
-Home = "http://stestr.readthedocs.io/en/latest/"
+Homepage = "https://stestr.readthedocs.io/en/stable/"
 Documentation = "https://stestr.readthedocs.io"
-"Source Code" = "https://github.com/mtreinish/stestr"
-"Bug Tracker" = "https://github.com/mtreinish/stestr/issues"
+Repository = "https://github.com/mtreinish/stestr"
+Issues = "https://github.com/mtreinish/stestr/issues"
 
 [project.scripts]
 stestr = "stestr.cli:main"
