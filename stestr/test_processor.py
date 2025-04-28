@@ -10,7 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import functools
 import io
+import multiprocessing
 import os
 import re
 import signal
@@ -24,6 +26,8 @@ from subunit import v2
 from stestr import results
 from stestr import scheduler
 from stestr import selection
+from stestr.subunit_runner import program
+from stestr.subunit_runner import run
 from stestr import testlist
 
 
@@ -94,6 +98,7 @@ class TestProcessorFixture(fixtures.Fixture):
         exclude_regex=None,
         include_list=None,
         randomize=False,
+        dynamic=False,
     ):
         """Create a TestProcessorFixture."""
 
@@ -115,6 +120,7 @@ class TestProcessorFixture(fixtures.Fixture):
         self.include_list = include_list
         self.exclude_regex = exclude_regex
         self.randomize = randomize
+        self.dynamic = dynamic
 
     def setUp(self):
         super().setUp()
@@ -249,6 +255,31 @@ class TestProcessorFixture(fixtures.Fixture):
         ids = testlist.parse_enumeration(out)
         return ids
 
+    def _dynamic_run_tests(self, job_queue, subunit_pipe):
+        while True:
+            # NOTE(mtreinish): Open on each loop iteration with a dup to
+            # remove the chance of being garbage collected. Without this
+            # you'll be fighting random Bad file desciptor errors
+            subunit_pipe = os.fdopen(os.dup(subunit_pipe.fileno()), "wb")
+            if job_queue.empty():
+                subunit_pipe.close()
+                return
+            try:
+                test_id = job_queue.get(block=False)
+            except Exception:
+                subunit_pipe.close()
+                return
+            if not test_id:
+                os.close(subunit_pipe.fileno())
+                raise ValueError("Invalid blank test_id: %s" % test_id)
+            cmd_list = [self.cmd, test_id]
+            test_runner = run.SubunitTestRunner
+            program.TestProgram(
+                module=None,
+                argv=cmd_list,
+                testRunner=functools.partial(test_runner, stdout=subunit_pipe),
+            )
+
     def run_tests(self):
         """Run the tests defined by the command
 
@@ -280,19 +311,41 @@ class TestProcessorFixture(fixtures.Fixture):
             test_id_groups = scheduler.partition_tests(
                 test_ids, self.concurrency, self.repository, self._group_callback
             )
-        for test_ids in test_id_groups:
-            if not test_ids:
-                # No tests in this partition
-                continue
-            fixture = self.useFixture(
-                TestProcessorFixture(
-                    test_ids,
-                    self.template,
-                    self.listopt,
-                    self.idoption,
-                    self.repository,
-                    parallel=False,
+        if not self.dynamic:
+            for test_ids in test_id_groups:
+                if not test_ids:
+                    # No tests in this partition
+                    continue
+                fixture = self.useFixture(
+                    TestProcessorFixture(
+                        test_ids,
+                        self.template,
+                        self.listopt,
+                        self.idoption,
+                        self.repository,
+                        parallel=False,
+                    )
                 )
+                result.extend(fixture.run_tests())
+            return result
+        else:
+            test_id_list = scheduler.get_dynamic_test_list(
+                test_ids, self.repository, self._group_callback
             )
-            result.extend(fixture.run_tests())
-        return result
+            test_list = multiprocessing.Queue()
+
+            for test_id in test_id_list:
+                test_list.put(test_id)
+
+            for i in range(self.concurrency):
+                fd_pipe_r, fd_pipe_w = multiprocessing.Pipe(False)
+                name = "worker-%s" % i
+                proc = multiprocessing.Process(
+                    target=self._dynamic_run_tests,
+                    name=name,
+                    args=(test_list, fd_pipe_w),
+                )
+                proc.start()
+                stream_read = os.dup(fd_pipe_r.fileno())
+                result.append({"stream": stream_read, "proc": proc})
+            return result

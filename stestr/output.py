@@ -164,21 +164,33 @@ class ReturnCodeToSubunit:
         generating subunit.
     """
 
-    def __init__(self, process):
+    def __init__(self, process, thread=None, dynamic=True):
         """Adapt a process to a readable stream."""
         self.proc = process
         self.done = False
-        self.source = self.proc.stdout
+        if dynamic:
+            self.source = process
+            self.proc = thread
+        else:
+            self.source = self.proc.stdout
+        self.dynamic = dynamic
         self.lastoutput = bytes((b"\n")[0])
 
     def __del__(self):
-        self.proc.wait()
+        if hasattr(self.proc, "wait"):
+            self.proc.wait()
+        else:
+            self.proc.join()
 
     def _append_return_code_as_test(self):
         if self.done is True:
             return
         self.source = io.BytesIO()
-        returncode = self.proc.wait()
+        if not self.dynamic:
+            returncode = self.proc.wait()
+        else:
+            self.proc.join()
+            returncode = self.proc.exitcode
         if returncode != 0:
             if self.lastoutput != bytes((b"\n")[0]):
                 # Subunit V1 is line orientated, it has to start on a fresh
