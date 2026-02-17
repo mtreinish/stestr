@@ -96,8 +96,8 @@ class CLITestResult(testtools.StreamResult):
         self._previous_run = previous_run
         self._summary = SummarizingResult()
         self.stream = testtools.compat.unicode_output_stream(stream)
-        self.sep1 = testtools.compat._u("=" * 70 + "\n")
-        self.sep2 = testtools.compat._u("-" * 70 + "\n")
+        self.sep1 = "=" * 70 + "\n"
+        self.sep2 = "-" * 70 + "\n"
         self.filterable_states = {"success", "uxsuccess", "xfail", "skip"}
         self.get_id = get_id
 
