@@ -23,7 +23,6 @@ from dbm import dumb as my_dbm
 from subunit import TestProtocolClient
 import subunit.v2
 import testtools
-from testtools.compat import _b
 
 from stestr.repository import abstract as repository
 from stestr import utils
@@ -132,7 +131,7 @@ class Repository(repository.AbstractRepository):
         except OSError:
             err = sys.exc_info()[1]
             if err.errno == errno.ENOENT:
-                run_subunit_content = _b("")
+                run_subunit_content = b""
             else:
                 raise
         return _DiskRun(None, run_subunit_content)
