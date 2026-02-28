@@ -250,7 +250,14 @@ class Run(command.Command):
             "--dynamic",
             action="store_true",
             default=False,
-            help="Enable the EXPERIMENTAL dynamic scheduler",
+            help="Enable the EXPERIMENTAL dynamic scheduler. This scheduler "
+            "is designed to to improve the worker balance. Each worker will "
+            "dynamically query the next test to run which can potentially "
+            "result in better wall time. This option is still experimental "
+            "and is not guaranteed to work in all cases. This option is also not "
+            "currently supported on Windows. If you encounter issues with this "
+            "option please file a bug at: "
+            "https://github.com/mtreinish/stestr/issues/new?template=bug_report.md"
         )
         return parser
 
