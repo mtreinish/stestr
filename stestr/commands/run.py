@@ -257,7 +257,7 @@ class Run(command.Command):
             "and is not guaranteed to work in all cases. This option is also not "
             "currently supported on Windows. If you encounter issues with this "
             "option please file a bug at: "
-            "https://github.com/mtreinish/stestr/issues/new?template=bug_report.md"
+            "https://github.com/mtreinish/stestr/issues/new?template=bug_report.md",
         )
         return parser
 

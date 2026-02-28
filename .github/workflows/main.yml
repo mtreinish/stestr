@@ -39,7 +39,7 @@ jobs:
           tox -epy
         if: runner.os == 'macOS'
   test_dynamic:
-    name: tests-python${{ matrix.python-version }}-${{ matrix.os }}
+    name: tests-dynamic-scheduler-python${{ matrix.python-version }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
