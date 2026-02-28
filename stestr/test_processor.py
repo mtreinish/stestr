@@ -332,18 +332,24 @@ class TestProcessorFixture(fixtures.Fixture):
             test_id_list = scheduler.get_dynamic_test_list(
                 test_ids, self.repository, self._group_callback
             )
-            test_list = multiprocessing.Queue()
+            # Use spawn to launch a fresh interpreter and have the minimal
+            # amount of state from stestr when invoking the test runner.
+            # This is equivalent to non-dynamic mode using subprocess instead
+            # of multiprocessing.
+            context = multiprocessing.get_context("spawn")
+            self._test_list_queue = context.Queue()
 
             for test_id in test_id_list:
-                test_list.put(test_id)
+                self._test_list_queue.put(test_id)
 
             for i in range(self.concurrency):
-                fd_pipe_r, fd_pipe_w = multiprocessing.Pipe(False)
+                fd_pipe_r, fd_pipe_w = context.Pipe(False)
                 name = "worker-%s" % i
-                proc = multiprocessing.Process(
+                context.Value
+                proc = context.Process(
                     target=self._dynamic_run_tests,
                     name=name,
-                    args=(test_list, fd_pipe_w),
+                    args=[self._test_list_queue, fd_pipe_w],
                 )
                 proc.start()
                 stream_read = os.dup(fd_pipe_r.fileno())
