@@ -57,3 +57,10 @@ history_list = "stestr.commands.history:HistoryList"
 history_show = "stestr.commands.history:HistoryShow"
 history_remove = "stestr.commands.history:HistoryRemove"
 
+[tool.flit.sdist]
+include = [
+    ".stestr.conf",
+    "test-requirements.txt",
+    "tox.ini",
+    "tools/find_and_rm.py",
+]
