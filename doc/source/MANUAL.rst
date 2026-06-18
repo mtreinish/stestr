@@ -502,6 +502,31 @@ There is also an option on ``stestr run``, ``--random`` to randomize the
 order of tests as they are passed to the workers. This is useful in certain
 use cases, especially when you want to test isolation between test cases.
 
+Dynamic Scheduler
+-----------------
+
+There is a new under development dynamic scheduler mode that is being designed
+to hopefully replace the static scheduling that stestr currently uses by
+default. This new scheduler will sort all the test ids found during discovery
+based on timing data and alphabetical order just like the static scheduler,
+but this scheduler puts the list in a unified work queue. Then each individual
+test worker will query the queue for the next test to execute. This should
+result in a better worker balance than the static partitioning used by
+default which may translate to a better wall time.
+
+You can enable this new scheduler with the ``--dynamic`` flag to
+``stestr run``. This option should also be compatible with the grouping
+options described in the :ref:`group_regex` section. Using the two in
+combination will result in the scheduler working with the group of tests
+instead of individual tests.
+
+Do note that the dynamic scheduler is still experimental and hasn't been as
+thoroughly tested as the default scheduler. It may not work in every use
+case, if you encounter an issue with the scheduler please file a bug at:
+
+https://github.com/mtreinish/stestr/issues/new?template=bug_report.md
+
+This new scheduler does not currently work on Windows.
 
 User Config Files
 -----------------

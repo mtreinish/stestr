@@ -94,7 +94,6 @@ class TestReturnCodes(base.TestCase):
                 "%s" % cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
             out, err = p.communicate()
-
         if not subunit:
             self.assertEqual(
                 p.returncode,
