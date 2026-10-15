@@ -520,6 +520,16 @@ options described in the :ref:`group_regex` section. Using the two in
 combination will result in the scheduler working with the group of tests
 instead of individual tests.
 
+While a dynamic run is in progress, each worker displays the completion
+of the whole run on stderr right before running its next group of tests::
+
+    [42/312 (13.5%) elapsed: 00:01:23, ETA: ~00:08:53]
+
+The percentage counts individual tests over the total number of tests of
+the run. The ETA extrapolates the average duration of the completed tests
+to the remaining ones, so it is only a rough estimate, and it stays
+unknown until the first group of tests completes.
+
 Do note that the dynamic scheduler is still experimental and hasn't been as
 thoroughly tested as the default scheduler. It may not work in every use
 case, if you encounter an issue with the scheduler please file a bug at:

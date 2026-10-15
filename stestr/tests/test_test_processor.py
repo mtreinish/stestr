@@ -17,6 +17,7 @@ import queue
 import signal
 import subprocess
 import threading
+import time
 import unittest
 from unittest import mock
 
@@ -199,6 +200,49 @@ class TestDynamicWorkerDebug(base.TestCase):
         self.assertNotIn("START", debug_out)
         self.assertEqual(b"", out)
 
+    def test_filtered_out_group_counts_tests_done(self):
+        # The test ids of a group filtered out entirely still count as
+        # done for the progress display, like they do for the debug
+        # watchdog counter.
+        top_dir = self.useFixture(fixtures.TempDir()).path
+        user_test = os.path.join(top_dir, "test_user.py")
+        with open(user_test, "w") as f:
+            f.write(
+                "import unittest\n"
+                "\n"
+                "\n"
+                "class TestDiscoverySeeding(unittest.TestCase):\n"
+                "    def test_here(self):\n"
+                "        pass\n"
+            )
+        read_conn, write_conn = self._make_pipe()
+        debug_stream = io.StringIO()
+        stderr = io.StringIO()
+        tests_done = multiprocessing.Value("i", 0)
+        run_start = multiprocessing.Value("d", time.time())
+        job_queue = queue.Queue()
+        job_queue.put(["test_user.TestDiscoverySeeding.test_missing"])
+        job_queue.put(None)
+        with mock.patch.object(test_processor.sys, "stderr", stderr):
+            with mock.patch.object(test_processor.faulthandler, "register"):
+                test_processor._dynamic_worker(
+                    job_queue,
+                    write_conn,
+                    test_path=top_dir,
+                    top_dir=top_dir,
+                    debug=True,
+                    debug_stream=debug_stream,
+                    tests_done=tests_done,
+                    run_start=run_start,
+                    total_tests=1,
+                )
+        write_conn.close()
+        self.assertEqual(1, tests_done.value)
+        self.assertIn(
+            "[1/1 (100.0%) elapsed: 00:00:00, ETA: ~00:00:00]",
+            stderr.getvalue(),
+        )
+
 
 class _FakeWorkerProc:
     def __init__(self, name, pid, ticks_alive, exitcode=None, on_tick=None):
@@ -283,6 +327,48 @@ class TestDynamicDebugWatchdog(base.TestCase):
         kill.assert_not_called()
 
 
+class TestDynamicProgressFormat(base.TestCase):
+    def test_format_before_first_completion(self):
+        # The ETA is unknown until a first group of tests completed.
+        self.assertEqual(
+            "[0/312 (0.0%) elapsed: 00:01:23, ETA: unknown]",
+            test_processor._format_dynamic_progress(0, 312, 83),
+        )
+
+    def test_format_mid_run(self):
+        # 42 done tests over 312, 83s elapsed: the ETA extrapolates the
+        # average duration of the done tests to the 270 remaining ones.
+        self.assertEqual(
+            "[42/312 (13.5%) elapsed: 00:01:23, ETA: ~00:08:53]",
+            test_processor._format_dynamic_progress(42, 312, 83),
+        )
+
+    def test_format_completion(self):
+        self.assertEqual(
+            "[312/312 (100.0%) elapsed: 00:10:00, ETA: ~00:00:00]",
+            test_processor._format_dynamic_progress(312, 312, 600),
+        )
+
+    def test_format_rounds_the_percentage(self):
+        self.assertEqual(
+            "[1/3 (33.3%) elapsed: 00:00:09, ETA: ~00:00:18]",
+            test_processor._format_dynamic_progress(1, 3, 9),
+        )
+
+    def test_format_clamps_out_of_range_counts(self):
+        # A worker may run fewer tests than its group contains when the
+        # test ids cannot all be loaded; the display never goes out of
+        # range.
+        self.assertEqual(
+            "[3/3 (100.0%) elapsed: 00:00:30, ETA: ~00:00:00]",
+            test_processor._format_dynamic_progress(5, 3, 30),
+        )
+        self.assertEqual(
+            "[0/3 (0.0%) elapsed: 00:00:30, ETA: unknown]",
+            test_processor._format_dynamic_progress(-1, 3, 30),
+        )
+
+
 class TestDynamicWorker(base.TestCase):
     # A stable, importable test id from this module used to exercise the
     # worker without spawning processes.
@@ -323,6 +409,64 @@ class TestDynamicWorker(base.TestCase):
         out = self._run_worker(job_queue)
         self.assertEqual(b"", out)
 
+    def test_worker_reports_progress_and_counts_tests(self):
+        job_queue = queue.Queue()
+        job_queue.put([self._test_id])
+        job_queue.put([self._test_id])
+        job_queue.put(None)
+        read_conn, write_conn = multiprocessing.get_context("spawn").Pipe(
+            False
+        )
+        tests_done = multiprocessing.Value("i", 0)
+        run_start = multiprocessing.Value("d", time.time())
+        stderr = io.StringIO()
+        with mock.patch.object(test_processor.sys, "stderr", stderr):
+            test_processor._dynamic_worker(
+                job_queue,
+                write_conn,
+                tests_done=tests_done,
+                run_start=run_start,
+                total_tests=2,
+            )
+        write_conn.close()
+        read_conn.close()
+        # Each completed group of tests counts its test ids in the
+        # shared counter.
+        self.assertEqual(2, tests_done.value)
+        out = stderr.getvalue()
+        # A progress line is displayed before each group of tests runs.
+        self.assertIn(
+            "[0/2 (0.0%) elapsed: 00:00:00, ETA: unknown]\n", out
+        )
+        self.assertIn(
+            "[1/2 (50.0%) elapsed: 00:00:00, ETA: ~00:00:00]\n", out
+        )
+        # And the completion of the whole run is displayed once at the
+        # end, by the worker that ran the last group.
+        self.assertIn(
+            "[2/2 (100.0%) elapsed: 00:00:00, ETA: ~00:00:00]\n", out
+        )
+
+    def test_worker_without_counters_does_not_display_progress(self):
+        # The progress display is driven by the counters shared with the
+        # parent: a worker without them (e.g. a direct worker call in a
+        # test) stays silent.
+        job_queue = queue.Queue()
+        job_queue.put([self._test_id])
+        job_queue.put(None)
+        read_conn, write_conn = multiprocessing.get_context("spawn").Pipe(
+            False
+        )
+        stderr = io.StringIO()
+        with mock.patch.object(test_processor.sys, "stderr", stderr):
+            test_processor._dynamic_worker(
+                job_queue,
+                write_conn,
+            )
+        write_conn.close()
+        read_conn.close()
+        self.assertEqual("", stderr.getvalue())
+
 
 class TestProcessorDynamicRun(base.TestCase):
     _test_id = (
@@ -362,7 +506,28 @@ class TestProcessorDynamicRun(base.TestCase):
         self.assertIn(self._test_id, statuses)
         self.assertEqual("success", statuses[self._test_id])
 
-    def test_dynamic_run_tests_no_tests(self):
+    def test_dynamic_run_tests_progress_display(self):
+        # Every worker displays the completion of the whole run on stderr
+        # right before running its next group of tests.
+        fixture = self._get_dynamic_fixture([self._test_id])
+        tmpdir = self.useFixture(fixtures.TempDir()).path
+        stderr_path = os.path.join(tmpdir, "workers_stderr")
+        with open(stderr_path, "wb") as stderr_file:
+            stderr_fd = os.dup(2)
+            os.dup2(stderr_file.fileno(), 2)
+            try:
+                workers = fixture.run_tests()
+                for worker in workers:
+                    worker["proc"].join()
+                    self.assertEqual(0, worker["proc"].exitcode)
+            finally:
+                os.dup2(stderr_fd, 2)
+                os.close(stderr_fd)
+        with open(stderr_path) as stderr_file:
+            stderr_out = stderr_file.read()
+        self.assertIn("[0/1 (0.0%) elapsed:", stderr_out)
+        self.assertIn("[1/1 (100.0%)", stderr_out)
+        self.assertEqual(1, fixture._tests_done.value)
         fixture = self._get_dynamic_fixture([])
         workers = fixture.run_tests()
         self.assertEqual([], workers)

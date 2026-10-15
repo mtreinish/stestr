@@ -44,6 +44,51 @@ _FINAL_TEST_STATUSES = frozenset(
 )
 
 
+def _format_progress_duration(seconds):
+    """Format a duration in seconds as a HH:MM:SS string."""
+    seconds = max(int(seconds), 0)
+    return "%02d:%02d:%02d" % (
+        seconds // 3600,
+        seconds % 3600 // 60,
+        seconds % 60,
+    )
+
+
+def _format_dynamic_progress(tests_done, total_tests, elapsed_seconds):
+    """Build the progress line displayed by the dynamic scheduler workers.
+
+    Each worker writes the line right before running its next group of
+    tests: it shows how many of the tests of the whole run already
+    completed, the corresponding percentage, the elapsed time of the run
+    and a rough ETA extrapolating the average duration of the completed
+    tests to the remaining ones. The ETA is unknown until the first group
+    of tests completes.
+
+    :param int tests_done: The number of tests already completed by the
+        run.
+    :param int total_tests: The total number of tests of the run.
+    :param float elapsed_seconds: Seconds elapsed since the run started.
+    :return: The progress line, without a trailing newline.
+    """
+    tests_done = max(min(tests_done, total_tests), 0)
+    percent = 100.0 * tests_done / total_tests if total_tests else 100.0
+    if tests_done >= total_tests > 0:
+        eta = "~00:00:00"
+    elif tests_done > 0:
+        eta = "~%s" % _format_progress_duration(
+            elapsed_seconds / tests_done * (total_tests - tests_done)
+        )
+    else:
+        eta = "unknown"
+    return "[%d/%d (%.1f%%) elapsed: %s, ETA: %s]" % (
+        tests_done,
+        total_tests,
+        percent,
+        _format_progress_duration(elapsed_seconds),
+        eta,
+    )
+
+
 class _DebugStreamResult:
     """StreamResult wrapper logging the per-test progress of a worker.
 
@@ -257,6 +302,9 @@ def _dynamic_worker(
     debug=False,
     debug_stream=None,
     groups_done=None,
+    tests_done=None,
+    run_start=None,
+    total_tests=0,
 ):
     """Run the groups of test ids from a queue until the sentinel.
 
@@ -289,6 +337,15 @@ def _dynamic_worker(
     :param groups_done: A multiprocessing.Value shared with the parent
         process, incremented after every completed group of tests.
         Optional.
+    :param tests_done: A multiprocessing.Value shared with the parent
+        process, incremented with the size of every completed group of
+        tests. Optional.
+    :param run_start: A multiprocessing.Value shared with the parent
+        process, set by the parent to the time.time() at which the run
+        started. Used with tests_done to display the progress of the
+        run. Optional.
+    :param int total_tests: The total number of tests scheduled for the
+        run, used with tests_done to display the progress of the run.
     """
     # NOTE(mtreinish): Duplicate the file descriptor of the pipe so the
     # writer is decoupled from the Connection object's lifetime. Without
@@ -343,10 +400,41 @@ def _dynamic_worker(
             )
             for test in program.iterate_tests(discovered):
                 test_map[test.id()] = test
+
+        def _count_tests_done(count):
+            # Add the size of a completed group to the shared counter of
+            # the run. Returns True when the whole run is completed, so
+            # that the caller displays the final progress line.
+            if tests_done is None or not total_tests:
+                return False
+            with tests_done.get_lock():
+                tests_done.value += count
+                return tests_done.value >= total_tests
+
+        def _write_progress_line(tests_done_value):
+            elapsed = max(time.time() - run_start.value, 0.0)
+            sys.stderr.write(
+                "%s\n"
+                % _format_dynamic_progress(
+                    tests_done_value, total_tests, elapsed
+                )
+            )
+            sys.stderr.flush()
+
         while True:
             group = job_queue.get()
             if group is None:
                 break
+            # Display the completion of the run on stderr before running
+            # the next group of tests.
+            if (
+                tests_done is not None
+                and run_start is not None
+                and total_tests
+            ):
+                with tests_done.get_lock():
+                    done = tests_done.value
+                _write_progress_line(done)
             if debug:
                 picked_groups += 1
                 debug_stream.write(
@@ -365,6 +453,8 @@ def _dynamic_worker(
                     if groups_done is not None:
                         with groups_done.get_lock():
                             groups_done.value += 1
+                    if _count_tests_done(len(group)):
+                        _write_progress_line(tests_done.value)
                     continue
             else:
                 tests = [
@@ -386,6 +476,8 @@ def _dynamic_worker(
             if groups_done is not None:
                 with groups_done.get_lock():
                     groups_done.value += 1
+            if _count_tests_done(len(group)):
+                _write_progress_line(tests_done.value)
     finally:
         sys.stdout.flush()
         subunit_stream.close()
@@ -441,7 +533,9 @@ class TestProcessorFixture(fixtures.Fixture):
         partitioned into separate workers
     :param bool dynamic: Use the experimental dynamic scheduler, workers
         will ask for the next test to run instead of being assigned a
-        partition up front
+        partition up front. Each worker also displays the completion of
+        the run (tests done, percentage, elapsed time and a rough ETA)
+        on stderr right before running its next group of tests.
     :param bool dynamic_debug: Enable the debug output of the dynamic
         scheduler (see the --dynamic-debug option of stestr run): each
         worker logs its progress to stderr and a watchdog thread
@@ -716,6 +810,20 @@ class TestProcessorFixture(fixtures.Fixture):
             groups_done = None
             if self.dynamic_debug:
                 groups_done = context.Value("i", 0)
+            # The progress display counts completed tests in a shared
+            # counter, and reads the start time of the run from a shared
+            # value set by the parent before spawning the workers. Both
+            # are scoped to the instance like the queue above: if they
+            # were garbage collected while the workers are still
+            # starting, the finalizer of their locks would unlink the
+            # underlying semaphores and the workers would crash with a
+            # FileNotFoundError when rebuilding them.
+            tests_done = context.Value("i", 0)
+            run_start = context.Value("d", time.time())
+            total_tests = sum(len(group) for group in test_id_list)
+            self._tests_done = tests_done
+            self._run_start = run_start
+            self._total_tests = total_tests
             for i in range(self.concurrency):
                 fd_pipe_r, fd_pipe_w = context.Pipe(False)
                 proc = context.Process(
@@ -729,6 +837,9 @@ class TestProcessorFixture(fixtures.Fixture):
                         self.dynamic_debug,
                         None,
                         groups_done,
+                        tests_done,
+                        run_start,
+                        total_tests,
                     ),
                 )
                 proc.start()

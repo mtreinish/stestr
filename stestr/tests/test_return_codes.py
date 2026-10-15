@@ -436,6 +436,19 @@ class TestReturnCodes(base.TestCase):
         self.assertRunExit("stestr run --dynamic --concurrency 2 passing", 0)
 
     @unittest.skipIf(sys.platform == "win32", "dynamic mode is not supported")
+    def test_dynamic_progress_display(self):
+        out, err = self.assertRunExit(
+            "stestr run --dynamic --concurrency 2 passing", 0
+        )
+        # Each worker displays the completion of the run on stderr right
+        # before running its next group of tests.
+        self.assertRegex(
+            err.decode(),
+            r"\[\d+/\d+ \(\d+\.\d%\) elapsed: \d+:\d+:\d+, "
+            r"ETA: (~\d+:\d+:\d+|unknown)\]",
+        )
+
+    @unittest.skipIf(sys.platform == "win32", "dynamic mode is not supported")
     def test_dynamic_subunit_passing(self):
         self.assertRunExit(
             "stestr run --dynamic --concurrency 2 passing --subunit",
