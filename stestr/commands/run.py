@@ -259,6 +259,18 @@ class Run(command.Command):
             "option please file a bug at: "
             "https://github.com/mtreinish/stestr/issues/new?template=bug_report.md",
         )
+        parser.add_argument(
+            "--dynamic-debug",
+            action="store_true",
+            default=False,
+            help="Enable the debug output of the dynamic scheduler. Each "
+            "worker logs to stderr the group of tests it picked from the "
+            "queue and every test start and completion, and a watchdog "
+            "thread reports the state of the queue and of the workers "
+            "every 30s, requesting from the workers a stack dump (written "
+            "to stderr) when nothing finishes anymore. This option has no "
+            "effect without --dynamic.",
+        )
         return parser
 
     def take_action(self, parsed_args):
@@ -351,6 +363,7 @@ class Run(command.Command):
             show_binary_attachments=args.show_binary_attachments,
             pdb=args.pdb,
             dynamic=args.dynamic,
+            dynamic_debug=args.dynamic_debug,
         )
 
         # Always output slowest test info if requested, regardless of other
@@ -413,6 +426,7 @@ def run_command(
     show_binary_attachments=True,
     pdb=False,
     dynamic=False,
+    dynamic_debug=False,
 ):
     """Function to execute the run command
 
@@ -478,6 +492,8 @@ def run_command(
         discover and just execute the test specified without launching any
         additional processes. A file name may be used in place of a test name.
     :param bool dynamic: Enable dynamic scheduling
+    :param bool dynamic_debug: Enable the debug output of the dynamic
+        scheduler. Has no effect when dynamic is not set.
 
     :return return_code: The exit code for the command. 0 for success and > 0
         for failures.
@@ -678,6 +694,7 @@ def run_command(
             test_path=test_path,
             randomize=random,
             dynamic=dynamic,
+            dynamic_debug=dynamic_debug,
         )
         if isolated:
             result = 0

@@ -528,6 +528,28 @@ https://github.com/mtreinish/stestr/issues/new?template=bug_report.md
 
 This new scheduler does not currently work on Windows.
 
+Debugging the dynamic scheduler
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When tracking down a worker that seems stuck, the ``--dynamic-debug``
+option to ``stestr run``, to be used together with ``--dynamic``, makes
+the state of the run visible in real time:
+
+- Each worker logs to stderr the group of tests it picked from the
+  queue, and each test start (``START``) and completion (``DONE``) with
+  its duration.
+- A watchdog thread prints every 30 seconds how many groups of tests
+  already ran, how many are still pending, and how many workers are
+  still alive.
+- When no group of tests finished across two consecutive watchdog
+  ticks, the watchdog sends SIGUSR1 to the workers that are still
+  running, and each of them dumps its Python stack to stderr. The
+  frames of a hung test then show in the log, right below the ``START``
+  line of the last test it started.
+
+The option has no effect without ``--dynamic``, or when the concurrency
+is 1 (in which case the tests run in the non-dynamic mode anyway).
+
 User Config Files
 -----------------
 

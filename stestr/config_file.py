@@ -127,6 +127,7 @@ class TestrConf:
         randomize=False,
         parallel_class=None,
         dynamic=False,
+        dynamic_debug=False,
     ):
         """Get a test_processor.TestProcessorFixture for this config file
 
@@ -173,6 +174,8 @@ class TestrConf:
             config file option which includes `group-regex` are set, this value
             will be used.
         :param bool dynamic: Enable dynamic scheduling
+        :param bool dynamic_debug: Enable the debug output of the
+            dynamic scheduler. Only used when dynamic is true.
 
         :returns: a TestProcessorFixture object for the specified config file
             and any arguments passed into this function
@@ -254,6 +257,7 @@ class TestrConf:
             include_list=include_list,
             randomize=randomize,
             dynamic=dynamic,
+            dynamic_debug=dynamic_debug,
             test_path=test_path,
             top_dir=top_dir,
         )
