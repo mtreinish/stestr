@@ -426,6 +426,11 @@ def trace(
     show_binary_attachments=False,
 ):
     stream = subunit.ByteStreamToStreamResult(stdin, non_subunit_name="stdout")
+    # Reset the module level state so that a trace run is not polluted by
+    # any previous run in the same process (e.g. when the dynamic scheduler
+    # runs several tests in the same worker process).
+    RESULTS.clear()
+    FAILS.clear()
     outcomes = testtools.StreamToDict(
         functools.partial(
             show_outcome,

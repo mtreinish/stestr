@@ -238,6 +238,11 @@ def load(
     # Not a full implementation of TestCase, but we only need to iterate
     # back to it. Needs to be a callable - its a head fake for
     # testsuite.add.
+    # Reset the module level state of the output filter so that this load
+    # is not polluted by any previous run in the same process (e.g. when
+    # the dynamic scheduler runs several tests in the same worker).
+    subunit_trace.RESULTS.clear()
+    subunit_trace.FAILS.clear()
     if in_streams:
         streams = utils.iter_streams(in_streams, "subunit")
     elif streams:

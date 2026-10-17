@@ -12,6 +12,9 @@
 
 import io
 
+import subunit
+import testtools
+
 from stestr import output
 from stestr.tests import base
 
@@ -84,3 +87,59 @@ class TestOutput(base.TestCase):
             )
             actual = f.getvalue()
             self.assertEqual(expected, actual)
+
+
+class FakeProcess:
+    """A stand-in for a multiprocessing.Process in ReturnCodeToSubunit."""
+
+    def __init__(self, exitcode):
+        self.exitcode = exitcode
+        self.joined = False
+
+    def join(self, timeout=None):
+        self.joined = True
+
+
+def _parse_output(raw):
+    case = subunit.ByteStreamToStreamResult(io.BytesIO(raw))
+    tests = []
+
+    def _add_test(test):
+        tests.append(test)
+
+    outcomes = testtools.StreamToDict(_add_test)
+    result = testtools.CopyStreamResult([outcomes])
+    result.startTestRun()
+    try:
+        case.run(result)
+    finally:
+        result.stopTestRun()
+    return tests
+
+
+class TestReturnCodeToSubunit(base.TestCase):
+    def test_dynamic_return_code_appended(self):
+        proc = FakeProcess(3)
+        rcs = output.ReturnCodeToSubunit(io.BytesIO(), proc)
+        self.assertTrue(rcs.dynamic)
+        out = rcs.read()
+        self.assertTrue(proc.joined)
+        tests = _parse_output(out)
+        self.assertIn(
+            ("process-returncode", "fail"),
+            [(test["id"], test["status"]) for test in tests],
+        )
+
+    def test_dynamic_zero_return_code(self):
+        proc = FakeProcess(0)
+        rcs = output.ReturnCodeToSubunit(io.BytesIO(), proc)
+        out = rcs.read()
+        self.assertEqual(b"", out)
+        tests = _parse_output(out)
+        self.assertEqual([], tests)
+
+    def test_del_without_proc(self):
+        # The dynamic mode builds the wrapper before the thread/process is
+        # known; deleting such an object must not raise.
+        rcs = output.ReturnCodeToSubunit(io.BytesIO(), None)
+        self.assertIsNone(rcs.__del__())

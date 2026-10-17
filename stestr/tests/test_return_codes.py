@@ -18,7 +18,9 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
+import unittest
 
 import fixtures
 import subunit as subunit_lib
@@ -94,7 +96,6 @@ class TestReturnCodes(base.TestCase):
                 "%s" % cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
             out, err = p.communicate()
-
         if not subunit:
             self.assertEqual(
                 p.returncode,
@@ -429,6 +430,31 @@ class TestReturnCodes(base.TestCase):
         stdout = fixtures.StringStream("stdout")
         self.useFixture(stdout)
         self.assertEqual(1, run.run_command(concurrency="1", stdout=stdout.stream))
+
+    @unittest.skipIf(sys.platform == "win32", "dynamic mode is not supported")
+    def test_dynamic_passing(self):
+        self.assertRunExit("stestr run --dynamic --concurrency 2 passing", 0)
+
+    @unittest.skipIf(sys.platform == "win32", "dynamic mode is not supported")
+    def test_dynamic_progress_display(self):
+        out, err = self.assertRunExit(
+            "stestr run --dynamic --concurrency 2 passing", 0
+        )
+        # Each worker displays the completion of the run on stderr right
+        # before running its next group of tests.
+        self.assertRegex(
+            err.decode(),
+            r"\[\d+/\d+ \(\d+\.\d%\) elapsed: \d+:\d+:\d+, "
+            r"ETA: (~\d+:\d+:\d+|unknown)\]",
+        )
+
+    @unittest.skipIf(sys.platform == "win32", "dynamic mode is not supported")
+    def test_dynamic_subunit_passing(self):
+        self.assertRunExit(
+            "stestr run --dynamic --concurrency 2 passing --subunit",
+            0,
+            subunit=True,
+        )
 
     def test_serial_fails_from_func(self):
         stdout = fixtures.StringStream("stdout")
