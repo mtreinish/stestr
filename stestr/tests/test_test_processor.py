@@ -16,6 +16,7 @@ import os
 import queue
 import signal
 import subprocess
+import sys
 import threading
 import time
 import unittest
@@ -164,6 +165,10 @@ class TestDynamicWorkerDebug(base.TestCase):
 
     def test_filtered_out_group_counted_as_done(self):
         top_dir = self.useFixture(fixtures.TempDir()).path
+        # Discovery imports the fixture module into sys.modules; pop it
+        # so that a same-named module imported later from another
+        # directory cannot break unittest discovery.
+        self.addCleanup(sys.modules.pop, "test_user", None)
         user_test = os.path.join(top_dir, "test_user.py")
         with open(user_test, "w") as f:
             f.write(
@@ -205,6 +210,10 @@ class TestDynamicWorkerDebug(base.TestCase):
         # done for the progress display, like they do for the debug
         # watchdog counter.
         top_dir = self.useFixture(fixtures.TempDir()).path
+        # Discovery imports the fixture module into sys.modules; pop it
+        # so that a same-named module imported later from another
+        # directory cannot break unittest discovery.
+        self.addCleanup(sys.modules.pop, "test_user", None)
         user_test = os.path.join(top_dir, "test_user.py")
         with open(user_test, "w") as f:
             f.write(
