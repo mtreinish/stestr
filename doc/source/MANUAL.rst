@@ -514,6 +514,13 @@ test worker will query the queue for the next test to execute. This should
 result in a better worker balance than the static partitioning used by
 default which may translate to a better wall time.
 
+With the ``--random`` option, the order in which the groups are picked
+from the queue is randomized, as well as the order of the tests inside
+each group, instead of using the timing data based ordering. The
+grouping itself is preserved, so a group (e.g. a test class with a
+``group_regex`` config or ``parallel-class``) keeps its tests together
+on the worker that picked it.
+
 You can enable this new scheduler with the ``--dynamic`` flag to
 ``stestr run``. This option should also be compatible with the grouping
 options described in the :ref:`group_regex` section. Using the two in

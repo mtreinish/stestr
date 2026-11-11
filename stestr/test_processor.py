@@ -759,7 +759,11 @@ class TestProcessorFixture(fixtures.Fixture):
         # create single worker TestProcessorFixtures for each worker
         else:
             test_id_groups = scheduler.partition_tests(
-                test_ids, self.concurrency, self.repository, self._group_callback
+                test_ids,
+                self.concurrency,
+                self.repository,
+                self._group_callback,
+                self.randomize,
             )
         if not self.dynamic:
             for test_ids in test_id_groups:
@@ -780,7 +784,10 @@ class TestProcessorFixture(fixtures.Fixture):
             return result
         else:
             test_id_list = scheduler.get_dynamic_test_list(
-                test_ids, self.repository, self._group_callback
+                test_ids,
+                self.repository,
+                self._group_callback,
+                self.randomize,
             )
             if not test_id_list:
                 # Nothing to run, return an empty list of processes so the

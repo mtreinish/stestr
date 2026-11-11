@@ -180,8 +180,11 @@ class Run(command.Command):
             "--random",
             action="store_true",
             default=False,
-            help="Randomize the test order after they are "
-            "partitioned into separate workers",
+            help="Randomize the order of the tests handed to the "
+            "workers. With the dynamic scheduler, the order of "
+            "the groups picked from the queue and the order of "
+            "the tests inside each group are randomized, "
+            "keeping the grouping intact",
         )
         parser.add_argument(
             "--combine",

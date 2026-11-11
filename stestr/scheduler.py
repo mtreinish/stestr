@@ -41,7 +41,10 @@ def get_dynamic_test_list(
         scheduling. This function expects a single test_id parameter and it
         will return a group identifier. Tests_ids that have the same group
         identifier will be kept together on a worker. Optional.
-    :param bool randomize: If true the order of the groups is randomized
+    :param bool randomize: If true the order in which the groups are
+        picked from the queue is randomized, as well as the order of
+        the tests inside each group; the grouping itself is preserved
+        and the timing based ordering is skipped.
 
     :return: A list where each element is a distinct list of test_ids
         (a group), and the union of all the elements is equal to
@@ -49,17 +52,6 @@ def get_dynamic_test_list(
     """
     _group_callback = group_callback
     time_data = {}
-    if randomize:
-        test_ids = list(test_ids)
-        random.shuffle(test_ids)
-        return [[test_id] for test_id in test_ids]
-    if repository:
-        time_data = repository.get_test_times(test_ids)
-        timed_tests = time_data["known"]
-        unknown_tests = time_data["unknown"]
-    else:
-        timed_tests = {}
-        unknown_tests = set(test_ids)
     # Group tests: generate group_id -> test_ids.
     group_ids = collections.defaultdict(list)
     if _group_callback is None:
@@ -72,6 +64,23 @@ def get_dynamic_test_list(
     for test_id in test_ids:
         group_id = group_callback(test_id) or test_id
         group_ids[group_id].append(test_id)
+    if randomize:
+        # Randomize the order in which the groups are picked from the
+        # queue, and the order of the tests inside each group, keeping
+        # the grouping itself as the unit of work. The timing data
+        # based ordering is skipped: the pick-up order is random.
+        group_list = list(group_ids.values())
+        random.shuffle(group_list)
+        for group in group_list:
+            random.shuffle(group)
+        return group_list
+    if repository:
+        time_data = repository.get_test_times(test_ids)
+        timed_tests = time_data["known"]
+        unknown_tests = time_data["unknown"]
+    else:
+        timed_tests = {}
+        unknown_tests = set(test_ids)
     # Time groups: generate three sets of groups:
     # - fully timed dict(group_id -> time),
     # - partially timed dict(group_id -> time) and
