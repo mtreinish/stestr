@@ -22,7 +22,14 @@ def _iter_internal_streams(input_streams, stream_type):
             streams.append(in_stream[1])
     for stream_value in streams:
         if isinstance(stream_value, output.ReturnCodeToSubunit):
-            if getattr(stream_value.source, "detach", None):
+            if stream_value.dynamic and not isinstance(
+                stream_value.source, io.TextIOBase
+            ):
+                # The stream is already binary: pass the wrapper through
+                # instead of detaching the source so that reading it to EOF
+                # still appends the worker return code as a test result.
+                yield stream_value
+            elif getattr(stream_value.source, "detach", None):
                 yield stream_value.source.detach()
             else:
                 yield stream_value.source

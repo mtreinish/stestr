@@ -212,3 +212,93 @@ class TestScheduler(base.TestCase):
             ["test_a", "test_b", "your_test"],
         ]
         self.assertEqual(expected_grouping, groups)
+
+    def test_get_dynamic_test_list(self):
+        repo = memory.RepositoryFactory().initialise("memory:")
+        result = repo.get_inserter()
+        result.startTestRun()
+        self._add_timed_test("slow", 3, result)
+        self._add_timed_test("fast1", 2, result)
+        self._add_timed_test("fast2", 1, result)
+        result.stopTestRun()
+        test_ids = ["slow", "fast1", "fast2", "unknown1", "unknown2"]
+        dynamic_test_list = scheduler.get_dynamic_test_list(test_ids, repo)
+        # The groups with known durations are scheduled first from the
+        # slowest to the fastest, the groups with unknown time come last.
+        # Without a group_callback every test id is its own group.
+        self.assertEqual(
+            [["slow"], ["fast1"], ["fast2"], ["unknown1"], ["unknown2"]],
+            dynamic_test_list,
+        )
+
+    def test_get_dynamic_test_list_randomize(self):
+        test_ids = [
+            "tests.test_a.FakeTestClass.test_one",
+            "tests.test_a.FakeTestClass.test_two",
+            "tests.test_b.FakeTestClass.test_one",
+        ]
+
+        def group_callback(test_id):
+            return test_id.rpartition(".")[0]
+
+        dynamic_test_list = scheduler.get_dynamic_test_list(
+            test_ids, None, group_callback, randomize=True
+        )
+        # randomize=True must shuffle the order of the groups and the
+        # order of the tests inside each group, without breaking the
+        # grouping itself (and not return the None that random.shuffle
+        # returns when used in place).
+        flattened = [test_id for group in dynamic_test_list for test_id in group]
+        self.assertEqual(sorted(test_ids), sorted(flattened))
+        non_random_list = scheduler.get_dynamic_test_list(
+            test_ids, None, group_callback
+        )
+        # The group members must be unchanged by randomizing: the same
+        # groups are returned, in a random order, each with its own
+        # tests in a random order. We cannot assert the randomness, so
+        # just check the shape of the result.
+        self.assertEqual(
+            sorted(sorted(group) for group in non_random_list),
+            sorted(sorted(group) for group in dynamic_test_list),
+        )
+
+    def test_get_dynamic_test_list_randomize_no_grouping(self):
+        repo = memory.RepositoryFactory().initialise("memory:")
+        test_ids = ["a_test", "b_test", "c_test"]
+        dynamic_test_list = scheduler.get_dynamic_test_list(
+            test_ids, repo, randomize=True
+        )
+        # Without a group callback every test id is its own group:
+        # randomizing must return single test groups in random order.
+        flattened = [test_id for group in dynamic_test_list for test_id in group]
+        self.assertEqual(sorted(test_ids), sorted(flattened))
+        for group in dynamic_test_list:
+            self.assertEqual(1, len(group))
+
+    def test_get_dynamic_test_list_with_grouping(self):
+        test_ids = [
+            "tests.test_a.FakeTestClass.test_one",
+            "tests.test_a.FakeTestClass.test_two",
+            "tests.test_b.FakeTestClass.test_one",
+        ]
+
+        def group_callback(test_id):
+            return test_id.rpartition(".")[0]
+
+        dynamic_test_list = scheduler.get_dynamic_test_list(
+            test_ids, None, group_callback
+        )
+        # The scheduled groups must contain the full test ids of each
+        # group, not the group ids themselves, and all the tests of a
+        # group are scheduled together as a single unit of work.
+        self.assertEqual(
+            [
+                ["tests.test_a.FakeTestClass.test_one",
+                 "tests.test_a.FakeTestClass.test_two"],
+                ["tests.test_b.FakeTestClass.test_one"],
+            ],
+            sorted(dynamic_test_list),
+        )
+        for group in dynamic_test_list:
+            for test_id in group:
+                self.assertFalse(test_id.endswith("."))
